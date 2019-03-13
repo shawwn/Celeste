@@ -22,10 +22,10 @@ namespace Celeste
 
     private bool ResetVertexBuffer()
     {
-      if (this.Vertices != null && !((GraphicsResource) this.Vertices).get_IsDisposed() && !((GraphicsResource) this.Vertices).get_GraphicsDevice().get_IsDisposed())
+      if (this.Vertices != null && !this.Vertices.IsDisposed && !this.Vertices.GraphicsDevice.IsDisposed)
         return false;
-      this.Vertices = new VertexBuffer(Engine.Graphics.get_GraphicsDevice(), typeof (VertexPositionTexture), this.verts.Length, (BufferUsage) 0);
-      this.Vertices.SetData<VertexPositionTexture>((M0[]) this.verts);
+      this.Vertices = new VertexBuffer(Engine.Graphics.GraphicsDevice, typeof (VertexPositionTexture), this.verts.Length, BufferUsage.None);
+      this.Vertices.SetData<VertexPositionTexture>(this.verts);
       return true;
     }
 
@@ -33,26 +33,23 @@ namespace Celeste
     {
       if (this.ResetVertexBuffer())
         return;
-      this.Vertices.SetData<VertexPositionTexture>((M0[]) this.verts);
+      this.Vertices.SetData<VertexPositionTexture>(this.verts);
     }
 
     public void Draw(Effect effect)
     {
       this.ResetVertexBuffer();
-      Engine.Graphics.get_GraphicsDevice().SetVertexBuffer(this.Vertices);
-      using (List<EffectPass>.Enumerator enumerator = effect.get_CurrentTechnique().get_Passes().GetEnumerator())
+      Engine.Graphics.GraphicsDevice.SetVertexBuffer(this.Vertices);
+      foreach (EffectPass pass in effect.CurrentTechnique.Passes)
       {
-        while (enumerator.MoveNext())
-        {
-          enumerator.Current.Apply();
-          Engine.Graphics.get_GraphicsDevice().DrawPrimitives((PrimitiveType) 0, 0, this.Vertices.get_VertexCount() / 3);
-        }
+        pass.Apply();
+        Engine.Graphics.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, this.Vertices.VertexCount / 3);
       }
     }
 
     public void Dispose()
     {
-      ((GraphicsResource) this.Vertices).Dispose();
+      this.Vertices.Dispose();
       this.Meshes = (List<ObjModel.Mesh>) null;
     }
 
@@ -84,26 +81,24 @@ namespace Celeste
             }
             else if (str2 == "v")
             {
-              Vector3 vector3;
-              ((Vector3) ref vector3).\u002Ector(ObjModel.Float(strArray1[1]), ObjModel.Float(strArray1[2]), ObjModel.Float(strArray1[3]));
+              Vector3 vector3 = new Vector3(ObjModel.Float(strArray1[1]), ObjModel.Float(strArray1[2]), ObjModel.Float(strArray1[3]));
               vector3List.Add(vector3);
             }
             else if (str2 == "vt")
             {
-              Vector2 vector2;
-              ((Vector2) ref vector2).\u002Ector(ObjModel.Float(strArray1[1]), ObjModel.Float(strArray1[2]));
+              Vector2 vector2 = new Vector2(ObjModel.Float(strArray1[1]), ObjModel.Float(strArray1[2]));
               vector2List.Add(vector2);
             }
             else if (str2 == "f")
             {
               for (int index = 1; index < Math.Min(4, strArray1.Length); ++index)
               {
-                VertexPositionTexture vertexPositionTexture = (VertexPositionTexture) null;
+                VertexPositionTexture vertexPositionTexture = new VertexPositionTexture();
                 string[] strArray2 = strArray1[index].Split('/');
                 if (strArray2[0].Length > 0)
-                  vertexPositionTexture.Position = (__Null) vector3List[int.Parse(strArray2[0]) - 1];
+                  vertexPositionTexture.Position = vector3List[int.Parse(strArray2[0]) - 1];
                 if (strArray2[1].Length > 0)
-                  vertexPositionTexture.TextureCoordinate = (__Null) vector2List[int.Parse(strArray2[1]) - 1];
+                  vertexPositionTexture.TextureCoordinate = vector2List[int.Parse(strArray2[1]) - 1];
                 vertexPositionTextureList.Add(vertexPositionTexture);
               }
             }
@@ -131,3 +126,4 @@ namespace Celeste
     }
   }
 }
+

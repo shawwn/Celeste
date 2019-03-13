@@ -14,15 +14,15 @@ namespace Celeste
   {
     public bool Enabled = true;
     public bool PlayerMustBeFacing = true;
+    private float cooldown = 0.0f;
+    private float hoverTimer = 0.0f;
+    private float disableDelay = 0.0f;
     public static TalkComponent PlayerOver;
     public Rectangle Bounds;
     public Vector2 DrawAt;
     public Action<Player> OnTalk;
     public TalkComponent.TalkComponentUI UI;
     public TalkComponent.HoverDisplay HoverUI;
-    private float cooldown;
-    private float hoverTimer;
-    private float disableDelay;
 
     public TalkComponent(
       Rectangle bounds,
@@ -49,7 +49,7 @@ namespace Celeste
       if (this.UI == null)
         this.Entity.Scene.Add((Entity) (this.UI = new TalkComponent.TalkComponentUI(this)));
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      bool flag = (double) this.disableDelay < 0.0500000007450581 && entity != null && (entity.CollideRect(new Rectangle((int) ((double) this.Entity.X + (double) (float) this.Bounds.X), (int) ((double) this.Entity.Y + (double) (float) this.Bounds.Y), (int) this.Bounds.Width, (int) this.Bounds.Height)) && entity.OnGround(1)) && entity.StateMachine.State == 0 && (!this.PlayerMustBeFacing || (double) Math.Abs(entity.X - this.Entity.X) <= 16.0 || entity.Facing == (Facings) Math.Sign(this.Entity.X - entity.X)) && (TalkComponent.PlayerOver == null || TalkComponent.PlayerOver == this);
+      bool flag = (double) this.disableDelay < 0.0500000007450581 && entity != null && (entity.CollideRect(new Rectangle((int) ((double) this.Entity.X + (double) this.Bounds.X), (int) ((double) this.Entity.Y + (double) this.Bounds.Y), this.Bounds.Width, this.Bounds.Height)) && entity.OnGround(1)) && entity.StateMachine.State == 0 && (!this.PlayerMustBeFacing || (double) Math.Abs(entity.X - this.Entity.X) <= 16.0 || entity.Facing == (Facings) Math.Sign(this.Entity.X - entity.X)) && (TalkComponent.PlayerOver == null || TalkComponent.PlayerOver == this);
       if (flag)
         this.hoverTimer += Engine.DeltaTime;
       else if (this.UI.Display)
@@ -58,7 +58,7 @@ namespace Celeste
         TalkComponent.PlayerOver = (TalkComponent) null;
       else if (flag)
         TalkComponent.PlayerOver = this;
-      if (flag && (double) this.cooldown <= 0.0 && (entity != null && (int) entity.StateMachine == 0) && (Input.Talk.Pressed && this.Enabled && !this.Scene.Paused))
+      if (flag && (double) this.cooldown <= 0.0 && (entity != null && (int) entity.StateMachine == 0) && (Input.Talk.Pressed && this.Enabled) && !this.Scene.Paused)
       {
         this.cooldown = 0.1f;
         if (this.OnTalk != null)
@@ -103,7 +103,7 @@ namespace Celeste
     public override void DebugRender(Camera camera)
     {
       base.DebugRender(camera);
-      Draw.HollowRect(this.Entity.X + (float) this.Bounds.X, this.Entity.Y + (float) this.Bounds.Y, (float) this.Bounds.Width, (float) this.Bounds.Height, Color.get_Green());
+      Draw.HollowRect(this.Entity.X + (float) this.Bounds.X, this.Entity.Y + (float) this.Bounds.Y, (float) this.Bounds.Width, (float) this.Bounds.Height, Color.Green);
     }
 
     public class HoverDisplay
@@ -153,9 +153,7 @@ namespace Celeste
           if (entity == null || entity.StateMachine.State == 11)
             return false;
           Level scene = this.Scene as Level;
-          if (!scene.FrozenOrPaused)
-            return scene.RetryPlayerCorpse == null;
-          return false;
+          return !scene.FrozenOrPaused && scene.RetryPlayerCorpse == null;
         }
       }
 
@@ -186,44 +184,31 @@ namespace Celeste
       public override void Render()
       {
         Level scene = this.Scene as Level;
-        if (scene.FrozenOrPaused || (double) this.slide <= 0.0 || this.Handler.Entity == null)
+        if (scene.FrozenOrPaused || ((double) this.slide <= 0.0 || this.Handler.Entity == null))
           return;
-        Vector2 position1 = Vector2.op_Subtraction(Vector2.op_Addition(this.Handler.Entity.Position, this.Handler.DrawAt), scene.Camera.Position.Floor());
+        Vector2 position1 = this.Handler.Entity.Position + this.Handler.DrawAt - scene.Camera.Position.Floor();
         if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
-          position1.X = (__Null) (320.0 - position1.X);
-        ref __Null local1 = ref position1.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 * 6f;
-        ref __Null local2 = ref position1.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 * 6f;
-        ref __Null local3 = ref position1.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local3 = ^(float&) ref local3 + (float) (Math.Sin((double) this.timer * 4.0) * 12.0 + 64.0 * (1.0 - (double) Ease.CubeOut(this.slide)));
+          position1.X = 320f - position1.X;
+        position1.X *= 6f;
+        position1.Y *= 6f;
+        position1.Y += (float) (Math.Sin((double) this.timer * 4.0) * 12.0 + 64.0 * (1.0 - (double) Ease.CubeOut(this.slide)));
         float scale = !this.Highlighted ? (float) (1.0 + (double) this.wiggler.Value * 0.5) : (float) (1.0 - (double) this.wiggler.Value * 0.5);
         float num = Ease.CubeInOut(this.slide) * this.alpha;
-        Color color = Color.op_Multiply(this.lineColor, num);
+        Color color = this.lineColor * num;
         if (this.Highlighted)
-          this.Handler.HoverUI.Texture.DrawJustified(position1, new Vector2(0.5f, 1f), Color.op_Multiply(color, this.alpha), scale);
+          this.Handler.HoverUI.Texture.DrawJustified(position1, new Vector2(0.5f, 1f), color * this.alpha, scale);
         else
-          GFX.Gui["hover/idle"].DrawJustified(position1, new Vector2(0.5f, 1f), Color.op_Multiply(color, this.alpha), scale);
-        if (!this.Highlighted)
-          return;
-        Vector2 position2 = Vector2.op_Addition(position1, Vector2.op_Multiply(this.Handler.HoverUI.InputPosition, scale));
-        if (Input.GuiInputController())
-          Input.GuiButton(Input.Talk, "controls/keyboard/oemquestion").DrawJustified(position2, new Vector2(0.5f), Color.op_Multiply(Color.get_White(), num), scale);
-        else
-          ActiveFont.DrawOutline(Input.FirstKey(Input.Talk).ToString().ToUpper(), position2, new Vector2(0.5f), new Vector2(scale), Color.op_Multiply(Color.get_White(), num), 2f, Color.get_Black());
+          GFX.Gui["hover/idle"].DrawJustified(position1, new Vector2(0.5f, 1f), color * this.alpha, scale);
+        if (this.Highlighted)
+        {
+          Vector2 position2 = position1 + this.Handler.HoverUI.InputPosition * scale;
+          if (Input.GuiInputController())
+            Input.GuiButton(Input.Talk, "controls/keyboard/oemquestion").DrawJustified(position2, new Vector2(0.5f), Color.White * num, scale);
+          else
+            ActiveFont.DrawOutline(Input.FirstKey(Input.Talk).ToString().ToUpper(), position2, new Vector2(0.5f), new Vector2(scale), Color.White * num, 2f, Color.Black);
+        }
       }
     }
   }
 }
+

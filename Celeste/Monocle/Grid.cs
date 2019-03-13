@@ -62,7 +62,7 @@ namespace Monocle
 
     public void Extend(int left, int right, int up, int down)
     {
-      this.Position = Vector2.op_Subtraction(this.Position, new Vector2((float) left * this.CellWidth, (float) up * this.CellHeight));
+      this.Position = this.Position - new Vector2((float) left * this.CellWidth, (float) up * this.CellHeight);
       int columns = this.Data.Columns + left + right;
       int rows = this.Data.Rows + up + down;
       if (columns <= 0 || rows <= 0)
@@ -78,7 +78,7 @@ namespace Monocle
           {
             int index3 = index1 + left;
             int index4 = index2 + up;
-            if (index3 >= 0 && index3 < columns && (index4 >= 0 && index4 < rows))
+            if (index3 >= 0 && index3 < columns && index4 >= 0 && index4 < rows)
               virtualMap[index3, index4] = this.Data[index1, index2];
           }
         }
@@ -142,7 +142,7 @@ namespace Monocle
       string str = "";
       for (int index1 = 0; index1 < this.CellsY; ++index1)
       {
-        if (index1 != 0)
+        if ((uint) index1 > 0U)
           str += "\n";
         for (int index2 = 0; index2 < this.CellsX; ++index2)
           str = !this.Data[index2, index1] ? str + "0" : str + "1";
@@ -233,7 +233,7 @@ namespace Monocle
     {
       get
       {
-        if (x >= 0 && y >= 0 && (x < this.CellsX && y < this.CellsY))
+        if (x >= 0 && y >= 0 && x < this.CellsX && y < this.CellsY)
           return this.Data[x, y];
         return false;
       }
@@ -303,11 +303,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.X;
+        return this.Position.X;
       }
       set
       {
-        this.Position.X = (__Null) (double) value;
+        this.Position.X = value;
       }
     }
 
@@ -315,11 +315,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.Y;
+        return this.Position.Y;
       }
       set
       {
-        this.Position.Y = (__Null) (double) value;
+        this.Position.Y = value;
       }
     }
 
@@ -327,11 +327,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.X + this.Width;
+        return this.Position.X + this.Width;
       }
       set
       {
-        this.Position.X = (__Null) ((double) value - (double) this.Width);
+        this.Position.X = value - this.Width;
       }
     }
 
@@ -339,11 +339,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.Y + this.Height;
+        return this.Position.Y + this.Height;
       }
       set
       {
-        this.Position.Y = (__Null) ((double) value - (double) this.Height);
+        this.Position.Y = value - this.Height;
       }
     }
 
@@ -384,47 +384,47 @@ namespace Monocle
 
     public override bool Collide(Vector2 point)
     {
-      if (point.X >= (double) this.AbsoluteLeft && point.Y >= (double) this.AbsoluteTop && (point.X < (double) this.AbsoluteRight && point.Y < (double) this.AbsoluteBottom))
-        return this.Data[(int) ((point.X - (double) this.AbsoluteLeft) / (double) this.CellWidth), (int) ((point.Y - (double) this.AbsoluteTop) / (double) this.CellHeight)];
+      if ((double) point.X >= (double) this.AbsoluteLeft && (double) point.Y >= (double) this.AbsoluteTop && (double) point.X < (double) this.AbsoluteRight && (double) point.Y < (double) this.AbsoluteBottom)
+        return this.Data[(int) (((double) point.X - (double) this.AbsoluteLeft) / (double) this.CellWidth), (int) (((double) point.Y - (double) this.AbsoluteTop) / (double) this.CellHeight)];
       return false;
     }
 
     public override bool Collide(Rectangle rect)
     {
-      if (!((Rectangle) ref rect).Intersects(this.Bounds))
+      if (!rect.Intersects(this.Bounds))
         return false;
-      int x = (int) (((double) ((Rectangle) ref rect).get_Left() - (double) this.AbsoluteLeft) / (double) this.CellWidth);
-      int y = (int) (((double) ((Rectangle) ref rect).get_Top() - (double) this.AbsoluteTop) / (double) this.CellHeight);
-      int width = (int) (((double) ((Rectangle) ref rect).get_Right() - (double) this.AbsoluteLeft - 1.0) / (double) this.CellWidth) - x + 1;
-      int height = (int) (((double) ((Rectangle) ref rect).get_Bottom() - (double) this.AbsoluteTop - 1.0) / (double) this.CellHeight) - y + 1;
+      int x = (int) (((double) rect.Left - (double) this.AbsoluteLeft) / (double) this.CellWidth);
+      int y = (int) (((double) rect.Top - (double) this.AbsoluteTop) / (double) this.CellHeight);
+      int width = (int) (((double) rect.Right - (double) this.AbsoluteLeft - 1.0) / (double) this.CellWidth) - x + 1;
+      int height = (int) (((double) rect.Bottom - (double) this.AbsoluteTop - 1.0) / (double) this.CellHeight) - y + 1;
       return this.CheckRect(x, y, width, height);
     }
 
     public override bool Collide(Vector2 from, Vector2 to)
     {
-      from = Vector2.op_Subtraction(from, this.AbsolutePosition);
-      to = Vector2.op_Subtraction(to, this.AbsolutePosition);
-      from = Vector2.op_Division(from, new Vector2(this.CellWidth, this.CellHeight));
-      to = Vector2.op_Division(to, new Vector2(this.CellWidth, this.CellHeight));
-      bool flag = (double) Math.Abs((float) (to.Y - from.Y)) > (double) Math.Abs((float) (to.X - from.X));
+      from -= this.AbsolutePosition;
+      to -= this.AbsolutePosition;
+      from /= new Vector2(this.CellWidth, this.CellHeight);
+      to /= new Vector2(this.CellWidth, this.CellHeight);
+      bool flag = (double) Math.Abs(to.Y - from.Y) > (double) Math.Abs(to.X - from.X);
       if (flag)
       {
-        float x1 = (float) from.X;
+        float x1 = from.X;
         from.X = from.Y;
-        from.Y = (__Null) (double) x1;
-        float x2 = (float) to.X;
+        from.Y = x1;
+        float x2 = to.X;
         to.X = to.Y;
-        to.Y = (__Null) (double) x2;
+        to.Y = x2;
       }
-      if (from.X > to.X)
+      if ((double) from.X > (double) to.X)
       {
         Vector2 vector2 = from;
         from = to;
         to = vector2;
       }
       float num1 = 0.0f;
-      float num2 = Math.Abs((float) (to.Y - from.Y)) / (float) (to.X - from.X);
-      int num3 = from.Y < to.Y ? 1 : -1;
+      float num2 = Math.Abs(to.Y - from.Y) / (to.X - from.X);
+      int num3 = (double) from.Y < (double) to.Y ? 1 : -1;
       int y = (int) from.Y;
       int x3 = (int) to.X;
       for (int x1 = (int) from.X; x1 <= x3; ++x1)
@@ -477,3 +477,4 @@ namespace Monocle
     }
   }
 }
+

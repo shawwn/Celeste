@@ -29,10 +29,10 @@ namespace Celeste
       this.Collider = (Collider) new Hitbox(6f, 6f, -3f, -7f);
       this.Sprite = new PlayerSprite(PlayerSpriteMode.Badeline);
       this.Sprite.Play("fallSlow", false, false);
-      this.Sprite.Scale.X = (__Null) -1.0;
+      this.Sprite.Scale.X = -1f;
       this.Hair = new PlayerHair(this.Sprite);
       this.Hair.Color = BadelineOldsite.HairColor;
-      this.Hair.Border = Color.get_Black();
+      this.Hair.Border = Color.Black;
       this.Hair.Facing = Facings.Left;
       this.Add((Component) this.Hair);
       this.Add((Component) this.Sprite);
@@ -45,8 +45,8 @@ namespace Celeste
         Audio.Play("event:/char/badeline/footstep", this.Position);
       });
       this.Add((Component) (this.Wave = new SineWave(0.25f)));
-      this.Wave.OnUpdate = (Action<float>) (f => this.Sprite.Position = Vector2.op_Multiply(Vector2.op_Multiply(this.floatNormal, f), this.Floatness));
-      this.Add((Component) (this.Light = new VertexLight(new Vector2(0.0f, -8f), Color.get_PaleVioletRed(), 1f, 20, 60)));
+      this.Wave.OnUpdate = (Action<float>) (f => this.Sprite.Position = this.floatNormal * f * this.Floatness);
+      this.Add((Component) (this.Light = new VertexLight(new Vector2(0.0f, -8f), Color.PaleVioletRed, 1f, 20, 60)));
     }
 
     public void Appear(Level level, bool silent = false)
@@ -57,14 +57,14 @@ namespace Celeste
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
       }
       level.Displacement.AddBurst(this.Center, 0.5f, 24f, 96f, 0.4f, (Ease.Easer) null, (Ease.Easer) null);
-      level.Particles.Emit(BadelineOldsite.P_Vanish, 12, this.Center, Vector2.op_Multiply(Vector2.get_One(), 6f));
+      level.Particles.Emit(BadelineOldsite.P_Vanish, 12, this.Center, Vector2.One * 6f);
     }
 
     public void Vanish()
     {
       Audio.Play("event:/char/badeline/disappear", this.Position);
       this.Shockwave();
-      this.SceneAs<Level>().Particles.Emit(BadelineOldsite.P_Vanish, 12, this.Center, Vector2.op_Multiply(Vector2.get_One(), 6f));
+      this.SceneAs<Level>().Particles.Emit(BadelineOldsite.P_Vanish, 12, this.Center, Vector2.One * 6f);
       this.RemoveSelf();
     }
 
@@ -79,73 +79,69 @@ namespace Celeste
       bool faceDirection = true,
       bool fadeLight = false)
     {
-      BadelineDummy badelineDummy = this;
-      badelineDummy.Sprite.Play("fallSlow", false, false);
-      if (faceDirection && Math.Sign((float) target.X - badelineDummy.X) != 0)
-        badelineDummy.Sprite.Scale.X = (__Null) (double) Math.Sign((float) target.X - badelineDummy.X);
-      Vector2 vector2 = Vector2.op_Subtraction(target, badelineDummy.Position).SafeNormalize();
-      Vector2 perp = new Vector2((float) -vector2.Y, (float) vector2.X);
+      this.Sprite.Play("fallSlow", false, false);
+      if (faceDirection && (uint) Math.Sign(target.X - this.X) > 0U)
+        this.Sprite.Scale.X = (float) Math.Sign(target.X - this.X);
+      Vector2 direction = (target - this.Position).SafeNormalize();
+      Vector2 perp = new Vector2(-direction.Y, direction.X);
       float speed = 0.0f;
-      while (Vector2.op_Inequality(badelineDummy.Position, target))
+      while (this.Position != target)
       {
-        speed = Calc.Approach(speed, badelineDummy.FloatSpeed, badelineDummy.FloatAccel * Engine.DeltaTime);
-        badelineDummy.Position = Calc.Approach(badelineDummy.Position, target, speed * Engine.DeltaTime);
-        badelineDummy.Floatness = Calc.Approach(badelineDummy.Floatness, 4f, 8f * Engine.DeltaTime);
-        badelineDummy.floatNormal = Calc.Approach(badelineDummy.floatNormal, perp, Engine.DeltaTime * 12f);
+        speed = Calc.Approach(speed, this.FloatSpeed, this.FloatAccel * Engine.DeltaTime);
+        this.Position = Calc.Approach(this.Position, target, speed * Engine.DeltaTime);
+        this.Floatness = Calc.Approach(this.Floatness, 4f, 8f * Engine.DeltaTime);
+        this.floatNormal = Calc.Approach(this.floatNormal, perp, Engine.DeltaTime * 12f);
         if (fadeLight)
-          badelineDummy.Light.Alpha = Calc.Approach(badelineDummy.Light.Alpha, 0.0f, Engine.DeltaTime * 2f);
+          this.Light.Alpha = Calc.Approach(this.Light.Alpha, 0.0f, Engine.DeltaTime * 2f);
         yield return (object) null;
       }
-      while ((double) badelineDummy.Floatness != 2.0)
+      while ((double) this.Floatness != 2.0)
       {
-        badelineDummy.Floatness = Calc.Approach(badelineDummy.Floatness, 2f, 8f * Engine.DeltaTime);
+        this.Floatness = Calc.Approach(this.Floatness, 2f, 8f * Engine.DeltaTime);
         yield return (object) null;
       }
       if (turnAtEndTo.HasValue)
-        badelineDummy.Sprite.Scale.X = (__Null) (double) turnAtEndTo.Value;
+        this.Sprite.Scale.X = (float) turnAtEndTo.Value;
     }
 
     public IEnumerator WalkTo(float x)
     {
-      BadelineDummy badelineDummy = this;
-      badelineDummy.Floatness = 0.0f;
-      badelineDummy.Sprite.Play("walk", false, false);
-      if (Math.Sign(x - badelineDummy.X) != 0)
-        badelineDummy.Sprite.Scale.X = (__Null) (double) Math.Sign(x - badelineDummy.X);
-      while ((double) badelineDummy.X != (double) x)
+      this.Floatness = 0.0f;
+      this.Sprite.Play("walk", false, false);
+      if ((uint) Math.Sign(x - this.X) > 0U)
+        this.Sprite.Scale.X = (float) Math.Sign(x - this.X);
+      while ((double) this.X != (double) x)
       {
-        badelineDummy.X = Calc.Approach(badelineDummy.X, x, Engine.DeltaTime * 64f);
+        this.X = Calc.Approach(this.X, x, Engine.DeltaTime * 64f);
         yield return (object) null;
       }
-      badelineDummy.Sprite.Play("idle", false, false);
+      this.Sprite.Play("idle", false, false);
     }
 
     public IEnumerator SmashBlock(Vector2 target)
     {
-      BadelineDummy badelineDummy = this;
-      badelineDummy.SceneAs<Level>().Displacement.AddBurst(badelineDummy.Position, 0.5f, 24f, 96f, 1f, (Ease.Easer) null, (Ease.Easer) null);
-      badelineDummy.Sprite.Play("dreamDashLoop", false, false);
-      Vector2 from = badelineDummy.Position;
-      float p;
-      for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 6f)
+      this.SceneAs<Level>().Displacement.AddBurst(this.Position, 0.5f, 24f, 96f, 1f, (Ease.Easer) null, (Ease.Easer) null);
+      this.Sprite.Play("dreamDashLoop", false, false);
+      Vector2 from = this.Position;
+      for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 6f)
       {
-        badelineDummy.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(target, from), Ease.CubeOut(p)));
+        this.Position = from + (target - from) * Ease.CubeOut(p);
         yield return (object) null;
       }
-      badelineDummy.Scene.Entities.FindFirst<DashBlock>().Break(badelineDummy.Position, new Vector2(0.0f, -1f), false);
-      badelineDummy.Sprite.Play("idle", false, false);
-      for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
+      this.Scene.Entities.FindFirst<DashBlock>().Break(this.Position, new Vector2(0.0f, -1f), false);
+      this.Sprite.Play("idle", false, false);
+      for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        badelineDummy.Position = Vector2.op_Addition(target, Vector2.op_Multiply(Vector2.op_Subtraction(from, target), Ease.CubeOut(p)));
+        this.Position = target + (from - target) * Ease.CubeOut(p);
         yield return (object) null;
       }
-      badelineDummy.Sprite.Play("fallSlow", false, false);
+      this.Sprite.Play("fallSlow", false, false);
     }
 
     public override void Update()
     {
-      if (this.Sprite.Scale.X != 0.0)
-        this.Hair.Facing = (Facings) Math.Sign((float) this.Sprite.Scale.X);
+      if ((double) this.Sprite.Scale.X != 0.0)
+        this.Hair.Facing = (Facings) Math.Sign(this.Sprite.Scale.X);
       base.Update();
     }
 
@@ -158,3 +154,4 @@ namespace Celeste
     }
   }
 }
+

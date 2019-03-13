@@ -16,30 +16,32 @@ namespace Celeste
   [Serializable]
   public class Settings
   {
+    public bool Fullscreen = false;
     public int WindowScale = 6;
+    public int ViewportPadding = 0;
     public bool VSync = true;
+    public bool DisableFlashes = false;
+    public bool DisableScreenShake = false;
     public RumbleAmount Rumble = RumbleAmount.On;
     public int MusicVolume = 10;
     public int SFXVolume = 10;
+    public int LastSaveFile = 0;
     public string Language = "english";
+    public bool Pico8OnMainMenu = false;
+    public bool SetViewportOnce = false;
+    public bool VariantsUnlocked = false;
+    public Keys Left = Keys.None;
+    public Keys Right = Keys.None;
+    public Keys Down = Keys.None;
+    public Keys Up = Keys.None;
+    public bool LaunchWithFMODLiveUpdate = false;
+    public bool LaunchInDebugMode = false;
     public static Settings Instance;
     public static bool Existed;
     public static string LastVersion;
     public const string EnglishLanguage = "english";
     public string Version;
-    public bool Fullscreen;
-    public int ViewportPadding;
-    public bool DisableFlashes;
-    public bool DisableScreenShake;
     public SpeedrunType SpeedrunClock;
-    public int LastSaveFile;
-    public bool Pico8OnMainMenu;
-    public bool SetViewportOnce;
-    public bool VariantsUnlocked;
-    public Keys Left;
-    public Keys Right;
-    public Keys Down;
-    public Keys Up;
     public List<Keys> Grab;
     public List<Keys> Jump;
     public List<Keys> Dash;
@@ -54,8 +56,6 @@ namespace Celeste
     public List<Buttons> BtnDash;
     public List<Buttons> BtnTalk;
     public List<Buttons> BtnAltQuickRestart;
-    public bool LaunchWithFMODLiveUpdate;
-    public bool LaunchInDebugMode;
     public const string Filename = "settings";
 
     [XmlAnyElement("LaunchInDebugModeComment")]
@@ -94,97 +94,63 @@ namespace Celeste
     public void SetDefaultKeyboardControls(bool reset)
     {
       if (reset)
-        this.Left = (Keys) 0;
+        this.Left = Keys.None;
       if (reset)
-        this.Right = (Keys) 0;
+        this.Right = Keys.None;
       if (reset)
-        this.Up = (Keys) 0;
+        this.Up = Keys.None;
       if (reset)
-        this.Down = (Keys) 0;
+        this.Down = Keys.None;
       if (reset || this.Grab == null || this.Grab.Count <= 0)
-      {
-        List<Keys> keysList = new List<Keys>();
-        keysList.Add((Keys) 90);
-        keysList.Add((Keys) 86);
-        keysList.Add((Keys) 160);
-        this.Grab = keysList;
-      }
+        this.Grab = new List<Keys>()
+        {
+          Keys.Z,
+          Keys.V,
+          Keys.LeftShift
+        };
       if (reset || this.Jump == null || this.Jump.Count <= 0)
-      {
-        List<Keys> keysList = new List<Keys>();
-        keysList.Add((Keys) 67);
-        this.Jump = keysList;
-      }
+        this.Jump = new List<Keys>() { Keys.C };
       if (reset || this.Dash == null || this.Dash.Count <= 0)
-      {
-        List<Keys> keysList = new List<Keys>();
-        keysList.Add((Keys) 88);
-        this.Dash = keysList;
-      }
+        this.Dash = new List<Keys>() { Keys.X };
       if (reset || this.Talk == null || this.Talk.Count <= 0)
-      {
-        List<Keys> keysList = new List<Keys>();
-        keysList.Add((Keys) 88);
-        this.Talk = keysList;
-      }
+        this.Talk = new List<Keys>() { Keys.X };
       if (reset || this.Pause == null)
         this.Pause = new List<Keys>();
       if (reset || this.Confirm == null || this.Confirm.Count <= 0)
-      {
-        List<Keys> keysList = new List<Keys>();
-        keysList.Add((Keys) 67);
-        this.Confirm = keysList;
-      }
+        this.Confirm = new List<Keys>() { Keys.C };
       if (reset || this.Cancel == null || this.Cancel.Count <= 0)
-      {
-        List<Keys> keysList = new List<Keys>();
-        keysList.Add((Keys) 88);
-        this.Cancel = keysList;
-      }
+        this.Cancel = new List<Keys>() { Keys.X };
       if (reset || this.Journal == null || this.Journal.Count <= 0)
-      {
-        List<Keys> keysList = new List<Keys>();
-        keysList.Add((Keys) 9);
-        this.Journal = keysList;
-      }
+        this.Journal = new List<Keys>() { Keys.Tab };
       if (!reset && this.QuickRestart != null && this.QuickRestart.Count > 0)
         return;
-      List<Keys> keysList1 = new List<Keys>();
-      keysList1.Add((Keys) 82);
-      this.QuickRestart = keysList1;
+      this.QuickRestart = new List<Keys>() { Keys.R };
     }
 
     public void SetDefaultButtonControls(bool reset)
     {
       if (reset || this.BtnJump == null || this.BtnJump.Count <= 0)
-      {
-        List<Buttons> buttonsList = new List<Buttons>();
-        buttonsList.Add((Buttons) 4096);
-        buttonsList.Add((Buttons) 32768);
-        this.BtnJump = buttonsList;
-      }
+        this.BtnJump = new List<Buttons>()
+        {
+          Buttons.A,
+          Buttons.Y
+        };
       if (reset || this.BtnDash == null || this.BtnDash.Count <= 0)
-      {
-        List<Buttons> buttonsList = new List<Buttons>();
-        buttonsList.Add((Buttons) 16384);
-        buttonsList.Add((Buttons) 8192);
-        this.BtnDash = buttonsList;
-      }
+        this.BtnDash = new List<Buttons>()
+        {
+          Buttons.X,
+          Buttons.B
+        };
       if (reset || this.BtnGrab == null || this.BtnGrab.Count <= 0)
-      {
-        List<Buttons> buttonsList = new List<Buttons>();
-        buttonsList.Add((Buttons) 8388608);
-        buttonsList.Add((Buttons) 4194304);
-        buttonsList.Add((Buttons) 256);
-        buttonsList.Add((Buttons) 512);
-        this.BtnGrab = buttonsList;
-      }
+        this.BtnGrab = new List<Buttons>()
+        {
+          Buttons.LeftTrigger,
+          Buttons.RightTrigger,
+          Buttons.LeftShoulder,
+          Buttons.RightShoulder
+        };
       if (reset || this.BtnTalk == null || this.BtnTalk.Count <= 0)
-      {
-        List<Buttons> buttonsList = new List<Buttons>();
-        buttonsList.Add((Buttons) 8192);
-        this.BtnTalk = buttonsList;
-      }
+        this.BtnTalk = new List<Buttons>() { Buttons.B };
       if (!reset && this.BtnAltQuickRestart != null)
         return;
       this.BtnAltQuickRestart = new List<Buttons>();
@@ -194,7 +160,7 @@ namespace Celeste
     {
       get
       {
-        return Math.Min(Engine.Instance.get_GraphicsDevice().get_Adapter().get_CurrentDisplayMode().get_Width() / 320, Engine.Instance.get_GraphicsDevice().get_Adapter().get_CurrentDisplayMode().get_Height() / 180);
+        return Math.Min(Engine.Instance.GraphicsDevice.Adapter.CurrentDisplayMode.Width / 320, Engine.Instance.GraphicsDevice.Adapter.CurrentDisplayMode.Height / 180);
       }
     }
 
@@ -257,7 +223,10 @@ namespace Celeste
       Settings.Instance.ApplyLanguage();
       if (!(Engine.Scene is Overworld))
         return;
-      (Engine.Scene as Overworld).GetUI<OuiMainMenu>()?.CreateButtons();
+      OuiMainMenu ui = (Engine.Scene as Overworld).GetUI<OuiMainMenu>();
+      if (ui != null)
+        ui.CreateButtons();
     }
   }
 }
+

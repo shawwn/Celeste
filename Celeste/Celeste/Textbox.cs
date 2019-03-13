@@ -18,11 +18,19 @@ namespace Celeste
   public class Textbox : Entity
   {
     private MTexture textbox = GFX.Portraits["textbox/default"];
+    private MTexture textboxOverlay = (MTexture) null;
+    private float ease = 0.0f;
+    private FancyText.Anchors anchor = FancyText.Anchors.Top;
+    private int index = 0;
+    private int shakeSeed = 0;
+    private float timer = 0.0f;
+    private float gradientFade = 0.0f;
     private bool canSkip = true;
     private Sprite portraitSprite = new Sprite((Atlas) null, (string) null);
+    private bool portraitExists = false;
+    private bool portraitIdling = false;
     private float portraitScale = 1.5f;
     private Dictionary<string, SoundSource> talkers = new Dictionary<string, SoundSource>();
-    private MTexture textboxOverlay;
     private const int textboxInnerWidth = 1688;
     private const int textboxInnerHeight = 272;
     private const float portraitPadding = 16f;
@@ -33,29 +41,21 @@ namespace Celeste
     private readonly float maxLineWidth;
     private readonly int linesPerPage;
     private const int stopVoiceCharactersEarly = 4;
-    private float ease;
     private FancyText.Text text;
     private Func<IEnumerator>[] events;
     private Coroutine runRoutine;
     private Coroutine skipRoutine;
     private PixelFont font;
     private float lineHeight;
-    private FancyText.Anchors anchor;
     private FancyText.Portrait portrait;
-    private int index;
     private bool waitingForInput;
     private bool disableInput;
-    private int shakeSeed;
-    private float timer;
-    private float gradientFade;
     private bool isInTrigger;
     private bool easingClose;
     private bool easingOpen;
     public Vector2 RenderOffset;
     private bool autoPressContinue;
     private char lastChar;
-    private bool portraitExists;
-    private bool portraitIdling;
     private Wiggler portraitWiggle;
     private SoundSource activeTalker;
     private SoundSource phonestatic;
@@ -86,9 +86,7 @@ namespace Celeste
     {
       get
       {
-        if (this.portrait == null || this.portrait.Sprite == null)
-          return "";
-        return this.portrait.Sprite;
+        return this.portrait == null || this.portrait.Sprite == null ? "" : this.portrait.Sprite;
       }
     }
 
@@ -96,9 +94,7 @@ namespace Celeste
     {
       get
       {
-        if (this.portrait == null || this.portrait.Sprite == null)
-          return "";
-        return this.portrait.Animation;
+        return this.portrait == null || this.portrait.Sprite == null ? "" : this.portrait.Animation;
       }
     }
 
@@ -139,160 +135,164 @@ namespace Celeste
 
     private IEnumerator RunRoutine()
     {
-      Textbox textbox = this;
       FancyText.Node last = (FancyText.Node) null;
       float delayBuildup = 0.0f;
-      while (textbox.index < textbox.Nodes.Count)
+      while (this.index < this.Nodes.Count)
       {
-        FancyText.Node current = textbox.Nodes[textbox.index];
+        FancyText.Node current = this.Nodes[this.index];
         float delay = 0.0f;
         if (current is FancyText.Anchor)
         {
-          if (Vector2.op_Equality(textbox.RenderOffset, Vector2.get_Zero()))
+          if (this.RenderOffset == Vector2.Zero)
           {
             FancyText.Anchors next = (current as FancyText.Anchor).Position;
-            if ((double) textbox.ease >= 1.0 && next != textbox.anchor)
-              yield return (object) textbox.EaseClose(false);
-            textbox.anchor = next;
+            if ((double) this.ease >= 1.0 && next != this.anchor)
+              yield return (object) this.EaseClose(false);
+            this.anchor = next;
           }
         }
         else if (current is FancyText.Portrait)
         {
           FancyText.Portrait next = current as FancyText.Portrait;
-          textbox.phonestatic.Stop(true);
-          if ((double) textbox.ease >= 1.0 && (textbox.portrait == null || next.Sprite != textbox.portrait.Sprite || next.Side != textbox.portrait.Side))
-            yield return (object) textbox.EaseClose(false);
-          textbox.textbox = GFX.Portraits["textbox/default"];
-          textbox.textboxOverlay = (MTexture) null;
-          textbox.portraitExists = false;
-          textbox.activeTalker = (SoundSource) null;
+          this.phonestatic.Stop(true);
+          if ((double) this.ease >= 1.0 && (this.portrait == null || next.Sprite != this.portrait.Sprite || next.Side != this.portrait.Side))
+            yield return (object) this.EaseClose(false);
+          this.textbox = GFX.Portraits["textbox/default"];
+          this.textboxOverlay = (MTexture) null;
+          this.portraitExists = false;
+          this.activeTalker = (SoundSource) null;
           XmlElement xml = (XmlElement) null;
           if (!string.IsNullOrEmpty(next.Sprite))
           {
             if (GFX.PortraitsSpriteBank.Has(next.SpriteId))
               xml = GFX.PortraitsSpriteBank.SpriteData[next.SpriteId].Sources[0].XML;
-            textbox.portraitExists = xml != null;
+            this.portraitExists = xml != null;
           }
-          if (textbox.portraitExists)
+          if (this.portraitExists)
           {
-            if (textbox.portrait == null || next.Sprite != textbox.portrait.Sprite)
+            if (this.portrait == null || next.Sprite != this.portrait.Sprite)
             {
-              GFX.PortraitsSpriteBank.CreateOn(textbox.portraitSprite, next.SpriteId);
-              textbox.portraitScale = 240f / (float) xml.AttrInt("size", 160);
-              if (!textbox.talkers.ContainsKey(next.SfxEvent))
+              GFX.PortraitsSpriteBank.CreateOn(this.portraitSprite, next.SpriteId);
+              this.portraitScale = 240f / (float) xml.AttrInt("size", 160);
+              if (!this.talkers.ContainsKey(next.SfxEvent))
               {
-                SoundSource soundSource = new SoundSource().Play(next.SfxEvent, (string) null, 0.0f);
-                textbox.talkers.Add(next.SfxEvent, soundSource);
-                textbox.Add((Component) soundSource);
+                SoundSource sfx = new SoundSource().Play(next.SfxEvent, (string) null, 0.0f);
+                this.talkers.Add(next.SfxEvent, sfx);
+                this.Add((Component) sfx);
+                sfx = (SoundSource) null;
               }
             }
-            if (textbox.talkers.ContainsKey(next.SfxEvent))
-              textbox.activeTalker = textbox.talkers[next.SfxEvent];
-            string index = "textbox/" + xml.Attr("textbox", "default");
-            textbox.textbox = GFX.Portraits[index];
-            if (GFX.Portraits.Has(index + "_overlay"))
-              textbox.textboxOverlay = GFX.Portraits[index + "_overlay"];
-            string str = xml.Attr("phonestatic", "");
-            if (!string.IsNullOrEmpty(str))
+            if (this.talkers.ContainsKey(next.SfxEvent))
+              this.activeTalker = this.talkers[next.SfxEvent];
+            string tex = "textbox/" + xml.Attr("textbox", "default");
+            this.textbox = GFX.Portraits[tex];
+            if (GFX.Portraits.Has(tex + "_overlay"))
+              this.textboxOverlay = GFX.Portraits[tex + "_overlay"];
+            tex = (string) null;
+            string stat = xml.Attr("phonestatic", "");
+            if (!string.IsNullOrEmpty(stat))
             {
-              if (str == "ex")
-                textbox.phonestatic.Play("event:/char/dialogue/sfx_support/phone_static_ex", (string) null, 0.0f);
-              else if (str == "mom")
-                textbox.phonestatic.Play("event:/char/dialogue/sfx_support/phone_static_mom", (string) null, 0.0f);
+              if (stat == "ex")
+                this.phonestatic.Play("event:/char/dialogue/sfx_support/phone_static_ex", (string) null, 0.0f);
+              else if (stat == "mom")
+                this.phonestatic.Play("event:/char/dialogue/sfx_support/phone_static_mom", (string) null, 0.0f);
             }
-            textbox.canSkip = false;
-            FancyText.Portrait portrait = textbox.portrait;
-            textbox.portrait = next;
+            stat = (string) null;
+            this.canSkip = false;
+            FancyText.Portrait was = this.portrait;
+            this.portrait = next;
             if (next.Pop)
-              textbox.portraitWiggle.Start();
-            if (portrait == null || portrait.Sprite != next.Sprite || portrait.Animation != next.Animation)
+              this.portraitWiggle.Start();
+            if (was == null || was.Sprite != next.Sprite || was.Animation != next.Animation)
             {
-              if (textbox.portraitSprite.Has(next.BeginAnimation))
+              if (this.portraitSprite.Has(next.BeginAnimation))
               {
-                textbox.portraitSprite.Play(next.BeginAnimation, true, false);
-                yield return (object) textbox.EaseOpen();
-                while (textbox.portraitSprite.CurrentAnimationID == next.BeginAnimation && textbox.portraitSprite.Animating)
+                this.portraitSprite.Play(next.BeginAnimation, true, false);
+                yield return (object) this.EaseOpen();
+                while (this.portraitSprite.CurrentAnimationID == next.BeginAnimation && this.portraitSprite.Animating)
                   yield return (object) null;
               }
-              if (textbox.portraitSprite.Has(next.IdleAnimation))
+              if (this.portraitSprite.Has(next.IdleAnimation))
               {
-                textbox.portraitIdling = true;
-                textbox.portraitSprite.Play(next.IdleAnimation, true, false);
+                this.portraitIdling = true;
+                this.portraitSprite.Play(next.IdleAnimation, true, false);
               }
             }
-            yield return (object) textbox.EaseOpen();
-            textbox.canSkip = true;
+            yield return (object) this.EaseOpen();
+            was = (FancyText.Portrait) null;
+            this.canSkip = true;
           }
           else
           {
-            textbox.portrait = (FancyText.Portrait) null;
-            yield return (object) textbox.EaseOpen();
+            this.portrait = (FancyText.Portrait) null;
+            yield return (object) this.EaseOpen();
           }
           next = (FancyText.Portrait) null;
+          xml = (XmlElement) null;
         }
         else if (current is FancyText.NewPage)
         {
-          textbox.PlayIdleAnimation();
-          if ((double) textbox.ease >= 1.0)
+          this.PlayIdleAnimation();
+          if ((double) this.ease >= 1.0)
           {
-            textbox.waitingForInput = true;
+            this.waitingForInput = true;
             yield return (object) 0.1f;
-            while (!textbox.ContinuePressed())
+            while (!this.ContinuePressed())
               yield return (object) null;
-            textbox.waitingForInput = false;
+            this.waitingForInput = false;
           }
-          textbox.Start = textbox.index + 1;
-          textbox.Page++;
+          this.Start = this.index + 1;
+          ++this.Page;
         }
         else if (current is FancyText.Wait)
         {
-          textbox.PlayIdleAnimation();
+          this.PlayIdleAnimation();
           delay = (current as FancyText.Wait).Duration;
         }
         else if (current is FancyText.Trigger)
         {
-          textbox.isInTrigger = true;
-          textbox.PlayIdleAnimation();
+          this.isInTrigger = true;
+          this.PlayIdleAnimation();
           FancyText.Trigger trigger = current as FancyText.Trigger;
           if (!trigger.Silent)
-            yield return (object) textbox.EaseClose(false);
-          int index = trigger.Index;
-          if (textbox.events != null && index >= 0 && index < textbox.events.Length)
-            yield return (object) textbox.events[index]();
-          textbox.isInTrigger = false;
+            yield return (object) this.EaseClose(false);
+          int triggerIndex = trigger.Index;
+          if (this.events != null && triggerIndex >= 0 && triggerIndex < this.events.Length)
+            yield return (object) this.events[triggerIndex]();
+          this.isInTrigger = false;
           trigger = (FancyText.Trigger) null;
         }
         else if (current is FancyText.Char)
         {
           FancyText.Char ch = current as FancyText.Char;
-          textbox.lastChar = (char) ch.Character;
-          if ((double) textbox.ease < 1.0)
-            yield return (object) textbox.EaseOpen();
-          bool flag = false;
-          if (textbox.index - 5 > textbox.Start)
+          this.lastChar = (char) ch.Character;
+          if ((double) this.ease < 1.0)
+            yield return (object) this.EaseOpen();
+          bool idling = false;
+          if (this.index - 5 > this.Start)
           {
-            for (int index = textbox.index; index < Math.Min(textbox.index + 4, textbox.Nodes.Count); ++index)
+            for (int i = this.index; i < Math.Min(this.index + 4, this.Nodes.Count); ++i)
             {
-              if (textbox.Nodes[index] is FancyText.NewPage)
+              if (this.Nodes[i] is FancyText.NewPage)
               {
-                flag = true;
-                textbox.PlayIdleAnimation();
+                idling = true;
+                this.PlayIdleAnimation();
               }
             }
           }
-          if (!flag && !ch.IsPunctuation)
-            textbox.PlayTalkAnimation();
+          if (!idling && !ch.IsPunctuation)
+            this.PlayTalkAnimation();
           if (last != null && last is FancyText.NewPage)
           {
-            --textbox.index;
+            --this.index;
             yield return (object) 0.2f;
-            ++textbox.index;
+            ++this.index;
           }
           delay = ch.Delay + delayBuildup;
           ch = (FancyText.Char) null;
         }
         last = current;
-        ++textbox.index;
+        ++this.index;
         if ((double) delay < 0.0160000007599592)
         {
           delayBuildup += delay;
@@ -301,28 +301,28 @@ namespace Celeste
         {
           delayBuildup = 0.0f;
           if ((double) delay > 0.5)
-            textbox.PlayIdleAnimation();
+            this.PlayIdleAnimation();
           yield return (object) delay;
         }
         current = (FancyText.Node) null;
       }
-      textbox.PlayIdleAnimation();
-      if ((double) textbox.ease > 0.0)
+      this.PlayIdleAnimation();
+      if ((double) this.ease > 0.0)
       {
-        textbox.waitingForInput = true;
-        while (!textbox.ContinuePressed())
+        this.waitingForInput = true;
+        while (!this.ContinuePressed())
           yield return (object) null;
-        textbox.waitingForInput = false;
-        textbox.Start = textbox.Nodes.Count;
-        yield return (object) textbox.EaseClose(true);
+        this.waitingForInput = false;
+        this.Start = this.Nodes.Count;
+        yield return (object) this.EaseClose(true);
       }
-      textbox.Close();
+      this.Close();
     }
 
     private void PlayIdleAnimation()
     {
       this.StopTalker();
-      if (this.portraitIdling || this.portraitSprite == null || (this.portrait == null || !this.portraitSprite.Has(this.portrait.IdleAnimation)))
+      if (this.portraitIdling || this.portraitSprite == null || this.portrait == null || !this.portraitSprite.Has(this.portrait.IdleAnimation))
         return;
       this.portraitSprite.Play(this.portrait.IdleAnimation, false, false);
       this.portraitIdling = true;
@@ -339,7 +339,7 @@ namespace Celeste
     private void PlayTalkAnimation()
     {
       this.StartTalker();
-      if (!this.portraitIdling || this.portraitSprite == null || (this.portrait == null || !this.portraitSprite.Has(this.portrait.TalkAnimation)))
+      if (!this.portraitIdling || this.portraitSprite == null || this.portrait == null || !this.portraitSprite.Has(this.portrait.TalkAnimation))
         return;
       this.portraitSprite.Play(this.portrait.TalkAnimation, false, false);
       this.portraitIdling = false;
@@ -355,73 +355,49 @@ namespace Celeste
 
     private IEnumerator EaseOpen()
     {
-      Textbox textbox1 = this;
-      if ((double) textbox1.ease < 1.0)
+      if ((double) this.ease < 1.0)
       {
-        textbox1.easingOpen = true;
-        if (textbox1.portrait != null && textbox1.portrait.Sprite.IndexOf("madeline", StringComparison.InvariantCultureIgnoreCase) >= 0)
+        this.easingOpen = true;
+        if (this.portrait != null && this.portrait.Sprite.IndexOf("madeline", StringComparison.InvariantCultureIgnoreCase) >= 0)
           Audio.Play("event:/ui/game/textbox_madeline_in");
         else
           Audio.Play("event:/ui/game/textbox_other_in");
-        while (true)
+        while ((double) (this.ease += (float) ((this.runRoutine.UseRawDeltaTime ? (double) Engine.RawDeltaTime : (double) Engine.DeltaTime) / 0.400000005960464)) < 1.0)
         {
-          Textbox textbox2 = textbox1;
-          double ease = (double) textbox1.ease;
-          double num1 = (textbox1.runRoutine.UseRawDeltaTime ? (double) Engine.RawDeltaTime : (double) Engine.DeltaTime) / 0.400000005960464;
-          double num2;
-          float num3 = (float) (num2 = ease + num1);
-          textbox2.ease = (float) num2;
-          if ((double) num3 < 1.0)
-          {
-            textbox1.gradientFade = Math.Max(textbox1.gradientFade, textbox1.ease);
-            yield return (object) null;
-          }
-          else
-            break;
+          this.gradientFade = Math.Max(this.gradientFade, this.ease);
+          yield return (object) null;
         }
-        textbox1.ease = textbox1.gradientFade = 1f;
-        textbox1.easingOpen = false;
+        this.ease = this.gradientFade = 1f;
+        this.easingOpen = false;
       }
     }
 
     private IEnumerator EaseClose(bool final)
     {
-      Textbox textbox1 = this;
-      textbox1.easingClose = true;
-      if (textbox1.portrait != null && textbox1.portrait.Sprite.IndexOf("madeline", StringComparison.InvariantCultureIgnoreCase) >= 0)
+      this.easingClose = true;
+      if (this.portrait != null && this.portrait.Sprite.IndexOf("madeline", StringComparison.InvariantCultureIgnoreCase) >= 0)
         Audio.Play("event:/ui/game/textbox_madeline_out");
       else
         Audio.Play("event:/ui/game/textbox_other_out");
-      while (true)
+      while ((double) (this.ease -= (float) ((this.runRoutine.UseRawDeltaTime ? (double) Engine.RawDeltaTime : (double) Engine.DeltaTime) / 0.400000005960464)) > 0.0)
       {
-        Textbox textbox2 = textbox1;
-        double ease = (double) textbox1.ease;
-        double num1 = (textbox1.runRoutine.UseRawDeltaTime ? (double) Engine.RawDeltaTime : (double) Engine.DeltaTime) / 0.400000005960464;
-        double num2;
-        float num3 = (float) (num2 = ease - num1);
-        textbox2.ease = (float) num2;
-        if ((double) num3 > 0.0)
-        {
-          if (final)
-            textbox1.gradientFade = textbox1.ease;
-          yield return (object) null;
-        }
-        else
-          break;
+        if (final)
+          this.gradientFade = this.ease;
+        yield return (object) null;
       }
-      textbox1.ease = 0.0f;
-      textbox1.easingClose = false;
+      this.ease = 0.0f;
+      this.easingClose = false;
     }
 
     private IEnumerator SkipDialog()
     {
       while (true)
       {
-        if (!this.waitingForInput && this.canSkip && (!this.easingOpen && !this.easingClose) && this.ContinuePressed())
+        if (!this.waitingForInput && (this.canSkip && !this.easingOpen) && !this.easingClose && this.ContinuePressed())
         {
           this.StopTalker();
           this.disableInput = true;
-          while (!this.waitingForInput && this.canSkip && (!this.easingOpen && !this.easingClose) && (!this.isInTrigger && !this.runRoutine.Finished))
+          while (!this.waitingForInput && this.canSkip && (!this.easingOpen && !this.easingClose) && !this.isInTrigger && !this.runRoutine.Finished)
             this.runRoutine.Update();
         }
         yield return (object) null;
@@ -438,9 +414,7 @@ namespace Celeste
       this.Update();
       while (this.Opened && (double) this.ease < 1.0)
         this.Update();
-      if (this.Page == page)
-        return this.Opened;
-      return false;
+      return this.Page == page && this.Opened;
     }
 
     public void Close()
@@ -453,11 +427,7 @@ namespace Celeste
 
     private bool ContinuePressed()
     {
-      if (this.autoPressContinue)
-        return true;
-      if (Input.MenuConfirm.Pressed || Input.MenuCancel.Pressed)
-        return !this.disableInput;
-      return false;
+      return this.autoPressContinue || (Input.MenuConfirm.Pressed || Input.MenuCancel.Pressed) && !this.disableInput;
     }
 
     public override void Update()
@@ -491,56 +461,46 @@ namespace Celeste
       Level scene = this.Scene as Level;
       if (scene != null && (scene.FrozenOrPaused || scene.RetryPlayerCorpse != null || scene.SkippingCutscene))
         return;
-      float alpha = Ease.CubeInOut(this.ease);
-      if ((double) alpha < 0.0500000007450581)
+      float num1 = Ease.CubeInOut(this.ease);
+      if ((double) num1 < 0.0500000007450581)
         return;
-      float num1 = 116f;
-      Vector2 vector2_1 = Vector2.op_Addition(new Vector2(num1, num1 / 2f), this.RenderOffset);
-      if (Vector2.op_Equality(this.RenderOffset, Vector2.get_Zero()))
+      float x = 116f;
+      Vector2 vector2_1 = new Vector2(x, x / 2f) + this.RenderOffset;
+      if (this.RenderOffset == Vector2.Zero)
       {
         if (this.anchor == FancyText.Anchors.Bottom)
-          ((Vector2) ref vector2_1).\u002Ector(num1, (float) (1080.0 - (double) num1 / 2.0 - 272.0));
+          vector2_1 = new Vector2(x, (float) (1080.0 - (double) x / 2.0 - 272.0));
         else if (this.anchor == FancyText.Anchors.Middle)
-          ((Vector2) ref vector2_1).\u002Ector(num1, 404f);
-        ref __Null local = ref vector2_1.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + (float) (int) (136.0 * (1.0 - (double) alpha));
+          vector2_1 = new Vector2(x, 404f);
+        vector2_1.Y += (float) (int) (136.0 * (1.0 - (double) num1));
       }
-      this.textbox.DrawCentered(Vector2.op_Addition(vector2_1, Vector2.op_Division(new Vector2(1688f, 272f * alpha), 2f)), Color.get_White(), new Vector2(1f, alpha));
+      this.textbox.DrawCentered(vector2_1 + new Vector2(1688f, 272f * num1) / 2f, Color.White, new Vector2(1f, num1));
       if (this.waitingForInput)
       {
         float num2 = this.portrait == null || this.PortraitSide(this.portrait) < 0 ? 1688f : 1432f;
-        Vector2 position = Vector2.op_Addition(new Vector2((float) vector2_1.X + num2, (float) (vector2_1.Y + 272.0)), new Vector2(-48f, (float) (((double) this.timer % 1.0 < 0.25 ? 6 : 0) - 40)));
+        Vector2 position = new Vector2(vector2_1.X + num2, vector2_1.Y + 272f) + new Vector2(-48f, (float) (((double) this.timer % 1.0 < 0.25 ? 6 : 0) - 40));
         GFX.Gui["textboxbutton"].DrawCentered(position);
       }
       if (this.portraitExists)
       {
         if (this.PortraitSide(this.portrait) > 0)
         {
-          this.portraitSprite.Position = new Vector2((float) (vector2_1.X + 1688.0 - 240.0 - 16.0), (float) vector2_1.Y);
-          this.portraitSprite.Scale.X = (__Null) -(double) this.portraitScale;
+          this.portraitSprite.Position = new Vector2((float) ((double) vector2_1.X + 1688.0 - 240.0 - 16.0), vector2_1.Y);
+          this.portraitSprite.Scale.X = -this.portraitScale;
         }
         else
         {
-          this.portraitSprite.Position = new Vector2((float) (vector2_1.X + 16.0), (float) vector2_1.Y);
-          this.portraitSprite.Scale.X = (__Null) (double) this.portraitScale;
+          this.portraitSprite.Position = new Vector2(vector2_1.X + 16f, vector2_1.Y);
+          this.portraitSprite.Scale.X = this.portraitScale;
         }
-        ref __Null local = ref this.portraitSprite.Scale.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * (this.portrait.Flipped ? -1f : 1f);
-        this.portraitSprite.Scale.Y = (__Null) ((double) this.portraitScale * ((272.0 * (double) alpha - 32.0) / 240.0) * (this.portrait.UpsideDown ? -1.0 : 1.0));
+        this.portraitSprite.Scale.X *= this.portrait.Flipped ? -1f : 1f;
+        this.portraitSprite.Scale.Y = (float) ((double) this.portraitScale * ((272.0 * (double) num1 - 32.0) / 240.0) * (this.portrait.UpsideDown ? -1.0 : 1.0));
         Sprite portraitSprite1 = this.portraitSprite;
-        portraitSprite1.Scale = Vector2.op_Multiply(portraitSprite1.Scale, (float) (0.899999976158142 + (double) this.portraitWiggle.Value * 0.100000001490116));
+        portraitSprite1.Scale = portraitSprite1.Scale * (float) (0.899999976158142 + (double) this.portraitWiggle.Value * 0.100000001490116);
         Sprite portraitSprite2 = this.portraitSprite;
-        portraitSprite2.Position = Vector2.op_Addition(portraitSprite2.Position, new Vector2(120f, (float) (272.0 * (double) alpha * 0.5)));
-        this.portraitSprite.Color = Color.op_Multiply(Color.get_White(), alpha);
-        if ((double) Math.Abs((float) this.portraitSprite.Scale.Y) > 0.0500000007450581)
+        portraitSprite2.Position = portraitSprite2.Position + new Vector2(120f, (float) (272.0 * (double) num1 * 0.5));
+        this.portraitSprite.Color = Color.White * num1;
+        if ((double) Math.Abs(this.portraitSprite.Scale.Y) > 0.0500000007450581)
           this.portraitSprite.Render();
       }
       if (this.textboxOverlay != null)
@@ -548,7 +508,7 @@ namespace Celeste
         int num2 = 1;
         if (this.portrait != null && this.PortraitSide(this.portrait) > 0)
           num2 = -1;
-        this.textboxOverlay.DrawCentered(Vector2.op_Addition(vector2_1, Vector2.op_Division(new Vector2(1688f, 272f * alpha), 2f)), Color.get_White(), new Vector2((float) num2, alpha));
+        this.textboxOverlay.DrawCentered(vector2_1 + new Vector2(1688f, 272f * num1) / 2f, Color.White, new Vector2((float) num2, num1));
       }
       Calc.PushRandom(this.shakeSeed);
       int num3 = 1;
@@ -559,11 +519,10 @@ namespace Celeste
         else if (this.text.Nodes[start] is FancyText.NewPage)
           break;
       }
-      Vector2 vector2_2;
-      ((Vector2) ref vector2_2).\u002Ector(this.innerTextPadding + (this.portrait == null || this.PortraitSide(this.portrait) >= 0 ? 0.0f : 256f), this.innerTextPadding);
-      Vector2 vector2_3 = Vector2.op_Division(new Vector2(this.portrait == null ? this.maxLineWidthNoPortrait : this.maxLineWidth, (float) this.linesPerPage * this.lineHeight * alpha), 2f);
+      Vector2 vector2_2 = new Vector2(this.innerTextPadding + (this.portrait == null || this.PortraitSide(this.portrait) >= 0 ? 0.0f : 256f), this.innerTextPadding);
+      Vector2 vector2_3 = new Vector2(this.portrait == null ? this.maxLineWidthNoPortrait : this.maxLineWidth, (float) this.linesPerPage * this.lineHeight * num1) / 2f;
       float num4 = num3 >= 4 ? 0.75f : 1f;
-      this.text.Draw(Vector2.op_Addition(Vector2.op_Addition(vector2_1, vector2_2), vector2_3), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(new Vector2(1f, alpha), num4), alpha, this.Start, int.MaxValue);
+      this.text.Draw(vector2_1 + vector2_2 + vector2_3, new Vector2(0.5f, 0.5f), new Vector2(1f, num1) * num4, num1, this.Start, int.MaxValue);
       Calc.PopRandom();
     }
 
@@ -595,3 +554,4 @@ namespace Celeste
     }
   }
 }
+

@@ -19,7 +19,7 @@ namespace Celeste
 
     public Trapdoor(EntityData data, Vector2 offset)
     {
-      this.Position = Vector2.op_Addition(data.Position, offset);
+      this.Position = data.Position + offset;
       this.Depth = 8999;
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create("trapdoor")));
       this.sprite.Play("idle", false, false);
@@ -33,7 +33,7 @@ namespace Celeste
     {
       this.Collidable = false;
       this.occluder.Visible = false;
-      if (player.Speed.Y >= 0.0)
+      if ((double) player.Speed.Y >= 0.0)
       {
         Audio.Play("event:/game/03_resort/trapdoor_fromtop", this.Position);
         this.sprite.Play("open", false, false);
@@ -47,14 +47,15 @@ namespace Celeste
 
     private IEnumerator OpenFromBottom()
     {
-      this.sprite.Scale.Y = (__Null) -1.0;
+      this.sprite.Scale.Y = -1f;
       yield return (object) this.sprite.PlayRoutine("open_partial", false);
       yield return (object) 0.1f;
       this.sprite.Rate = -1f;
       yield return (object) this.sprite.PlayRoutine("open_partial", true);
-      this.sprite.Scale.Y = (__Null) 1.0;
+      this.sprite.Scale.Y = 1f;
       this.sprite.Rate = 1f;
       this.sprite.Play("open", true, false);
     }
   }
 }
+

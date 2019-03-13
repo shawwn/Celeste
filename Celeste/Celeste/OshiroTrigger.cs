@@ -25,21 +25,17 @@ namespace Celeste
       if (this.State)
       {
         Level level = this.SceneAs<Level>();
-        Vector2 position;
-        ref Vector2 local = ref position;
-        Rectangle bounds1 = level.Bounds;
-        double num1 = (double) (((Rectangle) ref bounds1).get_Left() - 32);
-        Rectangle bounds2 = level.Bounds;
-        double num2 = (double) (((Rectangle) ref bounds2).get_Top() + level.Bounds.Height / 2);
-        ((Vector2) ref local).\u002Ector((float) num1, (float) num2);
-        this.Scene.Add((Entity) new AngryOshiro(position, false));
+        this.Scene.Add((Entity) new AngryOshiro(new Vector2((float) (level.Bounds.Left - 32), (float) (level.Bounds.Top + level.Bounds.Height / 2)), false));
         this.RemoveSelf();
       }
       else
       {
-        this.Scene.Tracker.GetEntity<AngryOshiro>()?.Leave();
+        AngryOshiro entity = this.Scene.Tracker.GetEntity<AngryOshiro>();
+        if (entity != null)
+          entity.Leave();
         this.RemoveSelf();
       }
     }
   }
 }
+

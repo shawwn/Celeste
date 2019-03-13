@@ -33,7 +33,7 @@ namespace Celeste
     }
 
     public SinkingPlatform(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Width)
+      : this(data.Position + offset, data.Width)
     {
     }
 
@@ -44,17 +44,17 @@ namespace Celeste
       this.textures = new MTexture[mtexture.Width / 8];
       for (int index = 0; index < this.textures.Length; ++index)
         this.textures[index] = mtexture.GetSubtexture(index * 8, 0, 8, 8, (MTexture) null);
-      scene.Add((Entity) new SinkingPlatformLine(Vector2.op_Addition(this.Position, new Vector2(this.Width / 2f, this.Height / 2f))));
+      scene.Add((Entity) new SinkingPlatformLine(this.Position + new Vector2(this.Width / 2f, this.Height / 2f)));
     }
 
     public override void Render()
     {
       Vector2 vector2 = this.shaker.Value;
-      this.textures[0].Draw(Vector2.op_Addition(this.Position, vector2));
+      this.textures[0].Draw(this.Position + vector2);
       for (int index = 8; (double) index < (double) this.Width - 8.0; index += 8)
-        this.textures[1].Draw(Vector2.op_Addition(Vector2.op_Addition(this.Position, vector2), new Vector2((float) index, 0.0f)));
-      this.textures[3].Draw(Vector2.op_Addition(Vector2.op_Addition(this.Position, vector2), new Vector2(this.Width - 8f, 0.0f)));
-      this.textures[2].Draw(Vector2.op_Addition(Vector2.op_Addition(this.Position, vector2), new Vector2((float) ((double) this.Width / 2.0 - 4.0), 0.0f)));
+        this.textures[1].Draw(this.Position + vector2 + new Vector2((float) index, 0.0f));
+      this.textures[3].Draw(this.Position + vector2 + new Vector2(this.Width - 8f, 0.0f));
+      this.textures[2].Draw(this.Position + vector2 + new Vector2((float) ((double) this.Width / 2.0 - 4.0), 0.0f));
     }
 
     public override void Update()
@@ -65,7 +65,7 @@ namespace Celeste
       {
         if ((double) this.riseTimer <= 0.0)
         {
-          if (this.ExactPosition.Y <= (double) this.startY)
+          if ((double) this.ExactPosition.Y <= (double) this.startY)
             Audio.Play("event:/game/03_resort/platform_vert_start", this.Position);
           this.shaker.ShakeFor(0.15f, false);
         }
@@ -90,19 +90,21 @@ namespace Celeste
       }
       else
       {
-        if ((double) this.speed >= 0.0 || this.ExactPosition.Y <= (double) this.startY)
+        if ((double) this.speed >= 0.0 || (double) this.ExactPosition.Y <= (double) this.startY)
           return;
         if (!this.upSfx.Playing)
           this.upSfx.Play("event:/game/03_resort/platform_vert_up_loop", (string) null, 0.0f);
         if (this.downSfx.Playing)
           this.downSfx.Stop(true);
         this.MoveTowardsY(this.startY, -this.speed * Engine.DeltaTime);
-        if (this.ExactPosition.Y > (double) this.startY)
-          return;
-        this.upSfx.Stop(true);
-        Audio.Play("event:/game/03_resort/platform_vert_end", this.Position);
-        this.shaker.ShakeFor(0.1f, false);
+        if ((double) this.ExactPosition.Y <= (double) this.startY)
+        {
+          this.upSfx.Stop(true);
+          Audio.Play("event:/game/03_resort/platform_vert_end", this.Position);
+          this.shaker.ShakeFor(0.1f, false);
+        }
       }
     }
   }
 }
+

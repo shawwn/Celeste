@@ -16,18 +16,21 @@ namespace Celeste
   public class AreaData
   {
     public int CassetteCheckpointIndex = -1;
-    public Color TitleBaseColor = Color.get_White();
-    public Color TitleAccentColor = Color.get_Gray();
-    public Color TitleTextColor = Color.get_White();
+    public Color TitleBaseColor = Color.White;
+    public Color TitleAccentColor = Color.Gray;
+    public Color TitleTextColor = Color.White;
     public float DarknessAlpha = 0.05f;
+    public float BloomBase = 0.0f;
     public float BloomStrength = 1f;
     public string Jumpthru = "wood";
     public string Spike = "default";
     public string CrumbleBlock = "default";
     public string WoodPlatform = "default";
-    public Color CassseteNoteColor = Color.get_White();
+    public Color CassseteNoteColor = Color.White;
     public Color CobwebColor = Calc.HexToColor("696a6a");
     public string CassetteSong = "event:/music/cassette/01_forsaken_city";
+    public Session.CoreModes CoreMode = Session.CoreModes.None;
+    public int MountainState = 0;
     public static List<AreaData> Areas;
     public string Name;
     public string Icon;
@@ -39,10 +42,7 @@ namespace Celeste
     public bool Dreaming;
     public string ColorGrade;
     public Action<Scene, bool, Action> Wipe;
-    public float BloomBase;
     public Action<Level> OnLevelBegin;
-    public Session.CoreModes CoreMode;
-    public int MountainState;
     public MountainCamera MountainIdle;
     public MountainCamera MountainSelect;
     public MountainCamera MountainZoom;
@@ -83,7 +83,7 @@ namespace Celeste
       };
       areaData1.TitleBaseColor = Calc.HexToColor("383838");
       areaData1.TitleAccentColor = Calc.HexToColor("50AFAE");
-      areaData1.TitleTextColor = Color.get_White();
+      areaData1.TitleTextColor = Color.White;
       areaData1.IntroType = Player.IntroTypes.WalkInRight;
       areaData1.Dreaming = false;
       areaData1.ColorGrade = (string) null;
@@ -139,7 +139,7 @@ namespace Celeste
       };
       areaData3.TitleBaseColor = Calc.HexToColor("6c7c81");
       areaData3.TitleAccentColor = Calc.HexToColor("2f344b");
-      areaData3.TitleTextColor = Color.get_White();
+      areaData3.TitleTextColor = Color.White;
       areaData3.IntroType = Player.IntroTypes.Jump;
       areaData3.Dreaming = false;
       areaData3.ColorGrade = (string) null;
@@ -197,7 +197,7 @@ namespace Celeste
       };
       areaData5.TitleBaseColor = Calc.HexToColor("247F35");
       areaData5.TitleAccentColor = Calc.HexToColor("E4EF69");
-      areaData5.TitleTextColor = Color.get_White();
+      areaData5.TitleTextColor = Color.White;
       areaData5.IntroType = Player.IntroTypes.WakeUp;
       areaData5.Dreaming = true;
       areaData5.ColorGrade = "oldsite";
@@ -267,7 +267,7 @@ namespace Celeste
       areaData8.Mode = modePropertiesArray1;
       areaData7.TitleBaseColor = Calc.HexToColor("b93c27");
       areaData7.TitleAccentColor = Calc.HexToColor("ffdd42");
-      areaData7.TitleTextColor = Color.get_White();
+      areaData7.TitleTextColor = Color.White;
       areaData7.IntroType = Player.IntroTypes.WalkInRight;
       areaData7.Dreaming = false;
       areaData7.ColorGrade = (string) null;
@@ -291,7 +291,7 @@ namespace Celeste
       areaData10.CassetteCheckpointIndex = 0;
       areaData10.TitleBaseColor = Calc.HexToColor("FF7F83");
       areaData10.TitleAccentColor = Calc.HexToColor("6D54B7");
-      areaData10.TitleTextColor = Color.get_White();
+      areaData10.TitleTextColor = Color.White;
       areaData10.Mode = new ModeProperties[3]
       {
         new ModeProperties()
@@ -391,7 +391,7 @@ namespace Celeste
       };
       areaData12.TitleBaseColor = Calc.HexToColor("8314bc");
       areaData12.TitleAccentColor = Calc.HexToColor("df72f9");
-      areaData12.TitleTextColor = Color.get_White();
+      areaData12.TitleTextColor = Color.White;
       areaData12.IntroType = Player.IntroTypes.WakeUp;
       areaData12.Dreaming = false;
       areaData12.ColorGrade = (string) null;
@@ -466,7 +466,7 @@ namespace Celeste
       areaData15.Mode = modePropertiesArray2;
       areaData14.TitleBaseColor = Calc.HexToColor("359FE0");
       areaData14.TitleAccentColor = Calc.HexToColor("3C5CBC");
-      areaData14.TitleTextColor = Color.get_White();
+      areaData14.TitleTextColor = Color.White;
       areaData14.IntroType = Player.IntroTypes.None;
       areaData14.Dreaming = false;
       areaData14.ColorGrade = "reflection";
@@ -533,7 +533,7 @@ namespace Celeste
       };
       areaData17.TitleBaseColor = Calc.HexToColor("FFD819");
       areaData17.TitleAccentColor = Calc.HexToColor("197DB7");
-      areaData17.TitleTextColor = Color.get_Black();
+      areaData17.TitleTextColor = Color.Black;
       areaData17.IntroType = Player.IntroTypes.None;
       areaData17.Dreaming = false;
       areaData17.ColorGrade = (string) null;
@@ -571,7 +571,7 @@ namespace Celeste
       };
       areaData19.TitleBaseColor = Calc.HexToColor("383838");
       areaData19.TitleAccentColor = Calc.HexToColor("50AFAE");
-      areaData19.TitleTextColor = Color.get_White();
+      areaData19.TitleTextColor = Color.White;
       areaData19.IntroType = Player.IntroTypes.WalkInLeft;
       areaData19.Dreaming = false;
       areaData19.ColorGrade = (string) null;
@@ -632,7 +632,7 @@ namespace Celeste
       areaData22.Mode = modePropertiesArray3;
       areaData21.TitleBaseColor = Calc.HexToColor("761008");
       areaData21.TitleAccentColor = Calc.HexToColor("E0201D");
-      areaData21.TitleTextColor = Color.get_White();
+      areaData21.TitleTextColor = Color.White;
       areaData21.IntroType = Player.IntroTypes.WalkInRight;
       areaData21.Dreaming = false;
       areaData21.ColorGrade = (string) null;
@@ -762,7 +762,10 @@ namespace Celeste
 
     public static AudioState GetCheckpointAudioState(AreaKey area, string level)
     {
-      return AreaData.GetCheckpoint(area, level)?.AudioState;
+      CheckpointData checkpoint = AreaData.GetCheckpoint(area, level);
+      if (checkpoint != null)
+        return checkpoint.AudioState;
+      return (AudioState) null;
     }
 
     public static void Unload()
@@ -814,9 +817,8 @@ namespace Celeste
 
     public bool HasMode(AreaMode mode)
     {
-      if ((AreaMode) this.Mode.Length > mode && this.Mode[(int) mode] != null)
-        return this.Mode[(int) mode].Path != null;
-      return false;
+      return (AreaMode) this.Mode.Length > mode && this.Mode[(int) mode] != null && this.Mode[(int) mode].Path != null;
     }
   }
 }
+

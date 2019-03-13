@@ -35,7 +35,7 @@ namespace Celeste
     }
 
     public CoreModeToggle(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Bool(nameof (onlyFire), false), data.Bool(nameof (onlyIce), false), data.Bool(nameof (persistent), false))
+      : this(data.Position + offset, data.Bool(nameof (onlyFire), false), data.Bool(nameof (onlyIce), false), data.Bool(nameof (persistent), false))
     {
     }
 
@@ -86,8 +86,8 @@ namespace Celeste
       if (this.persistent)
         level.Session.CoreMode = level.CoreMode;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      level.Flash(Color.op_Multiply(Color.get_White(), 0.15f), true);
-      Celeste.Celeste.Freeze(0.05f);
+      level.Flash(Color.White * 0.15f, true);
+      Celeste.Freeze(0.05f);
       this.cooldownTimer = 1f;
     }
 
@@ -103,12 +103,9 @@ namespace Celeste
     {
       get
       {
-        if (this.onlyFire && !this.iceMode)
-          return false;
-        if (this.onlyIce)
-          return !this.iceMode;
-        return true;
+        return (!this.onlyFire || this.iceMode) && (!this.onlyIce || !this.iceMode);
       }
     }
   }
 }
+

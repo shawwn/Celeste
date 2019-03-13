@@ -44,24 +44,18 @@ namespace Celeste
     private void ResetPosition()
     {
       Player entity = this.level.Tracker.GetEntity<Player>();
-      if (entity != null)
+      if (entity != null && (double) entity.Right < (double) (this.level.Bounds.Right - 64))
       {
-        double right = (double) entity.Right;
-        Rectangle bounds = this.level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Right() - 64);
-        if (right < num)
-        {
-          this.spawnSfx.Play("event:/game/04_cliffside/snowball_spawn", (string) null, 0.0f);
-          this.Collidable = this.Visible = true;
-          this.resetTimer = 0.0f;
-          this.X = this.level.Camera.Right + 10f;
-          this.atY = this.Y = entity.CenterY;
-          this.sine.Reset();
-          this.sprite.Play("spin", false, false);
-          return;
-        }
+        this.spawnSfx.Play("event:/game/04_cliffside/snowball_spawn", (string) null, 0.0f);
+        this.Collidable = this.Visible = true;
+        this.resetTimer = 0.0f;
+        this.X = this.level.Camera.Right + 10f;
+        this.atY = this.Y = entity.CenterY;
+        this.sine.Reset();
+        this.sprite.Play("spin", false, false);
       }
-      this.resetTimer = 0.05f;
+      else
+        this.resetTimer = 0.05f;
     }
 
     private void Destroy()
@@ -95,9 +89,8 @@ namespace Celeste
       if ((double) this.X >= (double) this.level.Camera.Left - 60.0)
         return;
       this.resetTimer += Engine.DeltaTime;
-      if ((double) this.resetTimer < 0.800000011920929)
-        return;
-      this.ResetPosition();
+      if ((double) this.resetTimer >= 0.800000011920929)
+        this.ResetPosition();
     }
 
     public override void Render()
@@ -107,3 +100,4 @@ namespace Celeste
     }
   }
 }
+

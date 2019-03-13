@@ -30,30 +30,13 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      CS08_EnterDoor cs08EnterDoor = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        cs08EnterDoor.EndCutscene(level, true);
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      cs08EnterDoor.player.StateMachine.State = 11;
-      cs08EnterDoor.Add((Component) new Coroutine(cs08EnterDoor.player.DummyWalkToExact((int) cs08EnterDoor.targetX, false, 0.7f), true));
-      cs08EnterDoor.Add((Component) new Coroutine(level.ZoomTo(new Vector2(cs08EnterDoor.targetX - level.Camera.X, 90f), 2f, 2f), true));
-      FadeWipe fadeWipe = new FadeWipe((Scene) level, false, (Action) null);
-      fadeWipe.Duration = 2f;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) fadeWipe.Wait();
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.player.StateMachine.State = 11;
+      this.Add((Component) new Coroutine(this.player.DummyWalkToExact((int) this.targetX, false, 0.7f), true));
+      this.Add((Component) new Coroutine(level.ZoomTo(new Vector2(this.targetX - level.Camera.X, 90f), 2f, 2f), true));
+      FadeWipe wipe = new FadeWipe((Scene) level, false, (Action) null);
+      wipe.Duration = 2f;
+      yield return (object) wipe.Wait();
+      this.EndCutscene(level, true);
     }
 
     public override void OnEnd(Level level)
@@ -66,9 +49,9 @@ namespace Celeste
         Session session = level.Session;
         Level level1 = level;
         Rectangle bounds = level.Bounds;
-        double left = (double) ((Rectangle) ref bounds).get_Left();
+        double left = (double) bounds.Left;
         bounds = level.Bounds;
-        double top = (double) ((Rectangle) ref bounds).get_Top();
+        double top = (double) bounds.Top;
         Vector2 from = new Vector2((float) left, (float) top);
         Vector2? nullable = new Vector2?(level1.GetSpawnPoint(from));
         session.RespawnPoint = nullable;
@@ -78,3 +61,4 @@ namespace Celeste
     }
   }
 }
+

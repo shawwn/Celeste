@@ -41,9 +41,9 @@ namespace Celeste
       this.Collider = (Collider) new Hitbox(20f, 20f, -10f, -10f);
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create("flyFeather")));
-      this.Add((Component) (this.wiggler = Wiggler.Create(1f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) v * 0.200000002980232))), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(1f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.One * (float) (1.0 + (double) v * 0.200000002980232)), false, false)));
       this.Add((Component) (this.bloom = new BloomPoint(0.5f, 20f)));
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 16, 48)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 16, 48)));
       this.Add((Component) (this.sine = new SineWave(0.6f).Randomize()));
       this.Add((Component) (this.outline = new Monocle.Image(GFX.Game["objects/flyFeather/outline"])));
       this.outline.CenterOrigin();
@@ -57,7 +57,7 @@ namespace Celeste
     }
 
     public FlyFeather(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Bool(nameof (shielded), false), data.Bool(nameof (singleUse), false))
+      : this(data.Position + offset, data.Bool(nameof (shielded), false), data.Bool(nameof (singleUse), false))
     {
     }
 
@@ -86,7 +86,7 @@ namespace Celeste
       base.Render();
       if (!this.shielded || !this.sprite.Visible)
         return;
-      Draw.Circle(Vector2.op_Addition(this.Position, this.sprite.Position), (float) (10.0 - (double) this.shieldRadiusWiggle.Value * 2.0), Color.get_White(), 3);
+      Draw.Circle(this.Position + this.sprite.Position, (float) (10.0 - (double) this.shieldRadiusWiggle.Value * 2.0), Color.White, 3);
     }
 
     private void Respawn()
@@ -98,7 +98,7 @@ namespace Celeste
       this.sprite.Visible = true;
       this.wiggler.Start();
       Audio.Play("event:/game/06_reflection/feather_reappear", this.Position);
-      this.level.ParticlesFG.Emit(FlyFeather.P_Respawn, 16, this.Position, Vector2.op_Multiply(Vector2.get_One(), 2f));
+      this.level.ParticlesFG.Emit(FlyFeather.P_Respawn, 16, this.Position, Vector2.One * 2f);
     }
 
     private void UpdateY()
@@ -106,7 +106,7 @@ namespace Celeste
       this.sprite.X = 0.0f;
       this.sprite.Y = this.bloom.Y = this.sine.Value * 2f;
       Sprite sprite = this.sprite;
-      sprite.Position = Vector2.op_Addition(sprite.Position, Vector2.op_Multiply(Vector2.op_Multiply(this.moveWiggleDir, this.moveWiggle.Value), -8f));
+      sprite.Position = sprite.Position + this.moveWiggleDir * this.moveWiggle.Value * -8f;
     }
 
     private void OnPlayer(Player player)
@@ -117,7 +117,7 @@ namespace Celeste
         player.PointBounce(this.Center);
         this.moveWiggle.Start();
         this.shieldRadiusWiggle.Start();
-        this.moveWiggleDir = Vector2.op_Subtraction(this.Center, player.Center).SafeNormalize(Vector2.get_UnitY());
+        this.moveWiggleDir = (this.Center - player.Center).SafeNormalize(Vector2.UnitY);
         Audio.Play("event:/game/06_reflection/feather_bubble_bounce", this.Position);
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
       }
@@ -132,22 +132,24 @@ namespace Celeste
           Audio.Play(this.shielded ? "event:/game/06_reflection/feather_bubble_renew" : "event:/game/06_reflection/feather_renew", this.Position);
         this.Collidable = false;
         this.Add((Component) new Coroutine(this.CollectRoutine(player, speed), true));
-        if (this.singleUse)
-          return;
-        this.outline.Visible = true;
-        this.respawnTimer = 3f;
+        if (!this.singleUse)
+        {
+          this.outline.Visible = true;
+          this.respawnTimer = 3f;
+        }
       }
     }
 
     private IEnumerator CollectRoutine(Player player, Vector2 playerSpeed)
     {
-      FlyFeather flyFeather = this;
-      flyFeather.level.Shake(0.3f);
-      flyFeather.sprite.Visible = false;
+      this.level.Shake(0.3f);
+      this.sprite.Visible = false;
       yield return (object) 0.05f;
-      float direction = !Vector2.op_Inequality(playerSpeed, Vector2.get_Zero()) ? Vector2.op_Subtraction(flyFeather.Position, player.Center).Angle() : playerSpeed.Angle();
-      flyFeather.level.ParticlesFG.Emit(FlyFeather.P_Collect, 10, flyFeather.Position, Vector2.op_Multiply(Vector2.get_One(), 6f));
-      SlashFx.Burst(flyFeather.Position, direction);
+      float angle = 0.0f;
+      angle = !(playerSpeed != Vector2.Zero) ? (this.Position - player.Center).Angle() : playerSpeed.Angle();
+      this.level.ParticlesFG.Emit(FlyFeather.P_Collect, 10, this.Position, Vector2.One * 6f);
+      SlashFx.Burst(this.Position, angle);
     }
   }
 }
+

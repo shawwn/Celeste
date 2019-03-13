@@ -13,8 +13,9 @@ namespace Celeste
 {
   public class PlayerDeadBody : Entity
   {
-    private Vector2 bounce = Vector2.get_Zero();
+    private Vector2 bounce = Vector2.Zero;
     private float scale = 1f;
+    private bool finished = false;
     public Action DeathAction;
     public float ActionDelay;
     private Color initialHairColor;
@@ -24,7 +25,6 @@ namespace Celeste
     private VertexLight light;
     private DeathEffect deathEffect;
     private Facings facing;
-    private bool finished;
 
     public PlayerDeadBody(Player player, Vector2 direction)
     {
@@ -35,7 +35,7 @@ namespace Celeste
       this.Add((Component) (this.hair = player.Hair));
       this.Add((Component) (this.sprite = player.Sprite));
       this.Add((Component) (this.light = player.Light));
-      this.sprite.Color = Color.get_White();
+      this.sprite.Color = Color.White;
       this.initialHairColor = this.hair.Color;
       this.bounce = direction;
       this.Add((Component) new Coroutine(this.DeathRoutine(), true));
@@ -44,17 +44,17 @@ namespace Celeste
     public override void Awake(Scene scene)
     {
       base.Awake(scene);
-      if (!Vector2.op_Inequality(this.bounce, Vector2.get_Zero()))
+      if (!(this.bounce != Vector2.Zero))
         return;
-      if ((double) Math.Abs((float) this.bounce.X) > (double) Math.Abs((float) this.bounce.Y))
+      if ((double) Math.Abs(this.bounce.X) > (double) Math.Abs(this.bounce.Y))
       {
         this.sprite.Play("deadside", false, false);
-        this.facing = (Facings) -Math.Sign((float) this.bounce.X);
+        this.facing = (Facings) -Math.Sign(this.bounce.X);
       }
       else
       {
         this.bounce = Calc.AngleToVector(Calc.AngleApproach(this.bounce.Angle(), new Vector2((float) -(int) this.player.Facing, 0.0f).Angle(), 0.5f), 1f);
-        if (this.bounce.Y < 0.0)
+        if ((double) this.bounce.Y < 0.0)
           this.sprite.Play("deadup", false, false);
         else
           this.sprite.Play("deaddown", false, false);
@@ -63,42 +63,39 @@ namespace Celeste
 
     private IEnumerator DeathRoutine()
     {
-      PlayerDeadBody playerDeadBody1 = this;
-      Level level = playerDeadBody1.SceneAs<Level>();
-      if (Vector2.op_Inequality(playerDeadBody1.bounce, Vector2.get_Zero()))
+      Level level = this.SceneAs<Level>();
+      if (this.bounce != Vector2.Zero)
       {
-        PlayerDeadBody playerDeadBody = playerDeadBody1;
-        Audio.Play("event:/char/madeline/predeath", playerDeadBody1.Position);
-        playerDeadBody1.scale = 1.5f;
-        Celeste.Celeste.Freeze(0.05f);
+        Audio.Play("event:/char/madeline/predeath", this.Position);
+        this.scale = 1.5f;
+        Celeste.Freeze(0.05f);
         yield return (object) null;
-        Vector2 from = playerDeadBody1.Position;
-        Vector2 to = Vector2.op_Addition(from, Vector2.op_Multiply(playerDeadBody1.bounce, 24f));
+        Vector2 from = this.Position;
+        Vector2 to = from + this.bounce * 24f;
         Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeOut, 0.5f, true);
-        playerDeadBody1.Add((Component) tween);
+        this.Add((Component) tween);
         tween.OnUpdate = (Action<Tween>) (t =>
         {
-          playerDeadBody.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), t.Eased));
-          playerDeadBody.scale = (float) (1.5 - (double) t.Eased * 0.5);
-          playerDeadBody.sprite.Rotation = (float) (Math.Floor((double) t.Eased * 4.0) * 6.28318548202515);
+          this.Position = from + (to - from) * t.Eased;
+          this.scale = (float) (1.5 - (double) t.Eased * 0.5);
+          this.sprite.Rotation = (float) (Math.Floor((double) t.Eased * 4.0) * 6.28318548202515);
         });
         yield return (object) (float) ((double) tween.Duration * 0.75);
         tween.Stop();
         tween = (Tween) null;
       }
-      playerDeadBody1.Position = Vector2.op_Addition(playerDeadBody1.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -5f));
-      level.Displacement.AddBurst(playerDeadBody1.Position, 0.3f, 0.0f, 80f, 1f, (Ease.Easer) null, (Ease.Easer) null);
+      this.Position = this.Position + Vector2.UnitY * -5f;
+      level.Displacement.AddBurst(this.Position, 0.3f, 0.0f, 80f, 1f, (Ease.Easer) null, (Ease.Easer) null);
       level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Long);
-      Audio.Play("event:/char/madeline/death", playerDeadBody1.Position);
-      playerDeadBody1.deathEffect = new DeathEffect(playerDeadBody1.initialHairColor, new Vector2?(Vector2.op_Subtraction(playerDeadBody1.Center, playerDeadBody1.Position)));
-      // ISSUE: reference to a compiler-generated method
-      playerDeadBody1.deathEffect.OnUpdate = new Action<float>(playerDeadBody1.\u003CDeathRoutine\u003Eb__14_0);
-      playerDeadBody1.Add((Component) playerDeadBody1.deathEffect);
-      yield return (object) (float) ((double) playerDeadBody1.deathEffect.Duration * 0.649999976158142);
-      if ((double) playerDeadBody1.ActionDelay > 0.0)
-        yield return (object) playerDeadBody1.ActionDelay;
-      playerDeadBody1.End();
+      Audio.Play("event:/char/madeline/death", this.Position);
+      this.deathEffect = new DeathEffect(this.initialHairColor, new Vector2?(this.Center - this.Position));
+      this.deathEffect.OnUpdate = (Action<float>) (f => this.light.Alpha = 1f - f);
+      this.Add((Component) this.deathEffect);
+      yield return (object) (float) ((double) this.deathEffect.Duration * 0.649999976158142);
+      if ((double) this.ActionDelay > 0.0)
+        yield return (object) this.ActionDelay;
+      this.End();
     }
 
     private void End()
@@ -117,15 +114,15 @@ namespace Celeste
       base.Update();
       if (Input.MenuConfirm.Pressed && !this.finished)
         this.End();
-      this.hair.Color = this.sprite.CurrentAnimationFrame == 0 ? Color.get_White() : this.initialHairColor;
+      this.hair.Color = this.sprite.CurrentAnimationFrame == 0 ? Color.White : this.initialHairColor;
     }
 
     public override void Render()
     {
       if (this.deathEffect == null)
       {
-        this.sprite.Scale.X = (__Null) ((double) this.facing * (double) this.scale);
-        this.sprite.Scale.Y = (__Null) (double) this.scale;
+        this.sprite.Scale.X = (float) this.facing * this.scale;
+        this.sprite.Scale.Y = this.scale;
         this.hair.Facing = this.facing;
         base.Render();
       }
@@ -134,3 +131,4 @@ namespace Celeste
     }
   }
 }
+

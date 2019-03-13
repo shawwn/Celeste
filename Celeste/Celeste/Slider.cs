@@ -29,24 +29,24 @@ namespace Celeste
       switch (surface)
       {
         case Slider.Surfaces.Ceiling:
-          this.dir = Vector2.op_UnaryNegation(Vector2.get_UnitX());
-          this.surface = Vector2.op_UnaryNegation(Vector2.get_UnitY());
+          this.dir = -Vector2.UnitX;
+          this.surface = -Vector2.UnitY;
           break;
         case Slider.Surfaces.LeftWall:
-          this.dir = Vector2.op_UnaryNegation(Vector2.get_UnitY());
-          this.surface = Vector2.op_UnaryNegation(Vector2.get_UnitX());
+          this.dir = -Vector2.UnitY;
+          this.surface = -Vector2.UnitX;
           break;
         case Slider.Surfaces.RightWall:
-          this.dir = Vector2.get_UnitY();
-          this.surface = Vector2.get_UnitX();
+          this.dir = Vector2.UnitY;
+          this.surface = Vector2.UnitX;
           break;
         default:
-          this.dir = Vector2.get_UnitX();
-          this.surface = Vector2.get_UnitY();
+          this.dir = Vector2.UnitX;
+          this.surface = Vector2.UnitY;
           break;
       }
       if (!clockwise)
-        this.dir = Vector2.op_Multiply(this.dir, -1f);
+        this.dir *= -1f;
       this.moving = true;
       this.foundSurfaceAfterCorner = this.gotOutOfWall = true;
       this.speed = 80f;
@@ -54,7 +54,7 @@ namespace Celeste
     }
 
     public Slider(EntityData e, Vector2 offset)
-      : this(Vector2.op_Addition(e.Position, offset), e.Bool("clockwise", true), e.Enum<Slider.Surfaces>(nameof (surface), Slider.Surfaces.Floor))
+      : this(e.Position + offset, e.Bool("clockwise", true), e.Enum<Slider.Surfaces>(nameof (surface), Slider.Surfaces.Floor))
     {
     }
 
@@ -64,7 +64,7 @@ namespace Celeste
       int num = 0;
       while (!this.Scene.CollideCheck<Solid>(this.Position))
       {
-        this.Position = Vector2.op_Addition(this.Position, this.surface);
+        this.Position = this.Position + this.surface;
         if (num >= 100)
           throw new Exception("Couldn't find surface");
       }
@@ -72,7 +72,7 @@ namespace Celeste
 
     private void OnPlayer(Player Player)
     {
-      Player.Die(Vector2.op_Subtraction(Player.Center, this.Center).SafeNormalize(Vector2.op_UnaryNegation(Vector2.get_UnitY())), false, true);
+      Player.Die((Player.Center - this.Center).SafeNormalize(-Vector2.UnitY), false, true);
       this.moving = false;
     }
 
@@ -82,46 +82,48 @@ namespace Celeste
       if (!this.moving)
         return;
       this.speed = Calc.Approach(this.speed, 80f, 400f * Engine.DeltaTime);
-      this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(this.dir, this.speed), Engine.DeltaTime));
+      this.Position = this.Position + this.dir * this.speed * Engine.DeltaTime;
       if (!this.OnSurfaceCheck())
       {
-        if (!this.foundSurfaceAfterCorner)
-          return;
-        this.Position = this.Position.Round();
-        int num = 0;
-        while (!this.OnSurfaceCheck())
+        if (this.foundSurfaceAfterCorner)
         {
-          this.Position = Vector2.op_Subtraction(this.Position, this.dir);
-          ++num;
-          if (num >= 100)
-            throw new Exception("Couldn't get back onto corner!");
+          this.Position = this.Position.Round();
+          int num = 0;
+          while (!this.OnSurfaceCheck())
+          {
+            this.Position = this.Position - this.dir;
+            ++num;
+            if (num >= 100)
+              throw new Exception("Couldn't get back onto corner!");
+          }
+          this.foundSurfaceAfterCorner = false;
+          Vector2 dir = this.dir;
+          this.dir = this.surface;
+          this.surface = -dir;
         }
-        this.foundSurfaceAfterCorner = false;
-        Vector2 dir = this.dir;
-        this.dir = this.surface;
-        this.surface = Vector2.op_UnaryNegation(dir);
       }
       else
       {
         this.foundSurfaceAfterCorner = true;
         if (this.InWallCheck())
         {
-          if (!this.gotOutOfWall)
-            return;
-          this.Position = this.Position.Round();
-          int num = 0;
-          while (this.InWallCheck())
+          if (this.gotOutOfWall)
           {
-            this.Position = Vector2.op_Subtraction(this.Position, this.dir);
-            ++num;
-            if (num >= 100)
-              throw new Exception("Couldn't get out of wall!");
+            this.Position = this.Position.Round();
+            int num = 0;
+            while (this.InWallCheck())
+            {
+              this.Position = this.Position - this.dir;
+              ++num;
+              if (num >= 100)
+                throw new Exception("Couldn't get out of wall!");
+            }
+            this.Position = this.Position + (this.dir - this.surface);
+            this.gotOutOfWall = false;
+            Vector2 surface = this.surface;
+            this.surface = this.dir;
+            this.dir = -surface;
           }
-          this.Position = Vector2.op_Addition(this.Position, Vector2.op_Subtraction(this.dir, this.surface));
-          this.gotOutOfWall = false;
-          Vector2 surface = this.surface;
-          this.surface = this.dir;
-          this.dir = Vector2.op_UnaryNegation(surface);
         }
         else
           this.gotOutOfWall = true;
@@ -130,17 +132,17 @@ namespace Celeste
 
     private bool OnSurfaceCheck()
     {
-      return this.Scene.CollideCheck<Solid>(Vector2.op_Addition(this.Position.Round(), this.surface));
+      return this.Scene.CollideCheck<Solid>(this.Position.Round() + this.surface);
     }
 
     private bool InWallCheck()
     {
-      return this.Scene.CollideCheck<Solid>(Vector2.op_Subtraction(this.Position.Round(), this.surface));
+      return this.Scene.CollideCheck<Solid>(this.Position.Round() - this.surface);
     }
 
     public override void Render()
     {
-      Draw.Circle(this.Position, 12f, Color.get_Red(), 8);
+      Draw.Circle(this.Position, 12f, Color.Red, 8);
     }
 
     public enum Surfaces
@@ -152,3 +154,4 @@ namespace Celeste
     }
   }
 }
+

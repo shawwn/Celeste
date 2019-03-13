@@ -49,17 +49,17 @@ namespace Celeste
     }
 
     public FloatingDebris(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
     public override void Update()
     {
       base.Update();
-      if (Vector2.op_Inequality(this.pushOut, Vector2.get_Zero()))
+      if (this.pushOut != Vector2.Zero)
       {
-        this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(this.pushOut, Engine.DeltaTime));
-        this.pushOut = Calc.Approach(this.pushOut, Vector2.get_Zero(), 64f * Engine.DeltaTime);
+        this.Position = this.Position + this.pushOut * Engine.DeltaTime;
+        this.pushOut = Calc.Approach(this.pushOut, Vector2.Zero, 64f * Engine.DeltaTime);
       }
       else
         this.Position = Calc.Approach(this.Position, this.start, 6f * Engine.DeltaTime);
@@ -69,10 +69,11 @@ namespace Celeste
 
     private void OnPlayer(Player player)
     {
-      Vector2 vector2 = Vector2.op_Subtraction(this.Position, player.Center).SafeNormalize(((Vector2) ref player.Speed).Length() * 0.2f);
-      if ((double) ((Vector2) ref vector2).LengthSquared() <= (double) ((Vector2) ref this.pushOut).LengthSquared())
+      Vector2 vector2 = (this.Position - player.Center).SafeNormalize(player.Speed.Length() * 0.2f);
+      if ((double) vector2.LengthSquared() <= (double) this.pushOut.LengthSquared())
         return;
       this.pushOut = vector2;
     }
   }
 }
+

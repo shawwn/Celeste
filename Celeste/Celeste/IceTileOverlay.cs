@@ -13,8 +13,8 @@ namespace Celeste
 {
   public class IceTileOverlay : Entity
   {
+    private float alpha = 0.0f;
     private List<MTexture> surfaces;
-    private float alpha;
 
     public IceTileOverlay()
     {
@@ -35,7 +35,7 @@ namespace Celeste
     {
       Level scene = this.Scene as Level;
       Camera camera = scene.Camera;
-      Color color = Color.op_Multiply(Color.get_White(), this.alpha);
+      Color color = Color.White * this.alpha;
       int num1 = (int) (Math.Floor(((double) camera.Left - (double) scene.SolidTiles.X) / 8.0) - 1.0);
       int num2 = (int) (Math.Floor(((double) camera.Top - (double) scene.SolidTiles.Y) / 8.0) - 1.0);
       int num3 = (int) (Math.Ceiling(((double) camera.Right - (double) scene.SolidTiles.X) / 8.0) + 1.0);
@@ -46,11 +46,12 @@ namespace Celeste
         {
           if (scene.SolidsData.SafeCheck(x, y) != '0' && scene.SolidsData.SafeCheck(x, y - 1) == '0')
           {
-            Vector2 position = Vector2.op_Addition(scene.SolidTiles.Position, Vector2.op_Multiply(new Vector2((float) x, (float) y), 8f));
-            this.surfaces[(x * 5 + y * 17) % this.surfaces.Count].Draw(position, Vector2.get_Zero(), color);
+            Vector2 position = scene.SolidTiles.Position + new Vector2((float) x, (float) y) * 8f;
+            this.surfaces[(x * 5 + y * 17) % this.surfaces.Count].Draw(position, Vector2.Zero, color);
           }
         }
       }
     }
   }
 }
+

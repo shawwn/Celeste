@@ -28,7 +28,7 @@ namespace Celeste
       if (DreamWipe.circles == null)
         DreamWipe.circles = new DreamWipe.Circle[(this.circleColumns + 2) * (this.circleRows + 2)];
       for (int index = 0; index < DreamWipe.vertexBuffer.Length; ++index)
-        DreamWipe.vertexBuffer[index].Color = (__Null) ScreenWipe.WipeColor;
+        DreamWipe.vertexBuffer[index].Color = ScreenWipe.WipeColor;
       int num1 = 1920 / this.circleColumns;
       int num2 = 1080 / this.circleRows;
       int num3 = 0;
@@ -69,23 +69,22 @@ namespace Celeste
       for (int index1 = 0; index1 < DreamWipe.circles.Length; ++index1)
       {
         DreamWipe.Circle circle = DreamWipe.circles[index1];
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(1f, 0.0f);
+        Vector2 vector2 = new Vector2(1f, 0.0f);
         for (float num2 = 0.0f; (double) num2 < 32.0; ++num2)
         {
           Vector2 vector = Calc.AngleToVector((float) (((double) num2 + 1.0) / 32.0 * 6.28318548202515), 1f);
           VertexPositionColor[] vertexBuffer1 = DreamWipe.vertexBuffer;
           int index2 = num1;
           int num3 = index2 + 1;
-          vertexBuffer1[index2].Position = (__Null) new Vector3(circle.Position, 0.0f);
+          vertexBuffer1[index2].Position = new Vector3(circle.Position, 0.0f);
           VertexPositionColor[] vertexBuffer2 = DreamWipe.vertexBuffer;
           int index3 = num3;
           int num4 = index3 + 1;
-          vertexBuffer2[index3].Position = (__Null) new Vector3(Vector2.op_Addition(circle.Position, Vector2.op_Multiply(vector2, circle.Radius)), 0.0f);
+          vertexBuffer2[index3].Position = new Vector3(circle.Position + vector2 * circle.Radius, 0.0f);
           VertexPositionColor[] vertexBuffer3 = DreamWipe.vertexBuffer;
           int index4 = num4;
           num1 = index4 + 1;
-          vertexBuffer3[index4].Position = (__Null) new Vector3(Vector2.op_Addition(circle.Position, Vector2.op_Multiply(vector, circle.Radius)), 0.0f);
+          vertexBuffer3[index4].Position = new Vector3(circle.Position + vector * circle.Radius, 0.0f);
           vector2 = vector;
         }
       }
@@ -100,3 +99,4 @@ namespace Celeste
     }
   }
 }
+

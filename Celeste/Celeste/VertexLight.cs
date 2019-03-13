@@ -16,7 +16,7 @@ namespace Celeste
     public int Index = -1;
     public bool Dirty = true;
     public float InSolidAlphaMultiplier = 1f;
-    public Color Color = Color.get_White();
+    public Color Color = Color.White;
     public float Alpha = 1f;
     private float startRadius = 16f;
     private float endRadius = 32f;
@@ -34,7 +34,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Addition(this.Entity.Position, this.position);
+        return this.Entity.Position + this.position;
       }
     }
 
@@ -42,11 +42,11 @@ namespace Celeste
     {
       get
       {
-        return (float) this.position.X;
+        return this.position.X;
       }
       set
       {
-        this.Position = new Vector2(value, (float) this.position.Y);
+        this.Position = new Vector2(value, this.position.Y);
       }
     }
 
@@ -54,11 +54,11 @@ namespace Celeste
     {
       get
       {
-        return (float) this.position.Y;
+        return this.position.Y;
       }
       set
       {
-        this.Position = new Vector2((float) this.position.X, value);
+        this.Position = new Vector2(this.position.X, value);
       }
     }
 
@@ -70,7 +70,7 @@ namespace Celeste
       }
       set
       {
-        if (!Vector2.op_Inequality(this.position, value))
+        if (!(this.position != value))
           return;
         this.Dirty = true;
         this.position = value;
@@ -113,7 +113,7 @@ namespace Celeste
     }
 
     public VertexLight(Color color, float alpha, int startFade, int endFade)
-      : this(Vector2.get_Zero(), color, alpha, startFade, endFade)
+      : this(Vector2.Zero, color, alpha, startFade, endFade)
     {
     }
 
@@ -183,18 +183,19 @@ namespace Celeste
       Tween tween = Tween.Create(Tween.TweenMode.Persist, (Ease.Easer) null, time, false);
       tween.OnUpdate = (Action<Tween>) (t =>
       {
-        float num;
+        float amount;
         if ((double) t.Percent >= (double) delay)
         {
           float t1 = MathHelper.Clamp((float) (((double) t.Percent - (double) delay) / (1.0 - (double) delay)), 0.0f, 1f);
-          num = Ease.CubeIn(t1);
+          amount = Ease.CubeIn(t1);
         }
         else
-          num = 0.0f;
-        this.StartRadius = (float) (int) MathHelper.Lerp(startB, startA, num);
-        this.EndRadius = (float) (int) MathHelper.Lerp(endB, endA, num);
+          amount = 0.0f;
+        this.StartRadius = (float) (int) MathHelper.Lerp(startB, startA, amount);
+        this.EndRadius = (float) (int) MathHelper.Lerp(endB, endA, amount);
       });
       return tween;
     }
   }
 }
+

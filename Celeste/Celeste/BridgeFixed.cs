@@ -12,15 +12,14 @@ namespace Celeste
   public class BridgeFixed : Solid
   {
     public BridgeFixed(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset), (float) data.Width, 8f, true)
+      : base(data.Position + offset, (float) data.Width, 8f, true)
     {
       MTexture texture = GFX.Game["scenery/bridge_fixed"];
       for (int index = 0; (double) index < (double) this.Width; index += texture.Width)
       {
-        Rectangle rectangle;
-        ((Rectangle) ref rectangle).\u002Ector(0, 0, texture.Width, texture.Height);
+        Rectangle rectangle = new Rectangle(0, 0, texture.Width, texture.Height);
         if ((double) (index + rectangle.Width) > (double) this.Width)
-          rectangle.Width = (__Null) ((int) this.Width - index);
+          rectangle.Width = (int) this.Width - index;
         Monocle.Image image = new Monocle.Image(texture);
         image.Position = new Vector2((float) index, -8f);
         this.Add((Component) image);
@@ -28,3 +27,4 @@ namespace Celeste
     }
   }
 }
+

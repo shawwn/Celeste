@@ -42,7 +42,8 @@ namespace Celeste
     public override void Render()
     {
       Vector2 position = (this.Scene as Level).Camera.Position;
-      Draw.Rect((float) (position.X - 10.0), (float) (position.Y - 10.0), 340f, 200f, Color.op_Multiply(this.Color, 1f - this.Percent));
+      Draw.Rect(position.X - 10f, position.Y - 10f, 340f, 200f, this.Color * (1f - this.Percent));
     }
   }
 }
+

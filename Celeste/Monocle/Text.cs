@@ -41,7 +41,7 @@ namespace Monocle
       Vector2 position,
       Text.HorizontalAlign horizontalAlign = Text.HorizontalAlign.Center,
       Text.VerticalAlign verticalAlign = Text.VerticalAlign.Center)
-      : this(font, text, position, Color.get_White(), horizontalAlign, verticalAlign)
+      : this(font, text, position, Color.White, horizontalAlign, verticalAlign)
     {
     }
 
@@ -101,7 +101,7 @@ namespace Monocle
     {
       get
       {
-        return (float) this.size.X;
+        return this.size.X;
       }
     }
 
@@ -109,7 +109,7 @@ namespace Monocle
     {
       get
       {
-        return (float) this.size.Y;
+        return this.size.Y;
       }
     }
 
@@ -122,15 +122,15 @@ namespace Monocle
     private void UpdateCentering()
     {
       if (this.horizontalOrigin == Text.HorizontalAlign.Left)
-        this.Origin.X = (__Null) 0.0;
+        this.Origin.X = 0.0f;
       else if (this.horizontalOrigin == Text.HorizontalAlign.Center)
-        this.Origin.X = (__Null) (this.size.X / 2.0);
+        this.Origin.X = this.size.X / 2f;
       else
         this.Origin.X = this.size.X;
       if (this.verticalOrigin == Text.VerticalAlign.Top)
-        this.Origin.Y = (__Null) 0.0;
+        this.Origin.Y = 0.0f;
       else if (this.verticalOrigin == Text.VerticalAlign.Center)
-        this.Origin.Y = (__Null) (this.size.Y / 2.0);
+        this.Origin.Y = this.size.Y / 2f;
       else
         this.Origin.Y = this.size.Y;
       this.Origin = this.Origin.Floor();
@@ -156,3 +156,4 @@ namespace Monocle
     }
   }
 }
+

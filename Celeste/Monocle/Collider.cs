@@ -75,8 +75,8 @@ namespace Monocle
 
     public void CenterOrigin()
     {
-      this.Position.X = (__Null) (-(double) this.Width / 2.0);
-      this.Position.Y = (__Null) (-(double) this.Height / 2.0);
+      this.Position.X = (float) (-(double) this.Width / 2.0);
+      this.Position.Y = (float) (-(double) this.Height / 2.0);
     }
 
     public float CenterX
@@ -111,8 +111,8 @@ namespace Monocle
       }
       set
       {
-        this.Left = (float) value.X;
-        this.Top = (float) value.Y;
+        this.Left = value.X;
+        this.Top = value.Y;
       }
     }
 
@@ -124,8 +124,8 @@ namespace Monocle
       }
       set
       {
-        this.CenterX = (float) value.X;
-        this.Top = (float) value.Y;
+        this.CenterX = value.X;
+        this.Top = value.Y;
       }
     }
 
@@ -137,8 +137,8 @@ namespace Monocle
       }
       set
       {
-        this.Right = (float) value.X;
-        this.Top = (float) value.Y;
+        this.Right = value.X;
+        this.Top = value.Y;
       }
     }
 
@@ -150,8 +150,8 @@ namespace Monocle
       }
       set
       {
-        this.Left = (float) value.X;
-        this.CenterY = (float) value.Y;
+        this.Left = value.X;
+        this.CenterY = value.Y;
       }
     }
 
@@ -163,8 +163,8 @@ namespace Monocle
       }
       set
       {
-        this.CenterX = (float) value.X;
-        this.CenterY = (float) value.Y;
+        this.CenterX = value.X;
+        this.CenterY = value.Y;
       }
     }
 
@@ -180,7 +180,7 @@ namespace Monocle
     {
       get
       {
-        return Vector2.op_Multiply(this.Size, 0.5f);
+        return this.Size * 0.5f;
       }
     }
 
@@ -192,8 +192,8 @@ namespace Monocle
       }
       set
       {
-        this.Right = (float) value.X;
-        this.CenterY = (float) value.Y;
+        this.Right = value.X;
+        this.CenterY = value.Y;
       }
     }
 
@@ -205,8 +205,8 @@ namespace Monocle
       }
       set
       {
-        this.Left = (float) value.X;
-        this.Bottom = (float) value.Y;
+        this.Left = value.X;
+        this.Bottom = value.Y;
       }
     }
 
@@ -218,8 +218,8 @@ namespace Monocle
       }
       set
       {
-        this.CenterX = (float) value.X;
-        this.Bottom = (float) value.Y;
+        this.CenterX = value.X;
+        this.Bottom = value.Y;
       }
     }
 
@@ -231,14 +231,14 @@ namespace Monocle
       }
       set
       {
-        this.Right = (float) value.X;
-        this.Bottom = (float) value.Y;
+        this.Right = value.X;
+        this.Bottom = value.Y;
       }
     }
 
     public void Render(Camera camera)
     {
-      this.Render(camera, Color.get_Red());
+      this.Render(camera, Color.Red);
     }
 
     public Vector2 AbsolutePosition
@@ -246,7 +246,7 @@ namespace Monocle
       get
       {
         if (this.Entity != null)
-          return Vector2.op_Addition(this.Entity.Position, this.Position);
+          return this.Entity.Position + this.Position;
         return this.Position;
       }
     }
@@ -256,8 +256,8 @@ namespace Monocle
       get
       {
         if (this.Entity != null)
-          return (float) (this.Entity.Position.X + this.Position.X);
-        return (float) this.Position.X;
+          return this.Entity.Position.X + this.Position.X;
+        return this.Position.X;
       }
     }
 
@@ -266,8 +266,8 @@ namespace Monocle
       get
       {
         if (this.Entity != null)
-          return (float) (this.Entity.Position.Y + this.Position.Y);
-        return (float) this.Position.Y;
+          return this.Entity.Position.Y + this.Position.Y;
+        return this.Position.Y;
       }
     }
 
@@ -276,7 +276,7 @@ namespace Monocle
       get
       {
         if (this.Entity != null)
-          return this.Top + (float) this.Entity.Position.Y;
+          return this.Top + this.Entity.Position.Y;
         return this.Top;
       }
     }
@@ -286,7 +286,7 @@ namespace Monocle
       get
       {
         if (this.Entity != null)
-          return this.Bottom + (float) this.Entity.Position.Y;
+          return this.Bottom + this.Entity.Position.Y;
         return this.Bottom;
       }
     }
@@ -296,7 +296,7 @@ namespace Monocle
       get
       {
         if (this.Entity != null)
-          return this.Left + (float) this.Entity.Position.X;
+          return this.Left + this.Entity.Position.X;
         return this.Left;
       }
     }
@@ -306,7 +306,7 @@ namespace Monocle
       get
       {
         if (this.Entity != null)
-          return this.Right + (float) this.Entity.Position.X;
+          return this.Right + this.Entity.Position.X;
         return this.Right;
       }
     }
@@ -320,3 +320,4 @@ namespace Monocle
     }
   }
 }
+

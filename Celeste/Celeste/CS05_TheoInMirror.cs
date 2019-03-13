@@ -32,18 +32,17 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS05_TheoInMirror cs05TheoInMirror = this;
-      cs05TheoInMirror.player.StateMachine.State = 11;
-      cs05TheoInMirror.player.StateMachine.Locked = true;
-      yield return (object) cs05TheoInMirror.player.DummyWalkTo(cs05TheoInMirror.theo.X - 16f, false, 1f, false);
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      yield return (object) this.player.DummyWalkTo(this.theo.X - 16f, false, 1f, false);
       yield return (object) 0.5f;
-      cs05TheoInMirror.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.theo.Sprite.Scale.X = -1f;
       yield return (object) 0.25f;
       yield return (object) Textbox.Say("ch5_theo_mirror");
-      cs05TheoInMirror.Add((Component) new Coroutine(cs05TheoInMirror.theo.MoveTo(Vector2.op_Addition(cs05TheoInMirror.theo.Position, new Vector2(64f, 0.0f)), false, new int?(), false), true));
+      this.Add((Component) new Coroutine(this.theo.MoveTo(this.theo.Position + new Vector2(64f, 0.0f), false, new int?(), false), true));
       yield return (object) 0.4f;
-      yield return (object) cs05TheoInMirror.player.DummyWalkToExact(cs05TheoInMirror.playerFinalX, false, 1f);
-      cs05TheoInMirror.EndCutscene(level, true);
+      yield return (object) this.player.DummyWalkToExact(this.playerFinalX, false, 1f);
+      this.EndCutscene(level, true);
     }
 
     public override void OnEnd(Level level)
@@ -52,9 +51,10 @@ namespace Celeste
       this.player.StateMachine.State = 0;
       this.player.X = (float) this.playerFinalX;
       this.player.MoveV(200f, (Collision) null, (Solid) null);
-      this.player.Speed = Vector2.get_Zero();
+      this.player.Speed = Vector2.Zero;
       this.Scene.Remove((Entity) this.theo);
       level.Session.SetFlag("theoInMirror", true);
     }
   }
 }
+

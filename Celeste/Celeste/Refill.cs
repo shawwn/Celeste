@@ -47,10 +47,10 @@ namespace Celeste
       this.flash.Add(nameof (flash), "", 0.05f);
       this.flash.OnFinish = (Action<string>) (anim => this.flash.Visible = false);
       this.flash.CenterOrigin();
-      this.Add((Component) (this.wiggler = Wiggler.Create(1f, 4f, (Action<float>) (v => this.sprite.Scale = this.flash.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) v * 0.200000002980232))), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(1f, 4f, (Action<float>) (v => this.sprite.Scale = this.flash.Scale = Vector2.One * (float) (1.0 + (double) v * 0.200000002980232)), false, false)));
       this.Add((Component) new MirrorReflection());
       this.Add((Component) (this.bloom = new BloomPoint(0.8f, 16f)));
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 16, 48)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 16, 48)));
       this.Add((Component) (this.sine = new SineWave(0.6f)));
       this.sine.Randomize();
       this.UpdateY();
@@ -58,7 +58,7 @@ namespace Celeste
     }
 
     public Refill(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Bool("twoDash", false), data.Bool(nameof (oneUse), false))
+      : this(data.Position + offset, data.Bool("twoDash", false), data.Bool(nameof (oneUse), false))
     {
     }
 
@@ -78,7 +78,7 @@ namespace Celeste
           this.Respawn();
       }
       else if (this.Scene.OnInterval(0.1f))
-        this.level.ParticlesFG.Emit(Refill.P_Glow, 1, this.Position, Vector2.op_Multiply(Vector2.get_One(), 5f));
+        this.level.ParticlesFG.Emit(Refill.P_Glow, 1, this.Position, Vector2.One * 5f);
       this.UpdateY();
       this.light.Alpha = Calc.Approach(this.light.Alpha, this.sprite.Visible ? 1f : 0.0f, 4f * Engine.DeltaTime);
       this.bloom.Alpha = this.light.Alpha * 0.8f;
@@ -98,7 +98,7 @@ namespace Celeste
       this.Depth = -100;
       this.wiggler.Start();
       Audio.Play("event:/game/general/diamond_return", this.Position);
-      this.level.ParticlesFG.Emit(Refill.P_Regen, 16, this.Position, Vector2.op_Multiply(Vector2.get_One(), 2f));
+      this.level.ParticlesFG.Emit(Refill.P_Regen, 16, this.Position, Vector2.One * 2f);
     }
 
     private void UpdateY()
@@ -126,21 +126,21 @@ namespace Celeste
 
     private IEnumerator RefillRoutine(Player player)
     {
-      Refill refill = this;
       Celeste.Celeste.Freeze(0.05f);
       yield return (object) null;
-      refill.level.Shake(0.3f);
-      refill.sprite.Visible = refill.flash.Visible = false;
-      if (!refill.oneUse)
-        refill.outline.Visible = true;
-      refill.Depth = 8999;
+      this.level.Shake(0.3f);
+      this.sprite.Visible = this.flash.Visible = false;
+      if (!this.oneUse)
+        this.outline.Visible = true;
+      this.Depth = 8999;
       yield return (object) 0.05f;
-      float direction = player.Speed.Angle();
-      refill.level.ParticlesFG.Emit(Refill.P_Shatter, 5, refill.Position, Vector2.op_Multiply(Vector2.get_One(), 4f), direction - 1.570796f);
-      refill.level.ParticlesFG.Emit(Refill.P_Shatter, 5, refill.Position, Vector2.op_Multiply(Vector2.get_One(), 4f), direction + 1.570796f);
-      SlashFx.Burst(refill.Position, direction);
-      if (refill.oneUse)
-        refill.RemoveSelf();
+      float angle = player.Speed.Angle();
+      this.level.ParticlesFG.Emit(Refill.P_Shatter, 5, this.Position, Vector2.One * 4f, angle - 1.570796f);
+      this.level.ParticlesFG.Emit(Refill.P_Shatter, 5, this.Position, Vector2.One * 4f, angle + 1.570796f);
+      SlashFx.Burst(this.Position, angle);
+      if (this.oneUse)
+        this.RemoveSelf();
     }
   }
 }
+

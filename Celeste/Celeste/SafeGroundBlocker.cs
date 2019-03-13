@@ -28,9 +28,9 @@ namespace Celeste
       Collider collider = this.Entity.Collider;
       if (this.CheckWith != null)
         this.Entity.Collider = this.CheckWith;
-      int num = player.CollideCheck(this.Entity) ? 1 : 0;
+      bool flag = player.CollideCheck(this.Entity);
       this.Entity.Collider = collider;
-      return num != 0;
+      return flag;
     }
 
     public override void DebugRender(Camera camera)
@@ -38,8 +38,9 @@ namespace Celeste
       Collider collider = this.Entity.Collider;
       if (this.CheckWith != null)
         this.Entity.Collider = this.CheckWith;
-      this.Entity.Collider.Render(camera, Color.get_Aqua());
+      this.Entity.Collider.Render(camera, Color.Aqua);
       this.Entity.Collider = collider;
     }
   }
 }
+

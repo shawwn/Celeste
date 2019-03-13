@@ -14,6 +14,9 @@ namespace Celeste
 {
   public class Strawberry : Entity
   {
+    private float wobble = 0.0f;
+    private float collectTimer = 0.0f;
+    private bool collected = false;
     public static ParticleType P_Glow;
     public static ParticleType P_GhostGlow;
     public static ParticleType P_GoldGlow;
@@ -26,10 +29,7 @@ namespace Celeste
     private BloomPoint bloom;
     private VertexLight light;
     private Tween lightTween;
-    private float wobble;
     private Vector2 start;
-    private float collectTimer;
-    private bool collected;
     private bool isGhostBerry;
     private bool flyingAway;
     private float flapSpeed;
@@ -51,7 +51,7 @@ namespace Celeste
     public Strawberry(EntityData data, Vector2 offset, EntityID gid)
     {
       this.ID = gid;
-      this.Position = this.start = Vector2.op_Addition(data.Position, offset);
+      this.Position = this.start = data.Position + offset;
       this.Winged = data.Bool("winged", false) || data.Name == "memorialTextController";
       this.Golden = data.Name == "memorialTextController" || data.Name == "goldenBerry";
       this.isGhostBerry = SaveData.Instance.CheckStrawberry(this.ID);
@@ -66,11 +66,11 @@ namespace Celeste
         {
           OnDash = new Action<Vector2>(this.OnDash)
         });
-      if (data.Nodes == null || data.Nodes.Length == 0)
+      if (data.Nodes == null || (uint) data.Nodes.Length <= 0U)
         return;
       this.Seeds = new List<StrawberrySeed>();
       for (int index = 0; index < data.Nodes.Length; ++index)
-        this.Seeds.Add(new StrawberrySeed(this, Vector2.op_Addition(offset, data.Nodes[index]), index, this.isGhostBerry));
+        this.Seeds.Add(new StrawberrySeed(this, offset + data.Nodes[index], index, this.isGhostBerry));
     }
 
     public override void Added(Scene scene)
@@ -79,7 +79,7 @@ namespace Celeste
       if (SaveData.Instance.CheckStrawberry(this.ID))
       {
         this.sprite = this.Golden ? GFX.SpriteBank.Create("goldghostberry") : GFX.SpriteBank.Create("ghostberry");
-        this.sprite.Color = Color.op_Multiply(Color.get_White(), 0.8f);
+        this.sprite.Color = Color.White * 0.8f;
       }
       else
         this.sprite = !this.Golden ? GFX.SpriteBank.Create("strawberry") : GFX.SpriteBank.Create("goldberry");
@@ -87,10 +87,10 @@ namespace Celeste
       if (this.Winged)
         this.sprite.Play("flap", false, false);
       this.sprite.OnFrameChange = new Action<string>(this.OnAnimate);
-      this.Add((Component) (this.wiggler = Wiggler.Create(0.4f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) v * 0.349999994039536))), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(0.4f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.One * (float) (1.0 + (double) v * 0.349999994039536)), false, false)));
       this.Add((Component) (this.rotateWiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (v => this.sprite.Rotation = (float) ((double) v * 30.0 * (Math.PI / 180.0))), false, false)));
       this.Add((Component) (this.bloom = new BloomPoint(this.Golden || this.isGhostBerry ? 0.5f : 1f, 12f)));
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 16, 24)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 16, 24)));
       this.Add((Component) (this.lightTween = this.light.CreatePulseTween()));
       if (this.Seeds != null && this.Seeds.Count > 0 && !(scene as Level).Session.GetFlag(this.gotSeedFlag))
       {
@@ -150,19 +150,16 @@ namespace Celeste
             this.Y += this.flapSpeed * Engine.DeltaTime;
             if (this.flyingAway)
             {
-              double y = (double) this.Y;
-              Rectangle bounds = this.SceneAs<Level>().Bounds;
-              double num = (double) (((Rectangle) ref bounds).get_Top() - 16);
-              if (y < num)
+              if ((double) this.Y < (double) (this.SceneAs<Level>().Bounds.Top - 16))
                 this.RemoveSelf();
             }
             else
             {
               this.flapSpeed = Calc.Approach(this.flapSpeed, 20f, 170f * Engine.DeltaTime);
-              if ((double) this.Y < this.start.Y - 5.0)
-                this.Y = (float) (this.start.Y - 5.0);
-              else if ((double) this.Y > this.start.Y + 5.0)
-                this.Y = (float) (this.start.Y + 5.0);
+              if ((double) this.Y < (double) this.start.Y - 5.0)
+                this.Y = this.start.Y - 5f;
+              else if ((double) this.Y > (double) this.start.Y + 5.0)
+                this.Y = this.start.Y + 5f;
             }
           }
         }
@@ -170,7 +167,7 @@ namespace Celeste
       base.Update();
       if (this.Follower.Leader == null || !this.Scene.OnInterval(0.08f))
         return;
-      this.SceneAs<Level>().ParticlesFG.Emit(!this.isGhostBerry ? (!this.Golden ? Strawberry.P_Glow : Strawberry.P_GoldGlow) : Strawberry.P_GhostGlow, Vector2.op_Addition(this.Position, Calc.Random.Range(Vector2.op_Multiply(Vector2.op_UnaryNegation(Vector2.get_One()), 6f), Vector2.op_Multiply(Vector2.get_One(), 6f))));
+      this.SceneAs<Level>().ParticlesFG.Emit(!this.isGhostBerry ? (!this.Golden ? Strawberry.P_Glow : Strawberry.P_GoldGlow) : Strawberry.P_GhostGlow, this.Position + Calc.Random.Range(-Vector2.One * 6f, Vector2.One * 6f));
     }
 
     private void OnDash(Vector2 dir)
@@ -231,8 +228,8 @@ namespace Celeste
         {
           this.sprite.Rate = 1f;
           this.sprite.Play("idle", false, false);
-          level.Particles.Emit(Strawberry.P_WingsBurst, 8, Vector2.op_Addition(this.Position, new Vector2(8f, 0.0f)), new Vector2(4f, 2f));
-          level.Particles.Emit(Strawberry.P_WingsBurst, 8, Vector2.op_Subtraction(this.Position, new Vector2(8f, 0.0f)), new Vector2(4f, 2f));
+          level.Particles.Emit(Strawberry.P_WingsBurst, 8, this.Position + new Vector2(8f, 0.0f), new Vector2(4f, 2f));
+          level.Particles.Emit(Strawberry.P_WingsBurst, 8, this.Position - new Vector2(8f, 0.0f), new Vector2(4f, 2f));
         }), Alarm.AlarmMode.Oneshot);
       }
       if (this.Golden)
@@ -267,39 +264,35 @@ namespace Celeste
 
     private IEnumerator FlyAwayRoutine()
     {
-      Strawberry strawberry = this;
-      strawberry.rotateWiggler.Start();
-      strawberry.flapSpeed = -200f;
+      this.rotateWiggler.Start();
+      this.flapSpeed = -200f;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeOut, 0.25f, true);
-      // ISSUE: reference to a compiler-generated method
-      tween.OnUpdate = new Action<Tween>(strawberry.\u003CFlyAwayRoutine\u003Eb__40_0);
-      strawberry.Add((Component) tween);
+      tween.OnUpdate = (Action<Tween>) (t => this.flapSpeed = MathHelper.Lerp(-200f, 0.0f, t.Eased));
+      this.Add((Component) tween);
       yield return (object) 0.1f;
-      Audio.Play("event:/game/general/strawberry_laugh", strawberry.Position);
+      Audio.Play("event:/game/general/strawberry_laugh", this.Position);
       yield return (object) 0.2f;
-      if (!strawberry.Follower.HasLeader)
-        Audio.Play("event:/game/general/strawberry_flyaway", strawberry.Position);
+      if (!this.Follower.HasLeader)
+        Audio.Play("event:/game/general/strawberry_flyaway", this.Position);
       tween.Stop();
       tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 0.5f, true);
-      // ISSUE: reference to a compiler-generated method
-      tween.OnUpdate = new Action<Tween>(strawberry.\u003CFlyAwayRoutine\u003Eb__40_1);
-      strawberry.Add((Component) tween);
+      tween.OnUpdate = (Action<Tween>) (t => this.flapSpeed = MathHelper.Lerp(0.0f, -200f, t.Eased));
+      this.Add((Component) tween);
     }
 
     private IEnumerator CollectRoutine(int collectIndex)
     {
-      Strawberry strawberry = this;
-      Level level = strawberry.Scene as Level;
-      strawberry.Tag = (int) Tags.TransitionUpdate;
-      int num = strawberry.isGhostBerry ? 1 : (strawberry.Golden ? 2 : 0);
-      Audio.Play("event:/game/general/strawberry_get", strawberry.Position, "colour", (float) num, "count", (float) collectIndex);
+      Level level = this.Scene as Level;
+      this.Tag = (int) Tags.TransitionUpdate;
+      int color = this.isGhostBerry ? 1 : (this.Golden ? 2 : 0);
+      Audio.Play("event:/game/general/strawberry_get", this.Position, "colour", (float) color, "count", (float) collectIndex);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      strawberry.sprite.Play("collect", false, false);
-      while (strawberry.sprite.Animating)
+      this.sprite.Play("collect", false, false);
+      while (this.sprite.Animating)
         yield return (object) null;
-      level.Displacement.AddBurst(strawberry.Position, 0.3f, 16f, 24f, 0.3f, (Ease.Easer) null, (Ease.Easer) null);
-      strawberry.Scene.Add((Entity) new StrawberryPoints(strawberry.Position, strawberry.isGhostBerry, collectIndex));
-      strawberry.RemoveSelf();
+      level.Displacement.AddBurst(this.Position, 0.3f, 16f, 24f, 0.3f, (Ease.Easer) null, (Ease.Easer) null);
+      this.Scene.Add((Entity) new StrawberryPoints(this.Position, this.isGhostBerry, collectIndex));
+      this.RemoveSelf();
     }
 
     private void OnLoseLeader()
@@ -308,10 +301,10 @@ namespace Celeste
         return;
       Alarm.Set((Entity) this, 0.15f, (Action) (() =>
       {
-        Vector2 vector = Vector2.op_Subtraction(this.start, this.Position).SafeNormalize();
+        Vector2 vector = (this.start - this.Position).SafeNormalize();
         float val = Vector2.Distance(this.Position, this.start);
         float num = Calc.ClampedMap(val, 16f, 120f, 16f, 96f);
-        SimpleCurve curve = new SimpleCurve(this.Position, this.start, Vector2.op_Addition(Vector2.op_Addition(this.start, Vector2.op_Multiply(vector, 16f)), Vector2.op_Multiply(Vector2.op_Multiply(vector.Perpendicular(), num), (float) Calc.Random.Choose<int>(1, -1))));
+        SimpleCurve curve = new SimpleCurve(this.Position, this.start, this.start + vector * 16f + vector.Perpendicular() * num * (float) Calc.Random.Choose<int>(1, -1));
         Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineOut, MathHelper.Max(val / 100f, 0.4f), true);
         tween.OnUpdate = (Action<Tween>) (f => this.Position = curve.GetPoint(f.Eased));
         tween.OnComplete = (Action<Tween>) (f => this.Depth = 0);
@@ -329,3 +322,4 @@ namespace Celeste
     }
   }
 }
+

@@ -18,9 +18,12 @@ namespace Celeste.Pico8
   public class Emulator : Scene
   {
     private Color[] pixels = new Color[16384];
-    private Vector2 offset = Vector2.get_Zero();
+    private Vector2 offset = Vector2.Zero;
     private bool updateGame = true;
+    private float delay = 0.0f;
     private bool skipFrame = true;
+    private TextMenu pauseMenu = (TextMenu) null;
+    private float pauseFade = 0.0f;
     private bool booting = true;
     private byte[] mask = new byte[128]
     {
@@ -179,11 +182,8 @@ namespace Celeste.Pico8
     private Point bootLevel;
     private VirtualRenderTarget buffer;
     private int frame;
-    private float delay;
     private bool leaving;
     private EventInstance bgSfx;
-    private TextMenu pauseMenu;
-    private float pauseFade;
     private EventInstance snapshot;
     private MTexture picoBootLogo;
     private byte[] tilemap;
@@ -257,14 +257,14 @@ namespace Celeste.Pico8
 
     private void ResetScreen()
     {
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(0, (Texture) null);
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) null);
+      Engine.Graphics.GraphicsDevice.Textures[0] = (Texture) null;
+      Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) null;
       for (int index1 = 0; index1 < 128; ++index1)
       {
         for (int index2 = 0; index2 < 128; ++index2)
-          this.pixels[index1 + index2 * 128] = Color.get_Black();
+          this.pixels[index1 + index2 * 128] = Color.Black;
       }
-      ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
+      this.buffer.Target.SetData<Color>(this.pixels);
     }
 
     public override void Update()
@@ -283,8 +283,8 @@ namespace Celeste.Pico8
         return;
       if (this.booting)
       {
-        Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(0, (Texture) null);
-        Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) null);
+        Engine.Graphics.GraphicsDevice.Textures[0] = (Texture) null;
+        Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) null;
         ++this.frame;
         int num = this.frame - 20;
         if (num == 1)
@@ -294,7 +294,7 @@ namespace Celeste.Pico8
             for (int index2 = 2; index2 < 128; index2 += 8)
               this.pixels[index2 + index1 * 128] = this.colors[Calc.Random.Next(4) + index1 / 32];
           }
-          ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
+          this.buffer.Target.SetData<Color>(this.pixels);
         }
         if (num == 4)
         {
@@ -303,7 +303,7 @@ namespace Celeste.Pico8
             for (int index2 = 0; index2 < 128; index2 += 4)
               this.pixels[index2 + index1 * 128] = this.colors[6 + ((index2 + index1) / 8 & 7)];
           }
-          ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
+          this.buffer.Target.SetData<Color>(this.pixels);
         }
         if (num == 7)
         {
@@ -312,7 +312,7 @@ namespace Celeste.Pico8
             for (int index2 = 2; index2 < 128; index2 += 4)
               this.pixels[index2 + index1 * 128] = this.colors[10 + Calc.Random.Next(4)];
           }
-          ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
+          this.buffer.Target.SetData<Color>(this.pixels);
         }
         if (num == 9)
         {
@@ -321,7 +321,7 @@ namespace Celeste.Pico8
             for (int index2 = 1; index2 < (int) sbyte.MaxValue; index2 += 2)
               this.pixels[index2 + index1 * 128] = this.pixels[index2 + 1 + index1 * 128];
           }
-          ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
+          this.buffer.Target.SetData<Color>(this.pixels);
         }
         if (num == 12)
         {
@@ -333,7 +333,7 @@ namespace Celeste.Pico8
                 this.pixels[index2 + index1 * 128] = this.colors[0];
             }
           }
-          ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
+          this.buffer.Target.SetData<Color>(this.pixels);
         }
         if (num == 15)
         {
@@ -342,15 +342,15 @@ namespace Celeste.Pico8
             for (int index2 = 0; index2 < 128; ++index2)
               this.pixels[index2 + index1 * 128] = this.colors[0];
           }
-          ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
+          this.buffer.Target.SetData<Color>(this.pixels);
         }
         if (num == 30)
           Audio.Play("event:/classic/pico8_boot");
         if (num == 30 || num == 35 || num == 40)
         {
-          Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.buffer);
-          Engine.Graphics.get_GraphicsDevice().Clear(this.colors[0]);
-          Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) null, (RasterizerState) RasterizerState.CullNone);
+          Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.buffer);
+          Engine.Graphics.GraphicsDevice.Clear(this.colors[0]);
+          Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, (DepthStencilState) null, RasterizerState.CullNone);
           this.picoBootLogo.Draw(new Vector2(1f, 1f));
           if (num >= 35)
             this.print("pico-8 0.1.9B", 1f, 18f, 6f);
@@ -360,61 +360,61 @@ namespace Celeste.Pico8
             this.print("booting cartridge..", 1f, 36f, 6f);
           }
           Draw.SpriteBatch.End();
-          Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) null);
+          Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) null);
         }
         if (num != 90)
           return;
         this.frame = 0;
         this.booting = false;
         Classic.Init(this);
-        if (this.bootLevel.X == null && this.bootLevel.Y == null)
-          return;
-        Classic.load_room((int) this.bootLevel.X, (int) this.bootLevel.Y);
+        if (this.bootLevel.X != 0 || (uint) this.bootLevel.Y > 0U)
+          Classic.load_room(this.bootLevel.X, this.bootLevel.Y);
       }
       else
       {
         ++this.frame;
         Classic.Update();
-        if (Classic.freeze > 0)
-          return;
-        Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.buffer);
-        Engine.Graphics.get_GraphicsDevice().Clear(this.colors[0]);
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) null, (RasterizerState) RasterizerState.CullNone, (Effect) null, Matrix.CreateTranslation((float) -this.offset.X, (float) -this.offset.Y, 0.0f));
-        Classic.Draw();
-        Draw.SpriteBatch.End();
-        Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) null);
-        if (this.paletteSwap.Count <= 0)
-          return;
-        ((Texture2D) this.buffer.Target).GetData<Color>((M0[]) this.pixels);
-        for (int index1 = 0; index1 < this.pixels.Length; ++index1)
+        if (Classic.freeze <= 0)
         {
-          int index2 = 0;
-          if (this.paletteSwap.TryGetValue(this.pixels[index1], out index2))
-            this.pixels[index1] = this.colors[index2];
+          Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.buffer);
+          Engine.Graphics.GraphicsDevice.Clear(this.colors[0]);
+          Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, (DepthStencilState) null, RasterizerState.CullNone, (Effect) null, Matrix.CreateTranslation(-this.offset.X, -this.offset.Y, 0.0f));
+          Classic.Draw();
+          Draw.SpriteBatch.End();
+          Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) null);
+          if (this.paletteSwap.Count > 0)
+          {
+            this.buffer.Target.GetData<Color>(this.pixels);
+            for (int index1 = 0; index1 < this.pixels.Length; ++index1)
+            {
+              int index2 = 0;
+              if (this.paletteSwap.TryGetValue(this.pixels[index1], out index2))
+                this.pixels[index1] = this.colors[index2];
+            }
+            this.buffer.Target.SetData<Color>(this.pixels);
+          }
         }
-        ((Texture2D) this.buffer.Target).SetData<Color>((M0[]) this.pixels);
       }
     }
 
     public override void Render()
     {
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) null, (RasterizerState) RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, (DepthStencilState) null, RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
       int num = 6;
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector((float) (this.buffer.Width * num), (float) (this.buffer.Height * num));
-      Vector2 vector2_2 = Vector2.op_Division(new Vector2((float) (1920.0 - vector2_1.X), (float) (1080.0 - vector2_1.Y)), 2f);
-      GFX.Game["pico8/consoleBG"].Draw(Vector2.get_Zero(), Vector2.get_Zero(), Color.get_White(), (float) num);
+      Vector2 vector2 = new Vector2((float) (this.buffer.Width * num), (float) (this.buffer.Height * num));
+      Vector2 position = new Vector2(1920f - vector2.X, 1080f - vector2.Y) / 2f;
+      GFX.Game["pico8/consoleBG"].Draw(Vector2.Zero, Vector2.Zero, Color.White, (float) num);
       bool flag = false;
       if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
         flag = true;
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.buffer, vector2_2, new Rectangle?(this.buffer.Bounds), Color.get_White(), 0.0f, Vector2.get_Zero(), (float) num, flag ? (SpriteEffects) 1 : (SpriteEffects) 0, 0.0f);
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.buffer, position, new Rectangle?(this.buffer.Bounds), Color.White, 0.0f, Vector2.Zero, (float) num, flag ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.0f);
       Draw.SpriteBatch.End();
       if (this.pauseMenu != null || (double) this.pauseFade > 0.0)
       {
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.LinearClamp, (DepthStencilState) null, (RasterizerState) RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, (DepthStencilState) null, RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
         if (this.pauseMenu != null || (double) this.pauseFade > 0.0)
         {
-          Draw.Rect(-1f, -1f, 1922f, 1082f, Color.op_Multiply(Color.get_Black(), this.pauseFade));
+          Draw.Rect(-1f, -1f, 1922f, 1082f, Color.Black * this.pauseFade);
           if (this.pauseMenu != null)
             this.pauseMenu.Render();
         }
@@ -559,18 +559,17 @@ namespace Celeste.Pico8
 
     public bool btn(int index)
     {
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector((float) (int) Input.MoveX, (float) (int) Input.MoveY);
+      Vector2 vector2 = new Vector2((float) (int) Input.MoveX, (float) (int) Input.MoveY);
       switch (index)
       {
         case 0:
-          return vector2.X < 0.0;
+          return (double) vector2.X < 0.0;
         case 1:
-          return vector2.X > 0.0;
+          return (double) vector2.X > 0.0;
         case 2:
-          return vector2.Y < 0.0;
+          return (double) vector2.Y < 0.0;
         case 3:
-          return vector2.Y > 0.0;
+          return (double) vector2.Y > 0.0;
         case 4:
           return Input.Jump.Check;
         case 5:
@@ -582,12 +581,12 @@ namespace Celeste.Pico8
 
     public int dashDirectionX(int facing)
     {
-      return Math.Sign((float) Input.GetAimVector((Facings) facing).X);
+      return Math.Sign(Input.GetAimVector((Facings) facing).X);
     }
 
     public int dashDirectionY(int facing)
     {
-      return Math.Sign((float) Input.GetAimVector((Facings) facing).Y);
+      return Math.Sign(Input.GetAimVector((Facings) facing).Y);
     }
 
     public int mget(int tx, int ty)
@@ -597,14 +596,12 @@ namespace Celeste.Pico8
 
     public bool fget(int tile, int flag)
     {
-      if (tile < this.mask.Length)
-        return ((uint) this.mask[tile] & (uint) (1 << flag)) > 0U;
-      return false;
+      return tile < this.mask.Length && ((uint) this.mask[tile] & (uint) (1 << flag)) > 0U;
     }
 
     public void camera()
     {
-      this.offset = Vector2.get_Zero();
+      this.offset = Vector2.Zero;
     }
 
     public void camera(float x, float y)
@@ -660,7 +657,7 @@ namespace Celeste.Pico8
 
     public void print(string str, float x, float y, float c)
     {
-      float num = x;
+      float x1 = x;
       Color color = this.colors[(int) c % 16];
       for (int index1 = 0; index1 < str.Length; ++index1)
       {
@@ -675,8 +672,8 @@ namespace Celeste.Pico8
           }
         }
         if (index2 >= 0)
-          this.font[index2].Draw(new Vector2(num, y), Vector2.get_Zero(), color);
-        num += 4f;
+          this.font[index2].Draw(new Vector2(x1, y), Vector2.Zero, color);
+        x1 += 4f;
       }
     }
 
@@ -702,16 +699,17 @@ namespace Celeste.Pico8
       bool flipX = false,
       bool flipY = false)
     {
-      SpriteEffects flip = (SpriteEffects) 0;
+      SpriteEffects flip = SpriteEffects.None;
       if (flipX)
-        flip = (SpriteEffects) (flip | 1);
+        flip |= SpriteEffects.FlipHorizontally;
       if (flipY)
-        flip = (SpriteEffects) (flip | 2);
+        flip |= SpriteEffects.FlipVertically;
       for (int index1 = 0; index1 < columns; ++index1)
       {
         for (int index2 = 0; index2 < rows; ++index2)
-          this.sprites[(int) sprite + index1 + index2 * 16].Draw(new Vector2((float) (int) Math.Floor((double) x + (double) (index1 * 8)), (float) (int) Math.Floor((double) y + (double) (index2 * 8))), Vector2.get_Zero(), Color.get_White(), 1f, 0.0f, flip);
+          this.sprites[(int) sprite + index1 + index2 * 16].Draw(new Vector2((float) (int) Math.Floor((double) x + (double) (index1 * 8)), (float) (int) Math.Floor((double) y + (double) (index2 * 8))), Vector2.Zero, Color.White, 1f, 0.0f, flip);
       }
     }
   }
 }
+

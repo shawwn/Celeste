@@ -267,15 +267,9 @@ namespace Celeste
         else if (area.ID == 6)
           Achievements.Register(Achievement.BSIDE6);
         else if (area.ID == 7)
-        {
           Achievements.Register(Achievement.BSIDE7);
-        }
-        else
-        {
-          if (area.ID != 9)
-            return;
+        else if (area.ID == 9)
           Achievements.Register(Achievement.BSIDE8);
-        }
       }
     }
 
@@ -349,9 +343,7 @@ namespace Celeste
       if (!this.DebugMode && !this.CheatMode)
         return this.Areas[area.ID].Modes[(int) area.Mode].Checkpoints.Count > 0;
       ModeProperties modeProperties = AreaData.Areas[area.ID].Mode[(int) area.Mode];
-      if (modeProperties != null && modeProperties.Checkpoints != null)
-        return (uint) modeProperties.Checkpoints.Length > 0U;
-      return false;
+      return modeProperties != null && modeProperties.Checkpoints != null && (uint) modeProperties.Checkpoints.Length > 0U;
     }
 
     public HashSet<string> GetCheckpoints(AreaKey area)
@@ -470,3 +462,4 @@ namespace Celeste
     }
   }
 }
+

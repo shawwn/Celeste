@@ -4,7 +4,6 @@
 // MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
 // Assembly location: M:\code\bin\Celeste\Celeste.exe
 
-using Microsoft.Xna.Framework;
 using Monocle;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -32,9 +31,9 @@ namespace Celeste
       foreach (LevelData level in (scene as Level).Session.MapData.Levels)
       {
         if (level.Name.Equals("e-01"))
-          this.startX = (float) ((Rectangle) ref level.Bounds).get_Left();
+          this.startX = (float) level.Bounds.Left;
         else if (level.Name.Equals("e-09"))
-          this.endX = (float) ((Rectangle) ref level.Bounds).get_Right();
+          this.endX = (float) level.Bounds.Right;
         if (regex.IsMatch(level.Name))
           this.levels.Add(level.Name);
       }
@@ -54,3 +53,4 @@ namespace Celeste
     }
   }
 }
+

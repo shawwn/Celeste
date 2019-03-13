@@ -74,7 +74,7 @@ namespace Celeste
     }
 
     public TriggerSpikes(EntityData data, Vector2 offset, TriggerSpikes.Directions dir)
-      : this(Vector2.op_Addition(data.Position, offset), TriggerSpikes.GetSize(data, dir), dir)
+      : this(data.Position + offset, TriggerSpikes.GetSize(data, dir), dir)
     {
     }
 
@@ -85,15 +85,14 @@ namespace Celeste
       this.dustTextures = GFX.Game.GetAtlasSubtextures("danger/dustcreature/base");
       this.tentacleColors = new Color[edgeColors.Length];
       for (int index = 0; index < this.tentacleColors.Length; ++index)
-        this.tentacleColors[index] = Color.Lerp(new Color(edgeColors[index]), Color.get_DarkSlateBlue(), 0.4f);
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(Math.Abs((float) this.outwards.Y), Math.Abs((float) this.outwards.X));
+        this.tentacleColors[index] = Color.Lerp(new Color(edgeColors[index]), Color.DarkSlateBlue, 0.4f);
+      Vector2 vector2 = new Vector2(Math.Abs(this.outwards.Y), Math.Abs(this.outwards.X));
       this.spikes = new TriggerSpikes.SpikeInfo[this.size / 4];
       for (int index = 0; index < this.spikes.Length; ++index)
       {
         this.spikes[index].Parent = this;
         this.spikes[index].Index = index;
-        this.spikes[index].WorldPosition = Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2, (float) (2 + index * 4)));
+        this.spikes[index].WorldPosition = this.Position + vector2 * (float) (2 + index * 4);
         this.spikes[index].ParticleTimerOffset = Calc.Random.NextFloat(0.25f);
         this.spikes[index].TextureIndex = Calc.Random.Next(this.dustTextures.Count);
         this.spikes[index].DustOutDistance = Calc.Random.Choose<int>(3, 4, 6);
@@ -104,7 +103,7 @@ namespace Celeste
 
     private void OnShake(Vector2 amount)
     {
-      this.shakeOffset = Vector2.op_Addition(this.shakeOffset, amount);
+      this.shakeOffset += amount;
     }
 
     private bool UpSafeBlockCheck(Player player)
@@ -160,25 +159,25 @@ namespace Celeste
       switch (this.direction)
       {
         case TriggerSpikes.Directions.Up:
-          if (player.Speed.Y < 0.0)
+          if ((double) player.Speed.Y < 0.0)
             break;
           minIndex = (int) (((double) player.Left - (double) this.Left) / 4.0);
           maxIndex = (int) (((double) player.Right - (double) this.Left) / 4.0);
           break;
         case TriggerSpikes.Directions.Down:
-          if (player.Speed.Y > 0.0)
+          if ((double) player.Speed.Y > 0.0)
             break;
           minIndex = (int) (((double) player.Left - (double) this.Left) / 4.0);
           maxIndex = (int) (((double) player.Right - (double) this.Left) / 4.0);
           break;
         case TriggerSpikes.Directions.Left:
-          if (player.Speed.X < 0.0)
+          if ((double) player.Speed.X < 0.0)
             break;
           minIndex = (int) (((double) player.Top - (double) this.Top) / 4.0);
           maxIndex = (int) (((double) player.Bottom - (double) this.Top) / 4.0);
           break;
         case TriggerSpikes.Directions.Right:
-          if (player.Speed.X > 0.0)
+          if ((double) player.Speed.X > 0.0)
             break;
           minIndex = (int) (((double) player.Top - (double) this.Top) / 4.0);
           maxIndex = (int) (((double) player.Bottom - (double) this.Top) / 4.0);
@@ -194,17 +193,19 @@ namespace Celeste
       int minIndex;
       int maxIndex;
       this.GetPlayerCollideIndex(player, out minIndex, out maxIndex);
-      if (minIndex <= spikeIndex + 1)
-        return maxIndex >= spikeIndex - 1;
-      return false;
+      return minIndex <= spikeIndex + 1 && maxIndex >= spikeIndex - 1;
     }
 
     private static int GetSize(EntityData data, TriggerSpikes.Directions dir)
     {
-      if ((uint) dir <= 1U)
-        return data.Width;
-      int num = (int) (dir - 2);
-      return data.Height;
+      switch (dir)
+      {
+        case TriggerSpikes.Directions.Up:
+        case TriggerSpikes.Directions.Down:
+          return data.Width;
+        default:
+          return data.Height;
+      }
     }
 
     public override void Update()
@@ -217,25 +218,23 @@ namespace Celeste
     public override void Render()
     {
       base.Render();
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(Math.Abs((float) this.outwards.Y), Math.Abs((float) this.outwards.X));
+      Vector2 vector2 = new Vector2(Math.Abs(this.outwards.Y), Math.Abs(this.outwards.X));
       int count = this.tentacleTextures.Count;
-      Vector2 one = Vector2.get_One();
-      Vector2 justify;
-      ((Vector2) ref justify).\u002Ector(0.0f, 0.5f);
+      Vector2 one = Vector2.One;
+      Vector2 justify = new Vector2(0.0f, 0.5f);
       if (this.direction == TriggerSpikes.Directions.Left)
-        one.X = (__Null) -1.0;
+        one.X = -1f;
       else if (this.direction == TriggerSpikes.Directions.Up)
-        one.Y = (__Null) -1.0;
+        one.Y = -1f;
       if (this.direction == TriggerSpikes.Directions.Up || this.direction == TriggerSpikes.Directions.Down)
-        ((Vector2) ref justify).\u002Ector(0.5f, 0.0f);
+        justify = new Vector2(0.5f, 0.0f);
       for (int index = 0; index < this.spikes.Length; ++index)
       {
         if (!this.spikes[index].Triggered)
         {
           MTexture tentacleTexture = this.tentacleTextures[(int) ((double) this.spikes[index].TentacleFrame % (double) count)];
-          Vector2 position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2, (float) (2 + index * 4)));
-          tentacleTexture.DrawJustified(Vector2.op_Addition(position, vector2), justify, Color.get_Black(), one, 0.0f);
+          Vector2 position = this.Position + vector2 * (float) (2 + index * 4);
+          tentacleTexture.DrawJustified(position + vector2, justify, Color.Black, one, 0.0f);
           tentacleTexture.DrawJustified(position, justify, this.tentacleColors[this.spikes[index].TentacleColor], one, 0.0f);
         }
       }
@@ -244,12 +243,11 @@ namespace Celeste
 
     private void RenderSpikes()
     {
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(Math.Abs((float) this.outwards.Y), Math.Abs((float) this.outwards.X));
+      Vector2 vector2 = new Vector2(Math.Abs(this.outwards.Y), Math.Abs(this.outwards.X));
       for (int index = 0; index < this.spikes.Length; ++index)
       {
         if (this.spikes[index].Triggered)
-          this.dustTextures[this.spikes[index].TextureIndex].DrawCentered(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(this.outwards, (float) ((double) this.spikes[index].Lerp * (double) this.spikes[index].DustOutDistance - 4.0))), Vector2.op_Multiply(vector2, (float) (2 + index * 4))), Color.get_White(), 0.5f * this.spikes[index].Lerp, this.spikes[index].TextureRotation);
+          this.dustTextures[this.spikes[index].TextureIndex].DrawCentered(this.Position + this.outwards * (float) ((double) this.spikes[index].Lerp * (double) this.spikes[index].DustOutDistance - 4.0) + vector2 * (float) (2 + index * 4), Color.White, 0.5f * this.spikes[index].Lerp, this.spikes[index].TextureRotation);
       }
     }
 
@@ -258,13 +256,13 @@ namespace Celeste
       switch (this.direction)
       {
         case TriggerSpikes.Directions.Up:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Addition(this.Position, Vector2.get_UnitY()));
+          return this.CollideCheckOutside((Entity) solid, this.Position + Vector2.UnitY);
         case TriggerSpikes.Directions.Down:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Subtraction(this.Position, Vector2.get_UnitY()));
+          return this.CollideCheckOutside((Entity) solid, this.Position - Vector2.UnitY);
         case TriggerSpikes.Directions.Left:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Addition(this.Position, Vector2.get_UnitX()));
+          return this.CollideCheckOutside((Entity) solid, this.Position + Vector2.UnitX);
         case TriggerSpikes.Directions.Right:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Subtraction(this.Position, Vector2.get_UnitX()));
+          return this.CollideCheckOutside((Entity) solid, this.Position - Vector2.UnitX);
         default:
           return false;
       }
@@ -274,7 +272,7 @@ namespace Celeste
     {
       if (this.direction != TriggerSpikes.Directions.Up)
         return false;
-      return this.CollideCheck((Entity) jumpThru, Vector2.op_Addition(this.Position, Vector2.get_UnitY()));
+      return this.CollideCheck((Entity) jumpThru, this.Position + Vector2.UnitY);
     }
 
     public enum Directions
@@ -324,9 +322,8 @@ namespace Celeste
         {
           this.Lerp = Calc.Approach(this.Lerp, 0.0f, 4f * Engine.DeltaTime);
           this.TentacleFrame += Engine.DeltaTime * 12f;
-          if ((double) this.Lerp > 0.0)
-            return;
-          this.Triggered = false;
+          if ((double) this.Lerp <= 0.0)
+            this.Triggered = false;
         }
       }
 
@@ -354,3 +351,4 @@ namespace Celeste
     }
   }
 }
+

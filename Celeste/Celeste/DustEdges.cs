@@ -15,11 +15,11 @@ namespace Celeste
   [Tracked(false)]
   public class DustEdges : Entity
   {
-    public static int DustGraphicEstabledCounter;
+    public static int DustGraphicEstabledCounter = 0;
+    private Vector2 noiseFromPos = new Vector2();
+    private Vector2 noiseToPos = new Vector2();
     private bool hasDust;
     private float noiseEase;
-    private Vector2 noiseFromPos;
-    private Vector2 noiseToPos;
     private VirtualTexture DustNoiseFrom;
     private VirtualTexture DustNoiseTo;
 
@@ -32,15 +32,15 @@ namespace Celeste
 
     private void CreateTextures()
     {
-      this.DustNoiseFrom = VirtualContent.CreateTexture("dust-noise-a", 128, 72, Color.get_White());
-      this.DustNoiseTo = VirtualContent.CreateTexture("dust-noise-b", 128, 72, Color.get_White());
-      Color[] colorArray = new Color[this.DustNoiseFrom.Width * this.DustNoiseTo.Height];
-      for (int index = 0; index < colorArray.Length; ++index)
-        colorArray[index] = new Color(Calc.Random.NextFloat(), 0.0f, 0.0f, 0.0f);
-      this.DustNoiseFrom.Texture.SetData<Color>((M0[]) colorArray);
-      for (int index = 0; index < colorArray.Length; ++index)
-        colorArray[index] = new Color(Calc.Random.NextFloat(), 0.0f, 0.0f, 0.0f);
-      this.DustNoiseTo.Texture.SetData<Color>((M0[]) colorArray);
+      this.DustNoiseFrom = VirtualContent.CreateTexture("dust-noise-a", 128, 72, Color.White);
+      this.DustNoiseTo = VirtualContent.CreateTexture("dust-noise-b", 128, 72, Color.White);
+      Color[] data = new Color[this.DustNoiseFrom.Width * this.DustNoiseTo.Height];
+      for (int index = 0; index < data.Length; ++index)
+        data[index] = new Color(Calc.Random.NextFloat(), 0.0f, 0.0f, 0.0f);
+      this.DustNoiseFrom.Texture.SetData<Color>(data);
+      for (int index = 0; index < data.Length; ++index)
+        data[index] = new Color(Calc.Random.NextFloat(), 0.0f, 0.0f, 0.0f);
+      this.DustNoiseTo.Texture.SetData<Color>(data);
     }
 
     public override void Update()
@@ -91,9 +91,9 @@ namespace Celeste
       this.hasDust = components.Count > 0;
       if (!this.hasDust)
         return;
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) GameplayBuffers.TempA);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone, (Effect) null, (this.Scene as Level).Camera.Matrix);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) GameplayBuffers.TempA);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, (Effect) null, (this.Scene as Level).Camera.Matrix);
       foreach (Component component in components)
       {
         DustEdge dustEdge = component as DustEdge;
@@ -104,17 +104,17 @@ namespace Celeste
       if (this.DustNoiseFrom == null || this.DustNoiseFrom.IsDisposed)
         this.CreateTextures();
       Vector2 vector2 = this.FlooredCamera();
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) GameplayBuffers.ResortDust);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) this.DustNoiseFrom.Texture);
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(2, (Texture) this.DustNoiseTo.Texture);
-      GFX.FxDust.get_Parameters().get_Item("colors").SetValue(DustStyles.Get(this.Scene).EdgeColors);
-      GFX.FxDust.get_Parameters().get_Item("noiseEase").SetValue(this.noiseEase);
-      GFX.FxDust.get_Parameters().get_Item("noiseFromPos").SetValue(Vector2.op_Addition(this.noiseFromPos, new Vector2((float) (vector2.X / 320.0), (float) (vector2.Y / 180.0))));
-      GFX.FxDust.get_Parameters().get_Item("noiseToPos").SetValue(Vector2.op_Addition(this.noiseToPos, new Vector2((float) (vector2.X / 320.0), (float) (vector2.Y / 180.0))));
-      GFX.FxDust.get_Parameters().get_Item("pixel").SetValue(new Vector2(1f / 320f, 0.005555556f));
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone, GFX.FxDust, Matrix.get_Identity());
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.TempA, Vector2.get_Zero(), Color.get_White());
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) GameplayBuffers.ResortDust);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) this.DustNoiseFrom.Texture;
+      Engine.Graphics.GraphicsDevice.Textures[2] = (Texture) this.DustNoiseTo.Texture;
+      GFX.FxDust.Parameters["colors"].SetValue(DustStyles.Get(this.Scene).EdgeColors);
+      GFX.FxDust.Parameters["noiseEase"].SetValue(this.noiseEase);
+      GFX.FxDust.Parameters["noiseFromPos"].SetValue(this.noiseFromPos + new Vector2(vector2.X / 320f, vector2.Y / 180f));
+      GFX.FxDust.Parameters["noiseToPos"].SetValue(this.noiseToPos + new Vector2(vector2.X / 320f, vector2.Y / 180f));
+      GFX.FxDust.Parameters["pixel"].SetValue(new Vector2(1f / 320f, 0.005555556f));
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, GFX.FxDust, Matrix.Identity);
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.TempA, Vector2.Zero, Color.White);
       Draw.SpriteBatch.End();
     }
 
@@ -122,16 +122,17 @@ namespace Celeste
     {
       if (!this.hasDust)
         return;
-      Vector2 vector2 = this.FlooredCamera();
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.ResortDust, vector2, Color.get_White());
+      Vector2 position = this.FlooredCamera();
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.ResortDust, position, Color.White);
     }
 
     private Vector2 FlooredCamera()
     {
       Vector2 position = (this.Scene as Level).Camera.Position;
-      position.X = (__Null) (double) (int) Math.Floor((double) position.X);
-      position.Y = (__Null) (double) (int) Math.Floor((double) position.Y);
+      position.X = (float) (int) Math.Floor((double) position.X);
+      position.Y = (float) (int) Math.Floor((double) position.Y);
       return position;
     }
   }
 }
+

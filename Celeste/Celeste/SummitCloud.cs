@@ -17,14 +17,14 @@ namespace Celeste
     private float diff;
 
     public SummitCloud(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Depth = -10550;
       this.diff = Calc.Random.Range(0.1f, 0.2f);
       List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures("scenery/summitclouds/cloud");
       this.image = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures));
       this.image.CenterOrigin();
-      this.image.Scale.X = (__Null) (double) Calc.Random.Choose<int>(-1, 1);
+      this.image.Scale.X = (float) Calc.Random.Choose<int>(-1, 1);
       this.Add((Component) this.image);
       SineWave sineWave = new SineWave(Calc.Random.Range(0.05f, 0.15f));
       sineWave.Randomize();
@@ -36,7 +36,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Subtraction(Vector2.op_Addition(this.Position, Vector2.op_Division(new Vector2(128f, 64f), 2f)), Vector2.op_Addition((this.Scene as Level).Camera.Position, new Vector2(160f, 90f))), 0.1f + this.diff));
+        return this.Position + (this.Position + new Vector2(128f, 64f) / 2f - ((this.Scene as Level).Camera.Position + new Vector2(160f, 90f))) * (0.1f + this.diff);
       }
     }
 
@@ -49,3 +49,4 @@ namespace Celeste
     }
   }
 }
+

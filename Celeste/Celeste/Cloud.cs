@@ -33,18 +33,18 @@ namespace Celeste
     {
       this.fragile = fragile;
       this.startY = this.Y;
-      this.Collider.Position.X = (__Null) -16.0;
+      this.Collider.Position.X = -16f;
       this.timer = Calc.Random.NextFloat() * 4f;
       this.Add((Component) (this.wiggler = Wiggler.Create(0.3f, 4f, (Action<float>) null, false, false)));
       this.particleType = fragile ? Cloud.P_FragileCloud : Cloud.P_Cloud;
       this.SurfaceSoundIndex = 4;
       this.Add((Component) new LightOcclude(0.2f));
-      this.scale = Vector2.get_One();
+      this.scale = Vector2.One;
       this.Add((Component) (this.sfx = new SoundSource()));
     }
 
     public Cloud(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Bool(nameof (fragile), false))
+      : this(data.Position + offset, data.Bool(nameof (fragile), false))
     {
     }
 
@@ -52,14 +52,9 @@ namespace Celeste
     {
       base.Added(scene);
       string id = this.fragile ? "cloudFragile" : "cloud";
-      if (this.SceneAs<Level>().Session.Area.Mode != AreaMode.Normal)
+      if ((uint) this.SceneAs<Level>().Session.Area.Mode > 0U)
       {
-        ref __Null local = ref this.Collider.Position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + 2f;
+        this.Collider.Position.X += 2f;
         this.Collider.Width -= 6f;
         id += "Remix";
       }
@@ -76,11 +71,11 @@ namespace Celeste
     public override void Update()
     {
       base.Update();
-      this.scale.X = (__Null) (double) Calc.Approach((float) this.scale.X, 1f, 1f * Engine.DeltaTime);
-      this.scale.Y = (__Null) (double) Calc.Approach((float) this.scale.Y, 1f, 1f * Engine.DeltaTime);
+      this.scale.X = Calc.Approach(this.scale.X, 1f, 1f * Engine.DeltaTime);
+      this.scale.Y = Calc.Approach(this.scale.Y, 1f, 1f * Engine.DeltaTime);
       this.timer += Engine.DeltaTime;
       if (this.GetPlayerRider() != null)
-        this.sprite.Position = Vector2.get_Zero();
+        this.sprite.Position = Vector2.Zero;
       else
         this.sprite.Position = Calc.Approach(this.sprite.Position, new Vector2(0.0f, (float) Math.Sin((double) this.timer * 2.0)), Engine.DeltaTime * 4f);
       if ((double) this.respawnTimer > 0.0)
@@ -91,7 +86,7 @@ namespace Celeste
         this.waiting = true;
         this.Y = this.startY;
         this.speed = 0.0f;
-        this.scale = Vector2.get_One();
+        this.scale = Vector2.One;
         this.Collidable = true;
         this.sprite.Play("spawn", false, false);
         this.sfx.Play("event:/game/04_cliffside/cloud_pink_reappear", (string) null, 0.0f);
@@ -99,7 +94,7 @@ namespace Celeste
       else if (this.waiting)
       {
         Player playerRider = this.GetPlayerRider();
-        if (playerRider == null || playerRider.Speed.Y < 0.0)
+        if (playerRider == null || (double) playerRider.Speed.Y < 0.0)
           return;
         this.canRumble = true;
         this.speed = 180f;
@@ -114,7 +109,7 @@ namespace Celeste
       {
         this.speed = Calc.Approach(this.speed, 180f, 600f * Engine.DeltaTime);
         this.MoveTowardsY(this.startY, this.speed * Engine.DeltaTime);
-        if (this.ExactPosition.Y != (double) this.startY)
+        if ((double) this.ExactPosition.Y != (double) this.startY)
           return;
         this.returning = false;
         this.waiting = true;
@@ -134,9 +129,9 @@ namespace Celeste
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
         }
         if ((double) this.speed < 0.0 && this.Scene.OnInterval(0.02f))
-          (this.Scene as Level).ParticlesBG.Emit(this.particleType, 1, Vector2.op_Addition(this.Position, new Vector2(0.0f, 2f)), new Vector2(this.Collider.Width / 2f, 1f), 1.570796f);
+          (this.Scene as Level).ParticlesBG.Emit(this.particleType, 1, this.Position + new Vector2(0.0f, 2f), new Vector2(this.Collider.Width / 2f, 1f), 1.570796f);
         if (this.fragile && (double) this.speed < 0.0)
-          this.sprite.Scale.Y = (__Null) (double) Calc.Approach((float) this.sprite.Scale.Y, 0.0f, Engine.DeltaTime * 4f);
+          this.sprite.Scale.Y = Calc.Approach(this.sprite.Scale.Y, 0.0f, Engine.DeltaTime * 4f);
         if ((double) this.Y >= (double) this.startY)
         {
           this.speed -= 1200f * Engine.DeltaTime;
@@ -147,8 +142,8 @@ namespace Celeste
           if ((double) this.speed >= -100.0)
           {
             Player playerRider = this.GetPlayerRider();
-            if (playerRider != null && playerRider.Speed.Y >= 0.0)
-              playerRider.Speed.Y = (__Null) -200.0;
+            if (playerRider != null && (double) playerRider.Speed.Y >= 0.0)
+              playerRider.Speed.Y = -200f;
             if (this.fragile)
             {
               this.Collidable = false;
@@ -171,8 +166,9 @@ namespace Celeste
 
     public override void Render()
     {
-      this.sprite.Scale = Vector2.op_Multiply(this.scale, (float) (1.0 + 0.100000001490116 * (double) this.wiggler.Value));
+      this.sprite.Scale = this.scale * (float) (1.0 + 0.100000001490116 * (double) this.wiggler.Value);
       base.Render();
     }
   }
 }
+

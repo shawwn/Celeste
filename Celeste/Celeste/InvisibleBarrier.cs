@@ -23,7 +23,7 @@ namespace Celeste
     }
 
     public InvisibleBarrier(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height)
+      : this(data.Position + offset, (float) data.Width, (float) data.Height)
     {
     }
 
@@ -38,3 +38,4 @@ namespace Celeste
     }
   }
 }
+

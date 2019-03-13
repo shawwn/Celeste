@@ -29,30 +29,30 @@ namespace Celeste
       this.sprite.Add("idle", "", 0.0f, new int[1]);
       this.sprite.Add("bounce", "", 0.07f, "idle", 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 4, 5);
       this.sprite.Play("idle", false, false);
-      this.sprite.Origin.X = (__Null) ((double) this.sprite.Width / 2.0);
-      this.sprite.Origin.Y = (__Null) (double) this.sprite.Height;
+      this.sprite.Origin.X = this.sprite.Width / 2f;
+      this.sprite.Origin.Y = this.sprite.Height;
       this.Depth = -8501;
       this.staticMover = new StaticMover();
       this.staticMover.OnAttach = (Action<Platform>) (p => this.Depth = p.Depth + 1);
       switch (orientation)
       {
         case Spring.Orientations.Floor:
-          this.staticMover.SolidChecker = (Func<Solid, bool>) (s => this.CollideCheck((Entity) s, Vector2.op_Addition(this.Position, Vector2.get_UnitY())));
-          this.staticMover.JumpThruChecker = (Func<JumpThru, bool>) (jt => this.CollideCheck((Entity) jt, Vector2.op_Addition(this.Position, Vector2.get_UnitY())));
+          this.staticMover.SolidChecker = (Func<Solid, bool>) (s => this.CollideCheck((Entity) s, this.Position + Vector2.UnitY));
+          this.staticMover.JumpThruChecker = (Func<JumpThru, bool>) (jt => this.CollideCheck((Entity) jt, this.Position + Vector2.UnitY));
           this.Add((Component) this.staticMover);
           break;
         case Spring.Orientations.WallLeft:
-          this.staticMover.SolidChecker = (Func<Solid, bool>) (s => this.CollideCheck((Entity) s, Vector2.op_Subtraction(this.Position, Vector2.get_UnitX())));
-          this.staticMover.JumpThruChecker = (Func<JumpThru, bool>) (jt => this.CollideCheck((Entity) jt, Vector2.op_Subtraction(this.Position, Vector2.get_UnitX())));
+          this.staticMover.SolidChecker = (Func<Solid, bool>) (s => this.CollideCheck((Entity) s, this.Position - Vector2.UnitX));
+          this.staticMover.JumpThruChecker = (Func<JumpThru, bool>) (jt => this.CollideCheck((Entity) jt, this.Position - Vector2.UnitX));
           this.Add((Component) this.staticMover);
           break;
         case Spring.Orientations.WallRight:
-          this.staticMover.SolidChecker = (Func<Solid, bool>) (s => this.CollideCheck((Entity) s, Vector2.op_Addition(this.Position, Vector2.get_UnitX())));
-          this.staticMover.JumpThruChecker = (Func<JumpThru, bool>) (jt => this.CollideCheck((Entity) jt, Vector2.op_Addition(this.Position, Vector2.get_UnitX())));
+          this.staticMover.SolidChecker = (Func<Solid, bool>) (s => this.CollideCheck((Entity) s, this.Position + Vector2.UnitX));
+          this.staticMover.JumpThruChecker = (Func<JumpThru, bool>) (jt => this.CollideCheck((Entity) jt, this.Position + Vector2.UnitX));
           this.Add((Component) this.staticMover);
           break;
       }
-      this.Add((Component) (this.wiggler = Wiggler.Create(1f, 4f, (Action<float>) (v => this.sprite.Scale.Y = (__Null) (1.0 + (double) v * 0.200000002980232)), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(1f, 4f, (Action<float>) (v => this.sprite.Scale.Y = (float) (1.0 + (double) v * 0.200000002980232)), false, false)));
       if (orientation == Spring.Orientations.Floor)
         this.Collider = (Collider) new Hitbox(16f, 6f, -8f, -6f);
       else if (orientation == Spring.Orientations.WallLeft)
@@ -72,7 +72,7 @@ namespace Celeste
     }
 
     public Spring(EntityData data, Vector2 offset, Spring.Orientations orientation)
-      : this(Vector2.op_Addition(data.Position, offset), orientation, data.Bool(nameof (playerCanUse), true))
+      : this(data.Position + offset, orientation, data.Bool(nameof (playerCanUse), true))
     {
     }
 
@@ -93,7 +93,7 @@ namespace Celeste
         return;
       if (this.Orientation == Spring.Orientations.Floor)
       {
-        if (player.Speed.Y < 0.0)
+        if ((double) player.Speed.Y < 0.0)
           return;
         this.BounceAnimate();
         player.SuperBounce(this.Top);
@@ -129,7 +129,7 @@ namespace Celeste
 
     private void OnSeeker(Seeker seeker)
     {
-      if (seeker.Speed.Y < -120.0)
+      if ((double) seeker.Speed.Y < -120.0)
         return;
       this.BounceAnimate();
       seeker.HitSpring();
@@ -149,3 +149,4 @@ namespace Celeste
     }
   }
 }
+

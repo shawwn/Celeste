@@ -56,7 +56,7 @@ namespace Celeste
     }
 
     public CassetteBlock(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height, data.Int("index", 0), data.Float("tempo", 1f))
+      : this(data.Position + offset, (float) data.Width, (float) data.Height, data.Int("index", 0), data.Float("tempo", 1f))
     {
     }
 
@@ -64,8 +64,7 @@ namespace Celeste
     {
       base.Awake(scene);
       Color color1 = Calc.HexToColor("667da5");
-      Color color2;
-      ((Color) ref color2).\u002Ector((float) ((double) ((Color) ref color1).get_R() / (double) byte.MaxValue * ((double) ((Color) ref this.color).get_R() / (double) byte.MaxValue)), (float) ((double) ((Color) ref color1).get_G() / (double) byte.MaxValue * ((double) ((Color) ref this.color).get_G() / (double) byte.MaxValue)), (float) ((double) ((Color) ref color1).get_B() / (double) byte.MaxValue * ((double) ((Color) ref this.color).get_B() / (double) byte.MaxValue)), 1f);
+      Color color2 = new Color((float) ((double) color1.R / (double) byte.MaxValue * ((double) this.color.R / (double) byte.MaxValue)), (float) ((double) color1.G / (double) byte.MaxValue * ((double) this.color.G / (double) byte.MaxValue)), (float) ((double) color1.B / (double) byte.MaxValue * ((double) this.color.B / (double) byte.MaxValue)), 1f);
       scene.Add((Entity) (this.side = new CassetteBlock.BoxSide(this, color2)));
       foreach (Component staticMover in this.staticMovers)
       {
@@ -110,7 +109,11 @@ namespace Celeste
         }
       }
       foreach (Component staticMover in this.staticMovers)
-        (staticMover.Entity as Spikes)?.SetOrigins(this.groupOrigin);
+      {
+        Spikes entity = staticMover.Entity as Spikes;
+        if (entity != null)
+          entity.SetOrigins(this.groupOrigin);
+      }
       for (float left = this.Left; (double) left < (double) this.Right; left += 8f)
       {
         for (float top = this.Top; (double) top < (double) this.Bottom; top += 8f)
@@ -157,7 +160,7 @@ namespace Celeste
     {
       foreach (CassetteBlock entity in this.Scene.Tracker.GetEntities<CassetteBlock>())
       {
-        if (entity != this && entity != block && entity.Index == this.Index && ((entity.CollideRect(new Rectangle((int) block.X - 1, (int) block.Y, (int) block.Width + 2, (int) block.Height)) ? 1 : (entity.CollideRect(new Rectangle((int) block.X, (int) block.Y - 1, (int) block.Width, (int) block.Height + 2)) ? 1 : 0)) != 0 && !this.group.Contains(entity)))
+        if (entity != this && entity != block && entity.Index == this.Index && ((entity.CollideRect(new Rectangle((int) block.X - 1, (int) block.Y, (int) block.Width + 2, (int) block.Height)) || entity.CollideRect(new Rectangle((int) block.X, (int) block.Y - 1, (int) block.Width, (int) block.Height + 2))) && !this.group.Contains(entity)))
         {
           this.group.Add(entity);
           this.FindInGroup(entity);
@@ -184,11 +187,10 @@ namespace Celeste
 
     private Monocle.Image CreateImage(float x, float y, int tx, int ty, MTexture tex)
     {
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector(x - this.X, y - this.Y);
+      Vector2 vector2_1 = new Vector2(x - this.X, y - this.Y);
       Monocle.Image image = new Monocle.Image(tex.GetSubtexture(tx * 8, ty * 8, 8, 8, (MTexture) null));
-      Vector2 vector2_2 = Vector2.op_Subtraction(this.groupOrigin, this.Position);
-      image.Origin = Vector2.op_Subtraction(vector2_2, vector2_1);
+      Vector2 vector2_2 = this.groupOrigin - this.Position;
+      image.Origin = vector2_2 - vector2_1;
       image.Position = vector2_2;
       image.Color = this.color;
       this.Add((Component) image);
@@ -264,8 +266,7 @@ namespace Celeste
         component.Visible = !this.Collidable;
       if (!this.groupLeader)
         return;
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector((float) (1.0 + (double) this.wiggler.Value * 0.0500000007450581 * this.wigglerScaler.X), (float) (1.0 + (double) this.wiggler.Value * 0.150000005960464 * this.wigglerScaler.Y));
+      Vector2 vector2 = new Vector2((float) (1.0 + (double) this.wiggler.Value * 0.0500000007450581 * (double) this.wigglerScaler.X), (float) (1.0 + (double) this.wiggler.Value * 0.150000005960464 * (double) this.wigglerScaler.Y));
       foreach (CassetteBlock cassetteBlock in this.group)
       {
         foreach (GraphicsComponent graphicsComponent in cassetteBlock.all)
@@ -322,17 +323,16 @@ namespace Celeste
     {
       foreach (CassetteBlock cassetteBlock in this.group)
       {
-        if (cassetteBlock != this && cassetteBlock.CollideCheck(actor, Vector2.op_Addition(cassetteBlock.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 4f))))
+        if (cassetteBlock != this && cassetteBlock.CollideCheck(actor, cassetteBlock.Position + Vector2.UnitY * 4f))
           return false;
       }
       bool collidable = this.Collidable;
       this.Collidable = true;
       for (int index = 1; index <= 4; ++index)
       {
-        if (!actor.CollideCheck<Solid>(Vector2.op_Subtraction(actor.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) index))))
+        if (!actor.CollideCheck<Solid>(actor.Position - Vector2.UnitY * (float) index))
         {
-          Entity entity = actor;
-          entity.Position = Vector2.op_Subtraction(entity.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) index));
+          actor.Position -= Vector2.UnitY * (float) index;
           this.Collidable = collidable;
           return true;
         }
@@ -367,3 +367,4 @@ namespace Celeste
     }
   }
 }
+

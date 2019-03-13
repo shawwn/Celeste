@@ -12,8 +12,8 @@ namespace Celeste
 {
   public class Parallax : Backdrop
   {
-    public Vector2 CameraOffset = Vector2.get_Zero();
-    public BlendState BlendState = (BlendState) BlendState.AlphaBlend;
+    public Vector2 CameraOffset = Vector2.Zero;
+    public BlendState BlendState = BlendState.AlphaBlend;
     private float fadeIn = 1f;
     public MTexture Texture;
     public bool DoFadeIn;
@@ -27,7 +27,7 @@ namespace Celeste
     public override void Update(Scene scene)
     {
       base.Update(scene);
-      this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(this.Speed, Engine.DeltaTime));
+      this.Position = this.Position + this.Speed * Engine.DeltaTime;
       if (this.DoFadeIn)
         this.fadeIn = Calc.Approach(this.fadeIn, this.Visible ? 1f : 0.0f, Engine.DeltaTime);
       else
@@ -36,72 +36,44 @@ namespace Celeste
 
     public override void Render(Scene scene)
     {
-      Vector2 vector2_1 = Vector2.op_Addition((scene as Level).Camera.Position, this.CameraOffset).Floor();
-      Vector2 vector2_2 = Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(vector2_1, this.Scroll)).Floor();
+      Vector2 vector2_1 = ((scene as Level).Camera.Position + this.CameraOffset).Floor();
+      Vector2 vector2_2 = (this.Position - vector2_1 * this.Scroll).Floor();
       float fadeIn = this.fadeIn;
       if (this.FadeX != null)
-        fadeIn *= this.FadeX.Value((float) (vector2_1.X + 160.0));
+        fadeIn *= this.FadeX.Value(vector2_1.X + 160f);
       if (this.FadeY != null)
-        fadeIn *= this.FadeY.Value((float) (vector2_1.Y + 90.0));
+        fadeIn *= this.FadeY.Value(vector2_1.Y + 90f);
       Color color = this.Color;
       if ((double) fadeIn < 1.0)
-        color = Color.op_Multiply(color, fadeIn);
-      if (((Color) ref color).get_A() <= (byte) 1)
+        color *= fadeIn;
+      if (color.A <= (byte) 1)
         return;
       if (this.LoopX)
       {
-        while (vector2_2.X < 0.0)
-        {
-          ref __Null local = ref vector2_2.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) this.Texture.Width;
-        }
-        while (vector2_2.X > 0.0)
-        {
-          ref __Null local = ref vector2_2.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local - (float) this.Texture.Width;
-        }
+        while ((double) vector2_2.X < 0.0)
+          vector2_2.X += (float) this.Texture.Width;
+        while ((double) vector2_2.X > 0.0)
+          vector2_2.X -= (float) this.Texture.Width;
       }
       if (this.LoopY)
       {
-        while (vector2_2.Y < 0.0)
-        {
-          ref __Null local = ref vector2_2.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) this.Texture.Height;
-        }
-        while (vector2_2.Y > 0.0)
-        {
-          ref __Null local = ref vector2_2.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local - (float) this.Texture.Height;
-        }
+        while ((double) vector2_2.Y < 0.0)
+          vector2_2.Y += (float) this.Texture.Height;
+        while ((double) vector2_2.Y > 0.0)
+          vector2_2.Y -= (float) this.Texture.Height;
       }
-      SpriteEffects flip = (SpriteEffects) 0;
+      SpriteEffects flip = SpriteEffects.None;
       if (this.FlipX && this.FlipY)
-        flip = (SpriteEffects) 3;
+        flip = SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically;
       else if (this.FlipX)
-        flip = (SpriteEffects) 1;
+        flip = SpriteEffects.FlipHorizontally;
       else if (this.FlipY)
-        flip = (SpriteEffects) 2;
-      for (float x = (float) vector2_2.X; (double) x < 320.0; x += (float) this.Texture.Width)
+        flip = SpriteEffects.FlipVertically;
+      for (float x = vector2_2.X; (double) x < 320.0; x += (float) this.Texture.Width)
       {
-        for (float y = (float) vector2_2.Y; (double) y < 180.0; y += (float) this.Texture.Height)
+        for (float y = vector2_2.Y; (double) y < 180.0; y += (float) this.Texture.Height)
         {
-          this.Texture.Draw(new Vector2(x, y), Vector2.get_Zero(), color, 1f, 0.0f, flip);
+          this.Texture.Draw(new Vector2(x, y), Vector2.Zero, color, 1f, 0.0f, flip);
           if (!this.LoopY)
             break;
         }
@@ -111,3 +83,4 @@ namespace Celeste
     }
   }
 }
+

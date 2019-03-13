@@ -17,13 +17,13 @@ namespace Celeste
     protected List<StaticMover> staticMovers = new List<StaticMover>();
     public bool BlockWaterfalls = true;
     public int SurfaceSoundIndex = 8;
+    public int SurfaceSoundPriority = 0;
     private Vector2 movementCounter;
     private Vector2 shakeAmount;
     private bool shaking;
     private float shakeTimer;
     public Vector2 LiftSpeed;
     public bool Safe;
-    public int SurfaceSoundPriority;
     public DashCollision OnDashCollide;
     public Action<Vector2> OnCollide;
 
@@ -47,7 +47,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Addition(this.Position, this.movementCounter);
+        return this.Position + this.movementCounter;
       }
     }
 
@@ -60,28 +60,30 @@ namespace Celeste
 
     public void ClearRemainder()
     {
-      this.movementCounter = Vector2.get_Zero();
+      this.movementCounter = Vector2.Zero;
     }
 
     public override void Update()
     {
       base.Update();
-      this.LiftSpeed = Vector2.get_Zero();
+      this.LiftSpeed = Vector2.Zero;
       if (!this.shaking)
         return;
       if (this.Scene.OnInterval(0.04f))
       {
         Vector2 shakeAmount = this.shakeAmount;
         this.shakeAmount = Calc.Random.ShakeVector();
-        this.OnShake(Vector2.op_Subtraction(this.shakeAmount, shakeAmount));
+        this.OnShake(this.shakeAmount - shakeAmount);
       }
-      if ((double) this.shakeTimer <= 0.0)
-        return;
-      this.shakeTimer -= Engine.DeltaTime;
       if ((double) this.shakeTimer > 0.0)
-        return;
-      this.shaking = false;
-      this.StopShaking();
+      {
+        this.shakeTimer -= Engine.DeltaTime;
+        if ((double) this.shakeTimer <= 0.0)
+        {
+          this.shaking = false;
+          this.StopShaking();
+        }
+      }
     }
 
     public void StartShaking(float time = 0.0f)
@@ -93,10 +95,10 @@ namespace Celeste
     public void StopShaking()
     {
       this.shaking = false;
-      if (!Vector2.op_Inequality(this.shakeAmount, Vector2.get_Zero()))
+      if (!(this.shakeAmount != Vector2.Zero))
         return;
-      this.OnShake(Vector2.op_UnaryNegation(this.shakeAmount));
-      this.shakeAmount = Vector2.get_Zero();
+      this.OnShake(-this.shakeAmount);
+      this.shakeAmount = Vector2.Zero;
     }
 
     public virtual void OnShake(Vector2 amount)
@@ -156,128 +158,88 @@ namespace Celeste
 
     public void MoveH(float moveH)
     {
-      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveH / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveH;
+      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? moveH / Engine.DeltaTime : 0.0f;
+      this.movementCounter.X += moveH;
       int move = (int) Math.Round((double) this.movementCounter.X);
-      if (move == 0)
+      if ((uint) move <= 0U)
         return;
-      ref __Null local2 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) move;
+      this.movementCounter.X -= (float) move;
       this.MoveHExact(move);
     }
 
     public void MoveH(float moveH, float liftSpeedH)
     {
-      this.LiftSpeed.X = (__Null) (double) liftSpeedH;
-      ref __Null local1 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveH;
+      this.LiftSpeed.X = liftSpeedH;
+      this.movementCounter.X += moveH;
       int move = (int) Math.Round((double) this.movementCounter.X);
-      if (move == 0)
+      if ((uint) move <= 0U)
         return;
-      ref __Null local2 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) move;
+      this.movementCounter.X -= (float) move;
       this.MoveHExact(move);
     }
 
     public void MoveV(float moveV)
     {
-      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveV / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveV;
+      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? moveV / Engine.DeltaTime : 0.0f;
+      this.movementCounter.Y += moveV;
       int move = (int) Math.Round((double) this.movementCounter.Y);
-      if (move == 0)
+      if ((uint) move <= 0U)
         return;
-      ref __Null local2 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) move;
+      this.movementCounter.Y -= (float) move;
       this.MoveVExact(move);
     }
 
     public void MoveV(float moveV, float liftSpeedV)
     {
-      this.LiftSpeed.Y = (__Null) (double) liftSpeedV;
-      ref __Null local1 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveV;
+      this.LiftSpeed.Y = liftSpeedV;
+      this.movementCounter.Y += moveV;
       int move = (int) Math.Round((double) this.movementCounter.Y);
-      if (move == 0)
+      if ((uint) move <= 0U)
         return;
-      ref __Null local2 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) move;
+      this.movementCounter.Y -= (float) move;
       this.MoveVExact(move);
     }
 
     public void MoveToX(float x)
     {
-      this.MoveH(x - (float) this.ExactPosition.X);
+      this.MoveH(x - this.ExactPosition.X);
     }
 
     public void MoveToX(float x, float liftSpeedX)
     {
-      this.MoveH(x - (float) this.ExactPosition.X, liftSpeedX);
+      this.MoveH(x - this.ExactPosition.X, liftSpeedX);
     }
 
     public void MoveToY(float y)
     {
-      this.MoveV(y - (float) this.ExactPosition.Y);
+      this.MoveV(y - this.ExactPosition.Y);
     }
 
     public void MoveToY(float y, float liftSpeedY)
     {
-      this.MoveV(y - (float) this.ExactPosition.Y, liftSpeedY);
+      this.MoveV(y - this.ExactPosition.Y, liftSpeedY);
     }
 
     public void MoveTo(Vector2 position)
     {
-      this.MoveToX((float) position.X);
-      this.MoveToY((float) position.Y);
+      this.MoveToX(position.X);
+      this.MoveToY(position.Y);
     }
 
     public void MoveTo(Vector2 position, Vector2 liftSpeed)
     {
-      this.MoveToX((float) position.X, (float) liftSpeed.X);
-      this.MoveToY((float) position.Y, (float) liftSpeed.Y);
+      this.MoveToX(position.X, liftSpeed.X);
+      this.MoveToY(position.Y, liftSpeed.Y);
     }
 
     public void MoveTowardsX(float x, float amount)
     {
-      this.MoveToX(Calc.Approach((float) this.ExactPosition.X, x, amount));
+      this.MoveToX(Calc.Approach(this.ExactPosition.X, x, amount));
     }
 
     public void MoveTowardsY(float y, float amount)
     {
-      this.MoveToY(Calc.Approach((float) this.ExactPosition.Y, y, amount));
+      this.MoveToY(Calc.Approach(this.ExactPosition.Y, y, amount));
     }
 
     public abstract void MoveHExact(int move);
@@ -286,62 +248,42 @@ namespace Celeste
 
     public void MoveToNaive(Vector2 position)
     {
-      this.MoveToXNaive((float) position.X);
-      this.MoveToYNaive((float) position.Y);
+      this.MoveToXNaive(position.X);
+      this.MoveToYNaive(position.Y);
     }
 
     public void MoveToXNaive(float x)
     {
-      this.MoveHNaive(x - (float) this.ExactPosition.X);
+      this.MoveHNaive(x - this.ExactPosition.X);
     }
 
     public void MoveToYNaive(float y)
     {
-      this.MoveVNaive(y - (float) this.ExactPosition.Y);
+      this.MoveVNaive(y - this.ExactPosition.Y);
     }
 
     public void MoveHNaive(float moveH)
     {
-      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveH / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveH;
+      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? moveH / Engine.DeltaTime : 0.0f;
+      this.movementCounter.X += moveH;
       int num = (int) Math.Round((double) this.movementCounter.X);
-      if (num == 0)
+      if ((uint) num <= 0U)
         return;
-      ref __Null local2 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) num;
+      this.movementCounter.X -= (float) num;
       this.X += (float) num;
-      this.MoveStaticMovers(Vector2.op_Multiply(Vector2.get_UnitX(), (float) num));
+      this.MoveStaticMovers(Vector2.UnitX * (float) num);
     }
 
     public void MoveVNaive(float moveV)
     {
-      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveV / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveV;
+      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? moveV / Engine.DeltaTime : 0.0f;
+      this.movementCounter.Y += moveV;
       int num = (int) Math.Round((double) this.movementCounter.Y);
-      if (num == 0)
+      if ((uint) num <= 0U)
         return;
-      ref __Null local2 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) num;
+      this.movementCounter.Y -= (float) num;
       this.Y += (float) num;
-      this.MoveStaticMovers(Vector2.op_Multiply(Vector2.get_UnitY(), (float) num));
+      this.MoveStaticMovers(Vector2.UnitY * (float) num);
     }
 
     public bool MoveHCollideSolids(
@@ -349,22 +291,12 @@ namespace Celeste
       bool thruDashBlocks,
       Action<Vector2, Vector2, Platform> onCollide = null)
     {
-      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveH / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveH;
+      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? moveH / Engine.DeltaTime : 0.0f;
+      this.movementCounter.X += moveH;
       int moveH1 = (int) Math.Round((double) this.movementCounter.X);
-      if (moveH1 == 0)
+      if ((uint) moveH1 <= 0U)
         return false;
-      ref __Null local2 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) moveH1;
+      this.movementCounter.X -= (float) moveH1;
       return this.MoveHExactCollideSolids(moveH1, thruDashBlocks, onCollide);
     }
 
@@ -373,22 +305,12 @@ namespace Celeste
       bool thruDashBlocks,
       Action<Vector2, Vector2, Platform> onCollide = null)
     {
-      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveV / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveV;
+      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? moveV / Engine.DeltaTime : 0.0f;
+      this.movementCounter.Y += moveV;
       int moveV1 = (int) Math.Round((double) this.movementCounter.Y);
-      if (moveV1 == 0)
+      if ((uint) moveV1 <= 0U)
         return false;
-      ref __Null local2 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) moveV1;
+      this.movementCounter.Y -= (float) moveV1;
       return this.MoveVExactCollideSolids(moveV1, thruDashBlocks, onCollide);
     }
 
@@ -398,42 +320,32 @@ namespace Celeste
       bool thruDashBlocks,
       Action<Vector2, Vector2, Platform> onCollide = null)
     {
-      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveH / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveH;
+      this.LiftSpeed.X = (double) Engine.DeltaTime != 0.0 ? moveH / Engine.DeltaTime : 0.0f;
+      this.movementCounter.X += moveH;
       int moveH1 = (int) Math.Round((double) this.movementCounter.X);
-      if (moveH1 == 0)
+      if ((uint) moveH1 <= 0U)
         return false;
-      ref __Null local2 = ref this.movementCounter.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) moveH1;
+      this.movementCounter.X -= (float) moveH1;
       double num1 = (double) this.Left + (double) moveH1;
       Rectangle bounds = level.Bounds;
-      double left = (double) ((Rectangle) ref bounds).get_Left();
+      double left = (double) bounds.Left;
       bool flag;
       if (num1 < left)
       {
         flag = true;
         bounds = level.Bounds;
-        moveH1 = ((Rectangle) ref bounds).get_Left() - (int) this.Left;
+        moveH1 = bounds.Left - (int) this.Left;
       }
       else
       {
         double num2 = (double) this.Right + (double) moveH1;
         bounds = level.Bounds;
-        double right = (double) ((Rectangle) ref bounds).get_Right();
+        double right = (double) bounds.Right;
         if (num2 > right)
         {
           flag = true;
           bounds = level.Bounds;
-          moveH1 = ((Rectangle) ref bounds).get_Right() - (int) this.Right;
+          moveH1 = bounds.Right - (int) this.Right;
         }
         else
           flag = false;
@@ -447,38 +359,23 @@ namespace Celeste
       bool thruDashBlocks,
       Action<Vector2, Vector2, Platform> onCollide = null)
     {
-      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? (__Null) ((double) moveV / (double) Engine.DeltaTime) : (__Null) 0.0;
-      ref __Null local1 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 + moveV;
+      this.LiftSpeed.Y = (double) Engine.DeltaTime != 0.0 ? moveV / Engine.DeltaTime : 0.0f;
+      this.movementCounter.Y += moveV;
       int moveV1 = (int) Math.Round((double) this.movementCounter.Y);
-      if (moveV1 == 0)
+      if ((uint) moveV1 <= 0U)
         return false;
-      ref __Null local2 = ref this.movementCounter.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 - (float) moveV1;
-      Rectangle bounds1 = level.Bounds;
-      int num1 = ((Rectangle) ref bounds1).get_Bottom() + 32;
-      double num2 = (double) this.Top + (double) moveV1;
-      Rectangle bounds2 = level.Bounds;
-      double top = (double) ((Rectangle) ref bounds2).get_Top();
+      this.movementCounter.Y -= (float) moveV1;
+      int num = level.Bounds.Bottom + 32;
       bool flag;
-      if (num2 < top)
+      if ((double) this.Top + (double) moveV1 < (double) level.Bounds.Top)
       {
         flag = true;
-        Rectangle bounds3 = level.Bounds;
-        moveV1 = ((Rectangle) ref bounds3).get_Top() - (int) this.Top;
+        moveV1 = level.Bounds.Top - (int) this.Top;
       }
-      else if ((double) this.Bottom + (double) moveV1 > (double) num1)
+      else if ((double) this.Bottom + (double) moveV1 > (double) num)
       {
         flag = true;
-        moveV1 = num1 - (int) this.Bottom;
+        moveV1 = num - (int) this.Bottom;
       }
       else
         flag = false;
@@ -494,21 +391,21 @@ namespace Celeste
       int num = Math.Sign(moveH);
       int move = 0;
       Solid solid = (Solid) null;
-      while (moveH != 0)
+      while ((uint) moveH > 0U)
       {
         if (thruDashBlocks)
         {
           foreach (DashBlock entity in this.Scene.Tracker.GetEntities<DashBlock>())
           {
-            if (this.CollideCheck((Entity) entity, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) num))))
+            if (this.CollideCheck((Entity) entity, this.Position + Vector2.UnitX * (float) num))
             {
-              entity.Break(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), (float) num), true);
+              entity.Break(this.Center, Vector2.UnitX * (float) num, true);
               this.SceneAs<Level>().Shake(0.2f);
               Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             }
           }
         }
-        solid = this.CollideFirst<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) num)));
+        solid = this.CollideFirst<Solid>(this.Position + Vector2.UnitX * (float) num);
         if (solid == null)
         {
           move += num;
@@ -521,7 +418,7 @@ namespace Celeste
       this.X = x;
       this.MoveHExact(move);
       if (solid != null && onCollide != null)
-        onCollide(Vector2.op_Multiply(Vector2.get_UnitX(), (float) num), Vector2.op_Multiply(Vector2.get_UnitX(), (float) move), (Platform) solid);
+        onCollide(Vector2.UnitX * (float) num, Vector2.UnitX * (float) move, (Platform) solid);
       return solid != null;
     }
 
@@ -534,26 +431,26 @@ namespace Celeste
       int num = Math.Sign(moveV);
       int move = 0;
       Platform platform = (Platform) null;
-      while (moveV != 0)
+      while ((uint) moveV > 0U)
       {
         if (thruDashBlocks)
         {
           foreach (DashBlock entity in this.Scene.Tracker.GetEntities<DashBlock>())
           {
-            if (this.CollideCheck((Entity) entity, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) num))))
+            if (this.CollideCheck((Entity) entity, this.Position + Vector2.UnitY * (float) num))
             {
-              entity.Break(this.Center, Vector2.op_Multiply(Vector2.get_UnitY(), (float) num), true);
+              entity.Break(this.Center, Vector2.UnitY * (float) num, true);
               this.SceneAs<Level>().Shake(0.2f);
               Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             }
           }
         }
-        platform = (Platform) this.CollideFirst<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) num)));
+        platform = (Platform) this.CollideFirst<Solid>(this.Position + Vector2.UnitY * (float) num);
         if (platform == null)
         {
           if (moveV > 0)
           {
-            platform = (Platform) this.CollideFirstOutside<JumpThru>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) num)));
+            platform = (Platform) this.CollideFirstOutside<JumpThru>(this.Position + Vector2.UnitY * (float) num);
             if (platform != null)
               break;
           }
@@ -567,8 +464,9 @@ namespace Celeste
       this.Y = y;
       this.MoveVExact(move);
       if (platform != null && onCollide != null)
-        onCollide(Vector2.op_Multiply(Vector2.get_UnitY(), (float) num), Vector2.op_Multiply(Vector2.get_UnitY(), (float) move), platform);
+        onCollide(Vector2.UnitY * (float) num, Vector2.UnitY * (float) move, platform);
       return platform != null;
     }
   }
 }
+

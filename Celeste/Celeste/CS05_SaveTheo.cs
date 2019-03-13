@@ -28,56 +28,55 @@ namespace Celeste
     public override void OnBegin(Level level)
     {
       this.theo = level.Tracker.GetEntity<TheoCrystal>();
-      this.playerEndPosition = Vector2.op_Addition(this.theo.Position, new Vector2(-24f, 0.0f));
+      this.playerEndPosition = this.theo.Position + new Vector2(-24f, 0.0f);
       this.Add((Component) new Coroutine(this.Cutscene(level), true));
     }
 
     private IEnumerator Cutscene(Level level)
     {
-      CS05_SaveTheo cs05SaveTheo = this;
-      cs05SaveTheo.player.StateMachine.State = 11;
-      cs05SaveTheo.player.StateMachine.Locked = true;
-      cs05SaveTheo.player.ForceCameraUpdate = true;
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      this.player.ForceCameraUpdate = true;
       level.Session.Audio.Music.Layer(6, 0.0f);
       level.Session.Audio.Apply();
-      yield return (object) cs05SaveTheo.player.DummyWalkTo(cs05SaveTheo.theo.X - 18f, false, 1f, false);
-      cs05SaveTheo.player.Facing = Facings.Right;
-      yield return (object) Textbox.Say("ch5_found_theo", new Func<IEnumerator>(cs05SaveTheo.TryToBreakCrystal));
+      yield return (object) this.player.DummyWalkTo(this.theo.X - 18f, false, 1f, false);
+      this.player.Facing = Facings.Right;
+      yield return (object) Textbox.Say("ch5_found_theo", new Func<IEnumerator>(this.TryToBreakCrystal));
       yield return (object) 0.25f;
-      yield return (object) cs05SaveTheo.Level.ZoomBack(0.5f);
-      cs05SaveTheo.EndCutscene(level, true);
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator TryToBreakCrystal()
     {
-      CS05_SaveTheo cs05SaveTheo = this;
-      cs05SaveTheo.Scene.Entities.FindFirst<TheoCrystalPedestal>().Collidable = true;
-      yield return (object) cs05SaveTheo.player.DummyWalkTo(cs05SaveTheo.theo.X, false, 1f, false);
+      TheoCrystalPedestal pedestal = this.Scene.Entities.FindFirst<TheoCrystalPedestal>();
+      pedestal.Collidable = true;
+      yield return (object) this.player.DummyWalkTo(this.theo.X, false, 1f, false);
       yield return (object) 0.1f;
-      yield return (object) cs05SaveTheo.Level.ZoomTo(new Vector2(160f, 90f), 2f, 0.5f);
-      cs05SaveTheo.player.DummyAutoAnimate = false;
-      cs05SaveTheo.player.Sprite.Play("lookUp", false, false);
+      yield return (object) this.Level.ZoomTo(new Vector2(160f, 90f), 2f, 0.5f);
+      this.player.DummyAutoAnimate = false;
+      this.player.Sprite.Play("lookUp", false, false);
       yield return (object) 1f;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       MInput.Disabled = true;
-      cs05SaveTheo.player.OverrideDashDirection = new Vector2?(new Vector2(0.0f, -1f));
-      cs05SaveTheo.player.StateMachine.Locked = false;
-      cs05SaveTheo.player.StateMachine.State = cs05SaveTheo.player.StartDash();
-      cs05SaveTheo.player.Dashes = 0;
+      this.player.OverrideDashDirection = new Vector2?(new Vector2(0.0f, -1f));
+      this.player.StateMachine.Locked = false;
+      this.player.StateMachine.State = this.player.StartDash();
+      this.player.Dashes = 0;
       yield return (object) 0.1f;
-      while (!cs05SaveTheo.player.OnGround(1) || cs05SaveTheo.player.Speed.Y < 0.0)
+      while (!this.player.OnGround(1) || (double) this.player.Speed.Y < 0.0)
       {
-        cs05SaveTheo.player.Dashes = 0;
+        this.player.Dashes = 0;
         Input.MoveY.Value = -1;
         Input.MoveX.Value = 0;
         yield return (object) null;
       }
-      cs05SaveTheo.player.OverrideDashDirection = new Vector2?();
-      cs05SaveTheo.player.StateMachine.State = 11;
-      cs05SaveTheo.player.StateMachine.Locked = true;
+      this.player.OverrideDashDirection = new Vector2?();
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
       MInput.Disabled = false;
-      cs05SaveTheo.player.DummyAutoAnimate = true;
-      yield return (object) cs05SaveTheo.player.DummyWalkToExact((int) cs05SaveTheo.playerEndPosition.X, true, 1f);
+      this.player.DummyAutoAnimate = true;
+      yield return (object) this.player.DummyWalkToExact((int) this.playerEndPosition.X, true, 1f);
       yield return (object) 1.5f;
     }
 
@@ -106,9 +105,10 @@ namespace Celeste
       first.DroppedTheo = true;
       this.theo.Depth = 100;
       this.theo.OnPedestal = false;
-      this.theo.Speed = Vector2.get_Zero();
+      this.theo.Speed = Vector2.Zero;
       while (!this.theo.OnGround(1))
         this.theo.MoveV(1f, (Collision) null, (Solid) null);
     }
   }
 }
+

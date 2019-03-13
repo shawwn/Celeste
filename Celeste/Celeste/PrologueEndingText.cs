@@ -40,7 +40,8 @@ namespace Celeste
 
     public override void Render()
     {
-      this.text.Draw(this.Position, new Vector2(0.5f, 0.5f), Vector2.get_One(), 1f, 0, int.MaxValue);
+      this.text.Draw(this.Position, new Vector2(0.5f, 0.5f), Vector2.One, 1f, 0, int.MaxValue);
     }
   }
 }
+

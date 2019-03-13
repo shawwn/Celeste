@@ -32,55 +32,53 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS01_Ending cs01Ending = this;
-      cs01Ending.player.StateMachine.State = 11;
-      cs01Ending.player.Dashes = 1;
+      this.player.StateMachine.State = 11;
+      this.player.Dashes = 1;
       level.Session.Audio.Music.Layer(3, false);
       level.Session.Audio.Apply();
       yield return (object) 0.5f;
-      yield return (object) cs01Ending.player.DummyWalkTo(cs01Ending.bonfire.X + 40f, false, 1f, false);
+      yield return (object) this.player.DummyWalkTo(this.bonfire.X + 40f, false, 1f, false);
       yield return (object) 1.5f;
-      cs01Ending.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.5f;
-      yield return (object) Textbox.Say("CH1_END", new Func<IEnumerator>(cs01Ending.EndCityTrigger));
+      yield return (object) Textbox.Say("CH1_END", new Func<IEnumerator>(this.EndCityTrigger));
       yield return (object) 0.3f;
-      cs01Ending.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator EndCityTrigger()
     {
-      CS01_Ending cs01Ending = this;
       yield return (object) 0.2f;
-      yield return (object) cs01Ending.player.DummyWalkTo(cs01Ending.bonfire.X - 12f, false, 1f, false);
+      yield return (object) this.player.DummyWalkTo(this.bonfire.X - 12f, false, 1f, false);
       yield return (object) 0.2f;
-      cs01Ending.player.Facing = Facings.Right;
-      cs01Ending.player.DummyAutoAnimate = false;
-      cs01Ending.player.Sprite.Play("duck", false, false);
+      this.player.Facing = Facings.Right;
+      this.player.DummyAutoAnimate = false;
+      this.player.Sprite.Play("duck", false, false);
       yield return (object) 0.5f;
-      if (cs01Ending.bonfire != null)
-        cs01Ending.bonfire.SetMode(Bonfire.Mode.Lit);
+      if (this.bonfire != null)
+        this.bonfire.SetMode(Bonfire.Mode.Lit);
       yield return (object) 1f;
-      cs01Ending.player.Sprite.Play("idle", false, false);
+      this.player.Sprite.Play("idle", false, false);
       yield return (object) 0.4f;
-      cs01Ending.player.DummyAutoAnimate = true;
-      yield return (object) cs01Ending.player.DummyWalkTo(cs01Ending.bonfire.X - 24f, false, 1f, false);
+      this.player.DummyAutoAnimate = true;
+      yield return (object) this.player.DummyWalkTo(this.bonfire.X - 24f, false, 1f, false);
       yield return (object) 0.4f;
-      cs01Ending.player.DummyAutoAnimate = false;
-      cs01Ending.player.Facing = Facings.Right;
-      cs01Ending.player.Sprite.Play("sleep", false, false);
-      Audio.Play("event:/char/madeline/campfire_sit", cs01Ending.player.Position);
+      this.player.DummyAutoAnimate = false;
+      this.player.Facing = Facings.Right;
+      this.player.Sprite.Play("sleep", false, false);
+      Audio.Play("event:/char/madeline/campfire_sit", this.player.Position);
       yield return (object) 4f;
-      BirdNPC bird = new BirdNPC(Vector2.op_Addition(cs01Ending.player.Position, new Vector2(88f, -200f)), BirdNPC.Modes.None);
-      cs01Ending.Scene.Add((Entity) bird);
+      BirdNPC bird = new BirdNPC(this.player.Position + new Vector2(88f, -200f), BirdNPC.Modes.None);
+      this.Scene.Add((Entity) bird);
       EventInstance instance = Audio.Play("event:/game/general/bird_in", bird.Position);
       bird.Facing = Facings.Left;
       bird.Sprite.Play("fall", false, false);
       Vector2 from = bird.Position;
-      Vector2 to = Vector2.op_Addition(cs01Ending.player.Position, new Vector2(1f, -12f));
+      Vector2 to = this.player.Position + new Vector2(1f, -12f);
       float percent = 0.0f;
       while ((double) percent < 1.0)
       {
-        bird.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), Ease.QuadOut(percent)));
+        bird.Position = from + (to - from) * Ease.QuadOut(percent);
         Audio.Position(instance, bird.Position);
         if ((double) percent > 0.5)
           bird.Sprite.Play("fly", false, false);
@@ -98,8 +96,8 @@ namespace Celeste
       yield return (object) null;
       bird = (BirdNPC) null;
       instance = (EventInstance) null;
-      from = (Vector2) null;
-      to = (Vector2) null;
+      from = new Vector2();
+      to = new Vector2();
       yield return (object) 2f;
     }
 
@@ -109,3 +107,4 @@ namespace Celeste
     }
   }
 }
+

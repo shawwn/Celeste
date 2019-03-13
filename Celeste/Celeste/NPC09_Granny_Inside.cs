@@ -13,10 +13,10 @@ namespace Celeste
 {
   public class NPC09_Granny_Inside : NPC
   {
+    private int conversation = 0;
     public const string DoorConversationAvailable = "granny_door";
     private const string DoorConversationDone = "granny_door_done";
     private const string CounterFlag = "granny";
-    private int conversation;
     private const int MaxConversation = 4;
     public Hahaha Hahaha;
     public GrannyLaughSfx LaughSfx;
@@ -29,9 +29,7 @@ namespace Celeste
     {
       get
       {
-        if (this.Level.Session.GetFlag("granny_door"))
-          return !this.Level.Session.GetFlag("granny_door_done");
-        return false;
+        return this.Level.Session.GetFlag("granny_door") && !this.Level.Session.GetFlag("granny_door_done");
       }
     }
 
@@ -39,14 +37,12 @@ namespace Celeste
     {
       get
       {
-        if (this.conversation <= 0 || this.conversation >= 4)
-          return this.HasDoorConversation;
-        return true;
+        return this.conversation > 0 && this.conversation < 4 || this.HasDoorConversation;
       }
     }
 
     public NPC09_Granny_Inside(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Add((Component) (this.Sprite = GFX.SpriteBank.Create("granny")));
       this.Sprite.Play("idle", false, false);
@@ -61,7 +57,7 @@ namespace Celeste
     {
       base.Added(scene);
       this.conversation = this.Level.Session.GetCounter("granny");
-      scene.Add((Entity) (this.Hahaha = new Hahaha(Vector2.op_Addition(this.Position, new Vector2(8f, -4f)), "", false, new Vector2?())));
+      scene.Add((Entity) (this.Hahaha = new Hahaha(this.Position + new Vector2(8f, -4f), "", false, new Vector2?())));
       this.Hahaha.Enabled = false;
     }
 
@@ -88,98 +84,63 @@ namespace Celeste
 
     private IEnumerator TalkRoutine(Player player)
     {
-      NPC09_Granny_Inside npC09GrannyInside = this;
       player.StateMachine.State = 11;
       player.Dashes = 1;
       player.ForceCameraUpdate = true;
       while (!player.OnGround(1))
         yield return (object) null;
-      yield return (object) player.DummyWalkToExact((int) npC09GrannyInside.X - 16, false, 1f);
+      yield return (object) player.DummyWalkToExact((int) this.X - 16, false, 1f);
       player.Facing = Facings.Right;
       player.ForceCameraUpdate = false;
-      Vector2 zoomPoint = new Vector2(npC09GrannyInside.X - 8f - npC09GrannyInside.Level.Camera.X, 110f);
-      if (npC09GrannyInside.HasDoorConversation)
+      Vector2 zoomPoint = new Vector2(this.X - 8f - this.Level.Camera.X, 110f);
+      if (this.HasDoorConversation)
       {
-        npC09GrannyInside.Sprite.Scale.X = (__Null) -1.0;
-        yield return (object) npC09GrannyInside.Level.ZoomTo(zoomPoint, 2f, 0.5f);
+        this.Sprite.Scale.X = -1f;
+        yield return (object) this.Level.ZoomTo(zoomPoint, 2f, 0.5f);
         yield return (object) Textbox.Say("APP_OLDLADY_LOCKED");
       }
-      else if (npC09GrannyInside.conversation == 0)
+      else if (this.conversation == 0)
       {
         yield return (object) 0.5f;
-        npC09GrannyInside.Sprite.Scale.X = (__Null) -1.0;
+        this.Sprite.Scale.X = -1f;
         yield return (object) 0.25f;
-        yield return (object) npC09GrannyInside.Level.ZoomTo(zoomPoint, 2f, 0.5f);
-        yield return (object) Textbox.Say("APP_OLDLADY_B", new Func<IEnumerator>(npC09GrannyInside.StartLaughing), new Func<IEnumerator>(npC09GrannyInside.StopLaughing));
+        yield return (object) this.Level.ZoomTo(zoomPoint, 2f, 0.5f);
+        yield return (object) Textbox.Say("APP_OLDLADY_B", new Func<IEnumerator>(this.StartLaughing), new Func<IEnumerator>(this.StopLaughing));
       }
-      else if (npC09GrannyInside.conversation == 1)
+      else if (this.conversation == 1)
       {
-        npC09GrannyInside.Sprite.Scale.X = (__Null) -1.0;
-        yield return (object) npC09GrannyInside.Level.ZoomTo(zoomPoint, 2f, 0.5f);
-        yield return (object) Textbox.Say("APP_OLDLADY_C", new Func<IEnumerator>(npC09GrannyInside.StartLaughing), new Func<IEnumerator>(npC09GrannyInside.StopLaughing));
+        this.Sprite.Scale.X = -1f;
+        yield return (object) this.Level.ZoomTo(zoomPoint, 2f, 0.5f);
+        yield return (object) Textbox.Say("APP_OLDLADY_C", new Func<IEnumerator>(this.StartLaughing), new Func<IEnumerator>(this.StopLaughing));
       }
-      else if (npC09GrannyInside.conversation == 2)
+      else if (this.conversation == 2)
       {
-        npC09GrannyInside.Sprite.Scale.X = (__Null) -1.0;
-        yield return (object) npC09GrannyInside.Level.ZoomTo(zoomPoint, 2f, 0.5f);
-        yield return (object) Textbox.Say("APP_OLDLADY_D", new Func<IEnumerator>(npC09GrannyInside.StartLaughing), new Func<IEnumerator>(npC09GrannyInside.StopLaughing));
+        this.Sprite.Scale.X = -1f;
+        yield return (object) this.Level.ZoomTo(zoomPoint, 2f, 0.5f);
+        yield return (object) Textbox.Say("APP_OLDLADY_D", new Func<IEnumerator>(this.StartLaughing), new Func<IEnumerator>(this.StopLaughing));
       }
-      else if (npC09GrannyInside.conversation == 3)
+      else if (this.conversation == 3)
       {
-        npC09GrannyInside.Sprite.Scale.X = (__Null) -1.0;
-        yield return (object) npC09GrannyInside.Level.ZoomTo(zoomPoint, 2f, 0.5f);
-        yield return (object) Textbox.Say("APP_OLDLADY_E", new Func<IEnumerator>(npC09GrannyInside.StartLaughing), new Func<IEnumerator>(npC09GrannyInside.StopLaughing));
+        this.Sprite.Scale.X = -1f;
+        yield return (object) this.Level.ZoomTo(zoomPoint, 2f, 0.5f);
+        yield return (object) Textbox.Say("APP_OLDLADY_E", new Func<IEnumerator>(this.StartLaughing), new Func<IEnumerator>(this.StopLaughing));
       }
-      npC09GrannyInside.talker.Enabled = npC09GrannyInside.talkerEnabled;
-      yield return (object) npC09GrannyInside.Level.ZoomBack(0.5f);
-      npC09GrannyInside.Level.EndCutscene();
-      npC09GrannyInside.EndTalking(npC09GrannyInside.Level);
+      this.talker.Enabled = this.talkerEnabled;
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.Level.EndCutscene();
+      this.EndTalking(this.Level);
     }
 
     private IEnumerator StartLaughing()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      NPC09_Granny_Inside npC09GrannyInside = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      npC09GrannyInside.Sprite.Play("laugh", false, false);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) null;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.Sprite.Play("laugh", false, false);
+      yield return (object) null;
     }
 
     private IEnumerator StopLaughing()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      NPC09_Granny_Inside npC09GrannyInside = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      npC09GrannyInside.Sprite.Play("idle", false, false);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) null;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.Sprite.Play("idle", false, false);
+      yield return (object) null;
     }
 
     private void EndTalking(Level level)
@@ -208,3 +169,4 @@ namespace Celeste
     }
   }
 }
+

@@ -15,8 +15,8 @@ namespace Monocle
     public Circle(float radius, float x = 0.0f, float y = 0.0f)
     {
       this.Radius = radius;
-      this.Position.X = (__Null) (double) x;
-      this.Position.Y = (__Null) (double) y;
+      this.Position.X = x;
+      this.Position.Y = y;
     }
 
     public override float Width
@@ -47,11 +47,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.X - this.Radius;
+        return this.Position.X - this.Radius;
       }
       set
       {
-        this.Position.X = (__Null) ((double) value + (double) this.Radius);
+        this.Position.X = value + this.Radius;
       }
     }
 
@@ -59,11 +59,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.Y - this.Radius;
+        return this.Position.Y - this.Radius;
       }
       set
       {
-        this.Position.Y = (__Null) ((double) value + (double) this.Radius);
+        this.Position.Y = value + this.Radius;
       }
     }
 
@@ -71,11 +71,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.X + this.Radius;
+        return this.Position.X + this.Radius;
       }
       set
       {
-        this.Position.X = (__Null) ((double) value - (double) this.Radius);
+        this.Position.X = value - this.Radius;
       }
     }
 
@@ -83,17 +83,17 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.Y + this.Radius;
+        return this.Position.Y + this.Radius;
       }
       set
       {
-        this.Position.Y = (__Null) ((double) value - (double) this.Radius);
+        this.Position.Y = value - this.Radius;
       }
     }
 
     public override Collider Clone()
     {
-      return (Collider) new Circle(this.Radius, (float) this.Position.X, (float) this.Position.Y);
+      return (Collider) new Circle(this.Radius, this.Position.X, this.Position.Y);
     }
 
     public override void Render(Camera camera, Color color)
@@ -137,3 +137,4 @@ namespace Monocle
     }
   }
 }
+

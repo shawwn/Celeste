@@ -11,12 +11,12 @@ namespace Monocle
 {
   public abstract class GraphicsComponent : Component
   {
-    public Vector2 Scale = Vector2.get_One();
-    public Color Color = Color.get_White();
+    public Vector2 Scale = Vector2.One;
+    public Color Color = Color.White;
+    public SpriteEffects Effects = SpriteEffects.None;
     public Vector2 Position;
     public Vector2 Origin;
     public float Rotation;
-    public SpriteEffects Effects;
 
     public GraphicsComponent(bool active)
       : base(active, true)
@@ -27,11 +27,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.X;
+        return this.Position.X;
       }
       set
       {
-        this.Position.X = (__Null) (double) value;
+        this.Position.X = value;
       }
     }
 
@@ -39,11 +39,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.Y;
+        return this.Position.Y;
       }
       set
       {
-        this.Position.Y = (__Null) (double) value;
+        this.Position.Y = value;
       }
     }
 
@@ -51,11 +51,11 @@ namespace Monocle
     {
       get
       {
-        return (this.Effects & 1) == 1;
+        return (this.Effects & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally;
       }
       set
       {
-        this.Effects = value ? (SpriteEffects) (this.Effects | 1) : (SpriteEffects) (this.Effects & -2);
+        this.Effects = value ? this.Effects | SpriteEffects.FlipHorizontally : this.Effects & ~SpriteEffects.FlipHorizontally;
       }
     }
 
@@ -63,11 +63,11 @@ namespace Monocle
     {
       get
       {
-        return (this.Effects & 2) == 2;
+        return (this.Effects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically;
       }
       set
       {
-        this.Effects = value ? (SpriteEffects) (this.Effects | 2) : (SpriteEffects) (this.Effects & -3);
+        this.Effects = value ? this.Effects | SpriteEffects.FlipVertically : this.Effects & ~SpriteEffects.FlipVertically;
       }
     }
 
@@ -75,17 +75,17 @@ namespace Monocle
     {
       get
       {
-        return Vector2.op_Addition(this.Entity == null ? Vector2.get_Zero() : this.Entity.Position, this.Position);
+        return (this.Entity == null ? Vector2.Zero : this.Entity.Position) + this.Position;
       }
       set
       {
-        this.Position = Vector2.op_Subtraction(value, this.Entity == null ? Vector2.get_Zero() : this.Entity.Position);
+        this.Position = value - (this.Entity == null ? Vector2.Zero : this.Entity.Position);
       }
     }
 
     public void DrawOutline(int offset = 1)
     {
-      this.DrawOutline(Color.get_Black(), offset);
+      this.DrawOutline(Color.Black, offset);
     }
 
     public void DrawOutline(Color color, int offset = 1)
@@ -97,9 +97,9 @@ namespace Monocle
       {
         for (int index2 = -1; index2 < 2; ++index2)
         {
-          if (index1 != 0 || index2 != 0)
+          if (index1 != 0 || (uint) index2 > 0U)
           {
-            this.Position = Vector2.op_Addition(position, new Vector2((float) (index1 * offset), (float) (index2 * offset)));
+            this.Position = position + new Vector2((float) (index1 * offset), (float) (index2 * offset));
             this.Render();
           }
         }
@@ -109,3 +109,4 @@ namespace Monocle
     }
   }
 }
+

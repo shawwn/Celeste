@@ -66,7 +66,7 @@ namespace Celeste
     {
       bool flag = this.Visible && this.Entity.Visible;
       Rectangle bounds = this.Bounds;
-      if (!Rectangle.op_Inequality(this.lastSize, bounds) && (double) this.lastAlpha == (double) this.Alpha && this.lastVisible == flag)
+      if (!(this.lastSize != bounds) && (double) this.lastAlpha == (double) this.Alpha && this.lastVisible == flag)
         return;
       this.MakeLightsDirty();
       this.lastSize = bounds;
@@ -93,12 +93,12 @@ namespace Celeste
       {
         if (!component.Dirty)
         {
-          Rectangle rectangle;
-          ((Rectangle) ref rectangle).\u002Ector((int) (component.Center.X - (double) component.EndRadius), (int) (component.Center.Y - (double) component.EndRadius), (int) component.EndRadius * 2, (int) component.EndRadius * 2);
-          if (((Rectangle) ref bounds).Intersects(rectangle) || ((Rectangle) ref this.lastSize).Intersects(rectangle))
+          Rectangle rectangle = new Rectangle((int) ((double) component.Center.X - (double) component.EndRadius), (int) ((double) component.Center.Y - (double) component.EndRadius), (int) component.EndRadius * 2, (int) component.EndRadius * 2);
+          if (bounds.Intersects(rectangle) || this.lastSize.Intersects(rectangle))
             component.Dirty = true;
         }
       }
     }
   }
 }
+

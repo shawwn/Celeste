@@ -25,9 +25,7 @@ namespace Celeste
     {
       get
       {
-        if (this.Overworld != null)
-          return this.Overworld.Current == this;
-        return false;
+        return this.Overworld != null && this.Overworld.Current == this;
       }
     }
 
@@ -46,3 +44,4 @@ namespace Celeste
     public abstract IEnumerator Leave(Oui next);
   }
 }
+

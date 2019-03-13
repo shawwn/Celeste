@@ -16,15 +16,15 @@ namespace Celeste
     public HashSet<ClutterBlock> HasBelow = new HashSet<ClutterBlock>();
     public List<ClutterBlock> Below = new List<ClutterBlock>();
     public List<ClutterBlock> Above = new List<ClutterBlock>();
+    private float floatTarget = 0.0f;
+    private float floatDelay = 0.0f;
+    private float floatTimer = 0.0f;
     public ClutterBlock.Colors BlockColor;
     public Monocle.Image Image;
     public bool OnTheGround;
     public bool TopSideOpen;
     public bool LeftSideOpen;
     public bool RightSideOpen;
-    private float floatTarget;
-    private float floatDelay;
-    private float floatTimer;
 
     public ClutterBlock(Vector2 position, MTexture texture, ClutterBlock.Colors color)
       : base(position)
@@ -51,7 +51,7 @@ namespace Celeste
       if ((double) this.floatDelay <= 0.0)
       {
         Player entity = this.Scene.Tracker.GetEntity<Player>();
-        if (entity != null && ((!this.TopSideOpen ? 0 : ((double) entity.Right <= (double) this.Left || (double) entity.Left >= (double) this.Right || (double) entity.Bottom < (double) this.Top - 1.0 ? 0 : ((double) entity.Bottom <= (double) this.Top + 4.0 ? 1 : 0))) | (entity.StateMachine.State != 1 || !this.LeftSideOpen || ((double) entity.Right < (double) this.Left - 1.0 || (double) entity.Right >= (double) this.Left + 4.0) || (double) entity.Bottom <= (double) this.Top ? 0 : ((double) entity.Top < (double) this.Bottom ? 1 : 0)) | (entity.StateMachine.State != 1 || !this.RightSideOpen || ((double) entity.Left > (double) this.Right + 1.0 || (double) entity.Left <= (double) this.Right - 4.0) || (double) entity.Bottom <= (double) this.Top ? 0 : ((double) entity.Top < (double) this.Bottom ? 1 : 0))) != 0)
+        if (entity != null && ((((!this.TopSideOpen ? (false ? 1 : 0) : ((double) entity.Right <= (double) this.Left || (double) entity.Left >= (double) this.Right || (double) entity.Bottom < (double) this.Top - 1.0 ? (false ? 1 : 0) : ((double) entity.Bottom <= (double) this.Top + 4.0 ? 1 : 0))) | (entity.StateMachine.State != 1 || !this.LeftSideOpen || ((double) entity.Right < (double) this.Left - 1.0 || (double) entity.Right >= (double) this.Left + 4.0) || (double) entity.Bottom <= (double) this.Top ? 0 : ((double) entity.Top < (double) this.Bottom ? 1 : 0))) != 0 ? 1 : 0) | (entity.StateMachine.State != 1 || !this.RightSideOpen || ((double) entity.Left > (double) this.Right + 1.0 || (double) entity.Left <= (double) this.Right - 4.0) || (double) entity.Bottom <= (double) this.Top ? 0 : ((double) entity.Top < (double) this.Bottom ? 1 : 0))) != 0)
           this.WeightDown();
       }
       this.floatTimer += Engine.DeltaTime;
@@ -71,7 +71,7 @@ namespace Celeste
 
     public void Absorb(ClutterAbsorbEffect effect)
     {
-      effect.FlyClutter(Vector2.op_Addition(this.Position, new Vector2(this.Image.Width * 0.5f, this.Image.Height * 0.5f + this.floatTarget)), this.Image.Texture, true, Calc.Random.NextFloat(0.5f));
+      effect.FlyClutter(this.Position + new Vector2(this.Image.Width * 0.5f, this.Image.Height * 0.5f + this.floatTarget), this.Image.Texture, true, Calc.Random.NextFloat(0.5f));
       this.Scene.Remove((Entity) this);
     }
 
@@ -84,3 +84,4 @@ namespace Celeste
     }
   }
 }
+

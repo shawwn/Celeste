@@ -33,51 +33,52 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS03_TheoEscape cs03TheoEscape = this;
-      cs03TheoEscape.player.StateMachine.State = 11;
-      cs03TheoEscape.player.StateMachine.Locked = true;
-      yield return (object) cs03TheoEscape.player.DummyWalkTo(cs03TheoEscape.theo.X - 64f, false, 1f, false);
-      cs03TheoEscape.player.Facing = Facings.Right;
-      yield return (object) cs03TheoEscape.Level.ZoomTo(new Vector2(240f, 135f), 2f, 0.5f);
-      Func<IEnumerator>[] funcArray = new Func<IEnumerator>[4]
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      yield return (object) this.player.DummyWalkTo(this.theo.X - 64f, false, 1f, false);
+      this.player.Facing = Facings.Right;
+      yield return (object) this.Level.ZoomTo(new Vector2(240f, 135f), 2f, 0.5f);
+      Func<IEnumerator>[] triggers = new Func<IEnumerator>[4]
       {
-        new Func<IEnumerator>(cs03TheoEscape.StopRemovingVent),
-        new Func<IEnumerator>(cs03TheoEscape.StartRemoveVent),
-        new Func<IEnumerator>(cs03TheoEscape.RemoveVent),
-        new Func<IEnumerator>(cs03TheoEscape.GivePhone)
+        new Func<IEnumerator>(this.StopRemovingVent),
+        new Func<IEnumerator>(this.StartRemoveVent),
+        new Func<IEnumerator>(this.RemoveVent),
+        new Func<IEnumerator>(this.GivePhone)
       };
       string dialog = "CH3_THEO_INTRO";
       if (!SaveData.Instance.HasFlag("MetTheo"))
         dialog = "CH3_THEO_NEVER_MET";
       else if (!SaveData.Instance.HasFlag("TheoKnowsName"))
         dialog = "CH3_THEO_NEVER_INTRODUCED";
-      yield return (object) Textbox.Say(dialog, funcArray);
-      cs03TheoEscape.theo.Sprite.Scale.X = (__Null) 1.0;
+      yield return (object) Textbox.Say(dialog, triggers);
+      triggers = (Func<IEnumerator>[]) null;
+      dialog = (string) null;
+      this.theo.Sprite.Scale.X = 1f;
       yield return (object) 0.2f;
-      cs03TheoEscape.theo.Sprite.Play("walk", false, false);
-      while (!cs03TheoEscape.theo.CollideCheck<Solid>(Vector2.op_Addition(cs03TheoEscape.theo.Position, new Vector2(2f, 0.0f))))
+      this.theo.Sprite.Play("walk", false, false);
+      while (!this.theo.CollideCheck<Solid>(this.theo.Position + new Vector2(2f, 0.0f)))
       {
         yield return (object) null;
-        cs03TheoEscape.theo.X += 48f * Engine.DeltaTime;
+        this.theo.X += 48f * Engine.DeltaTime;
       }
-      cs03TheoEscape.theo.Sprite.Play("idle", false, false);
+      this.theo.Sprite.Play("idle", false, false);
       yield return (object) 0.2f;
-      Audio.Play("event:/char/theo/resort_standtocrawl", cs03TheoEscape.theo.Position);
-      cs03TheoEscape.theo.Sprite.Play("duck", false, false);
+      Audio.Play("event:/char/theo/resort_standtocrawl", this.theo.Position);
+      this.theo.Sprite.Play("duck", false, false);
       yield return (object) 0.5f;
-      if (cs03TheoEscape.theo.Talker != null)
-        cs03TheoEscape.theo.Talker.Active = false;
+      if (this.theo.Talker != null)
+        this.theo.Talker.Active = false;
       level.Session.SetFlag("resort_theo", true);
-      cs03TheoEscape.player.StateMachine.Locked = false;
-      cs03TheoEscape.player.StateMachine.State = 0;
-      cs03TheoEscape.theo.CrawlUntilOut();
+      this.player.StateMachine.Locked = false;
+      this.player.StateMachine.State = 0;
+      this.theo.CrawlUntilOut();
       yield return (object) level.ZoomBack(0.5f);
-      cs03TheoEscape.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator StartRemoveVent()
     {
-      this.theo.Sprite.Scale.X = (__Null) 1.0;
+      this.theo.Sprite.Scale.X = 1f;
       yield return (object) 0.1f;
       Audio.Play("event:/char/theo/resort_vent_grab", this.theo.Position);
       this.theo.Sprite.Play("goToVent", false, false);
@@ -88,7 +89,7 @@ namespace Celeste
     {
       this.theo.Sprite.Play("idle", false, false);
       yield return (object) 0.1f;
-      this.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.theo.Sprite.Scale.X = -1f;
     }
 
     private IEnumerator RemoveVent()
@@ -99,25 +100,24 @@ namespace Celeste
       yield return (object) 0.8f;
       this.theo.grate.Fall();
       yield return (object) 0.8f;
-      this.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.theo.Sprite.Scale.X = -1f;
       yield return (object) 0.25f;
     }
 
     private IEnumerator GivePhone()
     {
-      CS03_TheoEscape cs03TheoEscape = this;
-      Player player = cs03TheoEscape.Scene.Tracker.GetEntity<Player>();
+      Player player = this.Scene.Tracker.GetEntity<Player>();
       if (player != null)
       {
-        cs03TheoEscape.theo.Sprite.Play("walk", false, false);
-        cs03TheoEscape.theo.Sprite.Scale.X = (__Null) -1.0;
-        while ((double) cs03TheoEscape.theo.X > (double) player.X + 24.0)
+        this.theo.Sprite.Play("walk", false, false);
+        this.theo.Sprite.Scale.X = -1f;
+        while ((double) this.theo.X > (double) player.X + 24.0)
         {
-          cs03TheoEscape.theo.X -= 48f * Engine.DeltaTime;
+          this.theo.X -= 48f * Engine.DeltaTime;
           yield return (object) null;
         }
       }
-      cs03TheoEscape.theo.Sprite.Play("idle", false, false);
+      this.theo.Sprite.Play("idle", false, false);
       yield return (object) 1f;
     }
 
@@ -132,9 +132,9 @@ namespace Celeste
         return;
       this.theo.Position = this.theoStart;
       this.theo.CrawlUntilOut();
-      if (this.theo.grate == null)
-        return;
-      this.theo.grate.RemoveSelf();
+      if (this.theo.grate != null)
+        this.theo.grate.RemoveSelf();
     }
   }
 }
+

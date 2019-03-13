@@ -14,30 +14,28 @@ namespace Celeste
 {
   public class ButtonConfigUI : TextMenu
   {
+    private float remappingEase = 0.0f;
+    private float inputDelay = 0.0f;
+    private List<Buttons> all = new List<Buttons>()
+    {
+      Buttons.A,
+      Buttons.B,
+      Buttons.X,
+      Buttons.Y,
+      Buttons.LeftShoulder,
+      Buttons.RightShoulder,
+      Buttons.LeftTrigger,
+      Buttons.RightTrigger
+    };
     private bool remapping;
-    private float remappingEase;
-    private float inputDelay;
     private float timeout;
     private ButtonConfigUI.Mappings remappingKey;
     private bool closing;
     private float closingDelay;
     private bool waitingForController;
-    private List<Buttons> all;
 
     public ButtonConfigUI()
     {
-      List<Buttons> buttonsList = new List<Buttons>();
-      buttonsList.Add((Buttons) 4096);
-      buttonsList.Add((Buttons) 8192);
-      buttonsList.Add((Buttons) 16384);
-      buttonsList.Add((Buttons) 32768);
-      buttonsList.Add((Buttons) 256);
-      buttonsList.Add((Buttons) 512);
-      buttonsList.Add((Buttons) 8388608);
-      buttonsList.Add((Buttons) 4194304);
-      this.all = buttonsList;
-      // ISSUE: explicit constructor call
-      base.\u002Ector();
       this.Reload(-1);
       this.OnESC = this.OnCancel = (Action) (() =>
       {
@@ -54,7 +52,7 @@ namespace Celeste
         this.ForceRemap(ButtonConfigUI.Mappings.Talk);
       });
       this.MinWidth = 600f;
-      this.Position.Y = (__Null) (double) this.ScrollTargetY;
+      this.Position.Y = this.ScrollTargetY;
       this.Alpha = 0.0f;
     }
 
@@ -75,7 +73,7 @@ namespace Celeste
       button.OnPressed = (Action) (() =>
       {
         Settings.Instance.SetDefaultButtonControls(true);
-        Celeste.Input.Initialize();
+        Input.Initialize();
         this.Reload(this.Selection);
       });
       this.Add((TextMenu.Item) button);
@@ -86,7 +84,7 @@ namespace Celeste
 
     private void Remap(ButtonConfigUI.Mappings mapping)
     {
-      if (!Celeste.Input.GuiInputController())
+      if (!Input.GuiInputController())
         return;
       this.remapping = true;
       this.remappingKey = mapping;
@@ -114,7 +112,7 @@ namespace Celeste
           Settings.Instance.BtnAltQuickRestart.Clear();
           break;
       }
-      Celeste.Input.Initialize();
+      Input.Initialize();
       this.Reload(this.Selection);
     }
 
@@ -157,7 +155,7 @@ namespace Celeste
         if (buttonsList != Settings.Instance.BtnAltQuickRestart)
           Settings.Instance.BtnAltQuickRestart.Remove(btn);
       }
-      Celeste.Input.Initialize();
+      Input.Initialize();
       this.Reload(this.Selection);
     }
 
@@ -165,46 +163,16 @@ namespace Celeste
     {
       List<Buttons> buttonsList = new List<Buttons>();
       buttonsList.AddRange((IEnumerable<Buttons>) this.all);
-      using (List<Buttons>.Enumerator enumerator = Settings.Instance.BtnJump.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-        {
-          Buttons current = enumerator.Current;
-          buttonsList.Remove(current);
-        }
-      }
-      using (List<Buttons>.Enumerator enumerator = Settings.Instance.BtnDash.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-        {
-          Buttons current = enumerator.Current;
-          buttonsList.Remove(current);
-        }
-      }
-      using (List<Buttons>.Enumerator enumerator = Settings.Instance.BtnGrab.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-        {
-          Buttons current = enumerator.Current;
-          buttonsList.Remove(current);
-        }
-      }
-      using (List<Buttons>.Enumerator enumerator = Settings.Instance.BtnTalk.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-        {
-          Buttons current = enumerator.Current;
-          buttonsList.Remove(current);
-        }
-      }
-      using (List<Buttons>.Enumerator enumerator = Settings.Instance.BtnAltQuickRestart.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-        {
-          Buttons current = enumerator.Current;
-          buttonsList.Remove(current);
-        }
-      }
+      foreach (Buttons buttons in Settings.Instance.BtnJump)
+        buttonsList.Remove(buttons);
+      foreach (Buttons buttons in Settings.Instance.BtnDash)
+        buttonsList.Remove(buttons);
+      foreach (Buttons buttons in Settings.Instance.BtnGrab)
+        buttonsList.Remove(buttons);
+      foreach (Buttons buttons in Settings.Instance.BtnTalk)
+        buttonsList.Remove(buttons);
+      foreach (Buttons buttons in Settings.Instance.BtnAltQuickRestart)
+        buttonsList.Remove(buttons);
       this.remappingKey = mapping;
       if (buttonsList.Count > 0)
       {
@@ -231,15 +199,11 @@ namespace Celeste
     {
       if (list.Count > 1)
       {
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(int&) ref button = (int) list[0];
+        button = list[0];
         list.RemoveAt(0);
         return true;
       }
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(int&) ref button = 4096;
+      button = Buttons.A;
       return false;
     }
 
@@ -254,14 +218,14 @@ namespace Celeste
       this.Focused = !this.closing && (double) this.inputDelay <= 0.0 && !this.waitingForController && !this.remapping;
       if (!this.closing)
       {
-        if (!Celeste.Input.GuiInputController())
+        if (!Input.GuiInputController())
           this.waitingForController = true;
         else if (this.waitingForController)
         {
           this.Reload(-1);
           this.waitingForController = false;
         }
-        if (Celeste.Input.MenuCancel.Pressed && !this.remapping)
+        if (Input.MenuCancel.Pressed && !this.remapping)
           this.OnCancel();
       }
       if ((double) this.inputDelay > 0.0 && !this.remapping)
@@ -269,25 +233,21 @@ namespace Celeste
       this.remappingEase = Calc.Approach(this.remappingEase, this.remapping ? 1f : 0.0f, Engine.DeltaTime * 4f);
       if ((double) this.remappingEase >= 1.0 && this.remapping)
       {
-        if (Celeste.Input.ESC.Pressed || (double) this.timeout <= 0.0 || !Celeste.Input.GuiInputController())
+        if (Input.ESC.Pressed || (double) this.timeout <= 0.0 || !Input.GuiInputController())
         {
           this.remapping = false;
           this.Focused = true;
         }
         else
         {
-          GamePadState currentState = MInput.GamePads[Celeste.Input.Gamepad].CurrentState;
-          GamePadState previousState = MInput.GamePads[Celeste.Input.Gamepad].PreviousState;
-          using (List<Buttons>.Enumerator enumerator = this.all.GetEnumerator())
+          GamePadState currentState = MInput.GamePads[Input.Gamepad].CurrentState;
+          GamePadState previousState = MInput.GamePads[Input.Gamepad].PreviousState;
+          foreach (Buttons buttons in this.all)
           {
-            while (enumerator.MoveNext())
+            if (currentState.IsButtonDown(buttons) && !previousState.IsButtonDown(buttons))
             {
-              Buttons current = enumerator.Current;
-              if (((GamePadState) ref currentState).IsButtonDown(current) && !((GamePadState) ref previousState).IsButtonDown(current))
-              {
-                this.AddRemap(current);
-                break;
-              }
+              this.AddRemap(buttons);
+              break;
             }
           }
         }
@@ -302,19 +262,19 @@ namespace Celeste
 
     public override void Render()
     {
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.get_Black(), Ease.CubeOut(this.Alpha)));
-      Vector2 position = Vector2.op_Multiply(new Vector2(1920f, 1080f), 0.5f);
-      if (Celeste.Input.GuiInputController())
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * Ease.CubeOut(this.Alpha));
+      Vector2 position = new Vector2(1920f, 1080f) * 0.5f;
+      if (Input.GuiInputController())
       {
         base.Render();
         if ((double) this.remappingEase <= 0.0)
           return;
-        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), 0.95f), Ease.CubeInOut(this.remappingEase)));
-        ActiveFont.Draw(Dialog.Get("BTN_CONFIG_CHANGING", (Language) null), Vector2.op_Addition(position, new Vector2(0.0f, -8f)), new Vector2(0.5f, 1f), Vector2.op_Multiply(Vector2.get_One(), 0.7f), Color.op_Multiply(Color.get_LightGray(), Ease.CubeIn(this.remappingEase)));
-        ActiveFont.Draw(this.Label(this.remappingKey), Vector2.op_Addition(position, new Vector2(0.0f, 8f)), new Vector2(0.5f, 0.0f), Vector2.op_Multiply(Vector2.get_One(), 2f), Color.op_Multiply(Color.get_White(), Ease.CubeIn(this.remappingEase)));
+        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * 0.95f * Ease.CubeInOut(this.remappingEase));
+        ActiveFont.Draw(Dialog.Get("BTN_CONFIG_CHANGING", (Language) null), position + new Vector2(0.0f, -8f), new Vector2(0.5f, 1f), Vector2.One * 0.7f, Color.LightGray * Ease.CubeIn(this.remappingEase));
+        ActiveFont.Draw(this.Label(this.remappingKey), position + new Vector2(0.0f, 8f), new Vector2(0.5f, 0.0f), Vector2.One * 2f, Color.White * Ease.CubeIn(this.remappingEase));
       }
       else
-        ActiveFont.Draw(Dialog.Clean("BTN_CONFIG_NOCONTROLLER", (Language) null), position, new Vector2(0.5f, 0.5f), Vector2.get_One(), Color.op_Multiply(Color.get_White(), Ease.CubeOut(this.Alpha)));
+        ActiveFont.Draw(Dialog.Clean("BTN_CONFIG_NOCONTROLLER", (Language) null), position, new Vector2(0.5f, 0.5f), Vector2.One, Color.White * Ease.CubeOut(this.Alpha));
     }
 
     private enum Mappings
@@ -336,9 +296,9 @@ namespace Celeste
         if (strArray.Length != 3)
           return;
         this.info.Add((object) strArray[0]);
-        this.info.Add((object) Celeste.Input.MenuConfirm);
+        this.info.Add((object) Input.MenuConfirm);
         this.info.Add((object) strArray[1]);
-        this.info.Add((object) Celeste.Input.MenuJournal);
+        this.info.Add((object) Input.MenuJournal);
         this.info.Add((object) strArray[2]);
       }
 
@@ -354,50 +314,41 @@ namespace Celeste
 
       public override void Render(Vector2 position, bool highlighted)
       {
-        Color color1 = Color.op_Multiply(Color.get_Gray(), Ease.CubeOut(this.Container.Alpha));
-        Color strokeColor = Color.op_Multiply(Color.get_Black(), Ease.CubeOut(this.Container.Alpha));
-        Color color2 = Color.op_Multiply(Color.get_White(), Ease.CubeOut(this.Container.Alpha));
+        Color color1 = Color.Gray * Ease.CubeOut(this.Container.Alpha);
+        Color strokeColor = Color.Black * Ease.CubeOut(this.Container.Alpha);
+        Color color2 = Color.White * Ease.CubeOut(this.Container.Alpha);
         float num = 0.0f;
         for (int index = 0; index < this.info.Count; ++index)
         {
           if (this.info[index] is string)
           {
             string text = this.info[index] as string;
-            num += (float) (ActiveFont.Measure(text).X * 0.600000023841858);
+            num += ActiveFont.Measure(text).X * 0.6f;
           }
           else if (this.info[index] is VirtualButton)
           {
-            MTexture mtexture = Celeste.Input.GuiButton(this.info[index] as VirtualButton, "controls/keyboard/oemquestion");
+            MTexture mtexture = Input.GuiButton(this.info[index] as VirtualButton, "controls/keyboard/oemquestion");
             num += (float) mtexture.Width * 0.6f;
           }
         }
-        Vector2 position1 = Vector2.op_Addition(position, Vector2.op_Division(new Vector2(this.Container.Width - num, 0.0f), 2f));
+        Vector2 position1 = position + new Vector2(this.Container.Width - num, 0.0f) / 2f;
         for (int index = 0; index < this.info.Count; ++index)
         {
           if (this.info[index] is string)
           {
             string text = this.info[index] as string;
-            ActiveFont.DrawOutline(text, position1, new Vector2(0.0f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 0.6f), color1, 2f, strokeColor);
-            ref __Null local = ref position1.X;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local + (float) (ActiveFont.Measure(text).X * 0.600000023841858);
+            ActiveFont.DrawOutline(text, position1, new Vector2(0.0f, 0.5f), Vector2.One * 0.6f, color1, 2f, strokeColor);
+            position1.X += ActiveFont.Measure(text).X * 0.6f;
           }
           else if (this.info[index] is VirtualButton)
           {
-            MTexture mtexture = Celeste.Input.GuiButton(this.info[index] as VirtualButton, "controls/keyboard/oemquestion");
+            MTexture mtexture = Input.GuiButton(this.info[index] as VirtualButton, "controls/keyboard/oemquestion");
             mtexture.DrawJustified(position1, new Vector2(0.0f, 0.5f), color2, 0.6f);
-            ref __Null local = ref position1.X;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local + (float) mtexture.Width * 0.6f;
+            position1.X += (float) mtexture.Width * 0.6f;
           }
         }
       }
     }
   }
 }
+

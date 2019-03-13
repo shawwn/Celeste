@@ -14,6 +14,7 @@ namespace Celeste
   public class BigWaterfall : Entity
   {
     private List<float> lines = new List<float>();
+    private float fade = 0.0f;
     private BigWaterfall.Layers layer;
     private float width;
     private float height;
@@ -22,18 +23,17 @@ namespace Celeste
     private Color fillColor;
     private float sine;
     private SoundSource loopingSfx;
-    private float fade;
 
     private Vector2 RenderPosition
     {
       get
       {
-        return this.RenderPositionAtCamera(Vector2.op_Addition((this.Scene as Level).Camera.Position, new Vector2(160f, 90f)));
+        return this.RenderPositionAtCamera((this.Scene as Level).Camera.Position + new Vector2(160f, 90f));
       }
     }
 
     public BigWaterfall(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Tag = (int) Tags.TransitionUpdate;
       this.layer = data.Enum<BigWaterfall.Layers>(nameof (layer), BigWaterfall.Layers.BG);
@@ -55,8 +55,8 @@ namespace Celeste
       {
         this.Depth = 10010;
         this.parallax = (float) -(0.699999988079071 + (double) Calc.Random.NextFloat() * 0.200000002980232);
-        this.surfaceColor = Color.op_Multiply(Calc.HexToColor("89dbf0"), 0.5f);
-        this.fillColor = Color.op_Multiply(Calc.HexToColor("29a7ea"), 0.3f);
+        this.surfaceColor = Calc.HexToColor("89dbf0") * 0.5f;
+        this.fillColor = Calc.HexToColor("29a7ea") * 0.3f;
         this.lines.Add(6f);
         this.lines.Add(this.width - 7f);
       }
@@ -83,33 +83,33 @@ namespace Celeste
 
     public Vector2 RenderPositionAtCamera(Vector2 camera)
     {
-      Vector2 vector2_1 = Vector2.op_Subtraction(Vector2.op_Addition(this.Position, Vector2.op_Division(new Vector2(this.width, this.height), 2f)), camera);
-      Vector2 vector2_2 = Vector2.get_Zero();
+      Vector2 vector2 = this.Position + new Vector2(this.width, this.height) / 2f - camera;
+      Vector2 zero = Vector2.Zero;
       if (this.layer == BigWaterfall.Layers.BG)
-        vector2_2 = Vector2.op_Subtraction(vector2_2, Vector2.op_Multiply(vector2_1, 0.6f));
+        zero -= vector2 * 0.6f;
       else if (this.layer == BigWaterfall.Layers.FG)
-        vector2_2 = Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, 0.2f));
-      return Vector2.op_Addition(this.Position, vector2_2);
+        zero += vector2 * 0.2f;
+      return this.Position + zero;
     }
 
     public void RenderDisplacement()
     {
-      Draw.Rect((float) this.RenderPosition.X, this.Y, this.width, this.height, new Color(0.5f, 0.5f, 1f, 1f));
+      Draw.Rect(this.RenderPosition.X, this.Y, this.width, this.height, new Color(0.5f, 0.5f, 1f, 1f));
     }
 
     public override void Update()
     {
       this.sine += Engine.DeltaTime;
       if (this.loopingSfx != null)
-        this.loopingSfx.Position = new Vector2((float) this.RenderPosition.X - this.X, Calc.Clamp((float) ((this.Scene as Level).Camera.Position.Y + 90.0), this.Y, this.height) - this.Y);
+        this.loopingSfx.Position = new Vector2(this.RenderPosition.X - this.X, Calc.Clamp((this.Scene as Level).Camera.Position.Y + 90f, this.Y, this.height) - this.Y);
       base.Update();
     }
 
     public override void Render()
     {
-      float x = (float) this.RenderPosition.X;
-      Color color1 = Color.op_Multiply(this.fillColor, this.fade);
-      Color color2 = Color.op_Multiply(this.surfaceColor, this.fade);
+      float x = this.RenderPosition.X;
+      Color color1 = this.fillColor * this.fade;
+      Color color2 = this.surfaceColor * this.fade;
       Draw.Rect(x, this.Y, this.width, this.height, color1);
       if (this.layer == BigWaterfall.Layers.FG)
       {
@@ -122,9 +122,9 @@ namespace Celeste
       {
         Vector2 position = (this.Scene as Level).Camera.Position;
         int num1 = 3;
-        double num2 = (double) Math.Max(this.Y, (float) Math.Floor(position.Y / (double) num1) * (float) num1);
-        float num3 = Math.Min(this.Y + this.height, (float) (position.Y + 180.0));
-        for (float y = (float) num2; (double) y < (double) num3; y += (float) num1)
+        float num2 = Math.Max(this.Y, (float) Math.Floor((double) position.Y / (double) num1) * (float) num1);
+        float num3 = Math.Min(this.Y + this.height, position.Y + 180f);
+        for (float y = num2; (double) y < (double) num3; y += (float) num1)
         {
           int num4 = (int) (Math.Sin((double) y / 6.0 - (double) this.sine * 8.0) * 2.0);
           Draw.Rect(x, y, (float) (4 + num4), (float) num1, color2);
@@ -142,3 +142,4 @@ namespace Celeste
     }
   }
 }
+

@@ -16,6 +16,8 @@ namespace Celeste
   public class BadelineOldsite : Entity
   {
     public static readonly Color HairColor = Calc.HexToColor("9B3FB5");
+    public bool Hovering = false;
+    private float hoveringTimer = 0.0f;
     private Dictionary<string, SoundSource> loopingSounds = new Dictionary<string, SoundSource>();
     private List<SoundSource> inactiveLoopingSounds = new List<SoundSource>();
     public static ParticleType P_Vanish;
@@ -28,8 +30,6 @@ namespace Celeste
     private bool following;
     private float followBehindTime;
     private float followBehindIndexDelay;
-    public bool Hovering;
-    private float hoveringTimer;
 
     public BadelineOldsite(Vector2 position, int index)
       : base(position)
@@ -41,8 +41,8 @@ namespace Celeste
       this.Sprite = new PlayerSprite(PlayerSpriteMode.Badeline);
       this.Sprite.Play("fallSlow", true, false);
       this.Hair = new PlayerHair(this.Sprite);
-      this.Hair.Color = Color.Lerp(BadelineOldsite.HairColor, Color.get_White(), (float) index / 6f);
-      this.Hair.Border = Color.get_Black();
+      this.Hair.Color = Color.Lerp(BadelineOldsite.HairColor, Color.White, (float) index / 6f);
+      this.Hair.Border = Color.Black;
       this.Add((Component) this.Hair);
       this.Add((Component) this.Sprite);
       this.Visible = false;
@@ -52,7 +52,7 @@ namespace Celeste
     }
 
     public BadelineOldsite(EntityData data, Vector2 offset, int index)
-      : this(Vector2.op_Addition(data.Position, offset), index)
+      : this(data.Position + offset, index)
     {
     }
 
@@ -83,86 +83,67 @@ namespace Celeste
 
     public IEnumerator StartChasingRoutine(Level level)
     {
-      BadelineOldsite badelineOldsite = this;
-      badelineOldsite.Hovering = true;
-      while ((badelineOldsite.player = badelineOldsite.Scene.Tracker.GetEntity<Player>()) == null || badelineOldsite.player.JustRespawned)
+      this.Hovering = true;
+      while ((this.player = this.Scene.Tracker.GetEntity<Player>()) == null || this.player.JustRespawned)
         yield return (object) null;
-      Vector2 to = badelineOldsite.player.Position;
-      yield return (object) badelineOldsite.followBehindIndexDelay;
-      if (!badelineOldsite.Visible)
-        badelineOldsite.PopIntoExistance(0.5f);
-      badelineOldsite.Sprite.Play("fallSlow", false, false);
-      badelineOldsite.Hair.Visible = true;
-      badelineOldsite.Hovering = false;
+      Vector2 to = this.player.Position;
+      yield return (object) this.followBehindIndexDelay;
+      if (!this.Visible)
+        this.PopIntoExistance(0.5f);
+      this.Sprite.Play("fallSlow", false, false);
+      this.Hair.Visible = true;
+      this.Hovering = false;
       if (level.Session.Area.Mode == AreaMode.Normal)
       {
         level.Session.Audio.Music.Event = "event:/music/lvl2/chase";
         level.Session.Audio.Apply();
       }
-      yield return (object) badelineOldsite.TweenToPlayer(to);
-      badelineOldsite.Collidable = true;
-      badelineOldsite.following = true;
-      badelineOldsite.Add((Component) (badelineOldsite.occlude = new LightOcclude(1f)));
+      yield return (object) this.TweenToPlayer(to);
+      this.Collidable = true;
+      this.following = true;
+      this.Add((Component) (this.occlude = new LightOcclude(1f)));
       if (level.Session.Level == "2")
-        badelineOldsite.Add((Component) new Coroutine(badelineOldsite.StopChasing(), true));
+        this.Add((Component) new Coroutine(this.StopChasing(), true));
     }
 
     private IEnumerator TweenToPlayer(Vector2 to)
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      BadelineOldsite badelineOldsite = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      Audio.Play("event:/char/badeline/level_entry", badelineOldsite.Position, "chaser_count", (float) badelineOldsite.index);
-      Vector2 from = badelineOldsite.Position;
-      Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, badelineOldsite.followBehindTime - 0.1f, true);
+      Audio.Play("event:/char/badeline/level_entry", this.Position, "chaser_count", (float) this.index);
+      Vector2 from = this.Position;
+      Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, this.followBehindTime - 0.1f, true);
       tween.OnUpdate = (Action<Tween>) (t =>
       {
         this.Position = Vector2.Lerp(from, to, t.Eased);
-        if (to.X != from.X)
-          this.Sprite.Scale.X = (__Null) ((double) Math.Abs((float) this.Sprite.Scale.X) * (double) Math.Sign((float) (to.X - from.X)));
+        if ((double) to.X != (double) from.X)
+          this.Sprite.Scale.X = Math.Abs(this.Sprite.Scale.X) * (float) Math.Sign(to.X - from.X);
         this.Trail();
       });
-      badelineOldsite.Add((Component) tween);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) tween.Duration;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.Add((Component) tween);
+      yield return (object) tween.Duration;
     }
 
     private IEnumerator StopChasing()
     {
-      BadelineOldsite badelineOldsite = this;
-      Level level = badelineOldsite.SceneAs<Level>();
+      Level level = this.SceneAs<Level>();
       int boundsRight = level.Bounds.X + 148;
       int boundsBottom = level.Bounds.Y + 168 + 184;
-      while ((double) badelineOldsite.X != (double) boundsRight || (double) badelineOldsite.Y != (double) boundsBottom)
+      while ((double) this.X != (double) boundsRight || (double) this.Y != (double) boundsBottom)
       {
         yield return (object) null;
-        if ((double) badelineOldsite.X > (double) boundsRight)
-          badelineOldsite.X = (float) boundsRight;
-        if ((double) badelineOldsite.Y > (double) boundsBottom)
-          badelineOldsite.Y = (float) boundsBottom;
+        if ((double) this.X > (double) boundsRight)
+          this.X = (float) boundsRight;
+        if ((double) this.Y > (double) boundsBottom)
+          this.Y = (float) boundsBottom;
       }
-      badelineOldsite.following = false;
-      badelineOldsite.ignorePlayerAnim = true;
-      badelineOldsite.Sprite.Play("laugh", false, false);
-      badelineOldsite.Sprite.Scale.X = (__Null) 1.0;
+      this.following = false;
+      this.ignorePlayerAnim = true;
+      this.Sprite.Play("laugh", false, false);
+      this.Sprite.Scale.X = 1f;
       yield return (object) 1f;
-      Audio.Play("event:/char/badeline/disappear", badelineOldsite.Position);
-      level.Displacement.AddBurst(badelineOldsite.Center, 0.5f, 24f, 96f, 0.4f, (Ease.Easer) null, (Ease.Easer) null);
-      level.Particles.Emit(BadelineOldsite.P_Vanish, 12, badelineOldsite.Center, Vector2.op_Multiply(Vector2.get_One(), 6f));
-      badelineOldsite.RemoveSelf();
+      Audio.Play("event:/char/badeline/disappear", this.Position);
+      level.Displacement.AddBurst(this.Center, 0.5f, 24f, 96f, 0.4f, (Ease.Easer) null, (Ease.Easer) null);
+      level.Particles.Emit(BadelineOldsite.P_Vanish, 12, this.Center, Vector2.One * 6f);
+      this.RemoveSelf();
     }
 
     public override void Update()
@@ -184,10 +165,10 @@ namespace Celeste
         if (this.following && this.player.GetChasePosition(this.Scene.TimeActive, this.followBehindTime + this.followBehindIndexDelay, out chaseState))
         {
           this.Position = Calc.Approach(this.Position, chaseState.Position, 500f * Engine.DeltaTime);
-          if (!this.ignorePlayerAnim && chaseState.Animation != this.Sprite.CurrentAnimationID && (chaseState.Animation != null && this.Sprite.Has(chaseState.Animation)))
+          if (!this.ignorePlayerAnim && chaseState.Animation != this.Sprite.CurrentAnimationID && chaseState.Animation != null && this.Sprite.Has(chaseState.Animation))
             this.Sprite.Play(chaseState.Animation, true, false);
           if (!this.ignorePlayerAnim)
-            this.Sprite.Scale.X = (__Null) ((double) Math.Abs((float) this.Sprite.Scale.X) * (double) chaseState.Facing);
+            this.Sprite.Scale.X = Math.Abs(this.Sprite.Scale.X) * (float) chaseState.Facing;
           for (int index = 0; index < chaseState.Sounds; ++index)
           {
             if (chaseState[index].Action == Player.ChaserStateSound.Actions.Oneshot)
@@ -220,8 +201,8 @@ namespace Celeste
           this.Trail();
         }
       }
-      if (this.Sprite.Scale.X != 0.0)
-        this.Hair.Facing = (Facings) Math.Sign((float) this.Sprite.Scale.X);
+      if ((double) this.Sprite.Scale.X != 0.0)
+        this.Hair.Facing = (Facings) Math.Sign(this.Sprite.Scale.X);
       if (this.Hovering)
       {
         this.hoveringTimer += Engine.DeltaTime;
@@ -243,7 +224,7 @@ namespace Celeste
 
     private void OnPlayer(Player player)
     {
-      player.Die(Vector2.op_Subtraction(player.Position, this.Position).SafeNormalize(), false, true);
+      player.Die((player.Position - this.Position).SafeNormalize(), false, true);
     }
 
     private void Die()
@@ -254,15 +235,15 @@ namespace Celeste
     private void PopIntoExistance(float duration)
     {
       this.Visible = true;
-      this.Sprite.Scale = Vector2.get_Zero();
-      this.Sprite.Color = Color.get_Transparent();
+      this.Sprite.Scale = Vector2.Zero;
+      this.Sprite.Color = Color.Transparent;
       this.Hair.Visible = true;
       this.Hair.Alpha = 0.0f;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, duration, true);
       tween.OnUpdate = (Action<Tween>) (t =>
       {
-        this.Sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), t.Eased);
-        this.Sprite.Color = Color.op_Multiply(Color.get_White(), t.Eased);
+        this.Sprite.Scale = Vector2.One * t.Eased;
+        this.Sprite.Color = Color.White * t.Eased;
         this.Hair.Alpha = t.Eased;
       });
       this.Add((Component) tween);
@@ -272,10 +253,11 @@ namespace Celeste
     {
       for (int index = 1; index <= dist; ++index)
       {
-        if (this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2(0.0f, (float) index))))
+        if (this.CollideCheck<Solid>(this.Position + new Vector2(0.0f, (float) index)))
           return true;
       }
       return false;
     }
   }
 }
+

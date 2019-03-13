@@ -17,11 +17,10 @@ namespace Celeste
       : base(journal)
     {
       this.PageTexture = "page";
-      Vector2 justify;
-      ((Vector2) ref justify).\u002Ector(0.5f, 0.5f);
+      Vector2 justify = new Vector2(0.5f, 0.5f);
       float scale = 0.5f;
-      Color color = Color.op_Multiply(Color.get_Black(), 0.6f);
-      this.table = new OuiJournalPage.Table().AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_speedruns", (Language) null), new Vector2(1f, 0.5f), 0.7f, Color.op_Multiply(Color.get_Black(), 0.7f), 0.0f, false)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_mode_normal", (Language) null), justify, scale + 0.1f, color, 240f, false)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_mode_normal_fullclear", (Language) null), justify, scale + 0.1f, color, 240f, false));
+      Color color = Color.Black * 0.6f;
+      this.table = new OuiJournalPage.Table().AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_speedruns", (Language) null), new Vector2(1f, 0.5f), 0.7f, Color.Black * 0.7f, 0.0f, false)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_mode_normal", (Language) null), justify, scale + 0.1f, color, 240f, false)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_mode_normal_fullclear", (Language) null), justify, scale + 0.1f, color, 240f, false));
       if (SaveData.Instance.UnlockedModes >= 2)
         this.table.AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_mode_bside", (Language) null), justify, scale + 0.1f, color, 240f, false));
       if (SaveData.Instance.UnlockedModes >= 3)
@@ -140,3 +139,4 @@ namespace Celeste
     }
   }
 }
+

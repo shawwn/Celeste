@@ -43,7 +43,7 @@ namespace Celeste
     }
 
     public LockBlock(EntityData data, Vector2 offset, EntityID id)
-      : this(Vector2.op_Addition(data.Position, offset), id, data.Bool(nameof (stepMusicProgress), false), data.Attr(nameof (sprite), "wood"))
+      : this(data.Position + offset, id, data.Bool(nameof (stepMusicProgress), false), data.Attr(nameof (sprite), "wood"))
     {
     }
 
@@ -75,30 +75,30 @@ namespace Celeste
 
     private IEnumerator UnlockRoutine(Follower fol)
     {
-      LockBlock lockBlock = this;
-      SoundEmitter emitter = SoundEmitter.Play(lockBlock.unlockSfxName, (Entity) lockBlock, new Vector2?());
+      SoundEmitter emitter = SoundEmitter.Play(this.unlockSfxName, (Entity) this, new Vector2?());
       emitter.Source.DisposeOnTransition = true;
-      Level level = lockBlock.SceneAs<Level>();
+      Level level = this.SceneAs<Level>();
       Key key = fol.Entity as Key;
-      lockBlock.Add((Component) new Coroutine(key.UseRoutine(Vector2.op_Addition(lockBlock.Center, new Vector2(0.0f, 2f))), true));
+      this.Add((Component) new Coroutine(key.UseRoutine(this.Center + new Vector2(0.0f, 2f)), true));
       yield return (object) 1.2f;
-      if (lockBlock.stepMusicProgress)
+      if (this.stepMusicProgress)
       {
         ++level.Session.Audio.Music.Progress;
         level.Session.Audio.Apply();
       }
-      level.Session.DoNotLoad.Add(lockBlock.ID);
+      level.Session.DoNotLoad.Add(this.ID);
       key.RegisterUsed();
       while (key.Turning)
         yield return (object) null;
-      lockBlock.Tag |= (int) Tags.TransitionUpdate;
-      lockBlock.Collidable = false;
+      this.Tag |= (int) Tags.TransitionUpdate;
+      this.Collidable = false;
       emitter.Source.DisposeOnTransition = false;
-      yield return (object) lockBlock.sprite.PlayRoutine("open", false);
+      yield return (object) this.sprite.PlayRoutine("open", false);
       level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      yield return (object) lockBlock.sprite.PlayRoutine("burst", false);
-      lockBlock.RemoveSelf();
+      yield return (object) this.sprite.PlayRoutine("burst", false);
+      this.RemoveSelf();
     }
   }
 }
+

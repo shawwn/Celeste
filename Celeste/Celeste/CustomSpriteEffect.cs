@@ -14,16 +14,17 @@ namespace Celeste
     private EffectParameter matrixParam;
 
     public CustomSpriteEffect(Effect effect)
+      : base(effect)
     {
-      base.\u002Ector(effect);
-      this.matrixParam = this.get_Parameters().get_Item("MatrixTransform");
+      this.matrixParam = this.Parameters["MatrixTransform"];
     }
 
-    protected virtual void OnApply()
+    protected override void OnApply()
     {
-      Viewport viewport = ((GraphicsResource) this).get_GraphicsDevice().get_Viewport();
-      this.matrixParam.SetValue(Matrix.op_Multiply(Matrix.CreateTranslation(-0.5f, -0.5f, 0.0f), Matrix.CreateOrthographicOffCenter(0.0f, (float) ((Viewport) ref viewport).get_Width(), (float) ((Viewport) ref viewport).get_Height(), 0.0f, 0.0f, 1f)));
+      Viewport viewport = this.GraphicsDevice.Viewport;
+      this.matrixParam.SetValue(Matrix.CreateOrthographicOffCenter(0.0f, (float) viewport.Width, (float) viewport.Height, 0.0f, 0.0f, 1f));
       base.OnApply();
     }
   }
 }
+

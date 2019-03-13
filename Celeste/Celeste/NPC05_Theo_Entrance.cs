@@ -18,7 +18,7 @@ namespace Celeste
       this.IdleAnim = "idle";
       this.MoveAnim = "walk";
       this.Maxspeed = 48f;
-      this.Add((Component) (this.Light = new VertexLight(Vector2.op_Multiply(Vector2.op_UnaryNegation(Vector2.get_UnitY()), 12f), Color.get_White(), 1f, 32, 64)));
+      this.Add((Component) (this.Light = new VertexLight(-Vector2.UnitY * 12f, Color.White, 1f, 32, 64)));
     }
 
     public override void Added(Scene scene)
@@ -31,3 +31,4 @@ namespace Celeste
     }
   }
 }
+

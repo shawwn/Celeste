@@ -12,7 +12,7 @@ namespace Celeste
   [Tracked(false)]
   public class BloomPoint : Component
   {
-    public Vector2 Position = Vector2.get_Zero();
+    public Vector2 Position = Vector2.Zero;
     public float Alpha = 1f;
     public float Radius = 8f;
 
@@ -20,11 +20,11 @@ namespace Celeste
     {
       get
       {
-        return (float) this.Position.X;
+        return this.Position.X;
       }
       set
       {
-        this.Position.X = (__Null) (double) value;
+        this.Position.X = value;
       }
     }
 
@@ -32,11 +32,11 @@ namespace Celeste
     {
       get
       {
-        return (float) this.Position.Y;
+        return this.Position.Y;
       }
       set
       {
-        this.Position.Y = (__Null) (double) value;
+        this.Position.Y = value;
       }
     }
 
@@ -56,3 +56,4 @@ namespace Celeste
     }
   }
 }
+

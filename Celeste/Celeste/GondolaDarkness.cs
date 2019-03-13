@@ -12,11 +12,11 @@ namespace Celeste
 {
   public class GondolaDarkness : Entity
   {
+    private float anxiety = 0.0f;
+    private float anxietyStutter = 0.0f;
     private Sprite sprite;
     private Sprite hands;
     private GondolaDarkness.Blackness blackness;
-    private float anxiety;
-    private float anxietyStutter;
     private WindSnowFG windSnowFG;
 
     public GondolaDarkness()
@@ -31,15 +31,14 @@ namespace Celeste
 
     public IEnumerator Appear(WindSnowFG windSnowFG = null)
     {
-      GondolaDarkness gondolaDarkness = this;
-      gondolaDarkness.windSnowFG = windSnowFG;
-      gondolaDarkness.Visible = true;
-      gondolaDarkness.Scene.Add((Entity) (gondolaDarkness.blackness = new GondolaDarkness.Blackness()));
+      this.windSnowFG = windSnowFG;
+      this.Visible = true;
+      this.Scene.Add((Entity) (this.blackness = new GondolaDarkness.Blackness()));
       for (float t = 0.0f; (double) t < 1.0; t += Engine.DeltaTime / 2f)
       {
         yield return (object) null;
-        gondolaDarkness.blackness.Fade = t;
-        gondolaDarkness.anxiety = t;
+        this.blackness.Fade = t;
+        this.anxiety = t;
         if (windSnowFG != null)
           windSnowFG.Alpha = 1f - t;
       }
@@ -72,7 +71,7 @@ namespace Celeste
 
     public override void Render()
     {
-      this.Position = Vector2.op_Addition((this.Scene as Level).Camera.Position, (this.Scene as Level).ZoomFocusPoint);
+      this.Position = (this.Scene as Level).Camera.Position + (this.Scene as Level).ZoomFocusPoint;
       base.Render();
     }
 
@@ -100,8 +99,9 @@ namespace Celeste
       {
         base.Render();
         Camera camera = (this.Scene as Level).Camera;
-        Draw.Rect(camera.Left - 1f, camera.Top - 1f, 322f, 182f, Color.op_Multiply(Color.get_Black(), this.Fade));
+        Draw.Rect(camera.Left - 1f, camera.Top - 1f, 322f, 182f, Color.Black * this.Fade);
       }
     }
   }
 }
+

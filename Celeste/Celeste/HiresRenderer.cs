@@ -16,7 +16,7 @@ namespace Celeste
     {
       get
       {
-        return Celeste.Celeste.HudTarget;
+        return Celeste.HudTarget;
       }
     }
 
@@ -24,22 +24,18 @@ namespace Celeste
     {
       get
       {
-        if (HiresRenderer.Buffer == null)
-          return false;
-        if (Engine.ViewWidth >= 1920)
-          return Engine.ViewHeight < 1080;
-        return true;
+        return HiresRenderer.Buffer != null && (Engine.ViewWidth < 1920 || Engine.ViewHeight < 1080);
       }
     }
 
     public static void BeginRender(BlendState blend = null, SamplerState sampler = null)
     {
       if (blend == null)
-        blend = (BlendState) BlendState.AlphaBlend;
+        blend = BlendState.AlphaBlend;
       if (sampler == null)
-        sampler = (SamplerState) SamplerState.LinearClamp;
-      Matrix matrix = HiresRenderer.DrawToBuffer ? Matrix.get_Identity() : Engine.ScreenMatrix;
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, blend, sampler, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, (Effect) null, matrix);
+        sampler = SamplerState.LinearClamp;
+      Matrix transformationMatrix = HiresRenderer.DrawToBuffer ? Matrix.Identity : Engine.ScreenMatrix;
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, blend, sampler, DepthStencilState.Default, RasterizerState.CullNone, (Effect) null, transformationMatrix);
     }
 
     public static void EndRender()
@@ -51,8 +47,8 @@ namespace Celeste
     {
       if (!HiresRenderer.DrawToBuffer)
         return;
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) HiresRenderer.Buffer);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) HiresRenderer.Buffer);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
       this.RenderContent(scene);
     }
 
@@ -60,8 +56,8 @@ namespace Celeste
     {
       if (HiresRenderer.DrawToBuffer)
       {
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.LinearClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
-        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) HiresRenderer.Buffer, new Vector2(-1f, -1f), Color.get_White());
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
+        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) HiresRenderer.Buffer, new Vector2(-1f, -1f), Color.White);
         Draw.SpriteBatch.End();
       }
       else
@@ -73,3 +69,4 @@ namespace Celeste
     }
   }
 }
+

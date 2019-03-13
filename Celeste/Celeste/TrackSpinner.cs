@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.TrackSpinner
-// Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
+// Assembly: Celeste, Versio@c04B-572A65ED61D1
 // Assembly location: M:\code\bin\Celeste\Celeste.exe
+
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -44,10 +44,10 @@ namespace Celeste
         (Collider) new Hitbox(16f, 4f, -8f, -3f)
       });
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
-      this.Start = Vector2.op_Addition(data.Position, offset);
-      this.End = Vector2.op_Addition(data.Nodes[0], offset);
+      this.Start = data.Position + offset;
+      this.End = data.Nodes[0] + offset;
       this.Speed = data.Enum<TrackSpinner.Speeds>("speed", TrackSpinner.Speeds.Normal);
-      this.Angle = Vector2.op_Subtraction(this.Start, this.End).Angle();
+      this.Angle = (this.Start - this.End).Angle();
       this.Percent = data.Bool("startCenter", false) ? 0.5f : 0.0f;
       if ((double) this.Percent == 1.0)
         this.Up = false;
@@ -73,25 +73,25 @@ namespace Celeste
       if ((double) this.PauseTimer > 0.0)
       {
         this.PauseTimer -= Engine.DeltaTime;
-        if ((double) this.PauseTimer > 0.0)
-          return;
-        this.OnTrackStart();
+        if ((double) this.PauseTimer <= 0.0)
+          this.OnTrackStart();
       }
       else
       {
         this.Percent = Calc.Approach(this.Percent, this.Up ? 1f : 0.0f, Engine.DeltaTime / TrackSpinner.MoveTimes[(int) this.Speed]);
         this.UpdatePosition();
-        if ((!this.Up || (double) this.Percent != 1.0) && (this.Up || (double) this.Percent != 0.0))
-          return;
-        this.Up = !this.Up;
-        this.PauseTimer = TrackSpinner.PauseTimes[(int) this.Speed];
-        this.OnTrackEnd();
+        if (this.Up && (double) this.Percent == 1.0 || !this.Up && (double) this.Percent == 0.0)
+        {
+          this.Up = !this.Up;
+          this.PauseTimer = TrackSpinner.PauseTimes[(int) this.Speed];
+          this.OnTrackEnd();
+        }
       }
     }
 
     public virtual void OnPlayer(Player player)
     {
-      if (player.Die(Vector2.op_Subtraction(player.Position, this.Position).SafeNormalize(), false, true) == null)
+      if (player.Die((player.Position - this.Position).SafeNormalize(), false, true) == null)
         return;
       this.Moving = false;
     }
@@ -112,3 +112,4 @@ namespace Celeste
     }
   }
 }
+

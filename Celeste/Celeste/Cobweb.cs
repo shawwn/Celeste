@@ -24,8 +24,8 @@ namespace Celeste
     public Cobweb(EntityData data, Vector2 offset)
     {
       this.Depth = -1;
-      this.anchorA = this.Position = Vector2.op_Addition(data.Position, offset);
-      this.anchorB = Vector2.op_Addition(data.Nodes[0], offset);
+      this.anchorA = this.Position = data.Position + offset;
+      this.anchorB = data.Nodes[0] + offset;
       foreach (Vector2 node in data.Nodes)
       {
         if (this.offshoots == null)
@@ -35,7 +35,7 @@ namespace Celeste
         }
         else
         {
-          this.offshoots.Add(Vector2.op_Addition(node, offset));
+          this.offshoots.Add(node + offset);
           this.offshootEndings.Add(0.3f + Calc.Random.NextFloat(0.4f));
         }
       }
@@ -74,7 +74,7 @@ namespace Celeste
 
     private void DrawCobweb(Vector2 a, Vector2 b, int steps, bool drawOffshoots)
     {
-      SimpleCurve simpleCurve = new SimpleCurve(a, b, Vector2.op_Addition(Vector2.op_Division(Vector2.op_Addition(a, b), 2f), Vector2.op_Multiply(Vector2.get_UnitY(), (float) (8.0 + Math.Sin((double) this.waveTimer) * 4.0))));
+      SimpleCurve simpleCurve = new SimpleCurve(a, b, (a + b) / 2f + Vector2.UnitY * (float) (8.0 + Math.Sin((double) this.waveTimer) * 4.0));
       if (drawOffshoots && this.offshoots != null)
       {
         for (int index = 0; index < this.offshoots.Count; ++index)
@@ -86,8 +86,9 @@ namespace Celeste
         float percent = (float) index / (float) steps;
         Vector2 point = simpleCurve.GetPoint(percent);
         Draw.Line(start, point, index <= 2 || index >= steps - 1 ? this.edge : this.color);
-        start = Vector2.op_Addition(point, Vector2.op_Subtraction(start, point).SafeNormalize());
+        start = point + (start - point).SafeNormalize();
       }
     }
   }
 }
+

@@ -41,31 +41,30 @@ namespace Celeste
       base.Update();
       this.X -= 300f * Engine.DeltaTime;
       this.distortionAlpha = Calc.Approach(this.distortionAlpha, 1f, Engine.DeltaTime * 4f);
-      double x = (double) this.X;
-      Rectangle bounds = this.SceneAs<Level>().Bounds;
-      double num = (double) (((Rectangle) ref bounds).get_Left() - 20);
-      if (x >= num)
+      if ((double) this.X >= (double) (this.SceneAs<Level>().Bounds.Left - 20))
         return;
       this.RemoveSelf();
     }
 
     private void RenderDisplacement()
     {
-      this.distortionTexture.DrawCentered(this.Position, Color.op_Multiply(Color.op_Multiply(Color.get_White(), 0.8f), this.distortionAlpha), new Vector2(0.9f, 1.5f));
+      this.distortionTexture.DrawCentered(this.Position, Color.White * 0.8f * this.distortionAlpha, new Vector2(0.9f, 1.5f));
     }
 
     private void OnPlayer(Player player)
     {
       if (player.StateMachine.State == 2)
         return;
-      player.Speed.X = (__Null) -100.0;
-      if (player.Speed.Y > 30.0)
-        player.Speed.Y = (__Null) 30.0;
-      if (this.hasHitPlayer)
-        return;
-      Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      Audio.Play("event:/game/05_mirror_temple/eye_pulse", player.Position);
-      this.hasHitPlayer = true;
+      player.Speed.X = -100f;
+      if ((double) player.Speed.Y > 30.0)
+        player.Speed.Y = 30f;
+      if (!this.hasHitPlayer)
+      {
+        Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
+        Audio.Play("event:/game/05_mirror_temple/eye_pulse", player.Position);
+        this.hasHitPlayer = true;
+      }
     }
   }
 }
+

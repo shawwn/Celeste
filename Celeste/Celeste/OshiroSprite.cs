@@ -18,7 +18,7 @@ namespace Celeste
 
     public OshiroSprite(int facing)
     {
-      this.Scale.X = (__Null) (double) facing;
+      this.Scale.X = (float) facing;
       GFX.SpriteBank.CreateOn((Sprite) this, "oshiro");
     }
 
@@ -27,8 +27,8 @@ namespace Celeste
       base.Added(entity);
       entity.Add((Component) (this.wiggler = Wiggler.Create(0.3f, 2f, (Action<float>) (f =>
       {
-        this.Scale.X = (__Null) ((double) Math.Sign((float) this.Scale.X) * (1.0 + (double) f * 0.200000002980232));
-        this.Scale.Y = (__Null) (1.0 - (double) f * 0.200000002980232);
+        this.Scale.X = (float) Math.Sign(this.Scale.X) * (float) (1.0 + (double) f * 0.200000002980232);
+        this.Scale.Y = (float) (1.0 - (double) f * 0.200000002980232);
       }), false, false)));
     }
 
@@ -52,37 +52,30 @@ namespace Celeste
       if (!this.AllowTurnInvisible || !this.Visible)
         return;
       Level scene = this.Scene as Level;
-      // ISSUE: variable of the null type
-      __Null x1 = this.RenderPosition.X;
-      Rectangle bounds = scene.Bounds;
-      double num1 = (double) (((Rectangle) ref bounds).get_Left() - 8);
-      int num2;
-      if (x1 > num1)
+      int num1;
+      if ((double) this.RenderPosition.X > (double) (scene.Bounds.Left - 8))
       {
-        // ISSUE: variable of the null type
-        __Null y1 = this.RenderPosition.Y;
-        bounds = scene.Bounds;
-        double num3 = (double) (((Rectangle) ref bounds).get_Top() - 8);
-        if (y1 > num3)
+        double y1 = (double) this.RenderPosition.Y;
+        Rectangle bounds = scene.Bounds;
+        double num2 = (double) (bounds.Top - 8);
+        if (y1 > num2)
         {
-          // ISSUE: variable of the null type
-          __Null x2 = this.RenderPosition.X;
+          double x = (double) this.RenderPosition.X;
           bounds = scene.Bounds;
-          double num4 = (double) (((Rectangle) ref bounds).get_Right() + 8);
-          if (x2 < num4)
+          double num3 = (double) (bounds.Right + 8);
+          if (x < num3)
           {
-            // ISSUE: variable of the null type
-            __Null y2 = this.RenderPosition.Y;
+            double y2 = (double) this.RenderPosition.Y;
             bounds = scene.Bounds;
-            double num5 = (double) (((Rectangle) ref bounds).get_Bottom() + 16);
-            num2 = y2 < num5 ? 1 : 0;
-            goto label_13;
+            double num4 = (double) (bounds.Bottom + 16);
+            num1 = y2 < num4 ? 1 : 0;
+            goto label_16;
           }
         }
       }
-      num2 = 0;
-label_13:
-      this.Visible = num2 != 0;
+      num1 = 0;
+label_16:
+      this.Visible = num1 != 0;
     }
 
     public void Wiggle()
@@ -98,7 +91,7 @@ label_13:
       if (flip)
       {
         this.Scale.X = -this.Scale.X;
-        if (this.Scale.X < 0.0)
+        if ((double) this.Scale.X < 0.0)
           Audio.Play("event:/char/oshiro/chat_turn_left", this.Entity.Position);
         else
           Audio.Play("event:/char/oshiro/chat_turn_right", this.Entity.Position);
@@ -107,3 +100,4 @@ label_13:
     }
   }
 }
+

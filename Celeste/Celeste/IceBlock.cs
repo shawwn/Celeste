@@ -35,14 +35,14 @@ namespace Celeste
     }
 
     public IceBlock(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height)
+      : this(data.Position + offset, (float) data.Width, (float) data.Height)
     {
     }
 
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      scene.Add((Entity) (this.solid = new Solid(Vector2.op_Addition(this.Position, new Vector2(2f, 3f)), this.Width - 4f, this.Height - 5f, false)));
+      scene.Add((Entity) (this.solid = new Solid(this.Position + new Vector2(2f, 3f), this.Width - 4f, this.Height - 5f, false)));
       this.Collidable = this.solid.Collidable = this.SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
     }
 
@@ -57,15 +57,15 @@ namespace Celeste
       {
         for (int index2 = 0; (double) index2 < (double) this.Height; index2 += 4)
         {
-          Vector2 position = Vector2.op_Addition(Vector2.op_Addition(this.Position, new Vector2((float) (index1 + 2), (float) (index2 + 2))), Calc.Random.Range(Vector2.op_Multiply(Vector2.op_UnaryNegation(Vector2.get_One()), 2f), Vector2.op_Multiply(Vector2.get_One(), 2f)));
-          level.Particles.Emit(IceBlock.P_Deactivate, position, Vector2.op_Subtraction(position, center).Angle());
+          Vector2 position = this.Position + new Vector2((float) (index1 + 2), (float) (index2 + 2)) + Calc.Random.Range(-Vector2.One * 2f, Vector2.One * 2f);
+          level.Particles.Emit(IceBlock.P_Deactivate, position, (position - center).Angle());
         }
       }
     }
 
     private void OnPlayer(Player player)
     {
-      player.Die(Vector2.op_Subtraction(player.Center, this.Center).SafeNormalize(), false, true);
+      player.Die((player.Center - this.Center).SafeNormalize(), false, true);
     }
 
     public override void Render()
@@ -76,3 +76,4 @@ namespace Celeste
     }
   }
 }
+

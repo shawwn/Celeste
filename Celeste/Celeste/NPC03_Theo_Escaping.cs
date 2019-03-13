@@ -28,10 +28,10 @@ namespace Celeste
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      this.Add((Component) (this.light = new VertexLight(Vector2.op_Subtraction(this.Center, this.Position), Color.get_White(), 1f, 32, 64)));
-      while (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2(1f, 0.0f))))
+      this.Add((Component) (this.light = new VertexLight(this.Center - this.Position, Color.White, 1f, 32, 64)));
+      while (!this.CollideCheck<Solid>(this.Position + new Vector2(1f, 0.0f)))
         ++this.X;
-      this.grate = new NPC03_Theo_Escaping.Grate(Vector2.op_Addition(this.Position, new Vector2(this.Width / 2f, -8f)));
+      this.grate = new NPC03_Theo_Escaping.Grate(this.Position + new Vector2(this.Width / 2f, -8f));
       this.Scene.Add((Entity) this.grate);
       this.Sprite.Play("goToVent", false, false);
     }
@@ -56,23 +56,21 @@ namespace Celeste
 
     public void CrawlUntilOut()
     {
-      this.Sprite.Scale.X = (__Null) 1.0;
+      this.Sprite.Scale.X = 1f;
       this.Sprite.Play("crawl", false, false);
       this.Add((Component) new Coroutine(this.CrawlUntilOutRoutine(), true));
     }
 
     private IEnumerator CrawlUntilOutRoutine()
     {
-      NPC03_Theo_Escaping npC03TheoEscaping = this;
-      npC03TheoEscaping.AddTag((int) Tags.Global);
-      Rectangle bounds = (npC03TheoEscaping.Scene as Level).Bounds;
-      int target = ((Rectangle) ref bounds).get_Right() + 280;
-      while ((double) npC03TheoEscaping.X != (double) target)
+      this.AddTag((int) Tags.Global);
+      int target = (this.Scene as Level).Bounds.Right + 280;
+      while ((double) this.X != (double) target)
       {
-        npC03TheoEscaping.X = Calc.Approach(npC03TheoEscaping.X, (float) target, 20f * Engine.DeltaTime);
+        this.X = Calc.Approach(this.X, (float) target, 20f * Engine.DeltaTime);
         yield return (object) null;
       }
-      npC03TheoEscaping.Scene.Remove((Entity) npC03TheoEscaping);
+      this.Scene.Remove((Entity) this);
     }
 
     public class Grate : Entity
@@ -102,19 +100,14 @@ namespace Celeste
       {
         if (this.falling)
         {
-          this.speed.X = (__Null) (double) Calc.Approach((float) this.speed.X, 0.0f, Engine.DeltaTime * 120f);
-          ref __Null local = ref this.speed.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + 400f * Engine.DeltaTime;
-          this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(this.speed, Engine.DeltaTime));
-          if (this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2(0.0f, 2f))) && this.speed.Y > 0.0)
-            this.speed.Y = (__Null) (-this.speed.Y * 0.25);
+          this.speed.X = Calc.Approach(this.speed.X, 0.0f, Engine.DeltaTime * 120f);
+          this.speed.Y += 400f * Engine.DeltaTime;
+          this.Position = this.Position + this.speed * Engine.DeltaTime;
+          if (this.CollideCheck<Solid>(this.Position + new Vector2(0.0f, 2f)) && (double) this.speed.Y > 0.0)
+            this.speed.Y = (float) (-(double) this.speed.Y * 0.25);
           this.alpha -= Engine.DeltaTime;
-          this.Sprite.Rotation += (float) ((double) Engine.DeltaTime * (double) ((Vector2) ref this.speed).Length() * 0.0500000007450581);
-          this.Sprite.Color = Color.op_Multiply(Color.get_White(), this.alpha);
+          this.Sprite.Rotation += (float) ((double) Engine.DeltaTime * (double) this.speed.Length() * 0.0500000007450581);
+          this.Sprite.Color = Color.White * this.alpha;
           if ((double) this.alpha <= 0.0)
             this.RemoveSelf();
         }
@@ -123,3 +116,4 @@ namespace Celeste
     }
   }
 }
+

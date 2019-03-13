@@ -42,17 +42,17 @@ namespace Celeste
     {
       base.Update();
       Entity entity = this.AbsorbInto != null ? this.AbsorbInto : (Entity) this.Scene.Tracker.GetEntity<Player>();
-      if ((entity == null || entity.Scene == null ? 1 : (!(entity is Player) ? 0 : ((entity as Player).Dead ? 1 : 0))) != 0)
+      if (entity == null || entity.Scene == null || entity is Player && (entity as Player).Dead)
       {
-        this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(this.burstDirection, this.burstSpeed), Engine.RawDeltaTime));
+        this.Position = this.Position + this.burstDirection * this.burstSpeed * Engine.RawDeltaTime;
         this.burstSpeed = Calc.Approach(this.burstSpeed, 800f, Engine.RawDeltaTime * 200f);
         this.sprite.Rotation = this.burstDirection.Angle();
         this.sprite.Scale = new Vector2(Math.Min(2f, (float) (0.5 + (double) this.burstSpeed * 0.0199999995529652)), Math.Max(0.05f, (float) (0.5 - (double) this.burstSpeed * 0.00400000018998981)));
-        this.sprite.Color = Color.op_Multiply(Color.get_White(), this.alpha = Calc.Approach(this.alpha, 0.0f, Engine.DeltaTime));
+        this.sprite.Color = Color.White * (this.alpha = Calc.Approach(this.alpha, 0.0f, Engine.DeltaTime));
       }
       else if ((double) this.consumeDelay > 0.0)
       {
-        this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(this.burstDirection, this.burstSpeed), Engine.RawDeltaTime));
+        this.Position = this.Position + this.burstDirection * this.burstSpeed * Engine.RawDeltaTime;
         this.burstSpeed = Calc.Approach(this.burstSpeed, 0.0f, Engine.RawDeltaTime * 120f);
         this.sprite.Rotation = this.burstDirection.Angle();
         this.sprite.Scale = new Vector2(Math.Min(2f, (float) (0.5 + (double) this.burstSpeed * 0.0199999995529652)), Math.Max(0.05f, (float) (0.5 - (double) this.burstSpeed * 0.00400000018998981)));
@@ -61,16 +61,13 @@ namespace Celeste
           return;
         Vector2 position = this.Position;
         Vector2 center = entity.Center;
-        Vector2 vector2_1 = Vector2.op_Division(Vector2.op_Addition(position, center), 2f);
-        Vector2 vector2_2 = Vector2.op_Subtraction(center, position).SafeNormalize().Perpendicular();
-        Vector2 vector2_3 = Vector2.op_Subtraction(position, center);
-        double num1 = (double) ((Vector2) ref vector2_3).Length();
-        Vector2 vector2_4 = Vector2.op_Multiply(Vector2.op_Multiply(vector2_2, (float) num1), (float) (0.0500000007450581 + (double) Calc.Random.NextFloat() * 0.449999988079071));
-        float num2 = (float) (center.X - position.X);
-        float num3 = (float) (center.Y - position.Y);
-        if ((double) Math.Abs(num2) > (double) Math.Abs(num3) && Math.Sign((float) vector2_4.X) != Math.Sign(num2) || (double) Math.Abs(num3) > (double) Math.Abs(num3) && Math.Sign((float) vector2_4.Y) != Math.Sign(num3))
-          vector2_4 = Vector2.op_Multiply(vector2_4, -1f);
-        this.curve = new SimpleCurve(position, center, Vector2.op_Addition(vector2_1, vector2_4));
+        Vector2 vector2_1 = (position + center) / 2f;
+        Vector2 vector2_2 = (center - position).SafeNormalize().Perpendicular() * (position - center).Length() * (float) (0.0500000007450581 + (double) Calc.Random.NextFloat() * 0.449999988079071);
+        float num1 = center.X - position.X;
+        float num2 = center.Y - position.Y;
+        if ((double) Math.Abs(num1) > (double) Math.Abs(num2) && Math.Sign(vector2_2.X) != Math.Sign(num1) || (double) Math.Abs(num2) > (double) Math.Abs(num2) && Math.Sign(vector2_2.Y) != Math.Sign(num2))
+          vector2_2 *= -1f;
+        this.curve = new SimpleCurve(position, center, vector2_1 + vector2_2);
         this.duration = 0.3f + Calc.Random.NextFloat(0.25f);
         this.burstScale = this.sprite.Scale;
       }
@@ -84,9 +81,10 @@ namespace Celeste
         this.Position = this.curve.GetPoint(percent);
         float num = Calc.YoYo(percent) * this.curve.GetLengthParametric(10);
         this.sprite.Scale = new Vector2(Math.Min(2f, (float) (0.5 + (double) num * 0.0199999995529652)), Math.Max(0.05f, (float) (0.5 - (double) num * 0.00400000018998981)));
-        this.sprite.Color = Color.op_Multiply(Color.get_White(), 1f - percent);
+        this.sprite.Color = Color.White * (1f - percent);
         this.sprite.Rotation = Calc.Angle(this.Position, this.curve.GetPoint(Ease.CubeIn(this.percent + 0.01f)));
       }
     }
   }
 }
+

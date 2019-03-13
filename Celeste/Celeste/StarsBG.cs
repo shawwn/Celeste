@@ -13,11 +13,11 @@ namespace Celeste
 {
   public class StarsBG : Backdrop
   {
+    private float falling = 0.0f;
     private const int StarCount = 100;
     private StarsBG.Star[] stars;
     private Color[] colors;
     private List<List<MTexture>> textures;
-    private float falling;
     private Vector2 center;
 
     public StarsBG()
@@ -26,7 +26,7 @@ namespace Celeste
       this.textures.Add(GFX.Game.GetAtlasSubtextures("bgs/02/stars/a"));
       this.textures.Add(GFX.Game.GetAtlasSubtextures("bgs/02/stars/b"));
       this.textures.Add(GFX.Game.GetAtlasSubtextures("bgs/02/stars/c"));
-      this.center = Vector2.op_Division(new Vector2((float) this.textures[0][0].Width, (float) this.textures[0][0].Height), 2f);
+      this.center = new Vector2((float) this.textures[0][0].Width, (float) this.textures[0][0].Height) / 2f;
       this.stars = new StarsBG.Star[100];
       for (int index = 0; index < this.stars.Length; ++index)
         this.stars[index] = new StarsBG.Star()
@@ -38,7 +38,7 @@ namespace Celeste
         };
       this.colors = new Color[8];
       for (int index = 0; index < this.colors.Length; ++index)
-        this.colors[index] = Color.op_Multiply(Color.op_Multiply(Color.get_Teal(), 0.7f), (float) (1.0 - (double) index / (double) this.colors.Length));
+        this.colors[index] = Color.Teal * 0.7f * (float) (1.0 - (double) index / (double) this.colors.Length);
     }
 
     public override void Update(Scene scene)
@@ -49,19 +49,18 @@ namespace Celeste
       Level level = scene as Level;
       for (int index = 0; index < this.stars.Length; ++index)
         this.stars[index].Timer += Engine.DeltaTime * this.stars[index].Rate;
-      if (!level.Session.Dreaming)
-        return;
-      this.falling += Engine.DeltaTime * 12f;
+      if (level.Session.Dreaming)
+        this.falling += Engine.DeltaTime * 12f;
     }
 
     public override void Render(Scene scene)
     {
-      Draw.Rect(0.0f, 0.0f, 320f, 180f, Color.get_Black());
+      Draw.Rect(0.0f, 0.0f, 320f, 180f, Color.Black);
       Level level = scene as Level;
-      Color color = Color.get_White();
+      Color color = Color.White;
       int num = 100;
       if (level.Session.Dreaming)
-        color = Color.op_Multiply(Color.get_Teal(), 0.7f);
+        color = Color.Teal * 0.7f;
       else
         num /= 2;
       for (int index1 = 0; index1 < num; ++index1)
@@ -72,35 +71,13 @@ namespace Celeste
         MTexture mtexture = texture[index2];
         if (level.Session.Dreaming)
         {
-          ref __Null local1 = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local1 = ^(float&) ref local1 - level.Camera.Y;
-          ref __Null local2 = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local2 = ^(float&) ref local2 + this.falling * this.stars[index1].Rate;
-          ref __Null local3 = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local3 = ^(float&) ref local3 % 180f;
-          if (position.Y < 0.0)
-          {
-            ref __Null local4 = ref position.Y;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local4 = ^(float&) ref local4 + 180f;
-          }
+          position.Y -= level.Camera.Y;
+          position.Y += this.falling * this.stars[index1].Rate;
+          position.Y %= 180f;
+          if ((double) position.Y < 0.0)
+            position.Y += 180f;
           for (int index3 = 0; index3 < this.colors.Length; ++index3)
-            mtexture.Draw(Vector2.op_Subtraction(position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) index3)), this.center, this.colors[index3]);
+            mtexture.Draw(position - Vector2.UnitY * (float) index3, this.center, this.colors[index3]);
         }
         mtexture.Draw(position, this.center, color);
       }
@@ -115,3 +92,4 @@ namespace Celeste
     }
   }
 }
+

@@ -26,9 +26,7 @@ namespace Monocle
     {
       get
       {
-        if (this.Texture != null && !((GraphicsResource) this.Texture).get_IsDisposed())
-          return ((GraphicsResource) this.Texture).get_GraphicsDevice().get_IsDisposed();
-        return true;
+        return this.Texture == null || this.Texture.IsDisposed || this.Texture.GraphicsDevice.IsDisposed;
       }
     }
 
@@ -49,8 +47,8 @@ namespace Monocle
 
     internal override void Unload()
     {
-      if (this.Texture != null && !((GraphicsResource) this.Texture).get_IsDisposed())
-        ((GraphicsResource) this.Texture).Dispose();
+      if (this.Texture != null && !this.Texture.IsDisposed)
+        this.Texture.Dispose();
       this.Texture = (Texture2D) null;
     }
 
@@ -59,14 +57,14 @@ namespace Monocle
       this.Unload();
       if (string.IsNullOrEmpty(this.Path))
       {
-        this.Texture = new Texture2D(Engine.Instance.get_GraphicsDevice(), this.Width, this.Height);
-        Color[] colorArray = new Color[this.Width * this.Height];
-        fixed (Color* colorPtr = colorArray)
+        this.Texture = new Texture2D(Engine.Instance.GraphicsDevice, this.Width, this.Height);
+        Color[] data = new Color[this.Width * this.Height];
+        fixed (Color* colorPtr = data)
         {
-          for (int index = 0; index < colorArray.Length; ++index)
+          for (int index = 0; index < data.Length; ++index)
             colorPtr[index] = this.color;
         }
-        this.Texture.SetData<Color>((M0[]) colorArray);
+        this.Texture.SetData<Color>(data);
       }
       else
       {
@@ -81,23 +79,23 @@ namespace Monocle
             int int32_2 = BitConverter.ToInt32(VirtualTexture.bytes, startIndex + 4);
             bool flag = VirtualTexture.bytes[startIndex + 8] == (byte) 1;
             int index1 = startIndex + 9;
-            int num1 = int32_1 * int32_2 * 4;
+            int elementCount = int32_1 * int32_2 * 4;
             int index2 = 0;
             fixed (byte* numPtr1 = VirtualTexture.bytes)
               fixed (byte* numPtr2 = VirtualTexture.buffer)
               {
-                while (index2 < num1)
+                while (index2 < elementCount)
                 {
-                  int num2 = (int) numPtr1[index1] * 4;
+                  int num1 = (int) numPtr1[index1] * 4;
                   if (flag)
                   {
-                    byte num3 = numPtr1[index1 + 1];
-                    if (num3 > (byte) 0)
+                    byte num2 = numPtr1[index1 + 1];
+                    if (num2 > (byte) 0)
                     {
                       numPtr2[index2] = numPtr1[index1 + 4];
                       numPtr2[index2 + 1] = numPtr1[index1 + 3];
                       numPtr2[index2 + 2] = numPtr1[index1 + 2];
-                      numPtr2[index2 + 3] = num3;
+                      numPtr2[index2 + 3] = num2;
                       index1 += 5;
                     }
                     else
@@ -117,10 +115,10 @@ namespace Monocle
                     numPtr2[index2 + 3] = byte.MaxValue;
                     index1 += 4;
                   }
-                  if (num2 > 4)
+                  if (num1 > 4)
                   {
                     int index3 = index2 + 4;
-                    for (int index4 = index2 + num2; index3 < index4; index3 += 4)
+                    for (int index4 = index2 + num1; index3 < index4; index3 += 4)
                     {
                       numPtr2[index3] = numPtr2[index2];
                       numPtr2[index3 + 1] = numPtr2[index2 + 1];
@@ -128,7 +126,7 @@ namespace Monocle
                       numPtr2[index3 + 3] = numPtr2[index2 + 3];
                     }
                   }
-                  index2 += num2;
+                  index2 += num1;
                   if (index1 > 524256)
                   {
                     int offset = 524288 - index1;
@@ -139,39 +137,39 @@ namespace Monocle
                   }
                 }
               }
-            this.Texture = new Texture2D(Engine.Graphics.get_GraphicsDevice(), int32_1, int32_2);
-            this.Texture.SetData<byte>((M0[]) VirtualTexture.buffer, 0, num1);
+            this.Texture = new Texture2D(Engine.Graphics.GraphicsDevice, int32_1, int32_2);
+            this.Texture.SetData<byte>(VirtualTexture.buffer, 0, elementCount);
           }
         }
         else if (extension == ".png")
         {
           using (FileStream fileStream = File.OpenRead(System.IO.Path.Combine(Engine.ContentDirectory, this.Path)))
-            this.Texture = Texture2D.FromStream(Engine.Graphics.get_GraphicsDevice(), (Stream) fileStream);
-          int length = this.Texture.get_Width() * this.Texture.get_Height();
-          Color[] colorArray = new Color[length];
-          this.Texture.GetData<Color>((M0[]) colorArray, 0, length);
-          fixed (Color* colorPtr = colorArray)
+            this.Texture = Texture2D.FromStream(Engine.Graphics.GraphicsDevice, (Stream) fileStream);
+          int elementCount = this.Texture.Width * this.Texture.Height;
+          Color[] data = new Color[elementCount];
+          this.Texture.GetData<Color>(data, 0, elementCount);
+          fixed (Color* colorPtr = data)
           {
-            for (int index = 0; index < length; ++index)
+            for (int index = 0; index < elementCount; ++index)
             {
-              ((Color) (IntPtr) (colorPtr + index)).set_R((byte) ((double) ((Color) (IntPtr) (colorPtr + index)).get_R() * ((double) ((Color) (IntPtr) (colorPtr + index)).get_A() / (double) byte.MaxValue)));
-              ((Color) (IntPtr) (colorPtr + index)).set_G((byte) ((double) ((Color) (IntPtr) (colorPtr + index)).get_G() * ((double) ((Color) (IntPtr) (colorPtr + index)).get_A() / (double) byte.MaxValue)));
-              ((Color) (IntPtr) (colorPtr + index)).set_B((byte) ((double) ((Color) (IntPtr) (colorPtr + index)).get_B() * ((double) ((Color) (IntPtr) (colorPtr + index)).get_A() / (double) byte.MaxValue)));
+              colorPtr[index].R = (byte) ((double) colorPtr[index].R * ((double) colorPtr[index].A / (double) byte.MaxValue));
+              colorPtr[index].G = (byte) ((double) colorPtr[index].G * ((double) colorPtr[index].A / (double) byte.MaxValue));
+              colorPtr[index].B = (byte) ((double) colorPtr[index].B * ((double) colorPtr[index].A / (double) byte.MaxValue));
             }
           }
-          this.Texture.SetData<Color>((M0[]) colorArray, 0, length);
+          this.Texture.SetData<Color>(data, 0, elementCount);
         }
         else if (extension == ".xnb")
         {
-          this.Texture = (Texture2D) Engine.Instance.get_Content().Load<Texture2D>(this.Path.Replace(".xnb", ""));
+          this.Texture = Engine.Instance.Content.Load<Texture2D>(this.Path.Replace(".xnb", ""));
         }
         else
         {
           using (FileStream fileStream = File.OpenRead(System.IO.Path.Combine(Engine.ContentDirectory, this.Path)))
-            this.Texture = Texture2D.FromStream(Engine.Graphics.get_GraphicsDevice(), (Stream) fileStream);
+            this.Texture = Texture2D.FromStream(Engine.Graphics.GraphicsDevice, (Stream) fileStream);
         }
-        this.Width = this.Texture.get_Width();
-        this.Height = this.Texture.get_Height();
+        this.Width = this.Texture.Width;
+        this.Height = this.Texture.Height;
       }
     }
 
@@ -183,3 +181,4 @@ namespace Monocle
     }
   }
 }
+

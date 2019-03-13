@@ -33,7 +33,7 @@ namespace Celeste
       this.label = Dialog.Clean(labelName, (Language) null);
       this.icon = GFX.Gui[iconName];
       this.labelScale = 1f;
-      float x = (float) ActiveFont.Measure(this.label).X;
+      float x = ActiveFont.Measure(this.label).X;
       if ((double) x > 400.0)
         this.labelScale = 400f / x;
       this.Add((Component) (this.wiggler = Wiggler.Create(0.25f, 4f, (Action<float>) null, false, false)));
@@ -49,10 +49,9 @@ namespace Celeste
     {
       base.Render();
       float scale = 64f / (float) this.icon.Width;
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(Ease.CubeInOut(this.ease) * 32f, (float) ((double) ActiveFont.LineHeight / 2.0 + (double) this.wiggler.Value * 8.0));
-      this.icon.DrawOutlineJustified(Vector2.op_Addition(this.Position, vector2), new Vector2(0.0f, 0.5f), Color.get_White(), scale);
-      ActiveFont.DrawOutline(this.label, Vector2.op_Addition(Vector2.op_Addition(this.Position, vector2), new Vector2(84f, 0.0f)), new Vector2(0.0f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), this.labelScale), this.SelectionColor, 2f, Color.get_Black());
+      Vector2 vector2 = new Vector2(Ease.CubeInOut(this.ease) * 32f, (float) ((double) ActiveFont.LineHeight / 2.0 + (double) this.wiggler.Value * 8.0));
+      this.icon.DrawOutlineJustified(this.Position + vector2, new Vector2(0.0f, 0.5f), Color.White, scale);
+      ActiveFont.DrawOutline(this.label, this.Position + vector2 + new Vector2(84f, 0.0f), new Vector2(0.0f, 0.5f), Vector2.One * this.labelScale, this.SelectionColor, 2f, Color.Black);
     }
 
     public override void OnSelect()
@@ -69,3 +68,4 @@ namespace Celeste
     }
   }
 }
+

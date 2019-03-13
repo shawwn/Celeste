@@ -23,7 +23,7 @@ namespace Celeste
       : base(position)
     {
       this.Add((Component) (this.Sprite = GFX.SpriteBank.Create("granny")));
-      this.Sprite.Scale.X = (__Null) -1.0;
+      this.Sprite.Scale.X = -1f;
       this.Sprite.Play("idle", false, false);
       this.Add((Component) new GrannyLaughSfx(this.Sprite));
     }
@@ -31,22 +31,21 @@ namespace Celeste
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      scene.Add((Entity) (this.Hahaha = new Hahaha(Vector2.op_Addition(this.Position, new Vector2(8f, -4f)), "", false, new Vector2?())));
+      scene.Add((Entity) (this.Hahaha = new Hahaha(this.Position + new Vector2(8f, -4f), "", false, new Vector2?())));
       this.Hahaha.Enabled = false;
       if (this.Session.GetFlag("granny_1") && !this.Session.GetFlag("granny_2"))
         this.Sprite.Play("laugh", false, false);
       if (this.Session.GetFlag("granny_3"))
         return;
       this.Add((Component) (this.Talker = new TalkComponent(new Rectangle(-20, -16, 40, 16), new Vector2(0.0f, -24f), new Action<Player>(this.OnTalk), (TalkComponent.HoverDisplay) null)));
-      if (this.Session.GetFlag("granny_1"))
-        return;
-      this.Talker.Enabled = false;
+      if (!this.Session.GetFlag("granny_1"))
+        this.Talker.Enabled = false;
     }
 
     public override void Update()
     {
       Player entity = this.Level.Tracker.GetEntity<Player>();
-      if (entity != null && !this.Session.GetFlag("granny_1") && (!this.cutscene && (double) entity.X > (double) this.X - 40.0))
+      if (entity != null && !this.Session.GetFlag("granny_1") && !this.cutscene && (double) entity.X > (double) this.X - 40.0)
       {
         this.cutscene = true;
         this.Scene.Add((Entity) new CS04_Granny(this, entity));
@@ -65,18 +64,17 @@ namespace Celeste
 
     private IEnumerator TalkRoutine(Player player)
     {
-      NPC04_Granny npC04Granny = this;
-      npC04Granny.Sprite.Play("idle", false, false);
+      this.Sprite.Play("idle", false, false);
       player.ForceCameraUpdate = true;
-      yield return (object) npC04Granny.PlayerApproachLeftSide(player, true, new float?(20f));
-      yield return (object) npC04Granny.Level.ZoomTo(new Vector2((float) (((double) player.X + (double) npC04Granny.X) / 2.0) - npC04Granny.Level.Camera.X, 116f), 2f, 0.5f);
-      if (!npC04Granny.Session.GetFlag("granny_2"))
+      yield return (object) this.PlayerApproachLeftSide(player, true, new float?(20f));
+      yield return (object) this.Level.ZoomTo(new Vector2((float) (((double) player.X + (double) this.X) / 2.0) - this.Level.Camera.X, 116f), 2f, 0.5f);
+      if (!this.Session.GetFlag("granny_2"))
         yield return (object) Textbox.Say("CH4_GRANNY_2");
       else
         yield return (object) Textbox.Say("CH4_GRANNY_3");
-      yield return (object) npC04Granny.Level.ZoomBack(0.5f);
-      npC04Granny.Level.EndCutscene();
-      npC04Granny.TalkEnd(npC04Granny.Level);
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.Level.EndCutscene();
+      this.TalkEnd(this.Level);
     }
 
     private void TalkEnd(Level level)
@@ -102,3 +100,4 @@ namespace Celeste
     }
   }
 }
+

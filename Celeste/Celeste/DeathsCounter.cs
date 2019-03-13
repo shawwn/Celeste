@@ -16,7 +16,7 @@ namespace Celeste
     public float Alpha = 1f;
     public float Scale = 1f;
     public float Stroke = 2f;
-    public Color Color = Color.get_White();
+    public Color Color = Color.White;
     private const int IconWidth = 60;
     public Vector2 Position;
     public bool CenteredX;
@@ -65,10 +65,11 @@ namespace Celeste
           return;
         this.amount = value;
         this.UpdateString();
-        if (!this.CanWiggle)
-          return;
-        this.wiggler.Start();
-        this.flashTimer = 0.5f;
+        if (this.CanWiggle)
+        {
+          this.wiggler.Start();
+          this.flashTimer = 0.5f;
+        }
       }
     }
 
@@ -124,31 +125,32 @@ namespace Celeste
 
     public override void Render()
     {
-      Vector2 vector2 = this.RenderPosition;
-      float x = (float) ActiveFont.Measure(this.sAmount).X;
+      Vector2 renderPosition = this.RenderPosition;
+      float x = ActiveFont.Measure(this.sAmount).X;
       float num = (float) (62.0 + (double) this.x.Width + 2.0) + x;
       Color color = this.Color;
-      Color strokeColor = Color.get_Black();
+      Color black = Color.Black;
       if ((double) this.flashTimer > 0.0 && this.Scene != null && this.Scene.BetweenRawInterval(0.05f))
         color = StrawberriesCounter.FlashColor;
       if ((double) this.Alpha < 1.0)
       {
-        color = Color.op_Multiply(color, this.Alpha);
-        strokeColor = Color.op_Multiply(strokeColor, this.Alpha);
+        color *= this.Alpha;
+        black *= this.Alpha;
       }
       if (this.CenteredX)
-        vector2 = Vector2.op_Subtraction(vector2, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), num / 2f), this.Scale));
-      this.icon.DrawCentered(Vector2.op_Addition(vector2, Vector2.op_Multiply(new Vector2(30f, 0.0f), this.Scale)), Color.op_Multiply(Color.get_White(), this.Alpha), this.Scale * (float) (1.0 + (double) this.iconWiggler.Value * 0.200000002980232));
-      this.x.DrawCentered(Vector2.op_Addition(vector2, Vector2.op_Multiply(new Vector2(62f + (float) (this.x.Width / 2), 2f), this.Scale)), color, this.Scale);
-      ActiveFont.DrawOutline(this.sAmount, Vector2.op_Addition(vector2, Vector2.op_Multiply(new Vector2(num - x / 2f, (float) (-(double) this.wiggler.Value * 18.0)), this.Scale)), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), this.Scale), color, this.Stroke, strokeColor);
+        renderPosition -= Vector2.UnitX * (num / 2f) * this.Scale;
+      this.icon.DrawCentered(renderPosition + new Vector2(30f, 0.0f) * this.Scale, Color.White * this.Alpha, this.Scale * (float) (1.0 + (double) this.iconWiggler.Value * 0.200000002980232));
+      this.x.DrawCentered(renderPosition + new Vector2(62f + (float) (this.x.Width / 2), 2f) * this.Scale, color, this.Scale);
+      ActiveFont.DrawOutline(this.sAmount, renderPosition + new Vector2(num - x / 2f, (float) (-(double) this.wiggler.Value * 18.0)) * this.Scale, new Vector2(0.5f, 0.5f), Vector2.One * this.Scale, color, this.Stroke, black);
     }
 
     public Vector2 RenderPosition
     {
       get
       {
-        return Vector2.op_Addition(this.Entity != null ? this.Entity.Position : Vector2.get_Zero(), this.Position).Round();
+        return ((this.Entity != null ? this.Entity.Position : Vector2.Zero) + this.Position).Round();
       }
     }
   }
 }
+

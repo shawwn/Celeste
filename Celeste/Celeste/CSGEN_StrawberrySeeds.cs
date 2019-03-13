@@ -34,18 +34,21 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CSGEN_StrawberrySeeds csgenStrawberrySeeds = this;
-      csgenStrawberrySeeds.sfx = Audio.Play("event:/game/general/seed_complete_main", csgenStrawberrySeeds.Position);
-      csgenStrawberrySeeds.snapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute", true);
-      Player entity = csgenStrawberrySeeds.Scene.Tracker.GetEntity<Player>();
-      if (entity != null)
-        csgenStrawberrySeeds.cameraStart = entity.CameraTarget;
-      foreach (StrawberrySeed seed in csgenStrawberrySeeds.strawberry.Seeds)
+      this.sfx = Audio.Play("event:/game/general/seed_complete_main", this.Position);
+      this.snapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute", true);
+      Player player = this.Scene.Tracker.GetEntity<Player>();
+      if (player != null)
+        this.cameraStart = player.CameraTarget;
+      foreach (StrawberrySeed seed1 in this.strawberry.Seeds)
+      {
+        StrawberrySeed seed = seed1;
         seed.OnAllCollected();
-      csgenStrawberrySeeds.strawberry.Depth = -2000002;
-      csgenStrawberrySeeds.strawberry.AddTag((int) Tags.FrozenUpdate);
+        seed = (StrawberrySeed) null;
+      }
+      this.strawberry.Depth = -2000002;
+      this.strawberry.AddTag((int) Tags.FrozenUpdate);
       yield return (object) 0.35f;
-      csgenStrawberrySeeds.Tag = (int) Tags.FrozenUpdate | (int) Tags.HUD;
+      this.Tag = (int) Tags.FrozenUpdate | (int) Tags.HUD;
       level.Frozen = true;
       level.FormationBackdrop.Display = true;
       level.FormationBackdrop.Alpha = 0.5f;
@@ -56,49 +59,56 @@ namespace Celeste
       Audio.BusPaused("bus:/gameplay_sfx/game/general/yes_pause", new bool?(true));
       Audio.BusPaused("bus:/gameplay_sfx/game/chapters", new bool?(true));
       yield return (object) 0.1f;
-      csgenStrawberrySeeds.system = new ParticleSystem(-2000002, 50);
-      csgenStrawberrySeeds.system.Tag = (int) Tags.FrozenUpdate;
-      level.Add((Entity) csgenStrawberrySeeds.system);
-      float num1 = 6.283185f / (float) csgenStrawberrySeeds.strawberry.Seeds.Count;
-      float angleOffset = 1.570796f;
-      Vector2 vector2_1 = Vector2.get_Zero();
-      foreach (StrawberrySeed seed in csgenStrawberrySeeds.strawberry.Seeds)
-        vector2_1 = Vector2.op_Addition(vector2_1, seed.Position);
-      Vector2 averagePos = Vector2.op_Division(vector2_1, (float) csgenStrawberrySeeds.strawberry.Seeds.Count);
-      foreach (StrawberrySeed seed in csgenStrawberrySeeds.strawberry.Seeds)
+      this.system = new ParticleSystem(-2000002, 50);
+      this.system.Tag = (int) Tags.FrozenUpdate;
+      level.Add((Entity) this.system);
+      float angleSep = 6.283185f / (float) this.strawberry.Seeds.Count;
+      float angle = 1.570796f;
+      Vector2 avg = Vector2.Zero;
+      foreach (StrawberrySeed seed1 in this.strawberry.Seeds)
       {
-        seed.StartSpinAnimation(averagePos, csgenStrawberrySeeds.strawberry.Position, angleOffset, 4f);
-        angleOffset -= num1;
+        StrawberrySeed seed = seed1;
+        avg += seed.Position;
+        seed = (StrawberrySeed) null;
       }
-      Vector2 val = Vector2.op_Subtraction(csgenStrawberrySeeds.strawberry.Position, new Vector2(160f, 90f));
-      Rectangle bounds1 = level.Bounds;
-      double left = (double) ((Rectangle) ref bounds1).get_Left();
-      Rectangle bounds2 = level.Bounds;
-      double top = (double) ((Rectangle) ref bounds2).get_Top();
-      Rectangle bounds3 = level.Bounds;
-      double num2 = (double) (((Rectangle) ref bounds3).get_Right() - 320);
-      Rectangle bounds4 = level.Bounds;
-      double num3 = (double) (((Rectangle) ref bounds4).get_Bottom() - 180);
-      Vector2 target = val.Clamp((float) left, (float) top, (float) num2, (float) num3);
-      csgenStrawberrySeeds.Add((Component) new Coroutine(CutsceneEntity.CameraTo(target, 3.5f, Ease.CubeInOut, 0.0f), true));
+      avg /= (float) this.strawberry.Seeds.Count;
+      foreach (StrawberrySeed seed1 in this.strawberry.Seeds)
+      {
+        StrawberrySeed seed = seed1;
+        seed.StartSpinAnimation(avg, this.strawberry.Position, angle, 4f);
+        angle -= angleSep;
+        seed = (StrawberrySeed) null;
+      }
+      avg = new Vector2();
+      Vector2 target = this.strawberry.Position - new Vector2(160f, 90f);
+      target = target.Clamp((float) level.Bounds.Left, (float) level.Bounds.Top, (float) (level.Bounds.Right - 320), (float) (level.Bounds.Bottom - 180));
+      this.Add((Component) new Coroutine(CutsceneEntity.CameraTo(target, 3.5f, Ease.CubeInOut, 0.0f), true));
+      target = new Vector2();
       yield return (object) 4f;
       Input.Rumble(RumbleStrength.Light, RumbleLength.Long);
-      Audio.Play("event:/game/general/seed_complete_berry", csgenStrawberrySeeds.strawberry.Position);
-      foreach (StrawberrySeed seed in csgenStrawberrySeeds.strawberry.Seeds)
-        seed.StartCombineAnimation(csgenStrawberrySeeds.strawberry.Position, 0.6f, csgenStrawberrySeeds.system);
+      Audio.Play("event:/game/general/seed_complete_berry", this.strawberry.Position);
+      foreach (StrawberrySeed seed1 in this.strawberry.Seeds)
+      {
+        StrawberrySeed seed = seed1;
+        seed.StartCombineAnimation(this.strawberry.Position, 0.6f, this.system);
+        seed = (StrawberrySeed) null;
+      }
       yield return (object) 0.6f;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      foreach (Entity seed in csgenStrawberrySeeds.strawberry.Seeds)
+      foreach (StrawberrySeed seed1 in this.strawberry.Seeds)
+      {
+        StrawberrySeed seed = seed1;
         seed.RemoveSelf();
-      csgenStrawberrySeeds.strawberry.CollectedSeeds();
+        seed = (StrawberrySeed) null;
+      }
+      this.strawberry.CollectedSeeds();
       yield return (object) 0.5f;
-      Vector2 vector2_2 = Vector2.op_Subtraction(level.Camera.Position, csgenStrawberrySeeds.cameraStart);
-      float dist = ((Vector2) ref vector2_2).Length();
-      yield return (object) CutsceneEntity.CameraTo(csgenStrawberrySeeds.cameraStart, dist / 180f, (Ease.Easer) null, 0.0f);
+      float dist = (level.Camera.Position - this.cameraStart).Length();
+      yield return (object) CutsceneEntity.CameraTo(this.cameraStart, dist / 180f, (Ease.Easer) null, 0.0f);
       if ((double) dist > 80.0)
         yield return (object) 0.25f;
       level.EndCutscene();
-      csgenStrawberrySeeds.OnEnd(level);
+      this.OnEnd(level);
     }
 
     public override void OnEnd(Level level)
@@ -145,3 +155,4 @@ namespace Celeste
     }
   }
 }
+

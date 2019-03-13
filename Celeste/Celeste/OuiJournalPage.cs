@@ -15,7 +15,7 @@ namespace Celeste
   public abstract class OuiJournalPage
   {
     public readonly Vector2 TextJustify = new Vector2(0.5f, 0.5f);
-    public readonly Color TextColor = Color.op_Multiply(Color.get_Black(), 0.6f);
+    public readonly Color TextColor = Color.Black * 0.6f;
     public const int PageWidth = 1610;
     public const int PageHeight = 1000;
     public const float TextScale = 0.5f;
@@ -30,8 +30,8 @@ namespace Celeste
 
     public virtual void Redraw(VirtualRenderTarget buffer)
     {
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) buffer);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) buffer);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
     }
 
     public virtual void Update()
@@ -41,10 +41,10 @@ namespace Celeste
     internal void RenderStamps()
     {
       if (SaveData.Instance.AssistMode)
-        GFX.Gui["fileselect/assist"].DrawCentered(new Vector2(1250f, 810f), Color.op_Multiply(Color.get_White(), 0.5f), 1f, 0.2f);
+        GFX.Gui["fileselect/assist"].DrawCentered(new Vector2(1250f, 810f), Color.White * 0.5f, 1f, 0.2f);
       if (!SaveData.Instance.CheatMode)
         return;
-      GFX.Gui["fileselect/cheatmode"].DrawCentered(new Vector2(1400f, 860f), Color.op_Multiply(Color.get_White(), 0.5f), 1f, 0.0f);
+      GFX.Gui["fileselect/cheatmode"].DrawCentered(new Vector2(1400f, 860f), Color.White * 0.5f, 1f, 0.0f);
     }
 
     public class Table
@@ -66,9 +66,7 @@ namespace Celeste
       {
         get
         {
-          if (this.rows.Count <= 0)
-            return (OuiJournalPage.Row) null;
-          return this.rows[0];
+          return this.rows.Count > 0 ? this.rows[0] : (OuiJournalPage.Row) null;
         }
       }
 
@@ -103,32 +101,20 @@ namespace Celeste
         for (int index1 = 0; index1 < this.Header.Count; ++index1)
         {
           float columnWidth = this.Header[index1].Width();
-          this.Header[index1].Render(Vector2.op_Addition(position, new Vector2(num1 + columnWidth * 0.5f, 40f)), columnWidth);
+          this.Header[index1].Render(position + new Vector2(num1 + columnWidth * 0.5f, 40f), columnWidth);
           for (int index2 = 1; index2 < this.rows.Count; ++index2)
           {
-            Vector2 center = Vector2.op_Addition(position, new Vector2(num1 + columnWidth * 0.5f, (float) (100.0 + ((double) index2 - 0.5) * 60.0)));
+            Vector2 center = position + new Vector2(num1 + columnWidth * 0.5f, (float) (100.0 + ((double) index2 - 0.5) * 60.0));
             if (index2 % 2 == 0)
-              Draw.Rect((float) (center.X - (double) columnWidth * 0.5), (float) (center.Y - 27.0), columnWidth + 20f, 54f, Color.op_Multiply(Color.get_Black(), 0.08f));
+              Draw.Rect(center.X - columnWidth * 0.5f, center.Y - 27f, columnWidth + 20f, 54f, Color.Black * 0.08f);
             if (index1 < this.rows[index2].Count && this.rows[index2][index1] != null)
             {
               OuiJournalPage.Cell cell = this.rows[index2][index1];
               if (cell.SpreadOverColumns > 1)
               {
                 for (int index3 = index1 + 1; index3 < index1 + cell.SpreadOverColumns; ++index3)
-                {
-                  ref __Null local = ref center.X;
-                  // ISSUE: cast to a reference type
-                  // ISSUE: explicit reference operation
-                  // ISSUE: cast to a reference type
-                  // ISSUE: explicit reference operation
-                  ^(float&) ref local = ^(float&) ref local + this.Header[index3].Width() * 0.5f;
-                }
-                ref __Null local1 = ref center.X;
-                // ISSUE: cast to a reference type
-                // ISSUE: explicit reference operation
-                // ISSUE: cast to a reference type
-                // ISSUE: explicit reference operation
-                ^(float&) ref local1 = ^(float&) ref local1 + (float) ((double) (cell.SpreadOverColumns - 1) * 20.0 * 0.5);
+                  center.X += this.Header[index3].Width() * 0.5f;
+                center.X += (float) ((double) (cell.SpreadOverColumns - 1) * 20.0 * 0.5);
               }
               this.rows[index2][index1].Render(center, columnWidth);
             }
@@ -223,16 +209,16 @@ namespace Celeste
       {
         if (this.forceWidth)
           return this.width;
-        return Math.Max(this.width, (float) ActiveFont.Measure(this.text).X * this.scale);
+        return Math.Max(this.width, ActiveFont.Measure(this.text).X * this.scale);
       }
 
       public override void Render(Vector2 center, float columnWidth)
       {
-        float num1 = (float) ActiveFont.Measure(this.text).X * this.scale;
+        float num1 = ActiveFont.Measure(this.text).X * this.scale;
         float num2 = 1f;
         if (!this.forceWidth && (double) num1 > (double) columnWidth)
           num2 = columnWidth / num1;
-        ActiveFont.Draw(this.text, Vector2.op_Addition(center, new Vector2((float) (-(double) columnWidth / 2.0 + (double) columnWidth * this.justify.X), 0.0f)), this.justify, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), this.scale), num2), this.color);
+        ActiveFont.Draw(this.text, center + new Vector2((float) (-(double) columnWidth / 2.0 + (double) columnWidth * (double) this.justify.X), 0.0f), this.justify, Vector2.One * this.scale * num2, this.color);
       }
     }
 
@@ -285,19 +271,15 @@ namespace Celeste
       public override void Render(Vector2 center, float columnWidth)
       {
         float num = this.Width();
-        Vector2 position = Vector2.op_Addition(center, new Vector2((float) (-(double) num * 0.5), 0.0f));
+        Vector2 position = center + new Vector2((float) (-(double) num * 0.5), 0.0f);
         for (int index = 0; index < this.icons.Length; ++index)
         {
           MTexture mtexture = GFX.Journal[this.icons[index]];
           mtexture.DrawJustified(position, new Vector2(0.0f, 0.5f));
-          ref __Null local = ref position.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + ((float) mtexture.Width + this.iconSpacing);
+          position.X += (float) mtexture.Width + this.iconSpacing;
         }
       }
     }
   }
 }
+

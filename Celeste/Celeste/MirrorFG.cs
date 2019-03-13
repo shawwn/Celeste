@@ -13,7 +13,7 @@ namespace Celeste
   {
     private static readonly Color[] colors = new Color[1]
     {
-      Color.get_Red()
+      Color.Red
     };
     private MirrorFG.Particle[] particles = new MirrorFG.Particle[50];
     private float fade;
@@ -43,8 +43,7 @@ namespace Celeste
         if ((double) this.particles[i].Percent >= 1.0)
           this.Reset(i, 0.0f);
         this.particles[i].Percent += Engine.DeltaTime / this.particles[i].Duration;
-        ref Vector2 local = ref this.particles[i].Position;
-        local = Vector2.op_Addition(local, Vector2.op_Multiply(Vector2.op_Multiply(this.particles[i].Direction, this.particles[i].Speed), Engine.DeltaTime));
+        this.particles[i].Position += this.particles[i].Direction * this.particles[i].Speed * Engine.DeltaTime;
         this.particles[i].Direction.Rotate(this.particles[i].Spin * Engine.DeltaTime);
       }
       this.fade = Calc.Approach(this.fade, this.Visible ? 1f : 0.0f, Engine.DeltaTime);
@@ -57,14 +56,14 @@ namespace Celeste
       Camera camera = (level as Level).Camera;
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        Vector2 vector2 = (Vector2) null;
-        vector2.X = (__Null) (double) this.Mod((float) this.particles[index].Position.X - camera.X, 320f);
-        vector2.Y = (__Null) (double) this.Mod((float) this.particles[index].Position.Y - camera.Y, 180f);
-        Vector2 position = vector2;
+        Vector2 position = new Vector2()
+        {
+          X = this.Mod(this.particles[index].Position.X - camera.X, 320f),
+          Y = this.Mod(this.particles[index].Position.Y - camera.Y, 180f)
+        };
         float percent = this.particles[index].Percent;
         float num = (double) percent >= 0.699999988079071 ? Calc.ClampedMap(percent, 0.7f, 1f, 1f, 0.0f) : Calc.ClampedMap(percent, 0.0f, 0.3f, 0.0f, 1f);
-        Color color = Color.op_Multiply(MirrorFG.colors[this.particles[index].Color], this.fade * num);
-        Draw.Rect(position, 1f, 1f, color);
+        Draw.Rect(position, 1f, 1f, MirrorFG.colors[this.particles[index].Color] * (this.fade * num));
       }
     }
 
@@ -85,3 +84,4 @@ namespace Celeste
     }
   }
 }
+

@@ -39,13 +39,13 @@ namespace Celeste
 
     public override void Render()
     {
-      Vector2 vector2_1 = Vector2.op_Subtraction(this.end, this.Position).SafeNormalize();
-      Vector2 vector2_2;
-      ((Vector2) ref vector2_2).\u002Ector((float) -vector2_1.Y, (float) vector2_1.X);
-      Draw.Line(Vector2.op_Subtraction(Vector2.op_Subtraction(this.Position, vector2_1), vector2_2), Vector2.op_Subtraction(Vector2.op_Addition(this.end, vector2_1), vector2_2), this.lineEdgeColor);
-      Draw.Line(Vector2.op_Subtraction(this.Position, vector2_1), Vector2.op_Addition(this.end, vector2_1), this.lineEdgeColor);
-      Draw.Line(Vector2.op_Addition(Vector2.op_Subtraction(this.Position, vector2_1), vector2_2), Vector2.op_Addition(Vector2.op_Addition(this.end, vector2_1), vector2_2), this.lineEdgeColor);
+      Vector2 vector2_1 = (this.end - this.Position).SafeNormalize();
+      Vector2 vector2_2 = new Vector2(-vector2_1.Y, vector2_1.X);
+      Draw.Line(this.Position - vector2_1 - vector2_2, this.end + vector2_1 - vector2_2, this.lineEdgeColor);
+      Draw.Line(this.Position - vector2_1, this.end + vector2_1, this.lineEdgeColor);
+      Draw.Line(this.Position - vector2_1 + vector2_2, this.end + vector2_1 + vector2_2, this.lineEdgeColor);
       Draw.Line(this.Position, this.end, this.lineInnerColor);
     }
   }
 }
+

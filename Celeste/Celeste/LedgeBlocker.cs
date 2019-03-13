@@ -24,20 +24,13 @@ namespace Celeste
 
     public bool HopBlockCheck(Player player)
     {
-      if (!this.Blocking || !player.CollideCheck(this.Entity, Vector2.op_Addition(player.Position, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) player.Facing), 8f))))
-        return false;
-      if (this.BlockChecker != null)
-        return this.BlockChecker(player);
-      return true;
+      return this.Blocking && player.CollideCheck(this.Entity, player.Position + Vector2.UnitX * (float) player.Facing * 8f) && (this.BlockChecker == null || this.BlockChecker(player));
     }
 
     public bool JumpThruBoostCheck(Player player)
     {
-      if (!this.Blocking || !player.CollideCheck(this.Entity, Vector2.op_Subtraction(player.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 2f))))
-        return false;
-      if (this.BlockChecker != null)
-        return this.BlockChecker(player);
-      return true;
+      return this.Blocking && player.CollideCheck(this.Entity, player.Position - Vector2.UnitY * 2f) && (this.BlockChecker == null || this.BlockChecker(player));
     }
   }
 }
+

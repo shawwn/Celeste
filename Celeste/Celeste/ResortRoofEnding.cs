@@ -26,7 +26,7 @@ namespace Celeste
     public bool BeginFalling;
 
     public ResortRoofEnding(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset), (float) data.Width, 2f, true)
+      : base(data.Position + offset, (float) data.Width, 2f, true)
     {
       this.EnableAssistModeChecks = false;
       Monocle.Image image1 = new Monocle.Image(GFX.Game["decals/3-resort/roofEdge_d"]);
@@ -58,16 +58,15 @@ namespace Celeste
       if ((this.Scene as Level).Session.GetFlag("oshiroEnding"))
         return;
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity == null)
-        return;
-      this.Scene.Add((Entity) new CS03_Ending(this, entity));
+      if (entity != null)
+        this.Scene.Add((Entity) new CS03_Ending(this, entity));
     }
 
     public override void Render()
     {
-      this.Position = Vector2.op_Addition(this.Position, this.Shake);
+      this.Position = this.Position + this.Shake;
       base.Render();
-      this.Position = Vector2.op_Subtraction(this.Position, this.Shake);
+      this.Position = this.Position - this.Shake;
     }
 
     public void Wobble(AngryOshiro ghost, bool fall = false)
@@ -86,25 +85,22 @@ namespace Celeste
 
     private IEnumerator WobbleImage(Monocle.Image img, float delay, Player player, bool fall)
     {
-      ResortRoofEnding resortRoofEnding = this;
       float orig = img.Y;
       yield return (object) delay;
-      for (int index = 0; index < 2; ++index)
-        resortRoofEnding.Scene.Add((Entity) Engine.Pooler.Create<Debris>().Init(Vector2.op_Addition(Vector2.op_Addition(resortRoofEnding.Position, img.Position), new Vector2((float) (index * 8 - 4), (float) Calc.Random.Range(0, 8))), '9'));
-      float p1;
-      float amount;
+      for (int i = 0; i < 2; ++i)
+        this.Scene.Add((Entity) Engine.Pooler.Create<Debris>().Init(this.Position + img.Position + new Vector2((float) (i * 8 - 4), (float) Calc.Random.Range(0, 8)), '9'));
       if (!fall)
       {
-        p1 = 0.0f;
-        amount = 5f;
+        float p = 0.0f;
+        float amount = 5f;
         while (true)
         {
-          p1 += Engine.DeltaTime * 16f;
+          p += Engine.DeltaTime * 16f;
           amount = Calc.Approach(amount, 1f, Engine.DeltaTime * 5f);
-          float num = (float) Math.Sin((double) p1) * amount;
-          img.Y = orig + num;
-          if (player != null && (double) Math.Abs(resortRoofEnding.X + img.X - player.X) < 16.0)
-            player.Sprite.Y = num;
+          float wobble = (float) Math.Sin((double) p) * amount;
+          img.Y = orig + wobble;
+          if (player != null && (double) Math.Abs(this.X + img.X - player.X) < 16.0)
+            player.Sprite.Y = wobble;
           yield return (object) null;
         }
       }
@@ -112,30 +108,30 @@ namespace Celeste
       {
         if (fall)
         {
-          while (!resortRoofEnding.BeginFalling)
+          while (!this.BeginFalling)
           {
-            int num = Calc.Random.Range(0, 2);
-            img.Y = orig + (float) num;
-            if (player != null && (double) Math.Abs(resortRoofEnding.X + img.X - player.X) < 16.0)
-              player.Sprite.Y = (float) num;
+            int wobble = Calc.Random.Range(0, 2);
+            img.Y = orig + (float) wobble;
+            if (player != null && (double) Math.Abs(this.X + img.X - player.X) < 16.0)
+              player.Sprite.Y = (float) wobble;
             yield return (object) 0.01f;
           }
           img.Texture = GFX.Game["decals/3-resort/roofCenter_snapped_" + Calc.Random.Choose<string>("a", "b", "c")];
-          resortRoofEnding.Collidable = false;
-          amount = Calc.Random.NextFloat();
-          p1 = Calc.Random.NextFloat(48f) - 24f;
+          this.Collidable = false;
+          float rotateTo = Calc.Random.NextFloat();
+          float speedX = Calc.Random.NextFloat(48f) - 24f;
           float speedY = (float) -(80.0 + (double) Calc.Random.NextFloat(80f));
           float up = new Vector2(0.0f, -1f).Angle();
           float off = Calc.Random.NextFloat();
-          for (float p2 = 0.0f; (double) p2 < 4.0; p2 += Engine.DeltaTime)
+          for (float p = 0.0f; (double) p < 4.0; p += Engine.DeltaTime)
           {
             Monocle.Image image = img;
-            image.Position = Vector2.op_Addition(image.Position, Vector2.op_Multiply(new Vector2(p1, speedY), Engine.DeltaTime));
-            img.Rotation += amount * Ease.CubeIn(p2);
-            p1 = Calc.Approach(p1, 0.0f, Engine.DeltaTime * 200f);
+            image.Position = image.Position + new Vector2(speedX, speedY) * Engine.DeltaTime;
+            img.Rotation += rotateTo * Ease.CubeIn(p);
+            speedX = Calc.Approach(speedX, 0.0f, Engine.DeltaTime * 200f);
             speedY += 600f * Engine.DeltaTime;
-            if (resortRoofEnding.Scene.OnInterval(0.1f, off))
-              Dust.Burst(Vector2.op_Addition(resortRoofEnding.Position, img.Position), up, 1);
+            if (this.Scene.OnInterval(0.1f, off))
+              Dust.Burst(this.Position + img.Position, up, 1);
             yield return (object) null;
           }
         }
@@ -144,3 +140,4 @@ namespace Celeste
     }
   }
 }
+

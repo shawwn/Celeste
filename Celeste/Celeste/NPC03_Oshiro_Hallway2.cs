@@ -17,7 +17,7 @@ namespace Celeste
       : base(position)
     {
       this.Add((Component) (this.Sprite = (Sprite) new OshiroSprite(-1)));
-      this.Add((Component) (this.Light = new VertexLight(Vector2.op_Multiply(Vector2.op_UnaryNegation(Vector2.get_UnitY()), 16f), Color.get_White(), 1f, 32, 64)));
+      this.Add((Component) (this.Light = new VertexLight(-Vector2.UnitY * 16f, Color.White, 1f, 32, 64)));
       this.MoveAnim = "move";
       this.IdleAnim = "idle";
     }
@@ -42,3 +42,4 @@ namespace Celeste
     }
   }
 }
+

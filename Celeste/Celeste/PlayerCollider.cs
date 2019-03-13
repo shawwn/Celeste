@@ -39,9 +39,9 @@ namespace Celeste
       }
       Collider collider2 = this.Entity.Collider;
       this.Entity.Collider = collider1;
-      int num = player.CollideCheck(this.Entity) ? 1 : 0;
+      bool flag = player.CollideCheck(this.Entity);
       this.Entity.Collider = collider2;
-      if (num == 0)
+      if (!flag)
         return false;
       this.OnCollide(player);
       return true;
@@ -53,8 +53,9 @@ namespace Celeste
         return;
       Collider collider = this.Entity.Collider;
       this.Entity.Collider = this.Collider;
-      this.Collider.Render(camera, Color.get_HotPink());
+      this.Collider.Render(camera, Color.HotPink);
       this.Entity.Collider = collider;
     }
   }
 }
+

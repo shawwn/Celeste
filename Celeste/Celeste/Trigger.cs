@@ -18,7 +18,7 @@ namespace Celeste
     public bool PlayerIsInside { get; private set; }
 
     public Trigger(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Collider = (Collider) new Hitbox((float) data.Width, (float) data.Height, 0.0f, 0.0f);
       this.Visible = false;
@@ -71,3 +71,4 @@ namespace Celeste
     }
   }
 }
+

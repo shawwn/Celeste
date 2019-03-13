@@ -14,7 +14,7 @@ namespace Celeste
     public static float Width(string label, VirtualButton button)
     {
       MTexture mtexture = Input.GuiButton(button, "controls/keyboard/oemquestion");
-      return (float) (ActiveFont.Measure(label).X + 8.0) + (float) mtexture.Width;
+      return ActiveFont.Measure(label).X + 8f + (float) mtexture.Width;
     }
 
     public static void Render(
@@ -28,13 +28,8 @@ namespace Celeste
     {
       MTexture mtexture = Input.GuiButton(button, "controls/keyboard/oemquestion");
       float num = ButtonUI.Width(label, button);
-      ref __Null local = ref position.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local - (float) ((double) scale * (double) num * ((double) justifyX - 0.5));
-      mtexture.Draw(position, new Vector2((float) mtexture.Width - num / 2f, (float) mtexture.Height / 2f), Color.op_Multiply(Color.get_White(), alpha), scale + wiggle);
+      position.X -= (float) ((double) scale * (double) num * ((double) justifyX - 0.5));
+      mtexture.Draw(position, new Vector2((float) mtexture.Width - num / 2f, (float) mtexture.Height / 2f), Color.White * alpha, scale + wiggle);
       ButtonUI.DrawText(label, position, num / 2f, scale + wiggle, alpha);
     }
 
@@ -45,8 +40,9 @@ namespace Celeste
       float scale,
       float alpha)
     {
-      float x = (float) ActiveFont.Measure(text).X;
-      ActiveFont.DrawOutline(text, position, new Vector2(justify / x, 0.5f), Vector2.op_Multiply(Vector2.get_One(), scale), Color.op_Multiply(Color.get_White(), alpha), 2f, Color.op_Multiply(Color.get_Black(), alpha));
+      float x = ActiveFont.Measure(text).X;
+      ActiveFont.DrawOutline(text, position, new Vector2(justify / x, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
     }
   }
 }
+

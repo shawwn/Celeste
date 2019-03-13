@@ -34,21 +34,21 @@ namespace Celeste
       string technique = GaussianBlur.techniques[(int) samples];
       if (fxGaussianBlur == null)
         return texture;
-      fxGaussianBlur.set_CurrentTechnique(fxGaussianBlur.get_Techniques().get_Item(technique));
-      fxGaussianBlur.get_Parameters().get_Item(nameof (fade)).SetValue(fade);
-      fxGaussianBlur.get_Parameters().get_Item("pixel").SetValue(Vector2.op_Multiply(new Vector2(1f / (float) temp.Width, 0.0f), sampleScale));
-      Engine.Instance.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) temp);
+      fxGaussianBlur.CurrentTechnique = fxGaussianBlur.Techniques[technique];
+      fxGaussianBlur.Parameters[nameof (fade)].SetValue(fade);
+      fxGaussianBlur.Parameters["pixel"].SetValue(new Vector2(1f / (float) temp.Width, 0.0f) * sampleScale);
+      Engine.Instance.GraphicsDevice.SetRenderTarget((RenderTarget2D) temp);
       if (clear)
-        Engine.Instance.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, direction != GaussianBlur.Direction.Vertical ? fxGaussianBlur : (Effect) null);
-      Draw.SpriteBatch.Draw(texture, new Rectangle(0, 0, temp.Width, temp.Height), Color.get_White());
+        Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, direction != GaussianBlur.Direction.Vertical ? fxGaussianBlur : (Effect) null);
+      Draw.SpriteBatch.Draw(texture, new Rectangle(0, 0, temp.Width, temp.Height), Color.White);
       Draw.SpriteBatch.End();
-      fxGaussianBlur.get_Parameters().get_Item("pixel").SetValue(Vector2.op_Multiply(new Vector2(0.0f, 1f / (float) output.Height), sampleScale));
-      Engine.Instance.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) output);
+      fxGaussianBlur.Parameters["pixel"].SetValue(new Vector2(0.0f, 1f / (float) output.Height) * sampleScale);
+      Engine.Instance.GraphicsDevice.SetRenderTarget((RenderTarget2D) output);
       if (clear)
-        Engine.Instance.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, direction != GaussianBlur.Direction.Horizontal ? fxGaussianBlur : (Effect) null);
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) temp, new Rectangle(0, 0, output.Width, output.Height), Color.get_White());
+        Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, direction != GaussianBlur.Direction.Horizontal ? fxGaussianBlur : (Effect) null);
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) temp, new Rectangle(0, 0, output.Width, output.Height), Color.White);
       Draw.SpriteBatch.End();
       return (Texture2D) (RenderTarget2D) output;
     }
@@ -68,3 +68,4 @@ namespace Celeste
     }
   }
 }
+

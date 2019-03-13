@@ -1,13 +1,12 @@
 ﻿// Decompiled with JetBrains decompiler
-// Type: Celeste.Celeste
+// Type: Celeste
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 // MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// Assembly location: M:\code\bin\Celeste\exe
 
 using Celeste.Pico8;
 using Microsoft.Xna.Framework;
 using Monocle;
-using Steamworks;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -17,8 +16,8 @@ namespace Celeste
 {
   public class Celeste : Engine
   {
-    public static Celeste.Celeste.PlayModes PlayMode = Celeste.Celeste.PlayModes.Normal;
-    public static readonly AppId_t SteamID = new AppId_t(504230U);
+    public static PlayModes PlayMode = PlayModes.Normal;
+    //public static readonly AppId_t SteamID = new AppId_t(504230U);
     private bool firstLoad = true;
     public AutoSplitterInfo AutoSplitterInfo = new AutoSplitterInfo();
     public const int GameWidth = 320;
@@ -27,7 +26,7 @@ namespace Celeste
     public const int TargetHeight = 1080;
     public const string EventName = "";
     public const string PLATFORM = "PC";
-    public static Celeste.Celeste Instance;
+    public static Celeste Instance;
     public static VirtualRenderTarget HudTarget;
     public static DisconnectedControllerUI DisconnectUI;
     public static Coroutine SaveRoutine;
@@ -37,7 +36,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Division(new Vector2(1920f, 1080f), 2f);
+        return Vector2.Divide(new Vector2(1920f, 1080f), 2f);
       }
     }
 
@@ -45,14 +44,14 @@ namespace Celeste
       : base(1920, 1080, 960, 540, nameof (Celeste), Settings.Instance.Fullscreen)
     {
       this.Version = new System.Version(1, 2, 6, 1);
-      Celeste.Celeste.Instance = this;
+      Instance = this;
       Engine.ExitOnEscapeKeypress = false;
-      this.set_IsFixedTimeStep(true);
+      this.IsFixedTimeStep = true;
       Settings.Instance.AfterLoad();
       if (Settings.Instance.Fullscreen)
         Engine.ViewPadding = Settings.Instance.ViewportPadding;
       Settings.Instance.ApplyScreen();
-      Engine.Graphics.set_SynchronizeWithVerticalRetrace(Settings.Instance.VSync);
+      Engine.Graphics.SynchronizeWithVerticalRetrace = Settings.Instance.VSync;
       Engine.Graphics.ApplyChanges();
       Stats.MakeRequest();
       Console.WriteLine("CELESTE : " + (object) this.Version);
@@ -64,7 +63,7 @@ namespace Celeste
       Sfxs.Initialize();
       Tags.Initialize();
       Input.Initialize();
-      Engine.Commands.Enabled = Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Debug;
+      Engine.Commands.Enabled = PlayMode == PlayModes.Debug;
       Engine.Scene = (Scene) new GameLoader();
     }
 
@@ -74,7 +73,7 @@ namespace Celeste
       if (this.firstLoad)
       {
         GameLoader.Stopwatch.Start();
-        Celeste.Celeste.HudTarget = VirtualContent.CreateRenderTarget("hud-target", 1922, 1082, false, true, 0);
+        HudTarget = VirtualContent.CreateRenderTarget("hud-target", 1922, 1082, false, true, 0);
         GFX.LoadGui();
         GFX.LoadOverworld();
         GFX.LoadGame();
@@ -85,17 +84,17 @@ namespace Celeste
       }
       if (GFX.Game != null)
       {
-        Draw.Particle = GFX.Game["util/particle"];
-        Draw.Pixel = new MTexture(GFX.Game["util/pixel"], 1, 1, 1, 1);
+        //Draw.Particle = GFX.Game["util/particle"];
+        //Draw.Pixel = new MTexture(GFX.Game["util/pixel"], 1, 1, 1, 1);
       }
       GFX.LoadEffects();
     }
 
     protected override void Update(GameTime gameTime)
     {
-      SteamAPI.RunCallbacks();
-      if (Celeste.Celeste.SaveRoutine != null)
-        Celeste.Celeste.SaveRoutine.Update();
+      //SteamAPI.RunCallbacks();
+      if (SaveRoutine != null)
+        SaveRoutine.Update();
       this.AutoSplitterInfo.Update();
       Audio.Update();
       base.Update(gameTime);
@@ -116,9 +115,9 @@ namespace Celeste
     protected override void RenderCore()
     {
       base.RenderCore();
-      if (Celeste.Celeste.DisconnectUI == null)
+      if (DisconnectUI == null)
         return;
-      Celeste.Celeste.DisconnectUI.Render();
+      DisconnectUI.Render();
     }
 
     public static void Freeze(float time)
@@ -135,18 +134,19 @@ namespace Celeste
     {
       get
       {
-        return Thread.CurrentThread.ManagedThreadId == Celeste.Celeste._mainThreadId;
+        return Thread.CurrentThread.ManagedThreadId == _mainThreadId;
       }
     }
 
     private static void Main(string[] args)
     {
-      Celeste.Celeste celeste;
+      Celeste celeste;
       try
       {
-        Celeste.Celeste._mainThreadId = Thread.CurrentThread.ManagedThreadId;
+        _mainThreadId = Thread.CurrentThread.ManagedThreadId;
         Settings.Initialize();
-        if (SteamAPI.RestartAppIfNecessary(Celeste.Celeste.SteamID))
+        /*
+        if (SteamAPI.RestartAppIfNecessary(SteamID))
           return;
         if (!SteamAPI.Init())
         {
@@ -156,6 +156,7 @@ namespace Celeste
         }
         if (!Settings.Existed)
           Settings.Instance.Language = SteamApps.GetCurrentGameLanguage();
+        */
         int num = Settings.Existed ? 1 : 0;
         for (int index = 0; index < args.Length - 1; ++index)
         {
@@ -169,7 +170,7 @@ namespace Celeste
           else if (args[index] == "--gui" || args[index] == "-g")
             Input.OverrideInputPrefix = args[++index];
         }
-        celeste = new Celeste.Celeste();
+        celeste = new Celeste();
       }
       catch (Exception ex)
       {
@@ -183,10 +184,10 @@ namespace Celeste
     public static void ReloadAssets(bool levels, bool graphics, bool hires, AreaKey? area = null)
     {
       if (levels)
-        Celeste.Celeste.ReloadLevels(area);
+        ReloadLevels(area);
       if (!graphics)
         return;
-      Celeste.Celeste.ReloadGraphics(hires);
+      ReloadGraphics(hires);
     }
 
     public static void ReloadLevels(AreaKey? area = null)

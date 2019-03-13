@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Celeste
 {
@@ -29,7 +30,7 @@ namespace Celeste
     private SoundSource flyawaySfx;
 
     public FlutterBird(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Depth = -9999;
       this.start = this.Position;
@@ -43,91 +44,84 @@ namespace Celeste
 
     public override void Update()
     {
-      this.sprite.Scale.X = (__Null) (double) Calc.Approach((float) this.sprite.Scale.X, (float) Math.Sign((float) this.sprite.Scale.X), 4f * Engine.DeltaTime);
-      this.sprite.Scale.Y = (__Null) (double) Calc.Approach((float) this.sprite.Scale.Y, 1f, 4f * Engine.DeltaTime);
+      this.sprite.Scale.X = Calc.Approach(this.sprite.Scale.X, (float) Math.Sign(this.sprite.Scale.X), 4f * Engine.DeltaTime);
+      this.sprite.Scale.Y = Calc.Approach(this.sprite.Scale.Y, 1f, 4f * Engine.DeltaTime);
       base.Update();
     }
 
     private IEnumerator IdleRoutine()
     {
-      FlutterBird flutterBird = this;
       while (true)
       {
-        Player player = flutterBird.Scene.Tracker.GetEntity<Player>();
+        Player player = this.Scene.Tracker.GetEntity<Player>();
         float delay = 0.25f + Calc.Random.NextFloat(1f);
-        float p;
-        for (p = 0.0f; (double) p < (double) delay; p += Engine.DeltaTime)
+        for (float p = 0.0f; (double) p < (double) delay; p += Engine.DeltaTime)
         {
-          if (player != null && (double) Math.Abs(player.X - flutterBird.X) < 48.0 && ((double) player.Y > (double) flutterBird.Y - 40.0 && (double) player.Y < (double) flutterBird.Y + 8.0))
-            flutterBird.FlyAway(Math.Sign(flutterBird.X - player.X), Calc.Random.NextFloat(0.2f));
+          if (player != null && (double) Math.Abs(player.X - this.X) < 48.0 && (double) player.Y > (double) this.Y - 40.0 && (double) player.Y < (double) this.Y + 8.0)
+            this.FlyAway(Math.Sign(this.X - player.X), Calc.Random.NextFloat(0.2f));
           yield return (object) null;
         }
-        Audio.Play("event:/game/general/birdbaby_hop", flutterBird.Position);
-        Vector2 target = Vector2.op_Addition(flutterBird.start, new Vector2(Calc.Random.NextFloat(8f) - 4f, 0.0f));
-        flutterBird.sprite.Scale.X = (__Null) (double) Math.Sign((float) (target.X - flutterBird.Position.X));
-        SimpleCurve bezier = new SimpleCurve(flutterBird.Position, target, Vector2.op_Subtraction(Vector2.op_Division(Vector2.op_Addition(flutterBird.Position, target), 2f), Vector2.op_Multiply(Vector2.get_UnitY(), 14f)));
-        for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
+        Audio.Play("event:/game/general/birdbaby_hop", this.Position);
+        Vector2 target = this.start + new Vector2(Calc.Random.NextFloat(8f) - 4f, 0.0f);
+        this.sprite.Scale.X = (float) Math.Sign(target.X - this.Position.X);
+        SimpleCurve bezier = new SimpleCurve(this.Position, target, (this.Position + target) / 2f - Vector2.UnitY * 14f);
+        for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
         {
-          flutterBird.Position = bezier.GetPoint(p);
+          this.Position = bezier.GetPoint(p);
           yield return (object) null;
         }
-        flutterBird.sprite.Scale.X = (__Null) ((double) Math.Sign((float) flutterBird.sprite.Scale.X) * 1.39999997615814);
-        flutterBird.sprite.Scale.Y = (__Null) 0.600000023841858;
-        flutterBird.Position = target;
+        this.sprite.Scale.X = (float) Math.Sign(this.sprite.Scale.X) * 1.4f;
+        this.sprite.Scale.Y = 0.6f;
+        this.Position = target;
         player = (Player) null;
-        target = (Vector2) null;
+        target = new Vector2();
         bezier = new SimpleCurve();
       }
     }
 
     private IEnumerator FlyAwayRoutine(int direction, float delay)
     {
-      FlutterBird flutterBird = this;
-      Level level = flutterBird.Scene as Level;
+      Level level = this.Scene as Level;
       yield return (object) delay;
-      flutterBird.sprite.Play("fly", false, false);
-      flutterBird.sprite.Scale.X = (__Null) ((double) -direction * 1.25);
-      flutterBird.sprite.Scale.Y = (__Null) 1.25;
+      this.sprite.Play("fly", false, false);
+      this.sprite.Scale.X = (float) -direction * 1.25f;
+      this.sprite.Scale.Y = 1.25f;
       level.ParticlesFG.Emit(Calc.Random.Choose<ParticleType>(new ParticleType[1]
       {
         ParticleTypes.Dust
-      }), flutterBird.Position, -1.570796f);
-      Vector2 from = flutterBird.Position;
-      Vector2 to = Vector2.op_Addition(flutterBird.Position, new Vector2((float) (direction * 4), -8f));
+      }), this.Position, -1.570796f);
+      Vector2 from = this.Position;
+      Vector2 to = this.Position + new Vector2((float) (direction * 4), -8f);
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 3f)
       {
-        flutterBird.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), Ease.CubeOut(p)));
+        this.Position = from + (to - from) * Ease.CubeOut(p);
         yield return (object) null;
       }
-      from = (Vector2) null;
-      to = (Vector2) null;
-      flutterBird.Depth = -10001;
-      flutterBird.sprite.Scale.X = -flutterBird.sprite.Scale.X;
-      to = Vector2.op_Multiply(new Vector2((float) direction, -4f), 8f);
-      while (true)
+      from = new Vector2();
+      to = new Vector2();
+      this.Depth = -10001;
+      this.sprite.Scale.X = -this.sprite.Scale.X;
+      Vector2 speed = new Vector2((float) direction, -4f) * 8f;
+      while ((double) this.Y + 8.0 > (double) level.Bounds.Top)
       {
-        double num = (double) flutterBird.Y + 8.0;
-        Rectangle bounds = level.Bounds;
-        double top = (double) ((Rectangle) ref bounds).get_Top();
-        if (num > top)
+        speed += new Vector2((float) (direction * 64), (float) sbyte.MinValue) * Engine.DeltaTime;
+        this.Position = this.Position + speed * Engine.DeltaTime;
+        if (this.Scene.OnInterval(0.1f) && (double) this.Y > (double) level.Camera.Top + 32.0)
         {
-          to = Vector2.op_Addition(to, Vector2.op_Multiply(new Vector2((float) (direction * 64), (float) sbyte.MinValue), Engine.DeltaTime));
-          flutterBird.Position = Vector2.op_Addition(flutterBird.Position, Vector2.op_Multiply(to, Engine.DeltaTime));
-          if (flutterBird.Scene.OnInterval(0.1f) && (double) flutterBird.Y > (double) level.Camera.Top + 32.0)
+          List<Entity> birds = this.Scene.Tracker.GetEntities<FlutterBird>();
+          foreach (Entity entity in birds)
           {
-            foreach (Entity entity in flutterBird.Scene.Tracker.GetEntities<FlutterBird>())
-            {
-              if ((double) Math.Abs(flutterBird.X - entity.X) < 48.0 && (double) Math.Abs(flutterBird.Y - entity.Y) < 48.0 && !(entity as FlutterBird).flyingAway)
-                (entity as FlutterBird).FlyAway(direction, Calc.Random.NextFloat(0.25f));
-            }
+            Entity bird = entity;
+            if ((double) Math.Abs(this.X - bird.X) < 48.0 && (double) Math.Abs(this.Y - bird.Y) < 48.0 && !(bird as FlutterBird).flyingAway)
+              (bird as FlutterBird).FlyAway(direction, Calc.Random.NextFloat(0.25f));
+            bird = (Entity) null;
           }
-          yield return (object) null;
+          birds = (List<Entity>) null;
         }
-        else
-          break;
+        yield return (object) null;
       }
-      to = (Vector2) null;
-      flutterBird.Scene.Remove((Entity) flutterBird);
+      speed = new Vector2();
+      this.Scene.Remove((Entity) this);
     }
 
     public void FlyAway(int direction, float delay)
@@ -142,3 +136,4 @@ namespace Celeste
     }
   }
 }
+

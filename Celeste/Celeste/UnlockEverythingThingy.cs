@@ -14,38 +14,13 @@ namespace Celeste
   {
     public UnlockEverythingThingy()
     {
-      this.AddInput('u', (Func<bool>) (() =>
-      {
-        if (Input.MenuUp.Pressed)
-          return !Input.MenuUp.Repeating;
-        return false;
-      }));
-      this.AddInput('d', (Func<bool>) (() =>
-      {
-        if (Input.MenuDown.Pressed)
-          return !Input.MenuDown.Repeating;
-        return false;
-      }));
-      this.AddInput('r', (Func<bool>) (() =>
-      {
-        if (Input.MenuRight.Pressed)
-          return !Input.MenuRight.Repeating;
-        return false;
-      }));
-      this.AddInput('l', (Func<bool>) (() =>
-      {
-        if (Input.MenuLeft.Pressed)
-          return !Input.MenuLeft.Repeating;
-        return false;
-      }));
+      this.AddInput('u', (Func<bool>) (() => Input.MenuUp.Pressed && !Input.MenuUp.Repeating));
+      this.AddInput('d', (Func<bool>) (() => Input.MenuDown.Pressed && !Input.MenuDown.Repeating));
+      this.AddInput('r', (Func<bool>) (() => Input.MenuRight.Pressed && !Input.MenuRight.Repeating));
+      this.AddInput('l', (Func<bool>) (() => Input.MenuLeft.Pressed && !Input.MenuLeft.Repeating));
       this.AddInput('A', (Func<bool>) (() => Input.MenuConfirm.Pressed));
       this.AddInput('L', (Func<bool>) (() => Input.MenuJournal.Pressed));
-      this.AddInput('R', (Func<bool>) (() =>
-      {
-        if (Input.Grab.Pressed)
-          return !Input.MenuJournal.Pressed;
-        return false;
-      }));
+      this.AddInput('R', (Func<bool>) (() => Input.Grab.Pressed && !Input.MenuJournal.Pressed));
       this.AddCheat("lrLRuudlRA", new Action(this.EnteredCheat));
       this.Logging = true;
     }
@@ -55,8 +30,8 @@ namespace Celeste
       Level level = this.SceneAs<Level>();
       level.PauseLock = true;
       level.Frozen = true;
-      level.Flash(Color.get_White(), false);
-      Audio.Play("event:/game/06_reflection/feather_bubble_get", Vector2.op_Addition((this.Scene as Level).Camera.Position, new Vector2(160f, 90f)));
+      level.Flash(Color.White, false);
+      Audio.Play("event:/game/06_reflection/feather_bubble_get", (this.Scene as Level).Camera.Position + new Vector2(160f, 90f));
       new FadeWipe(this.Scene, false, (Action) (() => this.UnlockEverything(level))).Duration = 2f;
       this.RemoveSelf();
     }
@@ -72,3 +47,4 @@ namespace Celeste
     }
   }
 }
+

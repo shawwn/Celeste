@@ -18,8 +18,9 @@ namespace Celeste
     }
 
     public PropLight(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.HexColor("color", (Color) null), data.Float("alpha", 0.0f))
+      : this(data.Position + offset, data.HexColor("color", new Color()), data.Float("alpha", 0.0f))
     {
     }
   }
 }
+

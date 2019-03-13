@@ -4,7 +4,6 @@
 // MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
 // Assembly location: M:\code\bin\Celeste\Celeste.exe
 
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
@@ -42,9 +41,8 @@ namespace Monocle
         int num = this.value;
         this.value = value;
         this.UpdateString();
-        if (this.OnValueUpdate == null)
-          return;
-        this.OnValueUpdate(num);
+        if (this.OnValueUpdate != null)
+          this.OnValueUpdate(num);
       }
     }
 
@@ -53,7 +51,7 @@ namespace Monocle
       this.drawString = this.prefix + this.value.ToString();
       if (!this.centered)
         return;
-      this.Origin = Vector2.op_Division(this.font.MeasureString(this.drawString), 2f).Floor();
+      this.Origin = (this.font.MeasureString(this.drawString) / 2f).Floor();
     }
 
     public override void Render()
@@ -65,7 +63,7 @@ namespace Monocle
     {
       get
       {
-        return (float) this.font.MeasureString(this.drawString).X;
+        return this.font.MeasureString(this.drawString).X;
       }
     }
 
@@ -73,8 +71,9 @@ namespace Monocle
     {
       get
       {
-        return (float) this.font.MeasureString(this.drawString).Y;
+        return this.font.MeasureString(this.drawString).Y;
       }
     }
   }
 }
+

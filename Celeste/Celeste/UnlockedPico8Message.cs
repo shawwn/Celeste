@@ -35,25 +35,24 @@ namespace Celeste
 
     private IEnumerator Routine()
     {
-      UnlockedPico8Message unlockedPico8Message = this;
-      Level level = unlockedPico8Message.Scene as Level;
+      Level level = this.Scene as Level;
       level.PauseLock = true;
       level.Paused = true;
-      while ((double) (unlockedPico8Message.alpha += Engine.DeltaTime / 0.5f) < 1.0)
+      while ((double) (this.alpha += Engine.DeltaTime / 0.5f) < 1.0)
         yield return (object) null;
-      unlockedPico8Message.alpha = 1f;
-      unlockedPico8Message.waitForKeyPress = true;
+      this.alpha = 1f;
+      this.waitForKeyPress = true;
       while (!Input.MenuConfirm.Pressed)
         yield return (object) null;
-      unlockedPico8Message.waitForKeyPress = false;
-      while ((double) (unlockedPico8Message.alpha -= Engine.DeltaTime / 0.5f) > 0.0)
+      this.waitForKeyPress = false;
+      while ((double) (this.alpha -= Engine.DeltaTime / 0.5f) > 0.0)
         yield return (object) null;
-      unlockedPico8Message.alpha = 0.0f;
+      this.alpha = 0.0f;
       level.PauseLock = false;
       level.Paused = false;
-      unlockedPico8Message.RemoveSelf();
-      if (unlockedPico8Message.callback != null)
-        unlockedPico8Message.callback();
+      this.RemoveSelf();
+      if (this.callback != null)
+        this.callback();
     }
 
     public override void Update()
@@ -65,14 +64,15 @@ namespace Celeste
     public override void Render()
     {
       float num = Ease.CubeOut(this.alpha);
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), num), 0.8f));
-      GFX.Gui["pico8"].DrawJustified(Vector2.op_Addition(Celeste.Celeste.TargetCenter, new Vector2(0.0f, (float) (-64.0 * (1.0 - (double) num) - 16.0))), new Vector2(0.5f, 1f), Color.op_Multiply(Color.get_White(), num));
-      Vector2 position = Vector2.op_Addition(Celeste.Celeste.TargetCenter, new Vector2(0.0f, (float) (64.0 * (1.0 - (double) num) + 16.0)));
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * num * 0.8f);
+      GFX.Gui["pico8"].DrawJustified(Celeste.Celeste.TargetCenter + new Vector2(0.0f, (float) (-64.0 * (1.0 - (double) num) - 16.0)), new Vector2(0.5f, 1f), Color.White * num);
+      Vector2 position = Celeste.Celeste.TargetCenter + new Vector2(0.0f, (float) (64.0 * (1.0 - (double) num) + 16.0));
       Vector2 vector2 = ActiveFont.Measure(this.text);
-      ActiveFont.Draw(this.text, position, new Vector2(0.5f, 0.0f), Vector2.get_One(), Color.op_Multiply(Color.get_White(), num));
+      ActiveFont.Draw(this.text, position, new Vector2(0.5f, 0.0f), Vector2.One, Color.White * num);
       if (!this.waitForKeyPress)
         return;
-      GFX.Gui["textboxbutton"].DrawCentered(Vector2.op_Addition(Celeste.Celeste.TargetCenter, new Vector2((float) (vector2.X / 2.0 + 32.0), (float) (vector2.Y + 48.0 + ((double) this.timer % 1.0 < 0.25 ? 6.0 : 0.0)))));
+      GFX.Gui["textboxbutton"].DrawCentered(Celeste.Celeste.TargetCenter + new Vector2((float) ((double) vector2.X / 2.0 + 32.0), (float) ((double) vector2.Y + 48.0 + ((double) this.timer % 1.0 < 0.25 ? 6.0 : 0.0))));
     }
   }
 }
+

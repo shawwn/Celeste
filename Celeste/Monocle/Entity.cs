@@ -16,11 +16,11 @@ namespace Monocle
     public bool Active = true;
     public bool Visible = true;
     public bool Collidable = true;
+    internal int depth = 0;
+    internal double actualDepth = 0.0;
     public Vector2 Position;
     private int tag;
     private Collider collider;
-    internal int depth;
-    internal double actualDepth;
 
     public Scene Scene { get; private set; }
 
@@ -33,7 +33,7 @@ namespace Monocle
     }
 
     public Entity()
-      : this(Vector2.get_Zero())
+      : this(Vector2.Zero)
     {
     }
 
@@ -91,7 +91,7 @@ namespace Monocle
     public virtual void DebugRender(Camera camera)
     {
       if (this.Collider != null)
-        this.Collider.Render(camera, this.Collidable ? Color.get_Red() : Color.get_DarkRed());
+        this.Collider.Render(camera, this.Collidable ? Color.Red : Color.DarkRed);
       this.Components.DebugRender(camera);
     }
 
@@ -123,9 +123,8 @@ namespace Monocle
         if (this.depth == value)
           return;
         this.depth = value;
-        if (this.Scene == null)
-          return;
-        this.Scene.SetActualDepth(this);
+        if (this.Scene != null)
+          this.Scene.SetActualDepth(this);
       }
     }
 
@@ -133,11 +132,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.X;
+        return this.Position.X;
       }
       set
       {
-        this.Position.X = (__Null) (double) value;
+        this.Position.X = value;
       }
     }
 
@@ -145,11 +144,11 @@ namespace Monocle
     {
       get
       {
-        return (float) this.Position.Y;
+        return this.Position.Y;
       }
       set
       {
-        this.Position.Y = (__Null) (double) value;
+        this.Position.Y = value;
       }
     }
 
@@ -198,14 +197,14 @@ namespace Monocle
       {
         if (this.Collider == null)
           return this.X;
-        return (float) this.Position.X + this.Collider.Left;
+        return this.Position.X + this.Collider.Left;
       }
       set
       {
         if (this.Collider == null)
-          this.Position.X = (__Null) (double) value;
+          this.Position.X = value;
         else
-          this.Position.X = (__Null) ((double) value - (double) this.Collider.Left);
+          this.Position.X = value - this.Collider.Left;
       }
     }
 
@@ -214,15 +213,15 @@ namespace Monocle
       get
       {
         if (this.Collider == null)
-          return (float) this.Position.X;
-        return (float) this.Position.X + this.Collider.Right;
+          return this.Position.X;
+        return this.Position.X + this.Collider.Right;
       }
       set
       {
         if (this.Collider == null)
-          this.Position.X = (__Null) (double) value;
+          this.Position.X = value;
         else
-          this.Position.X = (__Null) ((double) value - (double) this.Collider.Right);
+          this.Position.X = value - this.Collider.Right;
       }
     }
 
@@ -231,15 +230,15 @@ namespace Monocle
       get
       {
         if (this.Collider == null)
-          return (float) this.Position.Y;
-        return (float) this.Position.Y + this.Collider.Top;
+          return this.Position.Y;
+        return this.Position.Y + this.Collider.Top;
       }
       set
       {
         if (this.Collider == null)
-          this.Position.Y = (__Null) (double) value;
+          this.Position.Y = value;
         else
-          this.Position.Y = (__Null) ((double) value - (double) this.Collider.Top);
+          this.Position.Y = value - this.Collider.Top;
       }
     }
 
@@ -248,15 +247,15 @@ namespace Monocle
       get
       {
         if (this.Collider == null)
-          return (float) this.Position.Y;
-        return (float) this.Position.Y + this.Collider.Bottom;
+          return this.Position.Y;
+        return this.Position.Y + this.Collider.Bottom;
       }
       set
       {
         if (this.Collider == null)
-          this.Position.Y = (__Null) (double) value;
+          this.Position.Y = value;
         else
-          this.Position.Y = (__Null) ((double) value - (double) this.Collider.Bottom);
+          this.Position.Y = value - this.Collider.Bottom;
       }
     }
 
@@ -265,15 +264,15 @@ namespace Monocle
       get
       {
         if (this.Collider == null)
-          return (float) this.Position.X;
-        return (float) this.Position.X + this.Collider.CenterX;
+          return this.Position.X;
+        return this.Position.X + this.Collider.CenterX;
       }
       set
       {
         if (this.Collider == null)
-          this.Position.X = (__Null) (double) value;
+          this.Position.X = value;
         else
-          this.Position.X = (__Null) ((double) value - (double) this.Collider.CenterX);
+          this.Position.X = value - this.Collider.CenterX;
       }
     }
 
@@ -282,15 +281,15 @@ namespace Monocle
       get
       {
         if (this.Collider == null)
-          return (float) this.Position.Y;
-        return (float) this.Position.Y + this.Collider.CenterY;
+          return this.Position.Y;
+        return this.Position.Y + this.Collider.CenterY;
       }
       set
       {
         if (this.Collider == null)
-          this.Position.Y = (__Null) (double) value;
+          this.Position.Y = value;
         else
-          this.Position.Y = (__Null) ((double) value - (double) this.Collider.CenterY);
+          this.Position.Y = value - this.Collider.CenterY;
       }
     }
 
@@ -302,8 +301,8 @@ namespace Monocle
       }
       set
       {
-        this.Left = (float) value.X;
-        this.Top = (float) value.Y;
+        this.Left = value.X;
+        this.Top = value.Y;
       }
     }
 
@@ -315,8 +314,8 @@ namespace Monocle
       }
       set
       {
-        this.Right = (float) value.X;
-        this.Top = (float) value.Y;
+        this.Right = value.X;
+        this.Top = value.Y;
       }
     }
 
@@ -328,8 +327,8 @@ namespace Monocle
       }
       set
       {
-        this.Left = (float) value.X;
-        this.Bottom = (float) value.Y;
+        this.Left = value.X;
+        this.Bottom = value.Y;
       }
     }
 
@@ -341,8 +340,8 @@ namespace Monocle
       }
       set
       {
-        this.Right = (float) value.X;
-        this.Bottom = (float) value.Y;
+        this.Right = value.X;
+        this.Bottom = value.Y;
       }
     }
 
@@ -354,8 +353,8 @@ namespace Monocle
       }
       set
       {
-        this.CenterX = (float) value.X;
-        this.CenterY = (float) value.Y;
+        this.CenterX = value.X;
+        this.CenterY = value.Y;
       }
     }
 
@@ -367,8 +366,8 @@ namespace Monocle
       }
       set
       {
-        this.Left = (float) value.X;
-        this.CenterY = (float) value.Y;
+        this.Left = value.X;
+        this.CenterY = value.Y;
       }
     }
 
@@ -380,8 +379,8 @@ namespace Monocle
       }
       set
       {
-        this.Right = (float) value.X;
-        this.CenterY = (float) value.Y;
+        this.Right = value.X;
+        this.CenterY = value.Y;
       }
     }
 
@@ -393,8 +392,8 @@ namespace Monocle
       }
       set
       {
-        this.CenterX = (float) value.X;
-        this.Top = (float) value.Y;
+        this.CenterX = value.X;
+        this.Top = value.Y;
       }
     }
 
@@ -406,8 +405,8 @@ namespace Monocle
       }
       set
       {
-        this.CenterX = (float) value.X;
-        this.Bottom = (float) value.Y;
+        this.CenterX = value.X;
+        this.Bottom = value.Y;
       }
     }
 
@@ -509,9 +508,9 @@ namespace Monocle
     {
       Vector2 position = this.Position;
       this.Position = at;
-      int num = this.CollideCheck<T, Exclude>() ? 1 : 0;
+      bool flag = this.CollideCheck<T, Exclude>();
       this.Position = position;
-      return num != 0;
+      return flag;
     }
 
     public bool CollideCheckByComponent<T>() where T : Component
@@ -528,16 +527,14 @@ namespace Monocle
     {
       Vector2 position = this.Position;
       this.Position = at;
-      int num = this.CollideCheckByComponent<T>() ? 1 : 0;
+      bool flag = this.CollideCheckByComponent<T>();
       this.Position = position;
-      return num != 0;
+      return flag;
     }
 
     public bool CollideCheckOutside(Entity other, Vector2 at)
     {
-      if (!Collide.Check(this, other))
-        return Collide.Check(this, other, at);
-      return false;
+      return !Collide.Check(this, other) && Collide.Check(this, other, at);
     }
 
     public bool CollideCheckOutside(BitTag tag, Vector2 at)
@@ -887,3 +884,4 @@ namespace Monocle
     }
   }
 }
+

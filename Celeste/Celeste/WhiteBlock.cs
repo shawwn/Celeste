@@ -11,15 +11,15 @@ namespace Celeste
 {
   public class WhiteBlock : JumpThru
   {
+    private float playerDuckTimer = 0.0f;
     private bool enabled = true;
     private const float duckDuration = 3f;
-    private float playerDuckTimer;
     private bool activated;
     private Monocle.Image sprite;
     private Entity bgSolidTiles;
 
     public WhiteBlock(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset), 48, true)
+      : base(data.Position + offset, 48, true)
     {
       this.Add((Component) (this.sprite = new Monocle.Image(GFX.Game["objects/whiteblock"])));
       this.Depth = -9000;
@@ -37,7 +37,7 @@ namespace Celeste
     private void Disable()
     {
       this.enabled = false;
-      this.sprite.Color = Color.op_Multiply(Color.get_White(), 0.25f);
+      this.sprite.Color = Color.White * 0.25f;
       this.Collidable = false;
     }
 
@@ -48,26 +48,15 @@ namespace Celeste
       this.Collidable = false;
       player.Depth = 10001;
       Level scene = this.Scene as Level;
-      Rectangle rectangle;
-      ref Rectangle local = ref rectangle;
-      Rectangle bounds1 = scene.Bounds;
-      int num1 = ((Rectangle) ref bounds1).get_Left() / 8;
-      int num2 = scene.Bounds.Y / 8;
-      int num3 = scene.Bounds.Width / 8;
-      int num4 = scene.Bounds.Height / 8;
-      ((Rectangle) ref local).\u002Ector(num1, num2, num3, num4);
+      Rectangle rectangle = new Rectangle(scene.Bounds.Left / 8, scene.Bounds.Y / 8, scene.Bounds.Width / 8, scene.Bounds.Height / 8);
       Rectangle tileBounds = scene.Session.MapData.TileBounds;
-      bool[,] data = new bool[(int) rectangle.Width, (int) rectangle.Height];
+      bool[,] data = new bool[rectangle.Width, rectangle.Height];
       for (int index1 = 0; index1 < rectangle.Width; ++index1)
       {
         for (int index2 = 0; index2 < rectangle.Height; ++index2)
-          data[index1, index2] = scene.BgData[index1 + ((Rectangle) ref rectangle).get_Left() - ((Rectangle) ref tileBounds).get_Left(), index2 + ((Rectangle) ref rectangle).get_Top() - ((Rectangle) ref tileBounds).get_Top()] != '0';
+          data[index1, index2] = scene.BgData[index1 + rectangle.Left - tileBounds.Left, index2 + rectangle.Top - tileBounds.Top] != '0';
       }
-      Rectangle bounds2 = scene.Bounds;
-      double left = (double) ((Rectangle) ref bounds2).get_Left();
-      bounds2 = scene.Bounds;
-      double top = (double) ((Rectangle) ref bounds2).get_Top();
-      this.bgSolidTiles = (Entity) new Solid(new Vector2((float) left, (float) top), 1f, 1f, true);
+      this.bgSolidTiles = (Entity) new Solid(new Vector2((float) scene.Bounds.Left, (float) scene.Bounds.Top), 1f, 1f, true);
       this.bgSolidTiles.Collider = (Collider) new Grid(8f, 8f, data);
       this.Scene.Add(this.bgSolidTiles);
     }
@@ -88,21 +77,20 @@ namespace Celeste
         }
         else
           this.playerDuckTimer = 0.0f;
-        if (!(this.Scene as Level).Session.HeartGem)
-          return;
-        this.Disable();
+        if ((this.Scene as Level).Session.HeartGem)
+          this.Disable();
       }
-      else
+      else if (this.Scene.Tracker.GetEntity<HeartGem>() == null)
       {
-        if (this.Scene.Tracker.GetEntity<HeartGem>() != null)
-          return;
         Player entity = this.Scene.Tracker.GetEntity<Player>();
-        if (entity == null)
-          return;
-        this.Disable();
-        entity.Depth = 0;
-        this.Scene.Remove(this.bgSolidTiles);
+        if (entity != null)
+        {
+          this.Disable();
+          entity.Depth = 0;
+          this.Scene.Remove(this.bgSolidTiles);
+        }
       }
     }
   }
 }
+

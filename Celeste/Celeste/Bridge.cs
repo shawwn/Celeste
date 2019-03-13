@@ -13,6 +13,7 @@ namespace Celeste
   public class Bridge : Entity
   {
     private List<Rectangle> tileSizes = new List<Rectangle>();
+    private bool ending = false;
     private List<BridgeTile> tiles;
     private Level level;
     private bool canCollapse;
@@ -20,7 +21,6 @@ namespace Celeste
     private bool canEndCollapseB;
     private float collapseTimer;
     private int width;
-    private bool ending;
     private float gapStartX;
     private float gapEndX;
     private SoundSource collapseSfx;
@@ -46,7 +46,7 @@ namespace Celeste
     }
 
     public Bridge(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Width, (float) data.Nodes[0].X, (float) data.Nodes[1].X)
+      : this(data.Position + offset, data.Width, data.Nodes[0].X, data.Nodes[1].X)
     {
     }
 
@@ -55,32 +55,21 @@ namespace Celeste
       base.Added(scene);
       this.level = scene as Level;
       this.tiles = new List<BridgeTile>();
-      double gapStartX = (double) this.gapStartX;
-      Rectangle bounds1 = this.level.Bounds;
-      double left1 = (double) ((Rectangle) ref bounds1).get_Left();
-      this.gapStartX = (float) (gapStartX + left1);
-      double gapEndX = (double) this.gapEndX;
-      Rectangle bounds2 = this.level.Bounds;
-      double left2 = (double) ((Rectangle) ref bounds2).get_Left();
-      this.gapEndX = (float) (gapEndX + left2);
+      this.gapStartX += (float) this.level.Bounds.Left;
+      this.gapEndX += (float) this.level.Bounds.Left;
       Calc.PushRandom(1);
       Vector2 position = this.Position;
       int index = 0;
-      while (position.X < (double) this.X + (double) this.width)
+      while ((double) position.X < (double) this.X + (double) this.width)
       {
         Rectangle tileSize = index < 2 || index > 7 ? this.tileSizes[index] : this.tileSizes[2 + Calc.Random.Next(6)];
-        if (position.X < (double) this.gapStartX || position.X >= (double) this.gapEndX)
+        if ((double) position.X < (double) this.gapStartX || (double) position.X >= (double) this.gapEndX)
         {
           BridgeTile bridgeTile = new BridgeTile(position, tileSize);
           this.tiles.Add(bridgeTile);
           this.level.Add((Entity) bridgeTile);
         }
-        ref __Null local = ref position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + (float) tileSize.Width;
+        position.X += (float) tileSize.Width;
         index = (index + 1) % this.tileSizes.Count;
       }
       Calc.PopRandom();
@@ -132,11 +121,12 @@ namespace Celeste
         else if ((double) this.collapseTimer > 0.0)
         {
           this.collapseTimer -= Engine.DeltaTime;
-          if (this.tiles.Count < 5 || (double) entity.X < (double) this.tiles[4].X)
-            return;
-          int index = 0;
-          this.tiles[index].Fall(0.2f);
-          this.tiles.RemoveAt(index);
+          if (this.tiles.Count >= 5 && (double) entity.X >= (double) this.tiles[4].X)
+          {
+            int index = 0;
+            this.tiles[index].Fall(0.2f);
+            this.tiles.RemoveAt(index);
+          }
         }
         else
         {
@@ -159,3 +149,4 @@ namespace Celeste
     }
   }
 }
+

@@ -42,7 +42,7 @@ namespace Celeste
         this.Stars[index1].Distance = (float) (4.0 + (double) num3 * 20.0);
         this.Stars[index1].Sine = Calc.Random.NextFloat(6.283185f);
         this.Stars[index1].Position = this.GetTargetOfStar(ref this.Stars[index1]);
-        this.Stars[index1].Color = Color.Lerp(this.Color, Color.get_Transparent(), num3 * 0.5f);
+        this.Stars[index1].Color = Color.Lerp(this.Color, Color.Transparent, num3 * 0.5f);
         int index2 = (int) ((double) Ease.CubeIn(1f - num3) * (double) atlasSubtextures.Count);
         this.Stars[index1].Texture = atlasSubtextures[index2];
       }
@@ -66,30 +66,20 @@ namespace Celeste
         if (star.NodeIndex >= this.YNodes.Count - 1)
         {
           star.NodeIndex = 0;
-          ref __Null local = ref star.Position.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local - 448f;
+          star.Position.X -= 448f;
         }
       }
-      ref Vector2 local1 = ref star.Position;
-      local1 = Vector2.op_Addition(local1, Vector2.op_Division(Vector2.op_Subtraction(this.GetTargetOfStar(ref star), star.Position), 50f));
+      star.Position += (this.GetTargetOfStar(ref star) - star.Position) / 50f;
     }
 
     private Vector2 GetTargetOfStar(ref Starfield.Star star)
     {
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector((float) (star.NodeIndex * 32), this.YNodes[star.NodeIndex]);
-      Vector2 vector2_2;
-      ((Vector2) ref vector2_2).\u002Ector((float) ((star.NodeIndex + 1) * 32), this.YNodes[star.NodeIndex + 1]);
-      Vector2 vector2_3 = Vector2.op_Addition(vector2_1, Vector2.op_Multiply(Vector2.op_Subtraction(vector2_2, vector2_1), star.NodePercent));
-      Vector2 vector2_4 = Vector2.op_Subtraction(vector2_2, vector2_1).SafeNormalize();
-      Vector2 vector2_5;
-      ((Vector2) ref vector2_5).\u002Ector((float) -vector2_4.Y, (float) vector2_4.X);
-      Vector2 vector2_6 = Vector2.op_Multiply(Vector2.op_Multiply(vector2_5, star.Distance), (float) Math.Sin((double) star.Sine));
-      return Vector2.op_Addition(vector2_3, vector2_6);
+      Vector2 vector2_1 = new Vector2((float) (star.NodeIndex * 32), this.YNodes[star.NodeIndex]);
+      Vector2 vector2_2 = new Vector2((float) ((star.NodeIndex + 1) * 32), this.YNodes[star.NodeIndex + 1]);
+      Vector2 vector2_3 = vector2_1 + (vector2_2 - vector2_1) * star.NodePercent;
+      Vector2 vector2_4 = (vector2_2 - vector2_1).SafeNormalize();
+      Vector2 vector2_5 = new Vector2(-vector2_4.Y, vector2_4.X);
+      return vector2_3 + vector2_5 * star.Distance * (float) Math.Sin((double) star.Sine);
     }
 
     public override void Render(Scene scene)
@@ -97,10 +87,11 @@ namespace Celeste
       Vector2 position1 = (scene as Level).Camera.Position;
       for (int index = 0; index < this.Stars.Length; ++index)
       {
-        Vector2 vector2 = (Vector2) null;
-        vector2.X = (__Null) ((double) this.Mod((float) (this.Stars[index].Position.X - position1.X * this.Scroll.X), 448f) - 64.0);
-        vector2.Y = (__Null) ((double) this.Mod((float) (this.Stars[index].Position.Y - position1.Y * this.Scroll.Y), 212f) - 16.0);
-        Vector2 position2 = vector2;
+        Vector2 position2 = new Vector2()
+        {
+          X = this.Mod(this.Stars[index].Position.X - position1.X * this.Scroll.X, 448f) - 64f,
+          Y = this.Mod(this.Stars[index].Position.Y - position1.Y * this.Scroll.Y, 212f) - 16f
+        };
         this.Stars[index].Texture.DrawCentered(position2, this.Stars[index].Color);
       }
     }
@@ -122,3 +113,4 @@ namespace Celeste
     }
   }
 }
+

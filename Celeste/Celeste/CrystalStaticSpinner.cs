@@ -81,7 +81,7 @@ namespace Celeste
     }
 
     public CrystalStaticSpinner(EntityData data, Vector2 offset, CrystalColor color)
-      : this(Vector2.op_Addition(data.Position, offset), data.Bool("attachToSolid", false), color)
+      : this(data.Position + offset, data.Bool("attachToSolid", false), color)
     {
     }
 
@@ -136,9 +136,7 @@ namespace Celeste
     private bool InView()
     {
       Camera camera = (this.Scene as Level).Camera;
-      if ((double) this.X > (double) camera.X - 16.0 && (double) this.Y > (double) camera.Y - 16.0 && (double) this.X < (double) camera.X + 320.0 + 16.0)
-        return (double) this.Y < (double) camera.Y + 180.0 + 16.0;
-      return false;
+      return (double) this.X > (double) camera.X - 16.0 && (double) this.Y > (double) camera.Y - 16.0 && (double) this.X < (double) camera.X + 320.0 + 16.0 && (double) this.Y < (double) camera.Y + 180.0 + 16.0;
     }
 
     private void CreateSprites()
@@ -158,12 +156,8 @@ namespace Celeste
         this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(0, 10, 14, 14, (MTexture) null)).SetOrigin(12f, 2f));
       foreach (CrystalStaticSpinner entity in this.Scene.Tracker.GetEntities<CrystalStaticSpinner>())
       {
-        if (entity != this && entity.AttachToSolid == this.AttachToSolid && (double) entity.X >= (double) this.X)
-        {
-          Vector2 vector2 = Vector2.op_Subtraction(entity.Position, this.Position);
-          if ((double) ((Vector2) ref vector2).Length() < 24.0)
-            this.AddSprite(Vector2.op_Subtraction(Vector2.op_Division(Vector2.op_Addition(this.Position, entity.Position), 2f), this.Position));
-        }
+        if (entity != this && entity.AttachToSolid == this.AttachToSolid && (double) entity.X >= (double) this.X && (double) (entity.Position - this.Position).Length() < 24.0)
+          this.AddSprite((this.Position + entity.Position) / 2f - this.Position);
       }
       this.Scene.Add((Entity) (this.border = new CrystalStaticSpinner.Border((Entity) this, this.filler)));
       this.expanded = true;
@@ -226,7 +220,7 @@ namespace Celeste
 
     private void OnPlayer(Player player)
     {
-      player.Die(Vector2.op_Subtraction(player.Position, this.Position).SafeNormalize(), false, true);
+      player.Die((player.Position - this.Position).SafeNormalize(), false, true);
     }
 
     private void OnHoldable(Holdable h)
@@ -248,7 +242,7 @@ namespace Celeste
       if (this.InView())
       {
         Audio.Play("event:/game/06_reflection/fall_spike_smash", this.Position);
-        Color color = Color.get_White();
+        Color color = Color.White;
         if (this.color == CrystalColor.Red)
           color = Calc.HexToColor("ff4f4f");
         else if (this.color == CrystalColor.Blue)
@@ -311,14 +305,14 @@ namespace Celeste
           {
             Color color = image.Color;
             Vector2 position = image.Position;
-            image.Color = Color.get_Black();
-            image.Position = Vector2.op_Addition(position, new Vector2(0.0f, -1f));
+            image.Color = Color.Black;
+            image.Position = position + new Vector2(0.0f, -1f);
             image.Render();
-            image.Position = Vector2.op_Addition(position, new Vector2(0.0f, 1f));
+            image.Position = position + new Vector2(0.0f, 1f);
             image.Render();
-            image.Position = Vector2.op_Addition(position, new Vector2(-1f, 0.0f));
+            image.Position = position + new Vector2(-1f, 0.0f);
             image.Render();
-            image.Position = Vector2.op_Addition(position, new Vector2(1f, 0.0f));
+            image.Position = position + new Vector2(1f, 0.0f);
             image.Render();
             image.Color = color;
             image.Position = position;
@@ -328,3 +322,4 @@ namespace Celeste
     }
   }
 }
+

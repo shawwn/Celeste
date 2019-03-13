@@ -31,7 +31,7 @@ namespace Celeste
     {
       this.sprite.Play("lit", false, false);
       this.Add((Component) (this.bloom = new BloomPoint(1f, 16f)));
-      this.Add((Component) (this.light = new VertexLight(Color.get_LightSeaGreen(), 0.0f, 32, 128)));
+      this.Add((Component) (this.light = new VertexLight(Color.LightSeaGreen, 0.0f, 32, 128)));
       Audio.Play(count == 0 ? "event:/game/05_mirror_temple/mainmirror_torch_lit_1" : "event:/game/05_mirror_temple/mainmirror_torch_lit_2", this.Position);
       this.Add((Component) (this.loopSfx = new SoundSource()));
       this.loopSfx.Play("event:/game/05_mirror_temple/mainmirror_torch_loop", (string) null, 0.0f);
@@ -48,3 +48,4 @@ namespace Celeste
     }
   }
 }
+

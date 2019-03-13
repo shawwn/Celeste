@@ -27,7 +27,7 @@ namespace Celeste
 
     public void Update()
     {
-      Celeste.Level scene = Engine.Scene as Celeste.Level;
+      Level scene = Engine.Scene as Level;
       this.ChapterStarted = scene != null;
       this.ChapterComplete = this.ChapterStarted && scene.Completed;
       this.TimerActive = this.ChapterStarted && !scene.Completed;
@@ -45,3 +45,4 @@ namespace Celeste
     }
   }
 }
+

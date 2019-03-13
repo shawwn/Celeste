@@ -13,11 +13,11 @@ namespace Celeste
 {
   public class Selfie : Entity
   {
+    private float timer = 0.0f;
     private Level level;
     private Monocle.Image image;
     private Monocle.Image overImage;
     private bool waitForKeyPress;
-    private float timer;
     private Tween tween;
 
     public Selfie(Level level)
@@ -28,7 +28,7 @@ namespace Celeste
 
     public IEnumerator PictureRoutine(string photo = "selfie")
     {
-      this.level.Flash(Color.get_White(), false);
+      this.level.Flash(Color.White, false);
       yield return (object) 0.5f;
       yield return (object) this.OpenRoutine(photo);
       yield return (object) this.WaitForInput();
@@ -53,7 +53,7 @@ namespace Celeste
         atWidth = num;
         this.overImage.Texture = tex.GetSubtexture(tex.Width - atWidth, 0, atWidth, tex.Height, (MTexture) null);
         this.overImage.Visible = true;
-        this.overImage.Origin.X = (__Null) (double) (atWidth - tex.Width / 2);
+        this.overImage.Origin.X = (float) (atWidth - tex.Width / 2);
       });
       Audio.Play("event:/game/02_old_site/theoselfie_photo_filter");
       yield return (object) this.tween.Wait();
@@ -87,18 +87,17 @@ namespace Celeste
 
     public IEnumerator EndRoutine()
     {
-      Selfie selfie = this;
       Audio.Play("event:/game/02_old_site/theoselfie_photo_out");
       float percent = 0.0f;
       while ((double) percent < 1.0)
       {
         percent += Engine.DeltaTime * 2f;
-        selfie.image.Position = Vector2.Lerp(new Vector2(960f, 540f), new Vector2(928f, (float) (-(double) selfie.image.Height / 2.0)), Ease.BackIn(percent));
-        selfie.image.Rotation = MathHelper.Lerp(0.0f, -0.15f, Ease.BackIn(percent));
+        this.image.Position = Vector2.Lerp(new Vector2(960f, 540f), new Vector2(928f, (float) (-(double) this.image.Height / 2.0)), Ease.BackIn(percent));
+        this.image.Rotation = MathHelper.Lerp(0.0f, -0.15f, Ease.BackIn(percent));
         yield return (object) null;
       }
       yield return (object) null;
-      selfie.level.Remove((Entity) selfie);
+      this.level.Remove((Entity) this);
     }
 
     public override void Update()
@@ -128,7 +127,8 @@ namespace Celeste
       }
       if (!this.waitForKeyPress)
         return;
-      GFX.Gui["textboxbutton"].DrawCentered(Vector2.op_Addition(this.image.Position, new Vector2((float) ((double) this.image.Width / 2.0 + 40.0), (float) ((double) this.image.Height / 2.0 + ((double) this.timer % 1.0 < 0.25 ? 6.0 : 0.0)))));
+      GFX.Gui["textboxbutton"].DrawCentered(this.image.Position + new Vector2((float) ((double) this.image.Width / 2.0 + 40.0), (float) ((double) this.image.Height / 2.0 + ((double) this.timer % 1.0 < 0.25 ? 6.0 : 0.0))));
     }
   }
 }
+

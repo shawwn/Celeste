@@ -15,7 +15,7 @@ namespace Celeste
     private SoundSource sfx;
 
     public SoundSourceEntity(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Tag = (int) Tags.TransitionUpdate;
       this.Add((Component) (this.sfx = new SoundSource()));
@@ -29,3 +29,4 @@ namespace Celeste
     }
   }
 }
+

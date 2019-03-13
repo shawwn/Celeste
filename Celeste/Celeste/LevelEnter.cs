@@ -45,20 +45,19 @@ namespace Celeste
 
     private IEnumerator Routine()
     {
-      LevelEnter levelEnter = this;
       int area = -1;
-      if (levelEnter.session.StartedFromBeginning && !levelEnter.fromSaveData && levelEnter.session.Area.Mode == AreaMode.Normal && ((!SaveData.Instance.Areas[levelEnter.session.Area.ID].Modes[0].Completed || SaveData.Instance.DebugMode) && (levelEnter.session.Area.ID >= 1 && levelEnter.session.Area.ID <= 6)))
-        area = levelEnter.session.Area.ID;
+      if (this.session.StartedFromBeginning && !this.fromSaveData && this.session.Area.Mode == AreaMode.Normal && ((!SaveData.Instance.Areas[this.session.Area.ID].Modes[0].Completed || SaveData.Instance.DebugMode) && this.session.Area.ID >= 1) && this.session.Area.ID <= 6)
+        area = this.session.Area.ID;
       if (area >= 0)
       {
         yield return (object) 1f;
-        levelEnter.Add((Entity) (levelEnter.postcard = new Postcard(Dialog.Get("postcard_area_" + (object) area, (Language) null), area)));
-        yield return (object) levelEnter.postcard.DisplayRoutine();
+        this.Add((Entity) (this.postcard = new Postcard(Dialog.Get("postcard_area_" + (object) area, (Language) null), area)));
+        yield return (object) this.postcard.DisplayRoutine();
       }
-      if (levelEnter.session.StartedFromBeginning && !levelEnter.fromSaveData && levelEnter.session.Area.Mode == AreaMode.BSide)
+      if (this.session.StartedFromBeginning && !this.fromSaveData && this.session.Area.Mode == AreaMode.BSide)
       {
-        LevelEnter.BSideTitle title = new LevelEnter.BSideTitle(levelEnter.session);
-        levelEnter.Add((Entity) title);
+        LevelEnter.BSideTitle title = new LevelEnter.BSideTitle(this.session);
+        this.Add((Entity) title);
         Audio.Play("event:/ui/main/bside_intro_text");
         yield return (object) title.EaseIn();
         yield return (object) 0.25f;
@@ -66,8 +65,8 @@ namespace Celeste
         yield return (object) 0.25f;
         title = (LevelEnter.BSideTitle) null;
       }
-      Input.SetLightbarColor(AreaData.Get(levelEnter.session.Area).TitleBaseColor);
-      Engine.Scene = (Scene) new LevelLoader(levelEnter.session, new Vector2?());
+      Input.SetLightbarColor(AreaData.Get(this.session.Area).TitleBaseColor);
+      Engine.Scene = (Scene) new LevelLoader(this.session, new Vector2?());
     }
 
     public override void BeforeRender()
@@ -82,13 +81,13 @@ namespace Celeste
     {
       private float[] fade = new float[3];
       private float[] offsets = new float[3];
+      private float offset = 0.0f;
       private string title;
       private string musicBy;
       private string artist;
       private string album;
       private float musicByWidth;
       private PixelFontSize artistFont;
-      private float offset;
 
       public BSideTitle(Session session)
       {
@@ -124,29 +123,27 @@ namespace Celeste
         }
         this.title = Dialog.Get(AreaData.Get(session).Name, (Language) null) + " " + Dialog.Get(AreaData.Get(session).Name + "_remix", (Language) null);
         this.musicBy = Dialog.Get("remix_by", (Language) null) + " ";
-        this.musicByWidth = (float) ActiveFont.Measure(this.musicBy).X;
+        this.musicByWidth = ActiveFont.Measure(this.musicBy).X;
         this.album = Dialog.Get("remix_album", (Language) null);
       }
 
       public IEnumerator EaseIn()
       {
-        LevelEnter.BSideTitle bsideTitle = this;
-        bsideTitle.Add((Component) new Coroutine(bsideTitle.FadeTo(0, 1f, 1f), true));
+        this.Add((Component) new Coroutine(this.FadeTo(0, 1f, 1f), true));
         yield return (object) 0.2f;
-        bsideTitle.Add((Component) new Coroutine(bsideTitle.FadeTo(1, 1f, 1f), true));
+        this.Add((Component) new Coroutine(this.FadeTo(1, 1f, 1f), true));
         yield return (object) 0.2f;
-        bsideTitle.Add((Component) new Coroutine(bsideTitle.FadeTo(2, 1f, 1f), true));
+        this.Add((Component) new Coroutine(this.FadeTo(2, 1f, 1f), true));
         yield return (object) 1.8f;
       }
 
       public IEnumerator EaseOut()
       {
-        LevelEnter.BSideTitle bsideTitle = this;
-        bsideTitle.Add((Component) new Coroutine(bsideTitle.FadeTo(0, 0.0f, 1f), true));
+        this.Add((Component) new Coroutine(this.FadeTo(0, 0.0f, 1f), true));
         yield return (object) 0.2f;
-        bsideTitle.Add((Component) new Coroutine(bsideTitle.FadeTo(1, 0.0f, 1f), true));
+        this.Add((Component) new Coroutine(this.FadeTo(1, 0.0f, 1f), true));
         yield return (object) 0.2f;
-        bsideTitle.Add((Component) new Coroutine(bsideTitle.FadeTo(2, 0.0f, 1f), true));
+        this.Add((Component) new Coroutine(this.FadeTo(2, 0.0f, 1f), true));
         yield return (object) 1f;
       }
 
@@ -167,13 +164,13 @@ namespace Celeste
 
       public override void Render()
       {
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(60f + this.offset, 800f);
-        ActiveFont.Draw(this.title, Vector2.op_Addition(vector2, new Vector2(this.offsets[0], 0.0f)), Color.op_Multiply(Color.get_White(), this.fade[0]));
-        ActiveFont.Draw(this.musicBy, Vector2.op_Addition(vector2, new Vector2(this.offsets[1], 60f)), Color.op_Multiply(Color.get_White(), this.fade[1]));
-        this.artistFont.Draw(this.artist, Vector2.op_Addition(vector2, new Vector2(this.musicByWidth + this.offsets[1], 60f)), Color.op_Multiply(Color.get_White(), this.fade[1]));
-        ActiveFont.Draw(this.album, Vector2.op_Addition(vector2, new Vector2(this.offsets[2], 120f)), Color.op_Multiply(Color.get_White(), this.fade[2]));
+        Vector2 vector2 = new Vector2(60f + this.offset, 800f);
+        ActiveFont.Draw(this.title, vector2 + new Vector2(this.offsets[0], 0.0f), Color.White * this.fade[0]);
+        ActiveFont.Draw(this.musicBy, vector2 + new Vector2(this.offsets[1], 60f), Color.White * this.fade[1]);
+        this.artistFont.Draw(this.artist, vector2 + new Vector2(this.musicByWidth + this.offsets[1], 60f), Color.White * this.fade[1]);
+        ActiveFont.Draw(this.album, vector2 + new Vector2(this.offsets[2], 120f), Color.White * this.fade[2]);
       }
     }
   }
 }
+

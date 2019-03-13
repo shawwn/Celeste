@@ -23,12 +23,11 @@ namespace Celeste
       for (int index = 0; index < this.planets.Length; ++index)
       {
         this.planets[index].Texture = Calc.Random.Choose<MTexture>(atlasSubtextures);
-        ref Planets.Planet local = ref this.planets[index];
-        Vector2 vector2_1 = (Vector2) null;
-        vector2_1.X = (__Null) (double) Calc.Random.NextFloat(640f);
-        vector2_1.Y = (__Null) (double) Calc.Random.NextFloat(360f);
-        Vector2 vector2_2 = vector2_1;
-        local.Position = vector2_2;
+        this.planets[index].Position = new Vector2()
+        {
+          X = Calc.Random.NextFloat(640f),
+          Y = Calc.Random.NextFloat(360f)
+        };
       }
     }
 
@@ -37,10 +36,11 @@ namespace Celeste
       Vector2 position1 = (scene as Level).Camera.Position;
       for (int index = 0; index < this.planets.Length; ++index)
       {
-        Vector2 vector2 = (Vector2) null;
-        vector2.X = (__Null) ((double) this.Mod((float) (this.planets[index].Position.X - position1.X * this.Scroll.X), 640f) - 32.0);
-        vector2.Y = (__Null) ((double) this.Mod((float) (this.planets[index].Position.Y - position1.Y * this.Scroll.Y), 360f) - 32.0);
-        Vector2 position2 = vector2;
+        Vector2 position2 = new Vector2()
+        {
+          X = this.Mod(this.planets[index].Position.X - position1.X * this.Scroll.X, 640f) - 32f,
+          Y = this.Mod(this.planets[index].Position.Y - position1.Y * this.Scroll.Y, 360f) - 32f
+        };
         this.planets[index].Texture.DrawCentered(position2, this.Color);
       }
     }
@@ -57,3 +57,4 @@ namespace Celeste
     }
   }
 }
+

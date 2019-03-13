@@ -34,30 +34,29 @@ namespace Celeste
 
     private IEnumerator Cutscene()
     {
-      CS07_Ascend cs07Ascend = this;
-      while ((cs07Ascend.player = cs07Ascend.Scene.Tracker.GetEntity<Player>()) == null)
+      while ((this.player = this.Scene.Tracker.GetEntity<Player>()) == null)
         yield return (object) null;
-      cs07Ascend.origin = cs07Ascend.player.Position;
+      this.origin = this.player.Position;
       Audio.Play("event:/char/badeline/maddy_split");
-      cs07Ascend.player.CreateSplitParticles();
+      this.player.CreateSplitParticles();
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-      cs07Ascend.Level.Displacement.AddBurst(cs07Ascend.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
-      cs07Ascend.player.Dashes = 1;
-      cs07Ascend.player.Facing = Facings.Right;
-      cs07Ascend.Scene.Add((Entity) (cs07Ascend.badeline = new BadelineDummy(cs07Ascend.player.Position)));
-      cs07Ascend.badeline.AutoAnimator.Enabled = false;
-      cs07Ascend.spinning = true;
-      cs07Ascend.Add((Component) new Coroutine(cs07Ascend.SpinCharacters(), true));
-      yield return (object) Textbox.Say(cs07Ascend.cutscene);
+      this.Level.Displacement.AddBurst(this.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
+      this.player.Dashes = 1;
+      this.player.Facing = Facings.Right;
+      this.Scene.Add((Entity) (this.badeline = new BadelineDummy(this.player.Position)));
+      this.badeline.AutoAnimator.Enabled = false;
+      this.spinning = true;
+      this.Add((Component) new Coroutine(this.SpinCharacters(), true));
+      yield return (object) Textbox.Say(this.cutscene);
       Audio.Play("event:/char/badeline/maddy_join");
-      cs07Ascend.spinning = false;
+      this.spinning = false;
       yield return (object) 0.25f;
-      cs07Ascend.badeline.RemoveSelf();
-      cs07Ascend.player.Dashes = 2;
-      cs07Ascend.player.CreateSplitParticles();
+      this.badeline.RemoveSelf();
+      this.player.Dashes = 2;
+      this.player.CreateSplitParticles();
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-      cs07Ascend.Level.Displacement.AddBurst(cs07Ascend.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
-      cs07Ascend.EndCutscene(cs07Ascend.Level, true);
+      this.Level.Displacement.AddBurst(this.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
+      this.EndCutscene(this.Level, true);
     }
 
     private IEnumerator SpinCharacters()
@@ -67,18 +66,18 @@ namespace Celeste
       float timer = 1.570796f;
       this.player.Sprite.Play("spin", false, false);
       this.badeline.Sprite.Play("spin", false, false);
-      this.badeline.Sprite.Scale.X = (__Null) 1.0;
+      this.badeline.Sprite.Scale.X = 1f;
       while (this.spinning || (double) dist > 0.0)
       {
         dist = Calc.Approach(dist, this.spinning ? 1f : 0.0f, Engine.DeltaTime * 4f);
         int frame = (int) ((double) timer / 6.28318548202515 * 14.0 + 10.0);
-        float num1 = (float) Math.Sin((double) timer);
-        float num2 = (float) Math.Cos((double) timer);
-        float num3 = Ease.CubeOut(dist) * 32f;
+        float sin = (float) Math.Sin((double) timer);
+        float cos = (float) Math.Cos((double) timer);
+        float len = Ease.CubeOut(dist) * 32f;
         this.player.Sprite.SetAnimationFrame(frame);
         this.badeline.Sprite.SetAnimationFrame(frame + 7);
-        this.player.Position = Vector2.op_Subtraction(center, new Vector2(num1 * num3, (float) ((double) num2 * (double) dist * 8.0)));
-        this.badeline.Position = Vector2.op_Addition(center, new Vector2(num1 * num3, (float) ((double) num2 * (double) dist * 8.0)));
+        this.player.Position = center - new Vector2(sin * len, (float) ((double) cos * (double) dist * 8.0));
+        this.badeline.Position = center + new Vector2(sin * len, (float) ((double) cos * (double) dist * 8.0));
         timer -= Engine.DeltaTime * 2f;
         if ((double) timer <= 0.0)
           timer += 6.283185f;
@@ -99,3 +98,4 @@ namespace Celeste
     }
   }
 }
+

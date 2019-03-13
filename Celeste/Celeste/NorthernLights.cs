@@ -25,10 +25,10 @@ namespace Celeste
     private NorthernLights.Particle[] particles = new NorthernLights.Particle[50];
     private VertexPositionColorTexture[] verts = new VertexPositionColorTexture[1024];
     private VertexPositionColor[] gradient = new VertexPositionColor[6];
+    public float OffsetY = 0.0f;
     public float NorthernLightsAlpha = 1f;
     private VirtualRenderTarget buffer;
     private float timer;
-    public float OffsetY;
 
     public NorthernLights()
     {
@@ -65,14 +65,7 @@ namespace Celeste
             node.SineOffset += Engine.DeltaTime;
         }
         for (int index = 0; index < this.particles.Length; ++index)
-        {
-          ref __Null local = ref this.particles[index].Position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + this.particles[index].Speed * Engine.DeltaTime;
-        }
+          this.particles[index].Position.Y += this.particles[index].Speed * Engine.DeltaTime;
       }
       base.Update(scene);
     }
@@ -92,31 +85,30 @@ namespace Celeste
           float num2 = Math.Min(1f, (float) (strand.Nodes.Count - index) / 4f) * this.NorthernLightsAlpha;
           float num3 = this.OffsetY + (float) Math.Sin((double) node1.SineOffset) * 3f;
           float num4 = this.OffsetY + (float) Math.Sin((double) node2.SineOffset) * 3f;
-          this.Set(ref vert, (float) node1.Position.X, (float) node1.Position.Y + num3, node1.TextureOffset, 1f, Color.op_Multiply(node1.Color, node1.BottomAlpha * strand.Alpha * num1));
-          this.Set(ref vert, (float) node1.Position.X, (float) node1.Position.Y - node1.Height + num3, node1.TextureOffset, 0.05f, Color.op_Multiply(node1.Color, node1.TopAlpha * strand.Alpha * num1));
-          this.Set(ref vert, (float) node2.Position.X, (float) node2.Position.Y - node2.Height + num4, node2.TextureOffset, 0.05f, Color.op_Multiply(node2.Color, node2.TopAlpha * strand.Alpha * num2));
-          this.Set(ref vert, (float) node1.Position.X, (float) node1.Position.Y + num3, node1.TextureOffset, 1f, Color.op_Multiply(node1.Color, node1.BottomAlpha * strand.Alpha * num1));
-          this.Set(ref vert, (float) node2.Position.X, (float) node2.Position.Y - node2.Height + num4, node2.TextureOffset, 0.05f, Color.op_Multiply(node2.Color, node2.TopAlpha * strand.Alpha * num2));
-          this.Set(ref vert, (float) node2.Position.X, (float) node2.Position.Y + num4, node2.TextureOffset, 1f, Color.op_Multiply(node2.Color, node2.BottomAlpha * strand.Alpha * num2));
+          this.Set(ref vert, node1.Position.X, node1.Position.Y + num3, node1.TextureOffset, 1f, node1.Color * (node1.BottomAlpha * strand.Alpha * num1));
+          this.Set(ref vert, node1.Position.X, node1.Position.Y - node1.Height + num3, node1.TextureOffset, 0.05f, node1.Color * (node1.TopAlpha * strand.Alpha * num1));
+          this.Set(ref vert, node2.Position.X, node2.Position.Y - node2.Height + num4, node2.TextureOffset, 0.05f, node2.Color * (node2.TopAlpha * strand.Alpha * num2));
+          this.Set(ref vert, node1.Position.X, node1.Position.Y + num3, node1.TextureOffset, 1f, node1.Color * (node1.BottomAlpha * strand.Alpha * num1));
+          this.Set(ref vert, node2.Position.X, node2.Position.Y - node2.Height + num4, node2.TextureOffset, 0.05f, node2.Color * (node2.TopAlpha * strand.Alpha * num2));
+          this.Set(ref vert, node2.Position.X, node2.Position.Y + num4, node2.TextureOffset, 1f, node2.Color * (node2.BottomAlpha * strand.Alpha * num2));
           node1 = node2;
         }
       }
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.buffer);
-      GFX.DrawVertices<VertexPositionColor>(Matrix.get_Identity(), this.gradient, this.gradient.Length, (Effect) null, (BlendState) null);
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(0, (Texture) GFX.Misc["northernlights"].Texture.Texture);
-      Engine.Graphics.get_GraphicsDevice().get_SamplerStates().set_Item(0, (SamplerState) SamplerState.LinearWrap);
-      GFX.DrawVertices<VertexPositionColorTexture>(Matrix.get_Identity(), this.verts, vert, GFX.FxTexture, (BlendState) null);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.buffer);
+      GFX.DrawVertices<VertexPositionColor>(Matrix.Identity, this.gradient, this.gradient.Length, (Effect) null, (BlendState) null);
+      Engine.Graphics.GraphicsDevice.Textures[0] = (Texture) GFX.Misc["northernlights"].Texture.Texture;
+      Engine.Graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+      GFX.DrawVertices<VertexPositionColorTexture>(Matrix.Identity, this.verts, vert, GFX.FxTexture, (BlendState) null);
       bool clear = false;
       GaussianBlur.Blur((Texture2D) (RenderTarget2D) this.buffer, GameplayBuffers.TempA, this.buffer, 0.0f, clear, GaussianBlur.Samples.Five, 0.25f, GaussianBlur.Direction.Vertical, 1f);
       Draw.SpriteBatch.Begin();
       Camera camera = (scene as Level).Camera;
       for (int index = 0; index < this.particles.Length; ++index)
-      {
-        Vector2 position = (Vector2) null;
-        position.X = (__Null) (double) this.mod((float) (this.particles[index].Position.X - (double) camera.X * 0.200000002980232), 320f);
-        position.Y = (__Null) (double) this.mod((float) (this.particles[index].Position.Y - (double) camera.Y * 0.200000002980232), 180f);
-        Draw.Rect(position, 1f, 1f, this.particles[index].Color);
-      }
+        Draw.Rect(new Vector2()
+        {
+          X = this.mod(this.particles[index].Position.X - camera.X * 0.2f, 320f),
+          Y = this.mod(this.particles[index].Position.Y - camera.Y * 0.2f, 180f)
+        }, 1f, 1f, this.particles[index].Color);
       Draw.SpriteBatch.End();
     }
 
@@ -130,25 +122,17 @@ namespace Celeste
 
     private void Set(ref int vert, float px, float py, float tx, float ty, Color color)
     {
-      this.verts[vert].Color = (__Null) color;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vert].Position).X = (__Null) (double) px;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vert].Position).Y = (__Null) (double) py;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector2&) ref this.verts[vert].TextureCoordinate).X = (__Null) (double) tx;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector2&) ref this.verts[vert].TextureCoordinate).Y = (__Null) (double) ty;
+      this.verts[vert].Color = color;
+      this.verts[vert].Position.X = px;
+      this.verts[vert].Position.Y = py;
+      this.verts[vert].TextureCoordinate.X = tx;
+      this.verts[vert].TextureCoordinate.Y = ty;
       ++vert;
     }
 
     public override void Render(Scene scene)
     {
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.buffer, Vector2.get_Zero(), Color.get_White());
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.buffer, Vector2.Zero, Color.White);
     }
 
     private float mod(float x, float m)
@@ -174,8 +158,7 @@ namespace Celeste
         this.Duration = Calc.Random.Range(12f, 32f);
         this.Alpha = 0.0f;
         this.Nodes.Clear();
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector((float) Calc.Random.Range(-40, 60), (float) Calc.Random.Range(40, 90));
+        Vector2 vector2 = new Vector2((float) Calc.Random.Range(-40, 60), (float) Calc.Random.Range(40, 90));
         float num = Calc.Random.NextFloat();
         Color color = Calc.Random.Choose<Color>(NorthernLights.colors);
         for (int index = 0; index < 40; ++index)
@@ -191,7 +174,7 @@ namespace Celeste
             Color = Color.Lerp(color, Calc.Random.Choose<Color>(NorthernLights.colors), Calc.Random.Range(0.0f, 0.3f))
           };
           num += Calc.Random.Range(0.02f, 0.2f);
-          vector2 = Vector2.op_Addition(vector2, new Vector2((float) Calc.Random.Range(4, 20), (float) Calc.Random.Range(-15, 15)));
+          vector2 += new Vector2((float) Calc.Random.Range(4, 20), (float) Calc.Random.Range(-15, 15));
           this.Nodes.Add(node);
         }
       }
@@ -216,3 +199,4 @@ namespace Celeste
     }
   }
 }
+

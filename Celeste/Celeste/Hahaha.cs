@@ -54,7 +54,7 @@ namespace Celeste
     }
 
     public Hahaha(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Attr("ifset", ""), data.Bool("triggerLaughSfx", false), new Vector2?(data.Nodes.Length != 0 ? Vector2.op_Addition(offset, data.Nodes[0]) : Vector2.get_Zero()))
+      : this(data.Position + offset, data.Attr("ifset", ""), data.Bool("triggerLaughSfx", false), new Vector2?(data.Nodes.Length != 0 ? offset + data.Nodes[0] : Vector2.Zero))
     {
     }
 
@@ -107,7 +107,7 @@ namespace Celeste
     {
       foreach (Hahaha.Ha ha in this.has)
       {
-        ha.Sprite.Position = Vector2.op_Addition(this.Position, new Vector2(ha.Percent * 60f, (float) (-Math.Sin((double) ha.Percent * 13.0) * 4.0 - 10.0 + (double) ha.Percent * -16.0)));
+        ha.Sprite.Position = this.Position + new Vector2(ha.Percent * 60f, (float) (-Math.Sin((double) ha.Percent * 13.0) * 4.0 - 10.0 + (double) ha.Percent * -16.0));
         ha.Sprite.Render();
       }
     }
@@ -129,3 +129,4 @@ namespace Celeste
     }
   }
 }
+

@@ -12,17 +12,17 @@ namespace Celeste
 {
   public class TempleEye : Entity
   {
+    private bool bursting = false;
     private MTexture eyeTexture;
     private MTexture pupilTexture;
     private Sprite eyelid;
     private Vector2 pupilPosition;
     private Vector2 pupilTarget;
     private float blinkTimer;
-    private bool bursting;
     private bool isBG;
 
     public TempleEye(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
     }
 
@@ -62,19 +62,19 @@ namespace Celeste
       TheoCrystal entity = this.Scene.Tracker.GetEntity<TheoCrystal>();
       if (entity == null)
         return;
-      this.pupilTarget = Vector2.op_Subtraction(entity.Center, this.Position).SafeNormalize();
-      this.pupilPosition = Vector2.op_Multiply(this.pupilTarget, 3f);
+      this.pupilTarget = (entity.Center - this.Position).SafeNormalize();
+      this.pupilPosition = this.pupilTarget * 3f;
     }
 
     public override void Update()
     {
       if (!this.bursting)
       {
-        this.pupilPosition = Calc.Approach(this.pupilPosition, Vector2.op_Multiply(this.pupilTarget, 3f), Engine.DeltaTime * 16f);
+        this.pupilPosition = Calc.Approach(this.pupilPosition, this.pupilTarget * 3f, Engine.DeltaTime * 16f);
         TheoCrystal entity = this.Scene.Tracker.GetEntity<TheoCrystal>();
         if (entity != null)
         {
-          this.pupilTarget = Vector2.op_Subtraction(entity.Center, this.Position).SafeNormalize();
+          this.pupilTarget = (entity.Center - this.Position).SafeNormalize();
           if (this.Scene.OnInterval(0.25f) && Calc.Random.Chance(0.01f))
             this.eyelid.Play("blink", false, false);
         }
@@ -105,9 +105,10 @@ namespace Celeste
       if (!this.bursting)
       {
         this.eyeTexture.DrawCentered(this.Position);
-        this.pupilTexture.DrawCentered(Vector2.op_Addition(this.Position, this.pupilPosition));
+        this.pupilTexture.DrawCentered(this.Position + this.pupilPosition);
       }
       base.Render();
     }
   }
 }
+

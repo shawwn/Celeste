@@ -31,7 +31,7 @@ namespace Celeste
     }
 
     public StarJumpBlock(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height, data.Bool(nameof (sinks), false))
+      : this(data.Position + offset, (float) data.Width, (float) data.Height, data.Bool(nameof (sinks), false))
     {
     }
 
@@ -59,7 +59,7 @@ namespace Celeste
         {
           Monocle.Image image = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures4));
           image.CenterOrigin();
-          image.Scale.Y = (__Null) -1.0;
+          image.Scale.Y = -1f;
           image.Position = new Vector2((float) (index + 4), this.Height - 4f);
           this.Add((Component) image);
         }
@@ -71,7 +71,7 @@ namespace Celeste
         {
           Monocle.Image image = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures5));
           image.CenterOrigin();
-          image.Scale.X = (__Null) -1.0;
+          image.Scale.X = -1f;
           image.Position = new Vector2(4f, (float) (index + 4));
           this.Add((Component) image);
         }
@@ -88,7 +88,7 @@ namespace Celeste
       if (this.Open(-8f, 0.0f) && this.Open(0.0f, -8f))
       {
         image3 = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures6));
-        image3.Scale.X = (__Null) -1.0;
+        image3.Scale.X = -1f;
         Monocle.Image image1 = new Monocle.Image(atlasSubtextures1[this.mod((int) this.X / 8, atlasSubtextures1.Count)]);
         image1.Position = new Vector2(0.0f, -8f);
         this.Add((Component) image1);
@@ -96,7 +96,7 @@ namespace Celeste
       else if (this.Open(-8f, 0.0f))
       {
         image3 = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures5));
-        image3.Scale.X = (__Null) -1.0;
+        image3.Scale.X = -1f;
       }
       else if (this.Open(0.0f, -8f))
       {
@@ -132,16 +132,16 @@ namespace Celeste
       if (this.Open(-8f, this.Height - 8f) && this.Open(0.0f, this.Height))
       {
         image5 = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures6));
-        image5.Scale.X = (__Null) -1.0;
+        image5.Scale.X = -1f;
       }
       else if (this.Open(-8f, this.Height - 8f))
       {
         image5 = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures5));
-        image5.Scale.X = (__Null) -1.0;
+        image5.Scale.X = -1f;
       }
       else if (this.Open(0.0f, this.Height))
         image5 = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures4));
-      image5.Scale.Y = (__Null) -1.0;
+      image5.Scale.Y = -1f;
       image5.CenterOrigin();
       image5.Position = new Vector2(4f, this.Height - 4f);
       this.Add((Component) image5);
@@ -152,7 +152,7 @@ namespace Celeste
         image6 = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures5));
       else if (this.Open(this.Width - 8f, this.Height))
         image6 = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures4));
-      image6.Scale.Y = (__Null) -1.0;
+      image6.Scale.Y = -1f;
       image6.CenterOrigin();
       image6.Position = new Vector2(this.Width - 4f, this.Height - 4f);
       this.Add((Component) image6);
@@ -187,9 +187,10 @@ namespace Celeste
       if (entity != null)
       {
         Vector2 vector2 = this.level.Camera.Position.Floor();
-        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) entity.BlockFill, this.Position, new Rectangle?(new Rectangle((int) ((double) this.X - vector2.X), (int) ((double) this.Y - vector2.Y), (int) this.Width, (int) this.Height)), Color.get_White());
+        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) entity.BlockFill, this.Position, new Rectangle?(new Rectangle((int) ((double) this.X - (double) vector2.X), (int) ((double) this.Y - (double) vector2.Y), (int) this.Width, (int) this.Height)), Color.White);
       }
       base.Render();
     }
   }
 }
+

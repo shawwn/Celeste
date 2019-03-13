@@ -18,8 +18,8 @@ namespace Celeste
       Calc.HexToColor("4f6e9d"),
       Calc.HexToColor("47194a")
     };
-    private static readonly Color lineColor = Color.Lerp(Color.get_Gray(), Color.get_DarkBlue(), 0.25f);
-    private static readonly Color pinColor = Color.get_Gray();
+    private static readonly Color lineColor = Color.Lerp(Color.Gray, Color.DarkBlue, 0.25f);
+    private static readonly Color pinColor = Color.Gray;
 
     public Clothesline(Vector2 from, Vector2 to)
     {
@@ -29,8 +29,9 @@ namespace Celeste
     }
 
     public Clothesline(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), Vector2.op_Addition(data.Nodes[0], offset))
+      : this(data.Position + offset, data.Nodes[0] + offset)
     {
     }
   }
 }
+

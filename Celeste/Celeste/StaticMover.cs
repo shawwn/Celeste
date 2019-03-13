@@ -46,14 +46,9 @@ namespace Celeste
     public void Move(Vector2 amount)
     {
       if (this.OnMove != null)
-      {
         this.OnMove(amount);
-      }
       else
-      {
-        Entity entity = this.Entity;
-        entity.Position = Vector2.op_Addition(entity.Position, amount);
-      }
+        this.Entity.Position += amount;
     }
 
     public bool IsRiding(Solid solid)
@@ -94,3 +89,4 @@ namespace Celeste
     }
   }
 }
+

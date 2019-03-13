@@ -73,7 +73,7 @@ namespace Celeste
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
       this.Depth = -12500;
       this.Visible = false;
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 32, 64)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 32, 64)));
       this.Add((Component) (this.shaker = new Shaker(false, (Action<Vector2>) null)));
       this.state = new StateMachine(10);
       this.state.SetCallbacks(0, new Func<int>(this.ChaseUpdate), new Func<IEnumerator>(this.ChaseCoroutine), new Action(this.ChaseBegin), (Action) null);
@@ -90,10 +90,7 @@ namespace Celeste
       {
         OnOutBegin = (Action) (() =>
         {
-          double x = (double) this.X;
-          Rectangle bounds = this.level.Bounds;
-          double num = (double) ((Rectangle) ref bounds).get_Left() + (double) this.Sprite.Width / 2.0;
-          if (x > num)
+          if ((double) this.X > (double) this.level.Bounds.Left + (double) this.Sprite.Width / 2.0)
             this.Visible = false;
           else
             this.easeBackFromRightEdge = true;
@@ -112,7 +109,7 @@ namespace Celeste
     }
 
     public AngryOshiro(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), false)
+      : this(data.Position + offset, false)
     {
     }
 
@@ -138,14 +135,9 @@ namespace Celeste
       get
       {
         Player entity = this.level.Tracker.GetEntity<Player>();
-        if (entity == null)
-          return this.Y;
-        double centerY = (double) entity.CenterY;
-        Rectangle bounds = this.level.Bounds;
-        double num1 = (double) (((Rectangle) ref bounds).get_Top() + 8);
-        bounds = this.level.Bounds;
-        double num2 = (double) (((Rectangle) ref bounds).get_Bottom() - 8);
-        return MathHelper.Clamp((float) centerY, (float) num1, (float) num2);
+        if (entity != null)
+          return MathHelper.Clamp(entity.CenterY, (float) (this.level.Bounds.Top + 8), (float) (this.level.Bounds.Bottom - 8));
+        return this.Y;
       }
     }
 
@@ -153,7 +145,7 @@ namespace Celeste
     {
       if (this.state.State == 5 || (double) this.CenterX >= (double) player.CenterX + 4.0 && !(this.Sprite.CurrentAnimationID != "respawn"))
         return;
-      player.Die(Vector2.op_Subtraction(player.Center, this.Center).SafeNormalize(Vector2.get_UnitX()), false, true);
+      player.Die((player.Center - this.Center).SafeNormalize(Vector2.UnitX), false, true);
     }
 
     private void OnPlayerBounce(Player player)
@@ -161,7 +153,7 @@ namespace Celeste
       if (this.state.State != 2 || (double) player.Bottom > (double) this.Top + 6.0)
         return;
       Audio.Play("event:/game/general/thing_booped", this.Position);
-      Celeste.Celeste.Freeze(0.2f);
+      Celeste.Freeze(0.2f);
       player.Bounce(this.Top + 2f);
       this.state.State = 5;
       this.prechargeSfx.Stop(true);
@@ -171,15 +163,10 @@ namespace Celeste
     public override void Update()
     {
       base.Update();
-      this.Sprite.Scale.X = (__Null) (double) Calc.Approach((float) this.Sprite.Scale.X, 1f, 0.6f * Engine.DeltaTime);
-      this.Sprite.Scale.Y = (__Null) (double) Calc.Approach((float) this.Sprite.Scale.Y, 1f, 0.6f * Engine.DeltaTime);
+      this.Sprite.Scale.X = Calc.Approach(this.Sprite.Scale.X, 1f, 0.6f * Engine.DeltaTime);
+      this.Sprite.Scale.Y = Calc.Approach(this.Sprite.Scale.Y, 1f, 0.6f * Engine.DeltaTime);
       if (!this.doRespawnAnim)
-      {
-        double x = (double) this.X;
-        Rectangle bounds = this.level.Bounds;
-        double num = (double) ((Rectangle) ref bounds).get_Left() - (double) this.Width / 2.0;
-        this.Visible = x > num;
-      }
+        this.Visible = (double) this.X > (double) this.level.Bounds.Left - (double) this.Width / 2.0;
       this.yApproachSpeed = Calc.Approach(this.yApproachSpeed, 100f, 300f * Engine.DeltaTime);
       if (this.state.State != 3 && this.canControlTimeRate)
       {
@@ -212,7 +199,7 @@ namespace Celeste
         this.lightning.RenderPosition = new Vector2(this.level.Camera.Left - 2f, this.Top + 16f);
         this.lightning.Render();
       }
-      this.Sprite.Position = Vector2.op_Multiply(this.shaker.Value, 2f);
+      this.Sprite.Position = this.shaker.Value * 2f;
       base.Render();
     }
 
@@ -241,7 +228,7 @@ namespace Celeste
       }
       if (this.doRespawnAnim && (double) this.cameraXOffset >= 0.0)
       {
-        this.Collider.Position.X = (__Null) -48.0;
+        this.Collider.Position.X = -48f;
         this.Visible = true;
         this.Sprite.Play("respawn", false, false);
         this.doRespawnAnim = false;
@@ -250,7 +237,7 @@ namespace Celeste
       }
       this.cameraXOffset = Calc.Approach(this.cameraXOffset, 20f, 80f * Engine.DeltaTime);
       this.X = this.level.Camera.Left + this.cameraXOffset;
-      this.Collider.Position.X = (__Null) (double) Calc.Approach((float) this.Collider.Position.X, (float) this.colliderTargetPosition.X, Engine.DeltaTime * 128f);
+      this.Collider.Position.X = Calc.Approach(this.Collider.Position.X, this.colliderTargetPosition.X, Engine.DeltaTime * 128f);
       this.Collidable = this.Visible;
       if (this.level.Tracker.GetEntity<Player>() != null && this.Sprite.CurrentAnimationID != "respawn")
         this.CenterY = Calc.Approach(this.CenterY, this.TargetY, this.yApproachSpeed * Engine.DeltaTime);
@@ -259,28 +246,26 @@ namespace Celeste
 
     private IEnumerator ChaseCoroutine()
     {
-      AngryOshiro angryOshiro = this;
-      if (angryOshiro.level.Session.Area.Mode != AreaMode.Normal)
+      if ((uint) this.level.Session.Area.Mode > 0U)
       {
         yield return (object) 1f;
       }
       else
       {
-        yield return (object) AngryOshiro.ChaseWaitTimes[angryOshiro.attackIndex];
-        ++angryOshiro.attackIndex;
-        angryOshiro.attackIndex %= AngryOshiro.ChaseWaitTimes.Length;
+        yield return (object) AngryOshiro.ChaseWaitTimes[this.attackIndex];
+        ++this.attackIndex;
+        this.attackIndex %= AngryOshiro.ChaseWaitTimes.Length;
       }
-      angryOshiro.prechargeSfx.Play("event:/char/oshiro/boss_precharge", (string) null, 0.0f);
-      angryOshiro.Sprite.Play("charge", false, false);
+      this.prechargeSfx.Play("event:/char/oshiro/boss_precharge", (string) null, 0.0f);
+      this.Sprite.Play("charge", false, false);
       yield return (object) 0.7f;
-      if (angryOshiro.Scene.Tracker.GetEntity<Player>() != null)
+      if (this.Scene.Tracker.GetEntity<Player>() != null)
       {
-        // ISSUE: reference to a compiler-generated method
-        Alarm.Set((Entity) angryOshiro, 0.216f, new Action(angryOshiro.\u003CChaseCoroutine\u003Eb__47_0), Alarm.AlarmMode.Oneshot);
-        angryOshiro.state.State = 1;
+        Alarm.Set((Entity) this, 0.216f, (Action) (() => this.chargeSfx.Play("event:/char/oshiro/boss_charge", (string) null, 0.0f)), Alarm.AlarmMode.Oneshot);
+        this.state.State = 1;
       }
       else
-        angryOshiro.Sprite.Play("idle", false, false);
+        this.Sprite.Play("idle", false, false);
     }
 
     private int ChargeUpUpdate()
@@ -291,35 +276,25 @@ namespace Celeste
       this.X = this.level.Camera.Left + this.cameraXOffset;
       Player entity = this.level.Tracker.GetEntity<Player>();
       if (entity != null)
-      {
-        double centerY1 = (double) this.CenterY;
-        double centerY2 = (double) entity.CenterY;
-        Rectangle bounds = this.level.Bounds;
-        double num1 = (double) (((Rectangle) ref bounds).get_Top() + 8);
-        bounds = this.level.Bounds;
-        double num2 = (double) (((Rectangle) ref bounds).get_Bottom() - 8);
-        double num3 = (double) MathHelper.Clamp((float) centerY2, (float) num1, (float) num2);
-        double num4 = 30.0 * (double) Engine.DeltaTime;
-        this.CenterY = Calc.Approach((float) centerY1, (float) num3, (float) num4);
-      }
+        this.CenterY = Calc.Approach(this.CenterY, MathHelper.Clamp(entity.CenterY, (float) (this.level.Bounds.Top + 8), (float) (this.level.Bounds.Bottom - 8)), 30f * Engine.DeltaTime);
       return 1;
     }
 
     private void ChargeUpEnd()
     {
-      this.Sprite.Position = Vector2.get_Zero();
+      this.Sprite.Position = Vector2.Zero;
     }
 
     private IEnumerator ChargeUpCoroutine()
     {
-      AngryOshiro angryOshiro = this;
-      Celeste.Celeste.Freeze(0.05f);
+      Celeste.Freeze(0.05f);
       Distort.Anxiety = 0.3f;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      angryOshiro.lightningVisible = true;
-      angryOshiro.lightning.Play("once", true, false);
+      this.lightningVisible = true;
+      this.lightning.Play("once", true, false);
       yield return (object) 0.3f;
-      angryOshiro.state.State = angryOshiro.Scene.Tracker.GetEntity<Player>() == null ? 0 : 2;
+      Player player = this.Scene.Tracker.GetEntity<Player>();
+      this.state.State = player == null ? 0 : 2;
     }
 
     private void AttackBegin()
@@ -327,7 +302,7 @@ namespace Celeste
       this.attackSpeed = 0.0f;
       this.targetAnxiety = 0.3f;
       this.anxietySpeed = 4f;
-      this.level.DirectionalShake(Vector2.get_UnitX(), 0.3f);
+      this.level.DirectionalShake(Vector2.UnitX, 0.3f);
     }
 
     private void AttackEnd()
@@ -355,7 +330,7 @@ namespace Celeste
       }
       Input.Rumble(RumbleStrength.Light, RumbleLength.Short);
       if (this.Scene.OnInterval(0.05f))
-        TrailManager.Add((Entity) this, Color.op_Multiply(Color.get_Red(), 0.6f), 0.5f);
+        TrailManager.Add((Entity) this, Color.Red * 0.6f, 0.5f);
       return 2;
     }
 
@@ -387,15 +362,7 @@ namespace Celeste
     private int WaitingUpdate()
     {
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity != null && Vector2.op_Inequality(entity.Speed, Vector2.get_Zero()))
-      {
-        double x = (double) entity.X;
-        Rectangle bounds = this.level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Left() + 48);
-        if (x > num)
-          return 0;
-      }
-      return 4;
+      return entity != null && entity.Speed != Vector2.Zero && (double) entity.X > (double) (this.level.Bounds.Left + 48) ? 0 : 4;
     }
 
     private void HurtBegin()
@@ -407,10 +374,7 @@ namespace Celeste
     {
       this.X += 100f * Engine.DeltaTime;
       this.Y += 200f * Engine.DeltaTime;
-      double top = (double) this.Top;
-      Rectangle bounds = this.level.Bounds;
-      double num = (double) (((Rectangle) ref bounds).get_Bottom() + 20);
-      if (top <= num)
+      if ((double) this.Top <= (double) (this.level.Bounds.Bottom + 20))
         return 5;
       if (this.leaving)
       {
@@ -425,3 +389,4 @@ namespace Celeste
     }
   }
 }
+

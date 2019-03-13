@@ -11,10 +11,10 @@ namespace Monocle
 {
   public class TileGrid : Component
   {
-    public Color Color = Color.get_White();
+    public Color Color = Color.White;
+    public int VisualExtend = 0;
     public float Alpha = 1f;
     public Vector2 Position;
-    public int VisualExtend;
     public VirtualMap<MTexture> Tiles;
     public Camera ClipCamera;
 
@@ -69,7 +69,7 @@ namespace Monocle
 
     public void Extend(int left, int right, int up, int down)
     {
-      this.Position = Vector2.op_Subtraction(this.Position, new Vector2((float) (left * this.TileWidth), (float) (up * this.TileHeight)));
+      this.Position -= new Vector2((float) (left * this.TileWidth), (float) (up * this.TileHeight));
       int columns = this.TilesX + left + right;
       int rows = this.TilesY + up + down;
       if (columns <= 0 || rows <= 0)
@@ -85,7 +85,7 @@ namespace Monocle
           {
             int index3 = index1 + left;
             int index4 = index2 + up;
-            if (index3 >= 0 && index3 < columns && (index4 >= 0 && index4 < rows))
+            if (index3 >= 0 && index3 < columns && index4 >= 0 && index4 < rows)
               virtualMap[index3, index4] = this.Tiles[index1, index2];
           }
         }
@@ -137,7 +137,7 @@ namespace Monocle
 
     public Rectangle GetClippedRenderTiles()
     {
-      Vector2 vector2 = Vector2.op_Addition(this.Entity.Position, this.Position);
+      Vector2 vector2 = this.Entity.Position + this.Position;
       int val1_1;
       int val1_2;
       int val1_3;
@@ -152,21 +152,21 @@ namespace Monocle
       else
       {
         Camera clipCamera = this.ClipCamera;
-        val1_1 = (int) Math.Max(0.0, Math.Floor(((double) clipCamera.Left - vector2.X) / (double) this.TileWidth) - (double) this.VisualExtend);
-        val1_2 = (int) Math.Max(0.0, Math.Floor(((double) clipCamera.Top - vector2.Y) / (double) this.TileHeight) - (double) this.VisualExtend);
-        val1_3 = (int) Math.Min((double) this.TilesX, Math.Ceiling(((double) clipCamera.Right - vector2.X) / (double) this.TileWidth) + (double) this.VisualExtend);
-        val1_4 = (int) Math.Min((double) this.TilesY, Math.Ceiling(((double) clipCamera.Bottom - vector2.Y) / (double) this.TileHeight) + (double) this.VisualExtend);
+        val1_1 = (int) Math.Max(0.0, Math.Floor(((double) clipCamera.Left - (double) vector2.X) / (double) this.TileWidth) - (double) this.VisualExtend);
+        val1_2 = (int) Math.Max(0.0, Math.Floor(((double) clipCamera.Top - (double) vector2.Y) / (double) this.TileHeight) - (double) this.VisualExtend);
+        val1_3 = (int) Math.Min((double) this.TilesX, Math.Ceiling(((double) clipCamera.Right - (double) vector2.X) / (double) this.TileWidth) + (double) this.VisualExtend);
+        val1_4 = (int) Math.Min((double) this.TilesY, Math.Ceiling(((double) clipCamera.Bottom - (double) vector2.Y) / (double) this.TileHeight) + (double) this.VisualExtend);
       }
-      int num1 = Math.Max(val1_1, 0);
-      int num2 = Math.Max(val1_2, 0);
-      int num3 = Math.Min(val1_3, this.TilesX);
-      int num4 = Math.Min(val1_4, this.TilesY);
-      return new Rectangle(num1, num2, num3 - num1, num4 - num2);
+      int x = Math.Max(val1_1, 0);
+      int y = Math.Max(val1_2, 0);
+      int num1 = Math.Min(val1_3, this.TilesX);
+      int num2 = Math.Min(val1_4, this.TilesY);
+      return new Rectangle(x, y, num1 - x, num2 - y);
     }
 
     public override void Render()
     {
-      this.RenderAt(Vector2.op_Addition(this.Entity.Position, this.Position));
+      this.RenderAt(this.Entity.Position + this.Position);
     }
 
     public void RenderAt(Vector2 position)
@@ -174,12 +174,17 @@ namespace Monocle
       if ((double) this.Alpha <= 0.0)
         return;
       Rectangle clippedRenderTiles = this.GetClippedRenderTiles();
-      Color color = Color.op_Multiply(this.Color, this.Alpha);
-      for (int left = ((Rectangle) ref clippedRenderTiles).get_Left(); left < ((Rectangle) ref clippedRenderTiles).get_Right(); ++left)
+      Color color = this.Color * this.Alpha;
+      for (int left = clippedRenderTiles.Left; left < clippedRenderTiles.Right; ++left)
       {
-        for (int top = ((Rectangle) ref clippedRenderTiles).get_Top(); top < ((Rectangle) ref clippedRenderTiles).get_Bottom(); ++top)
-          this.Tiles[left, top]?.Draw(Vector2.op_Addition(position, new Vector2((float) (left * this.TileWidth), (float) (top * this.TileHeight))), Vector2.get_Zero(), color);
+        for (int top = clippedRenderTiles.Top; top < clippedRenderTiles.Bottom; ++top)
+        {
+          MTexture tile = this.Tiles[left, top];
+          if (tile != null)
+            tile.Draw(position + new Vector2((float) (left * this.TileWidth), (float) (top * this.TileHeight)), Vector2.Zero, color);
+        }
       }
     }
   }
 }
+

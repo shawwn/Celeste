@@ -16,7 +16,7 @@ namespace Celeste
     private Sprite sprite;
 
     public SeekerStatue(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       SeekerStatue seekerStatue = this;
       this.Depth = 8999;
@@ -44,24 +44,17 @@ namespace Celeste
       if (entity == null || !(this.sprite.CurrentAnimationID == "statue"))
         return;
       bool flag = false;
-      if (this.hatch == SeekerStatue.Hatch.Distance)
-      {
-        Vector2 vector2 = Vector2.op_Subtraction(entity.Position, this.Position);
-        if ((double) ((Vector2) ref vector2).Length() < 220.0)
-        {
-          flag = true;
-          goto label_6;
-        }
-      }
-      if (this.hatch == SeekerStatue.Hatch.PlayerRightOfX && (double) entity.X > (double) this.X + 32.0)
+      if (this.hatch == SeekerStatue.Hatch.Distance && (double) (entity.Position - this.Position).Length() < 220.0)
         flag = true;
-label_6:
-      if (!flag)
-        return;
-      this.BreakOutParticles();
-      this.sprite.Play("hatch", false, false);
-      Audio.Play("event:/game/05_mirror_temple/seeker_statue_break", this.Position);
-      Alarm.Set((Entity) this, 0.8f, new Action(this.BreakOutParticles), Alarm.AlarmMode.Oneshot);
+      else if (this.hatch == SeekerStatue.Hatch.PlayerRightOfX && (double) entity.X > (double) this.X + 32.0)
+        flag = true;
+      if (flag)
+      {
+        this.BreakOutParticles();
+        this.sprite.Play("hatch", false, false);
+        Audio.Play("event:/game/05_mirror_temple/seeker_statue_break", this.Position);
+        Alarm.Set((Entity) this, 0.8f, new Action(this.BreakOutParticles), Alarm.AlarmMode.Oneshot);
+      }
     }
 
     private void BreakOutParticles()
@@ -69,7 +62,7 @@ label_6:
       Level level = this.SceneAs<Level>();
       for (float direction = 0.0f; (double) direction < 6.28318548202515; direction += 0.1745329f)
       {
-        Vector2 position = Vector2.op_Addition(this.Center, Calc.AngleToVector(direction + Calc.Random.Range(-1f * (float) Math.PI / 90f, (float) Math.PI / 90f), (float) Calc.Random.Range(12, 20)));
+        Vector2 position = this.Center + Calc.AngleToVector(direction + Calc.Random.Range(-1f * (float) Math.PI / 90f, (float) Math.PI / 90f), (float) Calc.Random.Range(12, 20));
         level.Particles.Emit(Seeker.P_BreakOut, position, direction);
       }
     }
@@ -81,3 +74,4 @@ label_6:
     }
   }
 }
+

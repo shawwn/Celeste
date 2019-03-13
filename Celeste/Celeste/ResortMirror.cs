@@ -18,16 +18,16 @@ namespace Celeste
     private MTexture glassfg = GFX.Game["objects/mirror/glassfg"];
     private float shineAlpha = 0.7f;
     private float mirrorAlpha = 0.7f;
+    private bool shardReflection = false;
     private bool smashed;
     private Monocle.Image bg;
     private Monocle.Image frame;
     private Sprite breakingGlass;
     private VirtualRenderTarget mirror;
     private BadelineDummy evil;
-    private bool shardReflection;
 
     public ResortMirror(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Add((Component) new BeforeRenderHook(new Action(this.BeforeRender)));
       this.Depth = 9500;
@@ -59,7 +59,7 @@ namespace Celeste
       {
         MTexture shard = mtexture;
         MirrorSurface surface = new MirrorSurface((Action) null);
-        surface.OnRender = (Action) (() => shard.GetSubtexture((glassbg.Width - w) / 2, glassbg.Height - h, w, h, temp).DrawJustified(this.Position, new Vector2(0.5f, 1f), Color.op_Multiply(surface.ReflectionColor, this.shardReflection ? 1f : 0.0f)));
+        surface.OnRender = (Action) (() => shard.GetSubtexture((glassbg.Width - w) / 2, glassbg.Height - h, w, h, temp).DrawJustified(this.Position, new Vector2(0.5f, 1f), surface.ReflectionColor * (this.shardReflection ? 1f : 0.0f)));
         surface.ReflectionOffset = new Vector2((float) (9 + Calc.Random.Range(-4, 4)), (float) (4 + Calc.Random.Range(-2, 2)));
         this.Add((Component) surface);
       }
@@ -89,33 +89,32 @@ namespace Celeste
 
     public IEnumerator SmashRoutine()
     {
-      ResortMirror resortMirror = this;
-      yield return (object) resortMirror.evil.FloatTo(new Vector2((float) (resortMirror.mirror.Width / 2), (float) (resortMirror.mirror.Height - 8)), new int?(), true, false);
-      resortMirror.breakingGlass = GFX.SpriteBank.Create("glass");
-      resortMirror.breakingGlass.Position = new Vector2((float) (resortMirror.mirror.Width / 2), (float) resortMirror.mirror.Height);
-      resortMirror.breakingGlass.Play("break", false, false);
-      resortMirror.breakingGlass.Color = Color.op_Multiply(Color.get_White(), resortMirror.shineAlpha);
+      yield return (object) this.evil.FloatTo(new Vector2((float) (this.mirror.Width / 2), (float) (this.mirror.Height - 8)), new int?(), true, false);
+      this.breakingGlass = GFX.SpriteBank.Create("glass");
+      this.breakingGlass.Position = new Vector2((float) (this.mirror.Width / 2), (float) this.mirror.Height);
+      this.breakingGlass.Play("break", false, false);
+      this.breakingGlass.Color = Color.White * this.shineAlpha;
       Input.Rumble(RumbleStrength.Light, RumbleLength.FullSecond);
-      while (resortMirror.breakingGlass.CurrentAnimationID == "break")
+      while (this.breakingGlass.CurrentAnimationID == "break")
       {
-        if (resortMirror.breakingGlass.CurrentAnimationFrame == 7)
-          resortMirror.SceneAs<Level>().Shake(0.3f);
-        resortMirror.shineAlpha = Calc.Approach(resortMirror.shineAlpha, 1f, Engine.DeltaTime * 2f);
-        resortMirror.mirrorAlpha = Calc.Approach(resortMirror.mirrorAlpha, 1f, Engine.DeltaTime * 2f);
+        if (this.breakingGlass.CurrentAnimationFrame == 7)
+          this.SceneAs<Level>().Shake(0.3f);
+        this.shineAlpha = Calc.Approach(this.shineAlpha, 1f, Engine.DeltaTime * 2f);
+        this.mirrorAlpha = Calc.Approach(this.mirrorAlpha, 1f, Engine.DeltaTime * 2f);
         yield return (object) null;
       }
-      resortMirror.SceneAs<Level>().Shake(0.3f);
+      this.SceneAs<Level>().Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      for (float num1 = (float) (-(double) resortMirror.breakingGlass.Width / 2.0); (double) num1 < (double) resortMirror.breakingGlass.Width / 2.0; num1 += 8f)
+      for (float x = (float) (-(double) this.breakingGlass.Width / 2.0); (double) x < (double) this.breakingGlass.Width / 2.0; x += 8f)
       {
-        for (float num2 = -resortMirror.breakingGlass.Height; (double) num2 < 0.0; num2 += 8f)
+        for (float y = -this.breakingGlass.Height; (double) y < 0.0; y += 8f)
         {
           if (Calc.Random.Chance(0.5f))
-            (resortMirror.Scene as Level).Particles.Emit(DreamMirror.P_Shatter, 2, Vector2.op_Addition(resortMirror.Position, new Vector2(num1 + 4f, num2 + 4f)), new Vector2(8f, 8f), new Vector2(num1, num2).Angle());
+            (this.Scene as Level).Particles.Emit(DreamMirror.P_Shatter, 2, this.Position + new Vector2(x + 4f, y + 4f), new Vector2(8f, 8f), new Vector2(x, y).Angle());
         }
       }
-      resortMirror.shardReflection = true;
-      resortMirror.evil = (BadelineDummy) null;
+      this.shardReflection = true;
+      this.evil = (BadelineDummy) null;
     }
 
     public void Broken()
@@ -132,14 +131,14 @@ namespace Celeste
       if (this.smashed || this.mirror == null)
         return;
       Level level = this.SceneAs<Level>();
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.mirror);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.mirror);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
       NPC first = this.Scene.Entities.FindFirst<NPC>();
       if (first != null)
       {
         Vector2 renderPosition = first.Sprite.RenderPosition;
-        first.Sprite.RenderPosition = Vector2.op_Addition(Vector2.op_Addition(Vector2.op_Subtraction(renderPosition, this.Position), new Vector2((float) (this.mirror.Width / 2), (float) this.mirror.Height)), new Vector2(8f, -4f));
+        first.Sprite.RenderPosition = renderPosition - this.Position + new Vector2((float) (this.mirror.Width / 2), (float) this.mirror.Height) + new Vector2(8f, -4f);
         first.Sprite.Render();
         first.Sprite.RenderPosition = renderPosition;
       }
@@ -147,41 +146,33 @@ namespace Celeste
       if (entity != null)
       {
         Vector2 position = entity.Position;
-        entity.Position = Vector2.op_Addition(Vector2.op_Addition(Vector2.op_Subtraction(position, this.Position), new Vector2((float) (this.mirror.Width / 2), (float) this.mirror.Height)), new Vector2(8f, 0.0f));
-        Vector2 vector2 = Vector2.op_Subtraction(entity.Position, position);
-        for (int index1 = 0; index1 < entity.Hair.Nodes.Count; ++index1)
-        {
-          List<Vector2> nodes = entity.Hair.Nodes;
-          int index2 = index1;
-          nodes[index2] = Vector2.op_Addition(nodes[index2], vector2);
-        }
+        entity.Position = position - this.Position + new Vector2((float) (this.mirror.Width / 2), (float) this.mirror.Height) + new Vector2(8f, 0.0f);
+        Vector2 vector2 = entity.Position - position;
+        for (int index = 0; index < entity.Hair.Nodes.Count; ++index)
+          entity.Hair.Nodes[index] += vector2;
         entity.Render();
-        for (int index1 = 0; index1 < entity.Hair.Nodes.Count; ++index1)
-        {
-          List<Vector2> nodes = entity.Hair.Nodes;
-          int index2 = index1;
-          nodes[index2] = Vector2.op_Subtraction(nodes[index2], vector2);
-        }
+        for (int index = 0; index < entity.Hair.Nodes.Count; ++index)
+          entity.Hair.Nodes[index] -= vector2;
         entity.Position = position;
       }
       if (this.evil != null)
       {
         this.evil.Update();
-        this.evil.Hair.Facing = (Facings) Math.Sign((float) this.evil.Sprite.Scale.X);
+        this.evil.Hair.Facing = (Facings) Math.Sign(this.evil.Sprite.Scale.X);
         this.evil.Hair.AfterUpdate();
         this.evil.Render();
       }
       if (this.breakingGlass != null)
       {
-        this.breakingGlass.Color = Color.op_Multiply(Color.get_White(), this.shineAlpha);
+        this.breakingGlass.Color = Color.White * this.shineAlpha;
         this.breakingGlass.Update();
         this.breakingGlass.Render();
       }
       else
       {
         int num = -(int) ((double) level.Camera.Y * 0.800000011920929 % (double) this.glassfg.Height);
-        this.glassfg.DrawJustified(new Vector2((float) (this.mirror.Width / 2), (float) num), new Vector2(0.5f, 1f), Color.op_Multiply(Color.get_White(), this.shineAlpha));
-        this.glassfg.DrawJustified(new Vector2((float) (this.mirror.Height / 2), (float) (num - this.glassfg.Height)), new Vector2(0.5f, 1f), Color.op_Multiply(Color.get_White(), this.shineAlpha));
+        this.glassfg.DrawJustified(new Vector2((float) (this.mirror.Width / 2), (float) num), new Vector2(0.5f, 1f), Color.White * this.shineAlpha);
+        this.glassfg.DrawJustified(new Vector2((float) (this.mirror.Height / 2), (float) (num - this.glassfg.Height)), new Vector2(0.5f, 1f), Color.White * this.shineAlpha);
       }
       Draw.SpriteBatch.End();
     }
@@ -190,7 +181,7 @@ namespace Celeste
     {
       this.bg.Render();
       if (!this.smashed)
-        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.mirror, Vector2.op_Addition(this.Position, new Vector2((float) (-this.mirror.Width / 2), (float) -this.mirror.Height)), Color.op_Multiply(Color.get_White(), this.mirrorAlpha));
+        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.mirror, this.Position + new Vector2((float) (-this.mirror.Width / 2), (float) -this.mirror.Height), Color.White * this.mirrorAlpha);
       this.frame.Render();
     }
 
@@ -214,3 +205,4 @@ namespace Celeste
     }
   }
 }
+

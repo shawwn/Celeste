@@ -18,16 +18,16 @@ namespace Celeste
     private Wiggler wiggler;
 
     public ClutterDoor(EntityData data, Vector2 offset, Session session)
-      : base(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height, false)
+      : base(data.Position + offset, (float) data.Width, (float) data.Height, false)
     {
       this.Color = data.Enum<ClutterBlock.Colors>("type", ClutterBlock.Colors.Green);
       this.SurfaceSoundIndex = 20;
       this.Tag = (int) Tags.TransitionUpdate;
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create("ghost_door")));
-      this.sprite.Position = Vector2.op_Division(new Vector2(this.Width, this.Height), 2f);
+      this.sprite.Position = new Vector2(this.Width, this.Height) / 2f;
       this.sprite.Play("idle", false, false);
       this.OnDashCollide = new DashCollision(this.OnDashed);
-      this.Add((Component) (this.wiggler = Wiggler.Create(0.6f, 3f, (Action<float>) (f => this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 - (double) f * 0.200000002980232))), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(0.6f, 3f, (Action<float>) (f => this.sprite.Scale = Vector2.One * (float) (1.0 - (double) f * 0.200000002980232)), false, false)));
       if (this.IsLocked(session))
         return;
       this.InstantUnlock();
@@ -53,9 +53,7 @@ namespace Celeste
 
     public bool IsLocked(Session session)
     {
-      if (session.GetFlag("oshiro_clutter_door_open"))
-        return this.IsComplete(session);
-      return true;
+      return !session.GetFlag("oshiro_clutter_door_open") || this.IsComplete(session);
     }
 
     public bool IsComplete(Session session)
@@ -65,29 +63,26 @@ namespace Celeste
 
     public IEnumerator UnlockRoutine()
     {
-      ClutterDoor clutterDoor = this;
-      Camera camera = clutterDoor.SceneAs<Level>().Camera;
+      Camera camera = this.SceneAs<Level>().Camera;
       Vector2 from = camera.Position;
-      Vector2 to = clutterDoor.CameraTarget();
-      Vector2 vector2 = Vector2.op_Subtraction(from, to);
-      float p;
-      if ((double) ((Vector2) ref vector2).Length() > 8.0)
+      Vector2 to = this.CameraTarget();
+      if ((double) (from - to).Length() > 8.0)
       {
-        for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
+        for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
         {
-          camera.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), Ease.CubeInOut(p)));
+          camera.Position = from + (to - from) * Ease.CubeInOut(p);
           yield return (object) null;
         }
       }
       else
         yield return (object) 0.2f;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      Audio.Play("event:/game/03_resort/forcefield_vanish", clutterDoor.Position);
-      clutterDoor.sprite.Play("open", false, false);
-      clutterDoor.Collidable = false;
-      for (p = 0.0f; (double) p < 0.400000005960464; p += Engine.DeltaTime)
+      Audio.Play("event:/game/03_resort/forcefield_vanish", this.Position);
+      this.sprite.Play("open", false, false);
+      this.Collidable = false;
+      for (float time = 0.0f; (double) time < 0.400000005960464; time += Engine.DeltaTime)
       {
-        camera.Position = clutterDoor.CameraTarget();
+        camera.Position = this.CameraTarget();
         yield return (object) null;
       }
     }
@@ -100,25 +95,23 @@ namespace Celeste
     private Vector2 CameraTarget()
     {
       Level level = this.SceneAs<Level>();
-      Vector2 vector2 = Vector2.op_Subtraction(this.Position, Vector2.op_Division(new Vector2(320f, 180f), 2f));
+      Vector2 vector2 = this.Position - new Vector2(320f, 180f) / 2f;
       ref Vector2 local1 = ref vector2;
-      // ISSUE: variable of the null type
-      __Null x = vector2.X;
+      double x = (double) vector2.X;
       Rectangle bounds1 = level.Bounds;
-      double left = (double) ((Rectangle) ref bounds1).get_Left();
+      double left = (double) bounds1.Left;
       bounds1 = level.Bounds;
-      double num1 = (double) (((Rectangle) ref bounds1).get_Right() - 320);
+      double num1 = (double) (bounds1.Right - 320);
       double num2 = (double) MathHelper.Clamp((float) x, (float) left, (float) num1);
-      local1.X = (__Null) num2;
+      local1.X = (float) num2;
       ref Vector2 local2 = ref vector2;
-      // ISSUE: variable of the null type
-      __Null y = vector2.Y;
+      double y = (double) vector2.Y;
       Rectangle bounds2 = level.Bounds;
-      double top = (double) ((Rectangle) ref bounds2).get_Top();
+      double top = (double) bounds2.Top;
       bounds2 = level.Bounds;
-      double num3 = (double) (((Rectangle) ref bounds2).get_Bottom() - 180);
+      double num3 = (double) (bounds2.Bottom - 180);
       double num4 = (double) MathHelper.Clamp((float) y, (float) top, (float) num3);
-      local2.Y = (__Null) num4;
+      local2.Y = (float) num4;
       return vector2;
     }
 
@@ -130,3 +123,4 @@ namespace Celeste
     }
   }
 }
+

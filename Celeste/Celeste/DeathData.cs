@@ -36,7 +36,8 @@ namespace Celeste
     {
       float num1 = Math.Min(0.7f, (float) (0.300000011920929 + 0.100000001490116 * (double) this.Amount));
       int num2 = Math.Min(6, this.Amount + 1);
-      Draw.Rect((float) this.Position.X - (float) num2, (float) this.Position.Y - (float) num2, (float) (num2 * 2), (float) (num2 * 2), Color.op_Multiply(Color.get_Red(), num1));
+      Draw.Rect(this.Position.X - (float) num2, this.Position.Y - (float) num2, (float) (num2 * 2), (float) (num2 * 2), Color.Red * num1);
     }
   }
 }
+

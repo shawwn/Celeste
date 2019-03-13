@@ -52,7 +52,8 @@ namespace Celeste
 
     public void RenderFade()
     {
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), Ease.CubeInOut(this.Fade)), 0.95f));
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * Ease.CubeInOut(this.Fade) * 0.95f);
     }
   }
 }
+

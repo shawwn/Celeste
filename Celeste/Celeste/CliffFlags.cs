@@ -18,8 +18,8 @@ namespace Celeste
       Calc.HexToColor("2fd8a2"),
       Calc.HexToColor("d8d62f")
     };
-    private static readonly Color lineColor = Color.Lerp(Color.get_Gray(), Color.get_DarkBlue(), 0.25f);
-    private static readonly Color pinColor = Color.get_Gray();
+    private static readonly Color lineColor = Color.Lerp(Color.Gray, Color.DarkBlue, 0.25f);
+    private static readonly Color pinColor = Color.Gray;
 
     public CliffFlags(Vector2 from, Vector2 to)
     {
@@ -31,8 +31,9 @@ namespace Celeste
     }
 
     public CliffFlags(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), Vector2.op_Addition(data.Nodes[0], offset))
+      : this(data.Position + offset, data.Nodes[0] + offset)
     {
     }
   }
 }
+

@@ -21,7 +21,7 @@ namespace Celeste
     public bool Fallen { get; private set; }
 
     public BridgeTile(Vector2 position, Rectangle tileSize)
-      : base(position, (int) tileSize.Width, false)
+      : base(position, tileSize.Width, false)
     {
       this.images = new List<Monocle.Image>();
       if (tileSize.Width == 16)
@@ -31,7 +31,7 @@ namespace Celeste
         while (y < tileSize.Height)
         {
           Monocle.Image image;
-          this.Add((Component) (image = new Monocle.Image(GFX.Game["scenery/bridge"].GetSubtexture((int) tileSize.X, y, (int) tileSize.Width, height, (MTexture) null))));
+          this.Add((Component) (image = new Monocle.Image(GFX.Game["scenery/bridge"].GetSubtexture(tileSize.X, y, tileSize.Width, height, (MTexture) null))));
           image.Origin = new Vector2(image.Width / 2f, 0.0f);
           image.X = image.Width / 2f;
           image.Y = (float) (y - 8);
@@ -72,18 +72,18 @@ namespace Celeste
             Audio.Play("event:/game/00_prologue/bridge_support_break", this.Position);
             foreach (Monocle.Image image in this.images)
             {
-              if (image.RenderPosition.Y > (double) this.Y + 4.0)
+              if ((double) image.RenderPosition.Y > (double) this.Y + 4.0)
                 Dust.Burst(image.RenderPosition, -1.570796f, 8);
             }
           }
         }
-        this.images[0].Position = Vector2.op_Addition(new Vector2(this.images[0].Width / 2f, -8f), this.shakeOffset);
+        this.images[0].Position = new Vector2(this.images[0].Width / 2f, -8f) + this.shakeOffset;
       }
       else
       {
         this.colorLerp = Calc.Approach(this.colorLerp, 1f, 10f * Engine.DeltaTime);
-        this.images[0].Color = Color.Lerp(Color.get_White(), Color.get_Gray(), this.colorLerp);
-        this.shakeOffset = Vector2.get_Zero();
+        this.images[0].Color = Color.Lerp(Color.White, Color.Gray, this.colorLerp);
+        this.shakeOffset = Vector2.Zero;
         if (flag)
         {
           int num = 0;
@@ -98,9 +98,8 @@ namespace Celeste
         else
           this.speedY = Calc.Approach(this.speedY, 200f, 900f * Engine.DeltaTime);
         this.MoveV(this.speedY * Engine.DeltaTime);
-        if ((double) this.Top <= 220.0)
-          return;
-        this.RemoveSelf();
+        if ((double) this.Top > 220.0)
+          this.RemoveSelf();
       }
     }
 
@@ -113,3 +112,4 @@ namespace Celeste
     }
   }
 }
+

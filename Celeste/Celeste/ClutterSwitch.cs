@@ -47,11 +47,11 @@ namespace Celeste
       this.Add((Component) (this.icon = new Monocle.Image(GFX.Game["objects/resortclutter/icon_" + color.ToString()])));
       this.icon.CenterOrigin();
       this.icon.Position = new Vector2(16f, 8f);
-      this.Add((Component) (this.vertexLight = new VertexLight(new Vector2(this.CenterX - this.X, -1f), Color.get_Aqua(), 1f, 32, 64)));
+      this.Add((Component) (this.vertexLight = new VertexLight(new Vector2(this.CenterX - this.X, -1f), Color.Aqua, 1f, 32, 64)));
     }
 
     public ClutterSwitch(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Enum<ClutterBlock.Colors>("type", ClutterBlock.Colors.Green))
+      : this(data.Position + offset, data.Enum<ClutterBlock.Colors>("type", ClutterBlock.Colors.Green))
     {
     }
 
@@ -107,24 +107,24 @@ namespace Celeste
           Audio.Play("event:/game/03_resort/clutterswitch_return", this.Position);
         this.playerWasOnTop = false;
       }
-      this.sprite.Scale.X = (__Null) (double) Calc.Approach((float) this.sprite.Scale.X, this.targetXScale, 0.8f * Engine.DeltaTime);
+      this.sprite.Scale.X = Calc.Approach(this.sprite.Scale.X, this.targetXScale, 0.8f * Engine.DeltaTime);
     }
 
     private DashCollisionResults OnDashed(Player player, Vector2 direction)
     {
-      if (!this.pressed && Vector2.op_Equality(direction, Vector2.get_UnitY()))
+      if (!this.pressed && direction == Vector2.UnitY)
       {
-        Celeste.Celeste.Freeze(0.2f);
+        Celeste.Freeze(0.2f);
         Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
         Level scene = this.Scene as Level;
         scene.Session.SetFlag("oshiro_clutter_cleared_" + (object) (int) this.color, true);
         scene.Session.SetFlag("oshiro_clutter_door_open", false);
         this.vertexLight.StartRadius = 64f;
         this.vertexLight.EndRadius = 128f;
-        scene.DirectionalShake(Vector2.get_UnitY(), 0.6f);
-        scene.Particles.Emit(ClutterSwitch.P_Pressed, 20, Vector2.op_Subtraction(this.TopCenter, Vector2.op_Multiply(Vector2.get_UnitY(), 10f)), new Vector2(16f, 8f));
+        scene.DirectionalShake(Vector2.UnitY, 0.6f);
+        scene.Particles.Emit(ClutterSwitch.P_Pressed, 20, this.TopCenter - Vector2.UnitY * 10f, new Vector2(16f, 8f));
         this.BePressed();
-        this.sprite.Scale.X = (__Null) 1.5;
+        this.sprite.Scale.X = 1.5f;
         if (this.color == ClutterBlock.Colors.Lightning)
           this.Add((Component) new Coroutine(this.LightningRoutine(player), true));
         else
@@ -135,84 +135,90 @@ namespace Celeste
 
     private IEnumerator LightningRoutine(Player player)
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      ClutterSwitch clutterSwitch = this;
-      if (num != 0)
-        return false;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      clutterSwitch.SceneAs<Level>().Session.SetFlag("disable_lightning", true);
-      foreach (Entity entity in clutterSwitch.Scene.Entities.FindAll<Lightning>())
-        entity.RemoveSelf();
-      return false;
+      this.SceneAs<Level>().Session.SetFlag("disable_lightning", true);
+      foreach (Lightning lightning in this.Scene.Entities.FindAll<Lightning>())
+      {
+        Lightning l = lightning;
+        l.RemoveSelf();
+        l = (Lightning) null;
+      }
+      yield break;
     }
 
     private IEnumerator AbsorbRoutine(Player player)
     {
-      ClutterSwitch clutterSwitch = this;
-      clutterSwitch.Add((Component) (clutterSwitch.cutsceneSfx = new SoundSource()));
-      float duration = 0.0f;
-      if (clutterSwitch.color == ClutterBlock.Colors.Green)
+      this.Add((Component) (this.cutsceneSfx = new SoundSource()));
+      float finishDelay = 0.0f;
+      if (this.color == ClutterBlock.Colors.Green)
       {
-        clutterSwitch.cutsceneSfx.Play("event:/game/03_resort/clutterswitch_books", (string) null, 0.0f);
-        duration = 6.366f;
+        this.cutsceneSfx.Play("event:/game/03_resort/clutterswitch_books", (string) null, 0.0f);
+        finishDelay = 6.366f;
       }
-      else if (clutterSwitch.color == ClutterBlock.Colors.Red)
+      else if (this.color == ClutterBlock.Colors.Red)
       {
-        clutterSwitch.cutsceneSfx.Play("event:/game/03_resort/clutterswitch_linens", (string) null, 0.0f);
-        duration = 6.15f;
+        this.cutsceneSfx.Play("event:/game/03_resort/clutterswitch_linens", (string) null, 0.0f);
+        finishDelay = 6.15f;
       }
-      else if (clutterSwitch.color == ClutterBlock.Colors.Yellow)
+      else if (this.color == ClutterBlock.Colors.Yellow)
       {
-        clutterSwitch.cutsceneSfx.Play("event:/game/03_resort/clutterswitch_boxes", (string) null, 0.0f);
-        duration = 6.066f;
+        this.cutsceneSfx.Play("event:/game/03_resort/clutterswitch_boxes", (string) null, 0.0f);
+        finishDelay = 6.066f;
       }
-      clutterSwitch.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, (Action) (() => Audio.Play("event:/game/03_resort/clutterswitch_finish", this.Position)), duration, true));
+      this.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, (Action) (() => Audio.Play("event:/game/03_resort/clutterswitch_finish", this.Position)), finishDelay, true));
       player.StateMachine.State = 11;
-      Vector2 target = Vector2.op_Addition(clutterSwitch.Position, new Vector2(clutterSwitch.Width / 2f, 0.0f));
+      Vector2 target = this.Position + new Vector2(this.Width / 2f, 0.0f);
       ClutterAbsorbEffect effect = new ClutterAbsorbEffect();
-      clutterSwitch.Scene.Add((Entity) effect);
-      clutterSwitch.sprite.Play("break", false, false);
-      Level level = clutterSwitch.SceneAs<Level>();
+      this.Scene.Add((Entity) effect);
+      this.sprite.Play("break", false, false);
+      Level level = this.SceneAs<Level>();
       ++level.Session.Audio.Music.Progress;
       level.Session.Audio.Apply();
       level.Session.LightingAlphaAdd -= 0.05f;
       float start1 = level.Lighting.Alpha;
-      Tween tween1 = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, 2f, true);
-      tween1.OnUpdate = (Action<Tween>) (t => level.Lighting.Alpha = MathHelper.Lerp(start1, 0.05f, t.Eased));
-      clutterSwitch.Add((Component) tween1);
-      Alarm.Set((Entity) clutterSwitch, 3f, (Action) (() =>
+      Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, 2f, true);
+      tween.OnUpdate = (Action<Tween>) (t => level.Lighting.Alpha = MathHelper.Lerp(start1, 0.05f, t.Eased));
+      this.Add((Component) tween);
+      tween = (Tween) null;
+      Alarm.Set((Entity) this, 3f, (Action) (() =>
       {
         float start2 = this.vertexLight.StartRadius;
         float end = this.vertexLight.EndRadius;
-        Tween tween2 = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, 2f, true);
-        tween2.OnUpdate = (Action<Tween>) (t =>
+        Tween tween1 = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, 2f, true);
+        tween1.OnUpdate = (Action<Tween>) (t =>
         {
           level.Lighting.Alpha = MathHelper.Lerp(0.05f, level.BaseLightingAlpha + level.Session.LightingAlphaAdd, t.Eased);
           this.vertexLight.StartRadius = (float) (int) Math.Round((double) MathHelper.Lerp(start2, 24f, t.Eased));
           this.vertexLight.EndRadius = (float) (int) Math.Round((double) MathHelper.Lerp(end, 48f, t.Eased));
         });
-        this.Add((Component) tween2);
+        this.Add((Component) tween1);
       }), Alarm.AlarmMode.Oneshot);
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-      foreach (ClutterBlock clutterBlock in clutterSwitch.Scene.Entities.FindAll<ClutterBlock>())
+      List<ClutterBlock> clutterBlocks = this.Scene.Entities.FindAll<ClutterBlock>();
+      foreach (ClutterBlock clutterBlock in clutterBlocks)
       {
-        if (clutterBlock.BlockColor == clutterSwitch.color)
-          clutterBlock.Absorb(effect);
+        ClutterBlock block = clutterBlock;
+        if (block.BlockColor == this.color)
+          block.Absorb(effect);
+        block = (ClutterBlock) null;
       }
-      foreach (ClutterBlockBase clutterBlockBase in clutterSwitch.Scene.Entities.FindAll<ClutterBlockBase>())
+      foreach (ClutterBlockBase clutterBlockBase in this.Scene.Entities.FindAll<ClutterBlockBase>())
       {
-        if (clutterBlockBase.BlockColor == clutterSwitch.color)
-          clutterBlockBase.Deactivate();
+        ClutterBlockBase block = clutterBlockBase;
+        if (block.BlockColor == this.color)
+          block.Deactivate();
+        block = (ClutterBlockBase) null;
       }
       yield return (object) 1.5f;
       player.StateMachine.State = 0;
-      List<MTexture> images = GFX.Game.GetAtlasSubtextures("objects/resortclutter/" + clutterSwitch.color.ToString() + "_");
+      List<MTexture> images = GFX.Game.GetAtlasSubtextures("objects/resortclutter/" + this.color.ToString() + "_");
       for (int i = 0; i < 25; ++i)
       {
-        for (int index = 0; index < 5; ++index)
-          effect.FlyClutter(Vector2.op_Addition(target, Calc.AngleToVector(Calc.Random.NextFloat(6.283185f), 320f)), Calc.Random.Choose<MTexture>(images), false, 0.0f);
+        for (int j = 0; j < 5; ++j)
+        {
+          Vector2 pos = target + Calc.AngleToVector(Calc.Random.NextFloat(6.283185f), 320f);
+          effect.FlyClutter(pos, Calc.Random.Choose<MTexture>(images), false, 0.0f);
+          pos = new Vector2();
+        }
         level.Shake(0.3f);
         Input.Rumble(RumbleStrength.Light, RumbleLength.Long);
         yield return (object) 0.05f;
@@ -232,3 +238,4 @@ namespace Celeste
     }
   }
 }
+

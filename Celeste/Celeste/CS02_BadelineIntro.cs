@@ -26,7 +26,7 @@ namespace Celeste
       : base(true, false)
     {
       this.badeline = badeline;
-      this.badelineEndPosition = Vector2.op_Addition(badeline.Position, new Vector2(8f, -24f));
+      this.badelineEndPosition = badeline.Position + new Vector2(8f, -24f);
       this.Add((Component) (this.anxietySine = new SineWave(0.3f)));
       Distort.AnxietyOrigin = new Vector2(0.5f, 0.75f);
     }
@@ -47,58 +47,55 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS02_BadelineIntro cs02BadelineIntro = this;
-      cs02BadelineIntro.anxietyFadeTarget = 1f;
+      this.anxietyFadeTarget = 1f;
       while (true)
       {
-        cs02BadelineIntro.player = level.Tracker.GetEntity<Player>();
-        if (cs02BadelineIntro.player == null)
+        this.player = level.Tracker.GetEntity<Player>();
+        if (this.player == null)
           yield return (object) null;
         else
           break;
       }
-      while (!cs02BadelineIntro.player.OnGround(1))
+      while (!this.player.OnGround(1))
         yield return (object) null;
-      cs02BadelineIntro.player.StateMachine.State = 11;
-      cs02BadelineIntro.player.StateMachine.Locked = true;
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
       yield return (object) 1f;
       if (level.Session.Area.Mode == AreaMode.Normal)
         Audio.SetMusic("event:/music/lvl2/evil_madeline", true, true);
-      yield return (object) Textbox.Say("CH2_BADELINE_INTRO", new Func<IEnumerator>(cs02BadelineIntro.TurnAround), new Func<IEnumerator>(cs02BadelineIntro.RevealBadeline), new Func<IEnumerator>(cs02BadelineIntro.StartLaughing), new Func<IEnumerator>(cs02BadelineIntro.StopLaughing));
-      cs02BadelineIntro.anxietyFadeTarget = 0.0f;
-      yield return (object) cs02BadelineIntro.Level.ZoomBack(0.5f);
-      cs02BadelineIntro.EndCutscene(level, true);
+      yield return (object) Textbox.Say("CH2_BADELINE_INTRO", new Func<IEnumerator>(this.TurnAround), new Func<IEnumerator>(this.RevealBadeline), new Func<IEnumerator>(this.StartLaughing), new Func<IEnumerator>(this.StopLaughing));
+      this.anxietyFadeTarget = 0.0f;
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator TurnAround()
     {
-      CS02_BadelineIntro cs02BadelineIntro = this;
-      cs02BadelineIntro.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.2f;
-      cs02BadelineIntro.Add((Component) new Coroutine(CutsceneEntity.CameraTo(new Vector2((float) cs02BadelineIntro.Level.Bounds.X, cs02BadelineIntro.Level.Camera.Y), 0.5f, (Ease.Easer) null, 0.0f), true));
-      yield return (object) cs02BadelineIntro.Level.ZoomTo(new Vector2(84f, 135f), 2f, 0.5f);
+      this.Add((Component) new Coroutine(CutsceneEntity.CameraTo(new Vector2((float) this.Level.Bounds.X, this.Level.Camera.Y), 0.5f, (Ease.Easer) null, 0.0f), true));
+      yield return (object) this.Level.ZoomTo(new Vector2(84f, 135f), 2f, 0.5f);
       yield return (object) 0.2f;
     }
 
     private IEnumerator RevealBadeline()
     {
-      CS02_BadelineIntro cs02BadelineIntro = this;
-      Audio.Play("event:/game/02_old_site/sequence_badeline_intro", cs02BadelineIntro.badeline.Position);
+      Audio.Play("event:/game/02_old_site/sequence_badeline_intro", this.badeline.Position);
       yield return (object) 0.1f;
-      cs02BadelineIntro.Level.Displacement.AddBurst(Vector2.op_Addition(cs02BadelineIntro.badeline.Position, new Vector2(0.0f, -4f)), 0.8f, 8f, 48f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
+      this.Level.Displacement.AddBurst(this.badeline.Position + new Vector2(0.0f, -4f), 0.8f, 8f, 48f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
       yield return (object) 0.1f;
-      cs02BadelineIntro.badeline.Hovering = true;
-      cs02BadelineIntro.badeline.Hair.Visible = true;
-      cs02BadelineIntro.badeline.Sprite.Play("fallSlow", false, false);
-      Vector2 from = cs02BadelineIntro.badeline.Position;
-      Vector2 to = cs02BadelineIntro.badelineEndPosition;
+      this.badeline.Hovering = true;
+      this.badeline.Hair.Visible = true;
+      this.badeline.Sprite.Play("fallSlow", false, false);
+      Vector2 from = this.badeline.Position;
+      Vector2 to = this.badelineEndPosition;
       for (float t = 0.0f; (double) t < 1.0; t += Engine.DeltaTime)
       {
-        cs02BadelineIntro.badeline.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), Ease.CubeInOut(t)));
+        this.badeline.Position = from + (to - from) * Ease.CubeInOut(t);
         yield return (object) null;
       }
-      cs02BadelineIntro.player.Facing = (Facings) Math.Sign(cs02BadelineIntro.badeline.X - cs02BadelineIntro.player.X);
+      this.player.Facing = (Facings) Math.Sign(this.badeline.X - this.player.X);
       yield return (object) 1f;
     }
 
@@ -136,3 +133,4 @@ namespace Celeste
     }
   }
 }
+

@@ -13,24 +13,24 @@ namespace Celeste
 {
   public class DisconnectedControllerUI
   {
-    private float fade;
+    private float fade = 0.0f;
     private bool closing;
 
     public DisconnectedControllerUI()
     {
-      Celeste.Celeste.DisconnectUI = this;
+      Celeste.DisconnectUI = this;
       Engine.OverloadGameLoop = new Action(this.Update);
     }
 
     private void OnClose()
     {
-      Celeste.Celeste.DisconnectUI = (DisconnectedControllerUI) null;
+      Celeste.DisconnectUI = (DisconnectedControllerUI) null;
       Engine.OverloadGameLoop = (Action) null;
     }
 
     public void Update()
     {
-      int num = MInput.Disabled ? 1 : 0;
+      bool disabled = MInput.Disabled;
       MInput.Disabled = false;
       this.fade = Calc.Approach(this.fade, this.closing ? 0.0f : 1f, Engine.DeltaTime * 8f);
       if (!this.closing)
@@ -44,15 +44,15 @@ namespace Celeste
       }
       else if ((double) this.fade <= 0.0)
         this.OnClose();
-      MInput.Disabled = num != 0;
+      MInput.Disabled = disabled;
     }
 
     public void Render()
     {
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.LinearClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), this.fade), 0.8f));
-      ActiveFont.DrawOutline(Dialog.Clean("XB1_RECONNECT_CONTROLLER", (Language) null), Celeste.Celeste.TargetCenter, new Vector2(0.5f, 0.5f), Vector2.get_One(), Color.op_Multiply(Color.get_White(), this.fade), 2f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), this.fade), this.fade));
-      Input.GuiButton(Input.MenuConfirm, "controls/keyboard/oemquestion").DrawCentered(Vector2.op_Addition(Celeste.Celeste.TargetCenter, new Vector2(0.0f, 128f)), Color.op_Multiply(Color.get_White(), this.fade));
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * this.fade * 0.8f);
+      ActiveFont.DrawOutline(Dialog.Clean("XB1_RECONNECT_CONTROLLER", (Language) null), Celeste.TargetCenter, new Vector2(0.5f, 0.5f), Vector2.One, Color.White * this.fade, 2f, Color.Black * this.fade * this.fade);
+      Input.GuiButton(Input.MenuConfirm, "controls/keyboard/oemquestion").DrawCentered(Celeste.TargetCenter + new Vector2(0.0f, 128f), Color.White * this.fade);
       Draw.SpriteBatch.End();
     }
 
@@ -71,9 +71,10 @@ namespace Celeste
 
     public static void CheckGamepadDisconnect()
     {
-      if (Celeste.Celeste.DisconnectUI != null || !DisconnectedControllerUI.RequiresGamepad() || DisconnectedControllerUI.IsGamepadConnected())
+      if (Celeste.DisconnectUI != null || !DisconnectedControllerUI.RequiresGamepad() || DisconnectedControllerUI.IsGamepadConnected())
         return;
       DisconnectedControllerUI disconnectedControllerUi = new DisconnectedControllerUI();
     }
   }
 }
+

@@ -17,14 +17,14 @@ namespace Celeste
   [Tracked(false)]
   public class MiniTextbox : Entity
   {
+    private int index = 0;
+    private float ease = 0.0f;
     public const float TextScale = 0.75f;
     public const float BoxWidth = 1688f;
     public const float BoxHeight = 144f;
     public const float HudElementHeight = 180f;
-    private int index;
     private FancyText.Text text;
     private MTexture box;
-    private float ease;
     private bool closing;
     private Coroutine routine;
     private Sprite portrait;
@@ -85,68 +85,68 @@ namespace Celeste
 
     private IEnumerator Routine()
     {
-      MiniTextbox miniTextbox1 = this;
-      List<Entity> entities = miniTextbox1.Scene.Tracker.GetEntities<MiniTextbox>();
-      foreach (MiniTextbox miniTextbox2 in entities)
+      List<Entity> others = this.Scene.Tracker.GetEntities<MiniTextbox>();
+      foreach (MiniTextbox miniTextbox in others)
       {
-        if (miniTextbox2 != miniTextbox1)
-          miniTextbox2.Add((Component) new Coroutine(miniTextbox2.Close(), true));
+        MiniTextbox other = miniTextbox;
+        if (other != this)
+          other.Add((Component) new Coroutine(other.Close(), true));
+        other = (MiniTextbox) null;
       }
-      if (entities.Count > 0)
+      if (others.Count > 0)
         yield return (object) 0.3f;
-      while ((double) (miniTextbox1.ease += Engine.DeltaTime * 4f) < 1.0)
+      while ((double) (this.ease += Engine.DeltaTime * 4f) < 1.0)
         yield return (object) null;
-      miniTextbox1.ease = 1f;
-      if (miniTextbox1.portrait != null)
+      this.ease = 1f;
+      if (this.portrait != null)
       {
-        string beginAnim = "begin_" + miniTextbox1.portraitData.Animation;
-        if (miniTextbox1.portrait.Has(beginAnim))
+        string beginAnim = "begin_" + this.portraitData.Animation;
+        if (this.portrait.Has(beginAnim))
         {
-          miniTextbox1.portrait.Play(beginAnim, false, false);
-          while (miniTextbox1.portrait.CurrentAnimationID == beginAnim && miniTextbox1.portrait.Animating)
+          this.portrait.Play(beginAnim, false, false);
+          while (this.portrait.CurrentAnimationID == beginAnim && this.portrait.Animating)
             yield return (object) null;
         }
-        miniTextbox1.portrait.Play("talk_" + miniTextbox1.portraitData.Animation, false, false);
-        miniTextbox1.talkerSfx = new SoundSource().Play(miniTextbox1.portraitData.SfxEvent, (string) null, 0.0f);
-        miniTextbox1.talkerSfx.Param("dialogue_portrait", (float) miniTextbox1.portraitData.SfxExpression);
-        miniTextbox1.talkerSfx.Param("dialogue_end", 0.0f);
-        miniTextbox1.Add((Component) miniTextbox1.talkerSfx);
+        this.portrait.Play("talk_" + this.portraitData.Animation, false, false);
+        this.talkerSfx = new SoundSource().Play(this.portraitData.SfxEvent, (string) null, 0.0f);
+        this.talkerSfx.Param("dialogue_portrait", (float) this.portraitData.SfxExpression);
+        this.talkerSfx.Param("dialogue_end", 0.0f);
+        this.Add((Component) this.talkerSfx);
         beginAnim = (string) null;
       }
-      float num = 0.0f;
-      while (miniTextbox1.index < miniTextbox1.text.Nodes.Count)
+      float delay = 0.0f;
+      while (this.index < this.text.Nodes.Count)
       {
-        if (miniTextbox1.text.Nodes[miniTextbox1.index] is FancyText.Char)
-          num += (miniTextbox1.text.Nodes[miniTextbox1.index] as FancyText.Char).Delay;
-        ++miniTextbox1.index;
-        if ((double) num > 0.0160000007599592)
+        if (this.text.Nodes[this.index] is FancyText.Char)
+          delay += (this.text.Nodes[this.index] as FancyText.Char).Delay;
+        ++this.index;
+        if ((double) delay > 0.0160000007599592)
         {
-          yield return (object) num;
-          num = 0.0f;
+          yield return (object) delay;
+          delay = 0.0f;
         }
       }
-      if (miniTextbox1.portrait != null)
-        miniTextbox1.portrait.Play("idle_" + miniTextbox1.portraitData.Animation, false, false);
-      if (miniTextbox1.talkerSfx != null)
+      if (this.portrait != null)
+        this.portrait.Play("idle_" + this.portraitData.Animation, false, false);
+      if (this.talkerSfx != null)
       {
-        miniTextbox1.talkerSfx.Param("dialogue_portrait", 0.0f);
-        miniTextbox1.talkerSfx.Param("dialogue_end", 1f);
+        this.talkerSfx.Param("dialogue_portrait", 0.0f);
+        this.talkerSfx.Param("dialogue_end", 1f);
       }
       Audio.EndSnapshot(Level.DialogSnapshot);
       yield return (object) 3f;
-      yield return (object) miniTextbox1.Close();
+      yield return (object) this.Close();
     }
 
     private IEnumerator Close()
     {
-      MiniTextbox miniTextbox = this;
-      if (!miniTextbox.closing)
+      if (!this.closing)
       {
-        miniTextbox.closing = true;
-        while ((double) (miniTextbox.ease -= Engine.DeltaTime * 4f) > 0.0)
+        this.closing = true;
+        while ((double) (this.ease -= Engine.DeltaTime * 4f) > 0.0)
           yield return (object) null;
-        miniTextbox.ease = 0.0f;
-        miniTextbox.RemoveSelf();
+        this.ease = 0.0f;
+        this.RemoveSelf();
       }
     }
 
@@ -164,17 +164,16 @@ namespace Celeste
       Level scene = this.Scene as Level;
       if (scene.FrozenOrPaused || scene.RetryPlayerCorpse != null || scene.SkippingCutscene)
         return;
-      Vector2 position;
-      ((Vector2) ref position).\u002Ector((float) (Engine.Width / 2), (float) (72.0 + ((double) Engine.Width - 1688.0) / 4.0));
-      Vector2 vector2 = Vector2.op_Addition(position, new Vector2(-828f, -56f));
-      this.box.DrawCentered(position, Color.get_White(), new Vector2(1f, this.ease));
+      Vector2 position = new Vector2((float) (Engine.Width / 2), (float) (72.0 + ((double) Engine.Width - 1688.0) / 4.0));
+      Vector2 vector2 = position + new Vector2(-828f, -56f);
+      this.box.DrawCentered(position, Color.White, new Vector2(1f, this.ease));
       if (this.portrait != null)
       {
-        this.portrait.Scale = Vector2.op_Multiply(new Vector2(1f, this.ease), this.portraitScale);
-        this.portrait.RenderPosition = Vector2.op_Addition(vector2, new Vector2(this.portraitSize / 2f, this.portraitSize / 2f));
+        this.portrait.Scale = new Vector2(1f, this.ease) * this.portraitScale;
+        this.portrait.RenderPosition = vector2 + new Vector2(this.portraitSize / 2f, this.portraitSize / 2f);
         this.portrait.Render();
       }
-      this.text.Draw(new Vector2((float) (vector2.X + (double) this.portraitSize + 32.0), (float) position.Y), new Vector2(0.0f, 0.5f), Vector2.op_Multiply(new Vector2(1f, this.ease), 0.75f), 1f, 0, this.index);
+      this.text.Draw(new Vector2((float) ((double) vector2.X + (double) this.portraitSize + 32.0), position.Y), new Vector2(0.0f, 0.5f), new Vector2(1f, this.ease) * 0.75f, 1f, 0, this.index);
     }
 
     public override void Removed(Scene scene)
@@ -190,3 +189,4 @@ namespace Celeste
     }
   }
 }
+

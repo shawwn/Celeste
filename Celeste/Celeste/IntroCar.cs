@@ -11,15 +11,15 @@ namespace Celeste
 {
   public class IntroCar : JumpThru
   {
+    private bool didHaveRider = false;
     private Monocle.Image bodySprite;
     private Entity wheels;
     private float startY;
-    private bool didHaveRider;
 
     public IntroCar(Vector2 position)
       : base(position, 25, true)
     {
-      this.startY = (float) position.Y;
+      this.startY = position.Y;
       this.Depth = 1;
       this.Add((Component) (this.bodySprite = new Monocle.Image(GFX.Game["scenery/car/body"])));
       this.bodySprite.Origin = new Vector2(this.bodySprite.Width / 2f, this.bodySprite.Height);
@@ -32,7 +32,7 @@ namespace Celeste
     }
 
     public IntroCar(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
@@ -48,17 +48,17 @@ namespace Celeste
       Level level = scene as Level;
       if (level.Session.Area.ID != 0)
         return;
-      Rectangle bounds1 = level.Bounds;
-      Vector2 position = new Vector2((float) ((Rectangle) ref bounds1).get_Left(), this.Y);
+      Rectangle bounds = level.Bounds;
+      Vector2 position = new Vector2((float) bounds.Left, this.Y);
       double x = (double) this.X;
-      Rectangle bounds2 = level.Bounds;
-      double left = (double) ((Rectangle) ref bounds2).get_Left();
+      bounds = level.Bounds;
+      double left = (double) bounds.Left;
       int width = (int) (x - left - 48.0);
       IntroPavement introPavement = new IntroPavement(position, width);
       introPavement.Depth = -10001;
       level.Add((Entity) introPavement);
-      level.Add((Entity) new IntroCarBarrier(Vector2.op_Addition(this.Position, new Vector2(32f, 0.0f)), -10, Color.get_White()));
-      level.Add((Entity) new IntroCarBarrier(Vector2.op_Addition(this.Position, new Vector2(41f, 0.0f)), 5, Color.get_DarkGray()));
+      level.Add((Entity) new IntroCarBarrier(this.Position + new Vector2(32f, 0.0f), -10, Color.White));
+      level.Add((Entity) new IntroCarBarrier(this.Position + new Vector2(41f, 0.0f), 5, Color.DarkGray));
     }
 
     public override void Update()
@@ -81,3 +81,4 @@ namespace Celeste
     }
   }
 }
+

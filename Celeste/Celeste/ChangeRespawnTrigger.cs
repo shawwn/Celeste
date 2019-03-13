@@ -17,7 +17,7 @@ namespace Celeste
       : base(data, offset)
     {
       this.Collider = (Collider) new Hitbox((float) data.Width, (float) data.Height, 0.0f, 0.0f);
-      this.Target = data.Nodes == null || data.Nodes.Length == 0 ? this.Center : Vector2.op_Addition(data.Nodes[0], offset);
+      this.Target = data.Nodes == null || (uint) data.Nodes.Length <= 0U ? this.Center : data.Nodes[0] + offset;
       this.Visible = this.Active = false;
     }
 
@@ -30,7 +30,7 @@ namespace Celeste
     public override void OnEnter(Player player)
     {
       base.OnEnter(player);
-      if (this.Scene.CollideCheck<Solid>(Vector2.op_Addition(this.Target, Vector2.op_Multiply(Vector2.get_UnitY(), -4f))))
+      if (this.Scene.CollideCheck<Solid>(this.Target + Vector2.UnitY * -4f))
         return;
       Session session = (this.Scene as Level).Session;
       session.HitCheckpoint = true;
@@ -39,3 +39,4 @@ namespace Celeste
     }
   }
 }
+

@@ -17,6 +17,7 @@ namespace Celeste
     private List<OuiChapterSelectIcon> icons = new List<OuiChapterSelectIcon>();
     private int indexToSnap = -1;
     private MTexture scarf = GFX.Gui["areas/hover"];
+    private float inputDelay = 0.0f;
     private const int scarfSegmentSize = 2;
     private MTexture[] scarfSegments;
     private float ease;
@@ -24,7 +25,6 @@ namespace Celeste
     private bool journalEnabled;
     private bool disableInput;
     private bool display;
-    private float inputDelay;
 
     private int area
     {
@@ -69,21 +69,21 @@ namespace Celeste
 
     public override IEnumerator Enter(Oui from)
     {
-      OuiChapterSelect ouiChapterSelect = this;
-      ouiChapterSelect.Visible = true;
-      ouiChapterSelect.EaseCamera();
-      ouiChapterSelect.display = true;
-      ouiChapterSelect.journalEnabled = Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Debug || SaveData.Instance.CheatMode;
-      for (int id = 0; id <= SaveData.Instance.UnlockedAreas && !ouiChapterSelect.journalEnabled; ++id)
+      this.Visible = true;
+      this.EaseCamera();
+      this.display = true;
+      this.journalEnabled = Celeste.PlayMode == Celeste.PlayModes.Debug || SaveData.Instance.CheatMode;
+      for (int i = 0; i <= SaveData.Instance.UnlockedAreas && !this.journalEnabled; ++i)
       {
-        if (SaveData.Instance.Areas[id].Modes[0].TimePlayed > 0L && !AreaData.Get(id).Interlude)
-          ouiChapterSelect.journalEnabled = true;
+        if (SaveData.Instance.Areas[i].Modes[0].TimePlayed > 0L && !AreaData.Get(i).Interlude)
+          this.journalEnabled = true;
       }
       OuiChapterSelectIcon unselected = (OuiChapterSelectIcon) null;
       if (from is OuiChapterPanel)
-        (unselected = ouiChapterSelect.icons[ouiChapterSelect.area]).Unselect();
-      foreach (OuiChapterSelectIcon icon in ouiChapterSelect.icons)
+        (unselected = this.icons[this.area]).Unselect();
+      foreach (OuiChapterSelectIcon icon1 in this.icons)
       {
+        OuiChapterSelectIcon icon = icon1;
         if (icon.Area <= SaveData.Instance.UnlockedAreas && icon != unselected)
         {
           icon.Position = icon.HiddenPosition;
@@ -97,6 +97,7 @@ namespace Celeste
           icon.AssistModeUnlockable = true;
         }
         yield return (object) 0.01f;
+        icon = (OuiChapterSelectIcon) null;
       }
       if (from is OuiChapterPanel)
         yield return (object) 0.25f;
@@ -118,17 +119,18 @@ namespace Celeste
 
     private IEnumerator EaseOut(Oui next)
     {
-      OuiChapterSelect ouiChapterSelect = this;
       OuiChapterSelectIcon selected = (OuiChapterSelectIcon) null;
       if (next is OuiChapterPanel)
-        (selected = ouiChapterSelect.icons[ouiChapterSelect.area]).Select();
-      foreach (OuiChapterSelectIcon icon in ouiChapterSelect.icons)
+        (selected = this.icons[this.area]).Select();
+      foreach (OuiChapterSelectIcon icon1 in this.icons)
       {
+        OuiChapterSelectIcon icon = icon1;
         if (selected != icon)
           icon.Hide();
         yield return (object) 0.01f;
+        icon = (OuiChapterSelectIcon) null;
       }
-      ouiChapterSelect.Visible = false;
+      this.Visible = false;
     }
 
     public void AdvanceToNext()
@@ -141,32 +143,31 @@ namespace Celeste
 
     private IEnumerator AutoAdvanceRoutine()
     {
-      OuiChapterSelect ouiChapterSelect = this;
-      if (ouiChapterSelect.area < SaveData.Instance.MaxArea)
+      if (this.area < SaveData.Instance.MaxArea)
       {
-        int nextArea = ouiChapterSelect.area + 1;
+        int nextArea = this.area + 1;
         if (nextArea == 9)
-          ouiChapterSelect.icons[nextArea].HideIcon = true;
-        while (!ouiChapterSelect.Selected)
+          this.icons[nextArea].HideIcon = true;
+        while (!this.Selected)
           yield return (object) null;
         yield return (object) 1f;
         Audio.Play("event:/ui/postgame/unlock_newchapter");
         Audio.Play("event:/ui/world_map/icon/roll_right");
-        ouiChapterSelect.area = nextArea;
-        ouiChapterSelect.EaseCamera();
-        ouiChapterSelect.Overworld.Maddy.Hide(true);
-        if (ouiChapterSelect.area == 9)
+        this.area = nextArea;
+        this.EaseCamera();
+        this.Overworld.Maddy.Hide(true);
+        if (this.area == 9)
         {
           bool ready = false;
-          ouiChapterSelect.icons[ouiChapterSelect.area].CoreUnlock((Action) (() => ready = true));
+          this.icons[this.area].CoreUnlock((Action) (() => ready = true));
           while (!ready)
             yield return (object) null;
         }
         yield return (object) 0.25f;
       }
-      ouiChapterSelect.disableInput = false;
-      ouiChapterSelect.Focused = true;
-      ouiChapterSelect.Overworld.ShowInputUI = true;
+      this.disableInput = false;
+      this.Focused = true;
+      this.Overworld.ShowInputUI = true;
     }
 
     public override void Update()
@@ -246,20 +247,18 @@ namespace Celeste
 
     public override void Render()
     {
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(960f, (float) -this.scarf.Height * Ease.CubeInOut(1f - this.ease));
+      Vector2 vector2 = new Vector2(960f, (float) -this.scarf.Height * Ease.CubeInOut(1f - this.ease));
       for (int index = 0; index < this.scarfSegments.Length; ++index)
       {
-        float num1 = Ease.CubeIn((float) index / (float) this.scarfSegments.Length);
-        float num2 = (float) ((double) num1 * Math.Sin((double) this.Scene.RawTimeActive * 4.0 + (double) index * 0.0500000007450581) * 4.0 - (double) num1 * 16.0);
-        this.scarfSegments[index].DrawJustified(Vector2.op_Addition(vector2, new Vector2(num2, (float) (index * 2))), new Vector2(0.5f, 0.0f));
+        float num = Ease.CubeIn((float) index / (float) this.scarfSegments.Length);
+        float x = (float) ((double) num * Math.Sin((double) this.Scene.RawTimeActive * 4.0 + (double) index * 0.0500000007450581) * 4.0 - (double) num * 16.0);
+        this.scarfSegments[index].DrawJustified(vector2 + new Vector2(x, (float) (index * 2)), new Vector2(0.5f, 0.0f));
       }
       if ((double) this.journalEase <= 0.0)
         return;
-      Vector2 position;
-      ((Vector2) ref position).\u002Ector(128f * Ease.CubeOut(this.journalEase), 952f);
-      GFX.Gui["menu/journal"].DrawCentered(position, Color.op_Multiply(Color.get_White(), Ease.CubeOut(this.journalEase)));
-      Input.GuiButton(Input.MenuJournal, "controls/keyboard/oemquestion").Draw(position, Vector2.get_Zero(), Color.op_Multiply(Color.get_White(), Ease.CubeOut(this.journalEase)));
+      Vector2 position = new Vector2(128f * Ease.CubeOut(this.journalEase), 952f);
+      GFX.Gui["menu/journal"].DrawCentered(position, Color.White * Ease.CubeOut(this.journalEase));
+      Input.GuiButton(Input.MenuJournal, "controls/keyboard/oemquestion").Draw(position, Vector2.Zero, Color.White * Ease.CubeOut(this.journalEase));
     }
 
     private void EaseCamera()
@@ -270,3 +269,4 @@ namespace Celeste
     }
   }
 }
+

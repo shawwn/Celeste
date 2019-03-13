@@ -13,7 +13,7 @@ namespace Celeste
   {
     private DreamStars.Stars[] stars = new DreamStars.Stars[50];
     private Vector2 angle = Vector2.Normalize(new Vector2(-2f, -7f));
-    private Vector2 lastCamera = Vector2.get_Zero();
+    private Vector2 lastCamera = Vector2.Zero;
 
     public DreamStars()
     {
@@ -29,19 +29,16 @@ namespace Celeste
     {
       base.Update(scene);
       Vector2 position = (scene as Level).Camera.Position;
-      Vector2 vector2 = Vector2.op_Subtraction(position, this.lastCamera);
+      Vector2 vector2 = position - this.lastCamera;
       for (int index = 0; index < this.stars.Length; ++index)
-      {
-        ref Vector2 local = ref this.stars[index].Position;
-        local = Vector2.op_Addition(local, Vector2.op_Subtraction(Vector2.op_Multiply(Vector2.op_Multiply(this.angle, this.stars[index].Speed), Engine.DeltaTime), Vector2.op_Multiply(vector2, 0.5f)));
-      }
+        this.stars[index].Position += this.angle * this.stars[index].Speed * Engine.DeltaTime - vector2 * 0.5f;
       this.lastCamera = position;
     }
 
     public override void Render(Scene scene)
     {
       for (int index = 0; index < this.stars.Length; ++index)
-        Draw.HollowRect(new Vector2(this.mod((float) this.stars[index].Position.X, 320f), this.mod((float) this.stars[index].Position.Y, 180f)), this.stars[index].Size, this.stars[index].Size, Color.get_Teal());
+        Draw.HollowRect(new Vector2(this.mod(this.stars[index].Position.X, 320f), this.mod(this.stars[index].Position.Y, 180f)), this.stars[index].Size, this.stars[index].Size, Color.Teal);
     }
 
     private float mod(float x, float m)
@@ -57,3 +54,4 @@ namespace Celeste
     }
   }
 }
+

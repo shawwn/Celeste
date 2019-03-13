@@ -13,9 +13,9 @@ namespace Celeste
   [Tracked(true)]
   public class Billboard : Component
   {
-    public Color Color = Color.get_White();
-    public Vector2 Size = Vector2.get_One();
-    public Vector2 Scale = Vector2.get_One();
+    public Color Color = Color.White;
+    public Vector2 Size = Vector2.One;
+    public Vector2 Scale = Vector2.One;
     public MTexture Texture;
     public Vector3 Position;
     public Action BeforeRender;
@@ -30,9 +30,10 @@ namespace Celeste
     {
       this.Texture = texture;
       this.Position = position;
-      this.Size = size.HasValue ? size.Value : Vector2.get_One();
-      this.Color = color.HasValue ? color.Value : Color.get_White();
-      this.Scale = scale.HasValue ? scale.Value : Vector2.get_One();
+      this.Size = size.HasValue ? size.Value : Vector2.One;
+      this.Color = color.HasValue ? color.Value : Color.White;
+      this.Scale = scale.HasValue ? scale.Value : Vector2.One;
     }
   }
 }
+

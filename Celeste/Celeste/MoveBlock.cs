@@ -18,6 +18,7 @@ namespace Celeste
     private static readonly Color idleBgFill = Calc.HexToColor("474070");
     private static readonly Color pressedBgFill = Calc.HexToColor("30b335");
     private static readonly Color breakingBgFill = Calc.HexToColor("cc2541");
+    private MoveBlock.MovementState state = MoveBlock.MovementState.Idling;
     private List<Monocle.Image> body = new List<Monocle.Image>();
     private List<Monocle.Image> topButton = new List<Monocle.Image>();
     private List<Monocle.Image> leftButton = new List<Monocle.Image>();
@@ -42,7 +43,6 @@ namespace Celeste
     private float homeAngle;
     private int angleSteerSign;
     private Vector2 startPosition;
-    private MoveBlock.MovementState state;
     private bool leftPressed;
     private bool rightPressed;
     private bool topPressed;
@@ -119,7 +119,7 @@ namespace Celeste
         {
           int num3 = index1 == 0 ? 0 : (index1 < num1 - 1 ? 1 : 2);
           int num4 = index2 == 0 ? 0 : (index2 < num2 - 1 ? 1 : 2);
-          this.AddImage(mtexture1.GetSubtexture(num3 * 8, num4 * 8, 8, 8, (MTexture) null), Vector2.op_Multiply(new Vector2((float) index1, (float) index2), 8f), 0.0f, new Vector2(1f, 1f), this.body);
+          this.AddImage(mtexture1.GetSubtexture(num3 * 8, num4 * 8, 8, 8, (MTexture) null), new Vector2((float) index1, (float) index2) * 8f, 0.0f, new Vector2(1f, 1f), this.body);
         }
       }
       this.arrows = GFX.Game.GetAtlasSubtextures("objects/moveBlock/arrow");
@@ -130,7 +130,7 @@ namespace Celeste
     }
 
     public MoveBlock(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Width, data.Height, data.Enum<MoveBlock.Directions>(nameof (direction), MoveBlock.Directions.Left), data.Bool(nameof (canSteer), true), data.Bool(nameof (fast), false))
+      : this(data.Position + offset, data.Width, data.Height, data.Enum<MoveBlock.Directions>(nameof (direction), MoveBlock.Directions.Left), data.Bool(nameof (canSteer), true), data.Bool(nameof (fast), false))
     {
     }
 
@@ -142,86 +142,90 @@ namespace Celeste
 
     private IEnumerator Controller()
     {
-      MoveBlock moveBlock = this;
       while (true)
       {
-        moveBlock.triggered = false;
-        moveBlock.state = MoveBlock.MovementState.Idling;
-        while (!moveBlock.triggered && !moveBlock.HasPlayerRider())
+        this.triggered = false;
+        this.state = MoveBlock.MovementState.Idling;
+        while (!this.triggered && !this.HasPlayerRider())
           yield return (object) null;
-        Audio.Play("event:/game/04_cliffside/arrowblock_activate", moveBlock.Position);
-        moveBlock.state = MoveBlock.MovementState.Moving;
-        moveBlock.StartShaking(0.2f);
-        moveBlock.ActivateParticles();
+        Audio.Play("event:/game/04_cliffside/arrowblock_activate", this.Position);
+        this.state = MoveBlock.MovementState.Moving;
+        this.StartShaking(0.2f);
+        this.ActivateParticles();
         yield return (object) 0.2f;
-        moveBlock.targetSpeed = moveBlock.fast ? 75f : 60f;
-        moveBlock.moveSfx.Play("event:/game/04_cliffside/arrowblock_move", (string) null, 0.0f);
-        moveBlock.moveSfx.Param("arrow_stop", 0.0f);
-        moveBlock.StopPlayerRunIntoAnimation = false;
+        this.targetSpeed = this.fast ? 75f : 60f;
+        this.moveSfx.Play("event:/game/04_cliffside/arrowblock_move", (string) null, 0.0f);
+        this.moveSfx.Param("arrow_stop", 0.0f);
+        this.StopPlayerRunIntoAnimation = false;
         float crashTimer = 0.15f;
         float crashResetTimer = 0.1f;
         float noSteerTimer = 0.2f;
         while (true)
         {
-          if (moveBlock.canSteer)
+          if (this.canSteer)
           {
-            moveBlock.targetAngle = moveBlock.homeAngle;
-            bool flag = moveBlock.direction == MoveBlock.Directions.Right || moveBlock.direction == MoveBlock.Directions.Left ? moveBlock.HasPlayerOnTop() : moveBlock.HasPlayerClimbing();
-            if (flag && (double) noSteerTimer > 0.0)
+            this.targetAngle = this.homeAngle;
+            bool hasPlayer = this.direction != MoveBlock.Directions.Right && this.direction != MoveBlock.Directions.Left ? this.HasPlayerClimbing() : this.HasPlayerOnTop();
+            if (hasPlayer && (double) noSteerTimer > 0.0)
               noSteerTimer -= Engine.DeltaTime;
-            if (flag)
+            if (hasPlayer)
             {
               if ((double) noSteerTimer <= 0.0)
-                moveBlock.targetAngle = moveBlock.direction == MoveBlock.Directions.Right || moveBlock.direction == MoveBlock.Directions.Left ? moveBlock.homeAngle + 0.7853982f * (float) moveBlock.angleSteerSign * (float) Input.MoveY.Value : moveBlock.homeAngle + 0.7853982f * (float) moveBlock.angleSteerSign * (float) Input.MoveX.Value;
+                this.targetAngle = this.direction != MoveBlock.Directions.Right && this.direction != MoveBlock.Directions.Left ? this.homeAngle + 0.7853982f * (float) this.angleSteerSign * (float) Input.MoveX.Value : this.homeAngle + 0.7853982f * (float) this.angleSteerSign * (float) Input.MoveY.Value;
             }
             else
               noSteerTimer = 0.2f;
           }
-          if (moveBlock.Scene.OnInterval(0.02f))
-            moveBlock.MoveParticles();
-          moveBlock.speed = Calc.Approach(moveBlock.speed, moveBlock.targetSpeed, 300f * Engine.DeltaTime);
-          moveBlock.angle = Calc.Approach(moveBlock.angle, moveBlock.targetAngle, 50.26548f * Engine.DeltaTime);
-          Vector2 vec = Vector2.op_Multiply(Calc.AngleToVector(moveBlock.angle, moveBlock.speed), Engine.DeltaTime);
-          bool flag1;
-          if (moveBlock.direction == MoveBlock.Directions.Right || moveBlock.direction == MoveBlock.Directions.Left)
+          if (this.Scene.OnInterval(0.02f))
+            this.MoveParticles();
+          this.speed = Calc.Approach(this.speed, this.targetSpeed, 300f * Engine.DeltaTime);
+          this.angle = Calc.Approach(this.angle, this.targetAngle, 50.26548f * Engine.DeltaTime);
+          Vector2 move = Calc.AngleToVector(this.angle, this.speed) * Engine.DeltaTime;
+          bool hit = false;
+          Rectangle bounds;
+          if (this.direction == MoveBlock.Directions.Right || this.direction == MoveBlock.Directions.Left)
           {
-            flag1 = moveBlock.MoveCheck(vec.XComp());
-            moveBlock.noSquish = moveBlock.Scene.Tracker.GetEntity<Player>();
-            moveBlock.MoveVCollideSolids((float) vec.Y, false, (Action<Vector2, Vector2, Platform>) null);
-            moveBlock.noSquish = (Player) null;
-            if (moveBlock.Scene.OnInterval(0.03f))
+            hit = this.MoveCheck(move.XComp());
+            this.noSquish = this.Scene.Tracker.GetEntity<Player>();
+            this.MoveVCollideSolids(move.Y, false, (Action<Vector2, Vector2, Platform>) null);
+            this.noSquish = (Player) null;
+            if (this.Scene.OnInterval(0.03f))
             {
-              if (vec.Y > 0.0)
-                moveBlock.ScrapeParticles(Vector2.get_UnitY());
-              else if (vec.Y < 0.0)
-                moveBlock.ScrapeParticles(Vector2.op_UnaryNegation(Vector2.get_UnitY()));
+              if ((double) move.Y > 0.0)
+                this.ScrapeParticles(Vector2.UnitY);
+              else if ((double) move.Y < 0.0)
+                this.ScrapeParticles(-Vector2.UnitY);
             }
           }
           else
           {
-            flag1 = moveBlock.MoveCheck(vec.YComp());
-            moveBlock.noSquish = moveBlock.Scene.Tracker.GetEntity<Player>();
-            moveBlock.MoveHCollideSolids((float) vec.X, false, (Action<Vector2, Vector2, Platform>) null);
-            moveBlock.noSquish = (Player) null;
-            if (moveBlock.Scene.OnInterval(0.03f))
+            hit = this.MoveCheck(move.YComp());
+            this.noSquish = this.Scene.Tracker.GetEntity<Player>();
+            this.MoveHCollideSolids(move.X, false, (Action<Vector2, Vector2, Platform>) null);
+            this.noSquish = (Player) null;
+            if (this.Scene.OnInterval(0.03f))
             {
-              if (vec.X > 0.0)
-                moveBlock.ScrapeParticles(Vector2.get_UnitX());
-              else if (vec.X < 0.0)
-                moveBlock.ScrapeParticles(Vector2.op_UnaryNegation(Vector2.get_UnitX()));
+              if ((double) move.X > 0.0)
+                this.ScrapeParticles(Vector2.UnitX);
+              else if ((double) move.X < 0.0)
+                this.ScrapeParticles(-Vector2.UnitX);
             }
-            if (moveBlock.direction == MoveBlock.Directions.Down)
+            int num1;
+            if (this.direction == MoveBlock.Directions.Down)
             {
-              double top = (double) moveBlock.Top;
-              Rectangle bounds = moveBlock.SceneAs<Level>().Bounds;
-              double num = (double) (((Rectangle) ref bounds).get_Bottom() + 32);
-              if (top > num)
-                flag1 = true;
+              double top = (double) this.Top;
+              bounds = this.SceneAs<Level>().Bounds;
+              double num2 = (double) (bounds.Bottom + 32);
+              num1 = top > num2 ? 1 : 0;
             }
+            else
+              num1 = 0;
+            if (num1 != 0)
+              hit = true;
           }
-          if (flag1)
+          if (hit)
           {
-            moveBlock.moveSfx.Param("arrow_stop", 1f);
+            this.moveSfx.Param("arrow_stop", 1f);
             crashResetTimer = 0.1f;
             if ((double) crashTimer > 0.0)
               crashTimer -= Engine.DeltaTime;
@@ -230,90 +234,113 @@ namespace Celeste
           }
           else
           {
-            moveBlock.moveSfx.Param("arrow_stop", 0.0f);
+            this.moveSfx.Param("arrow_stop", 0.0f);
             if ((double) crashResetTimer > 0.0)
               crashResetTimer -= Engine.DeltaTime;
             else
               crashTimer = 0.15f;
           }
-          Level scene = moveBlock.Scene as Level;
-          double left1 = (double) moveBlock.Left;
-          Rectangle bounds1 = scene.Bounds;
-          double left2 = (double) ((Rectangle) ref bounds1).get_Left();
+          Level level = this.Scene as Level;
+          double left1 = (double) this.Left;
+          bounds = level.Bounds;
+          double left2 = (double) bounds.Left;
+          int num;
           if (left1 >= left2)
           {
-            double top1 = (double) moveBlock.Top;
-            bounds1 = scene.Bounds;
-            double top2 = (double) ((Rectangle) ref bounds1).get_Top();
+            double top1 = (double) this.Top;
+            bounds = level.Bounds;
+            double top2 = (double) bounds.Top;
             if (top1 >= top2)
             {
-              double right1 = (double) moveBlock.Right;
-              bounds1 = scene.Bounds;
-              double right2 = (double) ((Rectangle) ref bounds1).get_Right();
-              if (right1 <= right2)
-                yield return (object) null;
-              else
-                break;
+              double right1 = (double) this.Right;
+              bounds = level.Bounds;
+              double right2 = (double) bounds.Right;
+              num = right1 > right2 ? 1 : 0;
+              goto label_43;
             }
-            else
-              break;
+          }
+          num = 1;
+label_43:
+          if (num == 0)
+          {
+            move = new Vector2();
+            level = (Level) null;
+            yield return (object) null;
           }
           else
             break;
         }
-        Audio.Play("event:/game/04_cliffside/arrowblock_break", moveBlock.Position);
-        moveBlock.moveSfx.Stop(true);
-        moveBlock.state = MoveBlock.MovementState.Breaking;
-        moveBlock.speed = moveBlock.targetSpeed = 0.0f;
-        moveBlock.angle = moveBlock.targetAngle = moveBlock.homeAngle;
-        moveBlock.StartShaking(0.2f);
-        moveBlock.StopPlayerRunIntoAnimation = true;
+        Audio.Play("event:/game/04_cliffside/arrowblock_break", this.Position);
+        this.moveSfx.Stop(true);
+        this.state = MoveBlock.MovementState.Breaking;
+        this.speed = this.targetSpeed = 0.0f;
+        this.angle = this.targetAngle = this.homeAngle;
+        this.StartShaking(0.2f);
+        this.StopPlayerRunIntoAnimation = true;
         yield return (object) 0.2f;
-        moveBlock.BreakParticles();
+        this.BreakParticles();
         List<MoveBlock.Debris> debris = new List<MoveBlock.Debris>();
-        for (int index1 = 0; (double) index1 < (double) moveBlock.Width; index1 += 8)
+        for (int x = 0; (double) x < (double) this.Width; x += 8)
         {
-          for (int index2 = 0; (double) index2 < (double) moveBlock.Height; index2 += 8)
+          for (int y = 0; (double) y < (double) this.Height; y += 8)
           {
-            Vector2 vector2;
-            ((Vector2) ref vector2).\u002Ector((float) index1 + 4f, (float) index2 + 4f);
-            MoveBlock.Debris debris1 = Engine.Pooler.Create<MoveBlock.Debris>().Init(Vector2.op_Addition(moveBlock.Position, vector2), moveBlock.Center, Vector2.op_Addition(moveBlock.startPosition, vector2));
-            debris.Add(debris1);
-            moveBlock.Scene.Add((Entity) debris1);
+            Vector2 offset = new Vector2((float) x + 4f, (float) y + 4f);
+            MoveBlock.Debris d = Engine.Pooler.Create<MoveBlock.Debris>().Init(this.Position + offset, this.Center, this.startPosition + offset);
+            debris.Add(d);
+            this.Scene.Add((Entity) d);
+            offset = new Vector2();
+            d = (MoveBlock.Debris) null;
           }
         }
-        moveBlock.MoveStaticMovers(Vector2.op_Subtraction(moveBlock.startPosition, moveBlock.Position));
-        moveBlock.DisableStaticMovers();
-        moveBlock.Position = moveBlock.startPosition;
-        moveBlock.Visible = moveBlock.Collidable = false;
+        this.MoveStaticMovers(this.startPosition - this.Position);
+        this.DisableStaticMovers();
+        this.Position = this.startPosition;
+        this.Visible = this.Collidable = false;
         yield return (object) 2.2f;
         foreach (MoveBlock.Debris debris1 in debris)
-          debris1.StopMoving();
-        while (moveBlock.CollideCheck<Actor>() || moveBlock.CollideCheck<Solid>())
+        {
+          MoveBlock.Debris d = debris1;
+          d.StopMoving();
+          d = (MoveBlock.Debris) null;
+        }
+        while (this.CollideCheck<Actor>() || this.CollideCheck<Solid>())
           yield return (object) null;
-        moveBlock.Collidable = true;
-        EventInstance instance = Audio.Play("event:/game/04_cliffside/arrowblock_reform_begin", debris[0].Position);
+        this.Collidable = true;
+        EventInstance sound = Audio.Play("event:/game/04_cliffside/arrowblock_reform_begin", debris[0].Position);
         Coroutine routine;
-        moveBlock.Add((Component) (routine = new Coroutine(moveBlock.SoundFollowsDebrisCenter(instance, debris), true)));
+        this.Add((Component) (routine = new Coroutine(this.SoundFollowsDebrisCenter(sound, debris), true)));
         foreach (MoveBlock.Debris debris1 in debris)
-          debris1.StartShaking();
+        {
+          MoveBlock.Debris d = debris1;
+          d.StartShaking();
+          d = (MoveBlock.Debris) null;
+        }
         yield return (object) 0.2f;
         foreach (MoveBlock.Debris debris1 in debris)
-          debris1.ReturnHome(0.65f);
+        {
+          MoveBlock.Debris d = debris1;
+          d.ReturnHome(0.65f);
+          d = (MoveBlock.Debris) null;
+        }
         yield return (object) 0.6f;
         routine.RemoveSelf();
-        foreach (Entity entity in debris)
-          entity.RemoveSelf();
+        foreach (MoveBlock.Debris debris1 in debris)
+        {
+          MoveBlock.Debris d = debris1;
+          d.RemoveSelf();
+          d = (MoveBlock.Debris) null;
+        }
+        sound = (EventInstance) null;
         routine = (Coroutine) null;
-        Audio.Play("event:/game/04_cliffside/arrowblock_reappear", moveBlock.Position);
-        moveBlock.Visible = true;
-        moveBlock.EnableStaticMovers();
-        moveBlock.speed = moveBlock.targetSpeed = 0.0f;
-        moveBlock.angle = moveBlock.targetAngle = moveBlock.homeAngle;
-        moveBlock.noSquish = (Player) null;
-        moveBlock.fillColor = MoveBlock.idleBgFill;
-        moveBlock.UpdateColors();
-        moveBlock.flash = 1f;
+        Audio.Play("event:/game/04_cliffside/arrowblock_reappear", this.Position);
+        this.Visible = true;
+        this.EnableStaticMovers();
+        this.speed = this.targetSpeed = 0.0f;
+        this.angle = this.targetAngle = this.homeAngle;
+        this.noSquish = (Player) null;
+        this.fillColor = MoveBlock.idleBgFill;
+        this.UpdateColors();
+        this.flash = 1f;
         debris = (List<MoveBlock.Debris>) null;
       }
     }
@@ -328,11 +355,17 @@ namespace Celeste
         int playbackState = (int) instance.getPlaybackState(out state);
         if (state != PLAYBACK_STATE.STOPPED)
         {
-          Vector2 vector2 = Vector2.get_Zero();
+          Vector2 center = Vector2.Zero;
           foreach (MoveBlock.Debris debri in debris)
-            vector2 = Vector2.op_Addition(vector2, debri.Position);
-          Audio.Position(instance, Vector2.op_Division(vector2, (float) debris.Count));
+          {
+            MoveBlock.Debris d = debri;
+            center += d.Position;
+            d = (MoveBlock.Debris) null;
+          }
+          center /= (float) debris.Count;
+          Audio.Position(instance, center);
           yield return (object) null;
+          center = new Vector2();
         }
         else
           break;
@@ -344,9 +377,9 @@ namespace Celeste
       base.Update();
       if (this.canSteer)
       {
-        bool flag1 = (this.direction == MoveBlock.Directions.Up || this.direction == MoveBlock.Directions.Down) && this.CollideCheck<Player>(Vector2.op_Addition(this.Position, new Vector2(-1f, 0.0f)));
-        bool flag2 = (this.direction == MoveBlock.Directions.Up || this.direction == MoveBlock.Directions.Down) && this.CollideCheck<Player>(Vector2.op_Addition(this.Position, new Vector2(1f, 0.0f)));
-        bool flag3 = (this.direction == MoveBlock.Directions.Left || this.direction == MoveBlock.Directions.Right) && this.CollideCheck<Player>(Vector2.op_Addition(this.Position, new Vector2(0.0f, -1f)));
+        bool flag1 = (this.direction == MoveBlock.Directions.Up || this.direction == MoveBlock.Directions.Down) && this.CollideCheck<Player>(this.Position + new Vector2(-1f, 0.0f));
+        bool flag2 = (this.direction == MoveBlock.Directions.Up || this.direction == MoveBlock.Directions.Down) && this.CollideCheck<Player>(this.Position + new Vector2(1f, 0.0f));
+        bool flag3 = (this.direction == MoveBlock.Directions.Left || this.direction == MoveBlock.Directions.Right) && this.CollideCheck<Player>(this.Position + new Vector2(0.0f, -1f));
         foreach (GraphicsComponent graphicsComponent in this.topButton)
           graphicsComponent.Y = flag3 ? 2f : 0.0f;
         foreach (GraphicsComponent graphicsComponent in this.leftButton)
@@ -362,7 +395,7 @@ namespace Celeste
         this.topPressed = flag3;
       }
       if (this.moveSfx != null && this.moveSfx.Playing)
-        this.moveSfx.Param("arrow_influence", (float) ((int) Math.Floor((-(double) Vector2.op_Multiply(Calc.AngleToVector(this.angle, 1f), new Vector2(-1f, 1f)).Angle() + 6.28318548202515) % 6.28318548202515 / 6.28318548202515 * 8.0 + 0.5) + 1));
+        this.moveSfx.Param("arrow_influence", (float) ((int) Math.Floor((-(double) (Calc.AngleToVector(this.angle, 1f) * new Vector2(-1f, 1f)).Angle() + 6.28318548202515) % 6.28318548202515 / 6.28318548202515 * 8.0 + 0.5) + 1));
       this.border.Visible = this.Visible;
       this.flash = Calc.Approach(this.flash, 0.0f, Engine.DeltaTime * 5f);
       this.UpdateColors();
@@ -378,7 +411,7 @@ namespace Celeste
     {
       if (this.noSquish != null && (move < 0 && (double) this.noSquish.X < (double) this.X || move > 0 && (double) this.noSquish.X > (double) this.X))
       {
-        while (move != 0 && this.noSquish.CollideCheck<Solid>(Vector2.op_Addition(this.noSquish.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) move))))
+        while (move != 0 && this.noSquish.CollideCheck<Solid>(this.noSquish.Position + Vector2.UnitX * (float) move))
           move -= Math.Sign(move);
       }
       base.MoveHExact(move);
@@ -386,9 +419,9 @@ namespace Celeste
 
     public override void MoveVExact(int move)
     {
-      if (this.noSquish != null && move < 0 && (double) this.noSquish.Y <= (double) this.Y)
+      if (this.noSquish != null && (move < 0 && (double) this.noSquish.Y <= (double) this.Y))
       {
-        while (move != 0 && this.noSquish.CollideCheck<Solid>(Vector2.op_Addition(this.noSquish.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) move))))
+        while (move != 0 && this.noSquish.CollideCheck<Solid>(this.noSquish.Position + Vector2.UnitY * (float) move))
           move -= Math.Sign(move);
       }
       base.MoveVExact(move);
@@ -396,38 +429,34 @@ namespace Celeste
 
     private bool MoveCheck(Vector2 speed)
     {
-      if (speed.X != 0.0)
+      if ((double) speed.X != 0.0)
       {
-        if (!this.MoveHCollideSolids((float) speed.X, false, (Action<Vector2, Vector2, Platform>) null))
+        if (!this.MoveHCollideSolids(speed.X, false, (Action<Vector2, Vector2, Platform>) null))
           return false;
         for (int index1 = 1; index1 <= 3; ++index1)
         {
           for (int index2 = 1; index2 >= -1; index2 -= 2)
           {
-            Vector2 vector2;
-            ((Vector2) ref vector2).\u002Ector((float) Math.Sign((float) speed.X), (float) (index1 * index2));
-            if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, vector2)))
+            if (!this.CollideCheck<Solid>(this.Position + new Vector2((float) Math.Sign(speed.X), (float) (index1 * index2))))
             {
               this.MoveVExact(index1 * index2);
-              this.MoveHExact(Math.Sign((float) speed.X));
+              this.MoveHExact(Math.Sign(speed.X));
               return false;
             }
           }
         }
         return true;
       }
-      if (speed.Y == 0.0 || !this.MoveVCollideSolids((float) speed.Y, false, (Action<Vector2, Vector2, Platform>) null))
+      if ((double) speed.Y == 0.0 || !this.MoveVCollideSolids(speed.Y, false, (Action<Vector2, Vector2, Platform>) null))
         return false;
       for (int index1 = 1; index1 <= 3; ++index1)
       {
         for (int index2 = 1; index2 >= -1; index2 -= 2)
         {
-          Vector2 vector2;
-          ((Vector2) ref vector2).\u002Ector((float) (index1 * index2), (float) Math.Sign((float) speed.Y));
-          if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, vector2)))
+          if (!this.CollideCheck<Solid>(this.Position + new Vector2((float) (index1 * index2), (float) Math.Sign(speed.Y))))
           {
             this.MoveHExact(index1 * index2);
-            this.MoveVExact(Math.Sign((float) speed.Y));
+            this.MoveVExact(Math.Sign(speed.Y));
             return false;
           }
         }
@@ -459,12 +488,14 @@ namespace Celeste
       List<Monocle.Image> addTo)
     {
       Monocle.Image image = new Monocle.Image(tex);
-      image.Position = Vector2.op_Addition(position, new Vector2(4f, 4f));
+      image.Position = position + new Vector2(4f, 4f);
       image.CenterOrigin();
       image.Rotation = rotation;
       image.Scale = scale;
       this.Add((Component) image);
-      addTo?.Add(image);
+      if (addTo == null)
+        return;
+      addTo.Add(image);
     }
 
     private void SetVisible(List<Monocle.Image> images, bool visible)
@@ -476,7 +507,7 @@ namespace Celeste
     public override void Render()
     {
       Vector2 position = this.Position;
-      this.Position = Vector2.op_Addition(this.Position, this.Shake);
+      this.Position = this.Position + this.Shake;
       foreach (Component component in this.leftButton)
         component.Render();
       foreach (Component component in this.rightButton)
@@ -486,29 +517,29 @@ namespace Celeste
       Draw.Rect(this.X + 3f, this.Y + 3f, this.Width - 6f, this.Height - 6f, this.fillColor);
       foreach (Component component in this.body)
         component.Render();
-      Draw.Rect((float) (this.Center.X - 4.0), (float) (this.Center.Y - 4.0), 8f, 8f, this.fillColor);
+      Draw.Rect(this.Center.X - 4f, this.Center.Y - 4f, 8f, 8f, this.fillColor);
       if (this.state != MoveBlock.MovementState.Breaking)
         this.arrows[Calc.Clamp((int) Math.Floor((-(double) this.angle + 6.28318548202515) % 6.28318548202515 / 6.28318548202515 * 8.0 + 0.5), 0, 7)].DrawCentered(this.Center);
       else
         GFX.Game["objects/moveBlock/x"].DrawCentered(this.Center);
       float num = this.flash * 4f;
-      Draw.Rect(this.X - num, this.Y - num, this.Width + num * 2f, this.Height + num * 2f, Color.op_Multiply(Color.get_White(), this.flash));
+      Draw.Rect(this.X - num, this.Y - num, this.Width + num * 2f, this.Height + num * 2f, Color.White * this.flash);
       this.Position = position;
     }
 
     private void ActivateParticles()
     {
       bool flag1 = this.direction == MoveBlock.Directions.Down || this.direction == MoveBlock.Directions.Up;
-      int num = !this.canSteer || !flag1 ? (!this.CollideCheck<Player>(Vector2.op_Subtraction(this.Position, Vector2.get_UnitX())) ? 1 : 0) : 0;
-      bool flag2 = (!this.canSteer || !flag1) && !this.CollideCheck<Player>(Vector2.op_Addition(this.Position, Vector2.get_UnitX()));
-      bool flag3 = !this.canSteer | flag1 && !this.CollideCheck<Player>(Vector2.op_Subtraction(this.Position, Vector2.get_UnitY()));
-      if (num != 0)
-        this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Height / 2.0), this.CenterLeft, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), this.Height - 4f), 0.5f), 3.141593f);
+      bool flag2 = (!this.canSteer || !flag1) && !this.CollideCheck<Player>(this.Position - Vector2.UnitX);
+      bool flag3 = (!this.canSteer || !flag1) && !this.CollideCheck<Player>(this.Position + Vector2.UnitX);
+      bool flag4 = !this.canSteer | flag1 && !this.CollideCheck<Player>(this.Position - Vector2.UnitY);
       if (flag2)
-        this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Height / 2.0), this.CenterRight, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), this.Height - 4f), 0.5f), 0.0f);
+        this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Height / 2.0), this.CenterLeft, Vector2.UnitY * (this.Height - 4f) * 0.5f, 3.141593f);
       if (flag3)
-        this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Width / 2.0), this.TopCenter, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), this.Width - 4f), 0.5f), -1.570796f);
-      this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Width / 2.0), this.BottomCenter, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), this.Width - 4f), 0.5f), 1.570796f);
+        this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Height / 2.0), this.CenterRight, Vector2.UnitY * (this.Height - 4f) * 0.5f, 0.0f);
+      if (flag4)
+        this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Width / 2.0), this.TopCenter, Vector2.UnitX * (this.Width - 4f) * 0.5f, -1.570796f);
+      this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Activate, (int) ((double) this.Width / 2.0), this.BottomCenter, Vector2.UnitX * (this.Width - 4f) * 0.5f, 1.570796f);
     }
 
     private void BreakParticles()
@@ -518,8 +549,8 @@ namespace Celeste
       {
         for (int index2 = 0; (double) index2 < (double) this.Height; index2 += 4)
         {
-          Vector2 position = Vector2.op_Addition(this.Position, new Vector2((float) (2 + index1), (float) (2 + index2)));
-          this.SceneAs<Level>().Particles.Emit(MoveBlock.P_Break, 1, position, Vector2.op_Multiply(Vector2.get_One(), 2f), Vector2.op_Subtraction(position, center).Angle());
+          Vector2 position = this.Position + new Vector2((float) (2 + index1), (float) (2 + index2));
+          this.SceneAs<Level>().Particles.Emit(MoveBlock.P_Break, 1, position, Vector2.One * 2f, (position - center).Angle());
         }
       }
     }
@@ -532,36 +563,36 @@ namespace Celeste
       float num;
       if (this.direction == MoveBlock.Directions.Right)
       {
-        position = Vector2.op_Addition(this.CenterLeft, Vector2.get_UnitX());
-        vector2 = Vector2.op_Multiply(Vector2.get_UnitY(), this.Height - 4f);
+        position = this.CenterLeft + Vector2.UnitX;
+        vector2 = Vector2.UnitY * (this.Height - 4f);
         direction = 3.141593f;
         num = this.Height / 32f;
       }
       else if (this.direction == MoveBlock.Directions.Left)
       {
         position = this.CenterRight;
-        vector2 = Vector2.op_Multiply(Vector2.get_UnitY(), this.Height - 4f);
+        vector2 = Vector2.UnitY * (this.Height - 4f);
         direction = 0.0f;
         num = this.Height / 32f;
       }
       else if (this.direction == MoveBlock.Directions.Down)
       {
-        position = Vector2.op_Addition(this.TopCenter, Vector2.get_UnitY());
-        vector2 = Vector2.op_Multiply(Vector2.get_UnitX(), this.Width - 4f);
+        position = this.TopCenter + Vector2.UnitY;
+        vector2 = Vector2.UnitX * (this.Width - 4f);
         direction = -1.570796f;
         num = this.Width / 32f;
       }
       else
       {
         position = this.BottomCenter;
-        vector2 = Vector2.op_Multiply(Vector2.get_UnitX(), this.Width - 4f);
+        vector2 = Vector2.UnitX * (this.Width - 4f);
         direction = 1.570796f;
         num = this.Width / 32f;
       }
       this.particleRemainder += num;
       int particleRemainder = (int) this.particleRemainder;
       this.particleRemainder -= (float) particleRemainder;
-      Vector2 positionRange = Vector2.op_Multiply(vector2, 0.5f);
+      Vector2 positionRange = vector2 * 0.5f;
       if (particleRemainder <= 0)
         return;
       this.SceneAs<Level>().ParticlesBG.Emit(MoveBlock.P_Move, particleRemainder, position, positionRange, direction);
@@ -569,26 +600,24 @@ namespace Celeste
 
     private void ScrapeParticles(Vector2 dir)
     {
-      int num1 = this.Collidable ? 1 : 0;
+      bool collidable = this.Collidable;
       this.Collidable = false;
-      if (dir.X != 0.0)
+      if ((double) dir.X != 0.0)
       {
-        float num2 = dir.X <= 0.0 ? this.Left - 1f : this.Right;
+        float x = (double) dir.X <= 0.0 ? this.Left - 1f : this.Right;
         for (int index = 0; (double) index < (double) this.Height; index += 8)
         {
-          Vector2 vector2;
-          ((Vector2) ref vector2).\u002Ector(num2, this.Top + 4f + (float) index);
+          Vector2 vector2 = new Vector2(x, this.Top + 4f + (float) index);
           if (this.Scene.CollideCheck<Solid>(vector2))
             this.SceneAs<Level>().ParticlesFG.Emit(ZipMover.P_Scrape, vector2);
         }
       }
       else
       {
-        float num2 = dir.Y <= 0.0 ? this.Top - 1f : this.Bottom;
+        float y = (double) dir.Y <= 0.0 ? this.Top - 1f : this.Bottom;
         for (int index = 0; (double) index < (double) this.Width; index += 8)
         {
-          Vector2 vector2;
-          ((Vector2) ref vector2).\u002Ector(this.Left + 4f + (float) index, num2);
+          Vector2 vector2 = new Vector2(this.Left + 4f + (float) index, y);
           if (this.Scene.CollideCheck<Solid>(vector2))
             this.SceneAs<Level>().ParticlesFG.Emit(ZipMover.P_Scrape, vector2);
         }
@@ -630,7 +659,7 @@ namespace Celeste
 
       public override void Render()
       {
-        Draw.Rect((float) ((double) this.Parent.X + this.Parent.Shake.X - 1.0), (float) ((double) this.Parent.Y + this.Parent.Shake.Y - 1.0), this.Parent.Width + 2f, this.Parent.Height + 2f, Color.get_Black());
+        Draw.Rect((float) ((double) this.Parent.X + (double) this.Parent.Shake.X - 1.0), (float) ((double) this.Parent.Y + (double) this.Parent.Shake.Y - 1.0), this.Parent.Width + 2f, this.Parent.Height + 2f, Color.Black);
       }
     }
 
@@ -652,19 +681,19 @@ namespace Celeste
       private float spin;
 
       public Debris()
-        : base(Vector2.get_Zero())
+        : base(Vector2.Zero)
       {
         this.Tag = (int) Tags.TransitionUpdate;
         this.Collider = (Collider) new Hitbox(4f, 4f, -2f, -2f);
         this.Add((Component) (this.sprite = new Monocle.Image(Calc.Random.Choose<MTexture>(GFX.Game.GetAtlasSubtextures("objects/moveblock/debris")))));
         this.sprite.CenterOrigin();
         this.sprite.FlipX = Calc.Random.Chance(0.5f);
-        this.onCollideH = (Collision) (c => this.speed.X = (__Null) (-this.speed.X * 0.5));
+        this.onCollideH = (Collision) (c => this.speed.X = (float) (-(double) this.speed.X * 0.5));
         this.onCollideV = (Collision) (c =>
         {
-          if (this.firstHit || this.speed.Y > 50.0)
-            Audio.Play("event:/game/general/debris_stone", this.Position, "debris_velocity", Calc.ClampedMap((float) this.speed.Y, 0.0f, 600f, 0.0f, 1f));
-          this.speed.Y = this.speed.Y <= 0.0 || this.speed.Y >= 40.0 ? (__Null) (-this.speed.Y * 0.25) : (__Null) 0.0;
+          if (this.firstHit || (double) this.speed.Y > 50.0)
+            Audio.Play("event:/game/general/debris_stone", this.Position, "debris_velocity", Calc.ClampedMap(this.speed.Y, 0.0f, 600f, 0.0f, 1f));
+          this.speed.Y = (double) this.speed.Y <= 0.0 || (double) this.speed.Y >= 40.0 ? (float) (-(double) this.speed.Y * 0.25) : 0.0f;
           this.firstHit = false;
         });
       }
@@ -677,15 +706,15 @@ namespace Celeste
       {
         this.Collidable = true;
         this.Position = position;
-        this.speed = Vector2.op_Subtraction(position, center).SafeNormalize(60f + Calc.Random.NextFloat(60f));
+        this.speed = (position - center).SafeNormalize(60f + Calc.Random.NextFloat(60f));
         this.home = returnTo;
-        this.sprite.Position = Vector2.get_Zero();
+        this.sprite.Position = Vector2.Zero;
         this.sprite.Rotation = Calc.Random.NextAngle();
         this.returning = false;
         this.shaking = false;
-        this.sprite.Scale.X = (__Null) 1.0;
-        this.sprite.Scale.Y = (__Null) 1.0;
-        this.sprite.Color = Color.get_White();
+        this.sprite.Scale.X = 1f;
+        this.sprite.Scale.Y = 1f;
+        this.sprite.Color = Color.White;
         this.alpha = 1f;
         this.firstHit = false;
         this.spin = Calc.Random.Range(3.490659f, 10.47198f) * (float) Calc.Random.Choose<int>(1, -1);
@@ -699,18 +728,11 @@ namespace Celeste
         {
           if (this.Collidable)
           {
-            this.speed.X = (__Null) (double) Calc.Approach((float) this.speed.X, 0.0f, Engine.DeltaTime * 100f);
+            this.speed.X = Calc.Approach(this.speed.X, 0.0f, Engine.DeltaTime * 100f);
             if (!this.OnGround(1))
-            {
-              ref __Null local = ref this.speed.Y;
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              ^(float&) ref local = ^(float&) ref local + 400f * Engine.DeltaTime;
-            }
-            this.MoveH((float) this.speed.X * Engine.DeltaTime, this.onCollideH, (Solid) null);
-            this.MoveV((float) this.speed.Y * Engine.DeltaTime, this.onCollideV, (Solid) null);
+              this.speed.Y += 400f * Engine.DeltaTime;
+            this.MoveH(this.speed.X * Engine.DeltaTime, this.onCollideH, (Solid) null);
+            this.MoveV(this.speed.Y * Engine.DeltaTime, this.onCollideV, (Solid) null);
           }
           if (this.shaking && this.Scene.OnInterval(0.05f))
           {
@@ -722,14 +744,14 @@ namespace Celeste
         {
           this.Position = this.returnCurve.GetPoint(Ease.CubeOut(this.returnEase));
           this.returnEase = Calc.Approach(this.returnEase, 1f, Engine.DeltaTime / this.returnDuration);
-          this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) this.returnEase * 0.5));
+          this.sprite.Scale = Vector2.One * (float) (1.0 + (double) this.returnEase * 0.5);
         }
         if ((this.Scene as Level).Transitioning)
         {
           this.alpha = Calc.Approach(this.alpha, 0.0f, Engine.DeltaTime * 4f);
-          this.sprite.Color = Color.op_Multiply(Color.get_White(), this.alpha);
+          this.sprite.Color = Color.White * this.alpha;
         }
-        this.sprite.Rotation += this.spin * Calc.ClampedMap(Math.Abs((float) this.speed.Y), 50f, 150f, 0.0f, 1f) * Engine.DeltaTime;
+        this.sprite.Rotation += this.spin * Calc.ClampedMap(Math.Abs(this.speed.Y), 50f, 150f, 0.0f, 1f) * Engine.DeltaTime;
       }
 
       public void StopMoving()
@@ -759,9 +781,10 @@ namespace Celeste
         this.returning = true;
         this.returnEase = 0.0f;
         this.returnDuration = duration;
-        Vector2 vector2 = Vector2.op_Subtraction(this.home, this.Position).SafeNormalize();
-        this.returnCurve = new SimpleCurve(this.Position, this.home, Vector2.op_Addition(Vector2.op_Division(Vector2.op_Addition(this.Position, this.home), 2f), Vector2.op_Multiply(Vector2.op_Multiply(new Vector2((float) vector2.Y, (float) -vector2.X), Calc.Random.NextFloat(16f) + 16f), (float) Calc.Random.Facing())));
+        Vector2 vector2 = (this.home - this.Position).SafeNormalize();
+        this.returnCurve = new SimpleCurve(this.Position, this.home, (this.Position + this.home) / 2f + new Vector2(vector2.Y, -vector2.X) * (Calc.Random.NextFloat(16f) + 16f) * (float) Calc.Random.Facing());
       }
     }
   }
 }
+

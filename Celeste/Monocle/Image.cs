@@ -49,30 +49,31 @@ namespace Monocle
 
     public Image SetOrigin(float x, float y)
     {
-      this.Origin.X = (__Null) (double) x;
-      this.Origin.Y = (__Null) (double) y;
+      this.Origin.X = x;
+      this.Origin.Y = y;
       return this;
     }
 
     public Image CenterOrigin()
     {
-      this.Origin.X = (__Null) ((double) this.Width / 2.0);
-      this.Origin.Y = (__Null) ((double) this.Height / 2.0);
+      this.Origin.X = this.Width / 2f;
+      this.Origin.Y = this.Height / 2f;
       return this;
     }
 
     public Image JustifyOrigin(Vector2 at)
     {
-      this.Origin.X = (__Null) ((double) this.Width * at.X);
-      this.Origin.Y = (__Null) ((double) this.Height * at.Y);
+      this.Origin.X = this.Width * at.X;
+      this.Origin.Y = this.Height * at.Y;
       return this;
     }
 
     public Image JustifyOrigin(float x, float y)
     {
-      this.Origin.X = (__Null) ((double) this.Width * (double) x);
-      this.Origin.Y = (__Null) ((double) this.Height * (double) y);
+      this.Origin.X = this.Width * x;
+      this.Origin.Y = this.Height * y;
       return this;
     }
   }
 }
+

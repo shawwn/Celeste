@@ -16,18 +16,8 @@ namespace Celeste
       : base(data, offset)
     {
       this.CameraOffset = new Vector2(data.Float("cameraX", 0.0f), data.Float("cameraY", 0.0f));
-      ref __Null local1 = ref this.CameraOffset.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local1 = ^(float&) ref local1 * 48f;
-      ref __Null local2 = ref this.CameraOffset.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 * 32f;
+      this.CameraOffset.X *= 48f;
+      this.CameraOffset.Y *= 32f;
     }
 
     public override void OnEnter(Player player)
@@ -36,3 +26,4 @@ namespace Celeste
     }
   }
 }
+

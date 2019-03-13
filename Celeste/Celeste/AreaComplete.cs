@@ -30,13 +30,12 @@ namespace Celeste
     public AreaComplete(Session session, XmlElement xml, Atlas atlas, HiresSnow snow)
     {
       this.Session = session;
-      this.version = Celeste.Celeste.Instance.Version.ToString();
+      this.version = Celeste.Instance.Version.ToString();
       if (session.Area.ID != 7)
       {
         string text = Dialog.Clean("areacomplete_" + (object) session.Area.Mode + (session.FullClear ? (object) "_fullclear" : (object) ""), (Language) null);
-        Vector2 origin;
-        ((Vector2) ref origin).\u002Ector(960f, 200f);
-        float scale = Math.Min((float) (1600.0 / ActiveFont.Measure(text).X), 3f);
+        Vector2 origin = new Vector2(960f, 200f);
+        float scale = Math.Min(1600f / ActiveFont.Measure(text).X, 3f);
         this.title = new AreaCompleteTitle(origin, text, scale);
       }
       this.Add((Monocle.Renderer) (this.complete = new CompleteRenderer(xml, atlas, 1f, (Action) (() => this.finishedSlide = true))));
@@ -62,15 +61,9 @@ namespace Celeste
       else if (area.ID == 5)
         Achievements.Register(Achievement.CH5);
       else if (area.ID == 6)
-      {
         Achievements.Register(Achievement.CH6);
-      }
-      else
-      {
-        if (area.ID != 7)
-          return;
+      else if (area.ID == 7)
         Achievements.Register(Achievement.CH7);
-      }
     }
 
     public override void End()
@@ -82,7 +75,7 @@ namespace Celeste
     public override void Update()
     {
       base.Update();
-      if (Celeste.Input.MenuConfirm.Pressed && this.finishedSlide && this.canConfirm)
+      if (Input.MenuConfirm.Pressed && this.finishedSlide && this.canConfirm)
       {
         this.canConfirm = false;
         if (this.Session.Area.ID == 7 && this.Session.Area.Mode == AreaMode.Normal)
@@ -114,24 +107,22 @@ namespace Celeste
         }
       }
       this.snow.Alpha = Calc.Approach(this.snow.Alpha, 0.0f, Engine.DeltaTime * 0.5f);
-      this.snow.Direction.Y = (__Null) (double) Calc.Approach((float) this.snow.Direction.Y, 1f, Engine.DeltaTime * 24f);
+      this.snow.Direction.Y = Calc.Approach(this.snow.Direction.Y, 1f, Engine.DeltaTime * 24f);
       this.speedrunTimerDelay -= Engine.DeltaTime;
       if ((double) this.speedrunTimerDelay <= 0.0)
         this.speedrunTimerEase = Calc.Approach(this.speedrunTimerEase, 1f, Engine.DeltaTime * 2f);
       if (this.title != null)
         this.title.Update();
-      if (Celeste.Celeste.PlayMode != Celeste.Celeste.PlayModes.Debug)
+      if (Celeste.PlayMode != Celeste.PlayModes.Debug)
         return;
-      if (MInput.Keyboard.Pressed((Keys) 113))
+      if (MInput.Keyboard.Pressed(Keys.F2))
       {
-        Celeste.Celeste.ReloadAssets(false, true, false, new AreaKey?());
+        Celeste.ReloadAssets(false, true, false, new AreaKey?());
         Engine.Scene = (Scene) new LevelExit(LevelExit.Mode.Completed, this.Session, (HiresSnow) null);
       }
-      else
+      else if (MInput.Keyboard.Pressed(Keys.F3))
       {
-        if (!MInput.Keyboard.Pressed((Keys) 114))
-          return;
-        Celeste.Celeste.ReloadAssets(false, true, true, new AreaKey?());
+        Celeste.ReloadAssets(false, true, true, new AreaKey?());
         Engine.Scene = (Scene) new LevelExit(LevelExit.Mode.Completed, this.Session, (HiresSnow) null);
       }
     }
@@ -139,25 +130,19 @@ namespace Celeste
     private void RenderUI()
     {
       this.Entities.Render();
-      if ((double) this.speedrunTimerEase > 0.0 && Settings.Instance.SpeedrunClock != SpeedrunType.Off)
+      if ((double) this.speedrunTimerEase > 0.0 && (uint) Settings.Instance.SpeedrunClock > 0U)
       {
-        Vector2 position;
-        ((Vector2) ref position).\u002Ector((float) (80.0 - 300.0 * (1.0 - (double) Ease.CubeOut(this.speedrunTimerEase))), 1000f);
+        Vector2 position = new Vector2((float) (80.0 - 300.0 * (1.0 - (double) Ease.CubeOut(this.speedrunTimerEase))), 1000f);
         if (Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
         {
           SpeedrunTimerDisplay.DrawTime(position, this.speedrunTimerChapterString, 1f, true, false, false, 1f);
         }
         else
         {
-          ref __Null local = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local - 16f;
+          position.Y -= 16f;
           SpeedrunTimerDisplay.DrawTime(position, this.speedrunTimerFileString, 1f, true, false, false, 1f);
-          ActiveFont.DrawOutline(this.chapterSpeedrunText, Vector2.op_Addition(position, new Vector2(0.0f, 40f)), new Vector2(0.0f, 1f), Vector2.op_Multiply(Vector2.get_One(), 0.6f), Color.get_White(), 2f, Color.get_Black());
-          SpeedrunTimerDisplay.DrawTime(Vector2.op_Addition(position, new Vector2((float) (ActiveFont.Measure(this.chapterSpeedrunText).X * 0.600000023841858 + 8.0), 40f)), this.speedrunTimerChapterString, 0.6f, true, false, false, 1f);
+          ActiveFont.DrawOutline(this.chapterSpeedrunText, position + new Vector2(0.0f, 40f), new Vector2(0.0f, 1f), Vector2.One * 0.6f, Color.White, 2f, Color.Black);
+          SpeedrunTimerDisplay.DrawTime(position + new Vector2((float) ((double) ActiveFont.Measure(this.chapterSpeedrunText).X * 0.600000023841858 + 8.0), 40f), this.speedrunTimerChapterString, 0.6f, true, false, false, 1f);
         }
         AreaComplete.VersionNumberAndVariants(this.version, this.speedrunTimerEase, 1f);
       }
@@ -168,25 +153,17 @@ namespace Celeste
 
     public static void VersionNumberAndVariants(string version, float ease, float alpha)
     {
-      Vector2 position1;
-      ((Vector2) ref position1).\u002Ector((float) (1820.0 + 300.0 * (1.0 - (double) Ease.CubeOut(ease))), 1020f);
+      Vector2 position = new Vector2((float) (1820.0 + 300.0 * (1.0 - (double) Ease.CubeOut(ease))), 1020f);
       if (SaveData.Instance.AssistMode || SaveData.Instance.VariantMode)
       {
         MTexture mtexture = GFX.Gui[SaveData.Instance.AssistMode ? "cs_assistmode" : "cs_variantmode"];
-        ref __Null local = ref position1.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local - 32f;
-        Vector2 position2 = Vector2.op_Addition(position1, new Vector2(0.0f, -8f));
-        Vector2 justify = new Vector2(0.5f, 1f);
-        Color white = Color.get_White();
-        mtexture.DrawJustified(position2, justify, white, 0.6f);
-        ActiveFont.DrawOutline(version, position1, new Vector2(0.5f, 0.0f), Vector2.op_Multiply(Vector2.get_One(), 0.5f), Color.get_White(), 2f, Color.get_Black());
+        position.Y -= 32f;
+        mtexture.DrawJustified(position + new Vector2(0.0f, -8f), new Vector2(0.5f, 1f), Color.White, 0.6f);
+        ActiveFont.DrawOutline(version, position, new Vector2(0.5f, 0.0f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
       }
       else
-        ActiveFont.DrawOutline(version, position1, new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 0.5f), Color.get_White(), 2f, Color.get_Black());
+        ActiveFont.DrawOutline(version, position, new Vector2(0.5f, 0.5f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
     }
   }
 }
+

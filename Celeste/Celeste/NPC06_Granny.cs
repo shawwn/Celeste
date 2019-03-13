@@ -12,14 +12,14 @@ namespace Celeste
 {
   public class NPC06_Granny : NPC
   {
+    private int cutsceneIndex = 0;
     public Hahaha Hahaha;
-    private int cutsceneIndex;
 
     public NPC06_Granny(EntityData data, Vector2 position)
-      : base(Vector2.op_Addition(data.Position, position))
+      : base(data.Position + position)
     {
       this.Add((Component) (this.Sprite = GFX.SpriteBank.Create("granny")));
-      this.Sprite.Scale.X = (__Null) -1.0;
+      this.Sprite.Scale.X = -1f;
       this.Sprite.Play("idle", false, false);
       this.Add((Component) new GrannyLaughSfx(this.Sprite));
     }
@@ -27,7 +27,7 @@ namespace Celeste
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      scene.Add((Entity) (this.Hahaha = new Hahaha(Vector2.op_Addition(this.Position, new Vector2(8f, -4f)), "", false, new Vector2?())));
+      scene.Add((Entity) (this.Hahaha = new Hahaha(this.Position + new Vector2(8f, -4f), "", false, new Vector2?())));
       this.Hahaha.Enabled = false;
       while (this.Session.GetFlag("granny_" + (object) this.cutsceneIndex))
         ++this.cutsceneIndex;
@@ -55,3 +55,4 @@ namespace Celeste
     }
   }
 }
+

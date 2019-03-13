@@ -15,7 +15,7 @@ namespace Celeste
   public class GlassBlock : Solid
   {
     private List<GlassBlock.Line> lines = new List<GlassBlock.Line>();
-    private Color lineColor = Color.get_White();
+    private Color lineColor = Color.White;
     private bool sinks;
     private float startY;
 
@@ -31,7 +31,7 @@ namespace Celeste
     }
 
     public GlassBlock(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height, data.Bool(nameof (sinks), false))
+      : this(data.Position + offset, (float) data.Width, (float) data.Height, data.Bool(nameof (sinks), false))
     {
     }
 
@@ -53,20 +53,19 @@ namespace Celeste
 
     private void AddSide(Vector2 start, Vector2 normal, int tiles)
     {
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector((float) -normal.Y, (float) normal.X);
+      Vector2 vector2 = new Vector2(-normal.Y, normal.X);
       for (int index = 0; index < tiles; ++index)
       {
-        if (this.Open(Vector2.op_Addition(Vector2.op_Addition(start, Vector2.op_Multiply(vector2, (float) index)), normal)))
+        if (this.Open(start + vector2 * (float) index + normal))
         {
-          Vector2 a = Vector2.op_Addition(Vector2.op_Subtraction(Vector2.op_Addition(Vector2.op_Multiply(Vector2.op_Addition(start, Vector2.op_Multiply(vector2, (float) index)), 8f), new Vector2(4f)), Vector2.op_Multiply(vector2, 4f)), Vector2.op_Multiply(normal, 4f));
-          if (!this.Open(Vector2.op_Addition(start, Vector2.op_Multiply(vector2, (float) (index - 1)))))
-            a = Vector2.op_Subtraction(a, vector2);
-          while (index < tiles && this.Open(Vector2.op_Addition(Vector2.op_Addition(start, Vector2.op_Multiply(vector2, (float) index)), normal)))
+          Vector2 a = (start + vector2 * (float) index) * 8f + new Vector2(4f) - vector2 * 4f + normal * 4f;
+          if (!this.Open(start + vector2 * (float) (index - 1)))
+            a -= vector2;
+          while (index < tiles && this.Open(start + vector2 * (float) index + normal))
             ++index;
-          Vector2 b = Vector2.op_Addition(Vector2.op_Subtraction(Vector2.op_Addition(Vector2.op_Multiply(Vector2.op_Addition(start, Vector2.op_Multiply(vector2, (float) index)), 8f), new Vector2(4f)), Vector2.op_Multiply(vector2, 4f)), Vector2.op_Multiply(normal, 4f));
-          if (!this.Open(Vector2.op_Addition(start, Vector2.op_Multiply(vector2, (float) index))))
-            b = Vector2.op_Addition(b, vector2);
+          Vector2 b = (start + vector2 * (float) index) * 8f + new Vector2(4f) - vector2 * 4f + normal * 4f;
+          if (!this.Open(start + vector2 * (float) index))
+            b += vector2;
           this.lines.Add(new GlassBlock.Line(a, b));
         }
       }
@@ -74,17 +73,14 @@ namespace Celeste
 
     private bool Open(Vector2 tile)
     {
-      Vector2 point;
-      ((Vector2) ref point).\u002Ector((float) ((double) this.X + tile.X * 8.0 + 4.0), (float) ((double) this.Y + tile.Y * 8.0 + 4.0));
-      if (!this.Scene.CollideCheck<SolidTiles>(point))
-        return !this.Scene.CollideCheck<GlassBlock>(point);
-      return false;
+      Vector2 point = new Vector2((float) ((double) this.X + (double) tile.X * 8.0 + 4.0), (float) ((double) this.Y + (double) tile.Y * 8.0 + 4.0));
+      return !this.Scene.CollideCheck<SolidTiles>(point) && !this.Scene.CollideCheck<GlassBlock>(point);
     }
 
     public override void Render()
     {
       foreach (GlassBlock.Line line in this.lines)
-        Draw.Line(Vector2.op_Addition(this.Position, line.A), Vector2.op_Addition(this.Position, line.B), this.lineColor);
+        Draw.Line(this.Position + line.A, this.Position + line.B, this.lineColor);
     }
 
     private struct Line
@@ -100,3 +96,4 @@ namespace Celeste
     }
   }
 }
+

@@ -41,9 +41,7 @@ namespace Celeste
     {
       get
       {
-        if (!this.follower.HasLeader)
-          return this.finished;
-        return true;
+        return this.follower.HasLeader || this.finished;
       }
     }
 
@@ -67,15 +65,15 @@ namespace Celeste
           this.Depth = -1000000;
           this.Collider = (Collider) new Hitbox(24f, 24f, -12f, -12f);
           this.attached = p;
-          this.start = Vector2.op_Subtraction(this.Position, p.Position);
+          this.start = this.Position - p.Position;
         })
       });
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
-      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + 0.200000002980232 * (double) v))), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.One * (float) (1.0 + 0.200000002980232 * (double) v)), false, false)));
       this.Add((Component) (this.sine = new SineWave(0.5f).Randomize()));
       this.Add((Component) (this.shaker = new Shaker(false, (Action<Vector2>) null)));
       this.Add((Component) (this.bloom = new BloomPoint(1f, 12f)));
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 16, 24)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 16, 24)));
       this.Add((Component) (this.lightTween = this.light.CreatePulseTween()));
     }
 
@@ -87,7 +85,7 @@ namespace Celeste
       this.sprite.Position = new Vector2(this.sine.Value * 2f, this.sine.ValueOverTwo * 1f);
       this.Add((Component) this.sprite);
       if (this.ghost)
-        this.sprite.Color = Color.op_Multiply(Color.get_White(), 0.8f);
+        this.sprite.Color = Color.White * 0.8f;
       this.sprite.PlayOffset("idle", (float) (0.25 + (1.0 - (double) this.index / ((double) this.Scene.Tracker.CountEntities<StrawberrySeed>() + 1.0)) * 0.75), false);
       this.sprite.OnFrameChange = (Action<string>) (s =>
       {
@@ -111,7 +109,7 @@ namespace Celeste
           this.losing = true;
         if (this.losing)
         {
-          if ((double) this.loseTimer <= 0.0 || this.player.Speed.Y < 0.0)
+          if ((double) this.loseTimer <= 0.0 || (double) this.player.Speed.Y < 0.0)
           {
             this.player.Leader.LoseFollower(this.follower);
             this.losing = false;
@@ -126,7 +124,7 @@ namespace Celeste
             this.losing = false;
           }
         }
-        this.sprite.Position = Vector2.op_Addition(new Vector2(this.sine.Value * 2f, this.sine.ValueOverTwo * 1f), this.shaker.Value);
+        this.sprite.Position = new Vector2(this.sine.Value * 2f, this.sine.ValueOverTwo * 1f) + this.shaker.Value;
       }
       else
         this.light.Alpha = Calc.Approach(this.light.Alpha, 0.0f, Engine.DeltaTime * 4f);
@@ -166,28 +164,27 @@ namespace Celeste
 
     private IEnumerator ReturnRoutine()
     {
-      StrawberrySeed strawberrySeed = this;
-      Audio.Play("event:/game/general/seed_poof", strawberrySeed.Position);
-      strawberrySeed.Collidable = false;
-      strawberrySeed.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), 2f);
+      Audio.Play("event:/game/general/seed_poof", this.Position);
+      this.Collidable = false;
+      this.sprite.Scale = Vector2.One * 2f;
       yield return (object) 0.05f;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      for (int index = 0; index < 6; ++index)
+      for (int i = 0; i < 6; ++i)
       {
-        float num = Calc.Random.NextFloat(6.283185f);
-        strawberrySeed.level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, Vector2.op_Addition(strawberrySeed.Position, Calc.AngleToVector(num, 4f)), Vector2.get_Zero(), num);
+        float dir = Calc.Random.NextFloat(6.283185f);
+        this.level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, this.Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
       }
-      strawberrySeed.Visible = false;
-      yield return (object) (float) (0.300000011920929 + (double) strawberrySeed.index * 0.100000001490116);
-      Audio.Play("event:/game/general/seed_reappear", strawberrySeed.Position, "count", (float) strawberrySeed.index);
-      strawberrySeed.Position = strawberrySeed.start;
-      if (strawberrySeed.attached != null)
-        strawberrySeed.Position = Vector2.op_Addition(strawberrySeed.Position, strawberrySeed.attached.Position);
-      strawberrySeed.shaker.ShakeFor(0.4f, false);
-      strawberrySeed.sprite.Scale = Vector2.get_One();
-      strawberrySeed.Visible = true;
-      strawberrySeed.Collidable = true;
-      strawberrySeed.level.Displacement.AddBurst(strawberrySeed.Position, 0.2f, 8f, 28f, 0.2f, (Ease.Easer) null, (Ease.Easer) null);
+      this.Visible = false;
+      yield return (object) (float) (0.300000011920929 + (double) this.index * 0.100000001490116);
+      Audio.Play("event:/game/general/seed_reappear", this.Position, "count", (float) this.index);
+      this.Position = this.start;
+      if (this.attached != null)
+        this.Position = this.Position + this.attached.Position;
+      this.shaker.ShakeFor(0.4f, false);
+      this.sprite.Scale = Vector2.One;
+      this.Visible = true;
+      this.Collidable = true;
+      this.level.Displacement.AddBurst(this.Position, 0.2f, 8f, 28f, 0.2f, (Ease.Easer) null, (Ease.Easer) null);
     }
 
     public void OnAllCollected()
@@ -212,7 +209,7 @@ namespace Celeste
       tween1.OnUpdate = (Action<Tween>) (t => spinLerp = t.Eased);
       this.Add((Component) tween1);
       Tween tween2 = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, time, true);
-      tween2.OnUpdate = (Action<Tween>) (t => this.Position = Vector2.Lerp(start, Vector2.op_Addition(Vector2.Lerp(averagePos, centerPos, spinLerp), Calc.AngleToVector(1.570796f + angleOffset - MathHelper.Lerp(0.0f, 32.20132f, t.Eased), 25f)), spinLerp));
+      tween2.OnUpdate = (Action<Tween>) (t => this.Position = Vector2.Lerp(start, Vector2.Lerp(averagePos, centerPos, spinLerp) + Calc.AngleToVector(1.570796f + angleOffset - MathHelper.Lerp(0.0f, 32.20132f, t.Eased), 25f), spinLerp));
       this.Add((Component) tween2);
     }
 
@@ -221,14 +218,14 @@ namespace Celeste
       Vector2 position = this.Position;
       float startAngle = Calc.Angle(centerPos, position);
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.BigBackIn, time, true);
-      tween.OnUpdate = (Action<Tween>) (t => this.Position = Vector2.op_Addition(centerPos, Calc.AngleToVector(MathHelper.Lerp(startAngle, startAngle - 6.283185f, Ease.CubeIn(t.Percent)), MathHelper.Lerp(25f, 0.0f, t.Eased))));
+      tween.OnUpdate = (Action<Tween>) (t => this.Position = centerPos + Calc.AngleToVector(MathHelper.Lerp(startAngle, startAngle - 6.283185f, Ease.CubeIn(t.Percent)), MathHelper.Lerp(25f, 0.0f, t.Eased)));
       tween.OnComplete = (Action<Tween>) (t =>
       {
         this.Visible = false;
         for (int index = 0; index < 6; ++index)
         {
           float num = Calc.Random.NextFloat(6.283185f);
-          particleSystem.Emit(StrawberrySeed.P_Burst, 1, Vector2.op_Addition(this.Position, Calc.AngleToVector(num, 4f)), Vector2.get_Zero(), num);
+          particleSystem.Emit(StrawberrySeed.P_Burst, 1, this.Position + Calc.AngleToVector(num, 4f), Vector2.Zero, num);
         }
         this.RemoveSelf();
       });
@@ -236,3 +233,4 @@ namespace Celeste
     }
   }
 }
+

@@ -7,7 +7,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
-using System.Collections.Generic;
 
 namespace Celeste
 {
@@ -23,65 +22,54 @@ namespace Celeste
       this.Color = color;
       for (int index1 = 0; index1 < 24; ++index1)
       {
-        float num1 = (float) (index1 - 1) / 24f;
-        float num2 = (float) index1 / 24f;
-        Vector2 vector1 = Calc.AngleToVector(num1 * 6.283185f, distance);
-        Vector2 vector2 = Calc.AngleToVector(num2 * 6.283185f, distance);
+        float x1 = (float) (index1 - 1) / 24f;
+        float x2 = (float) index1 / 24f;
+        Vector2 vector1 = Calc.AngleToVector(x1 * 6.283185f, distance);
+        Vector2 vector2 = Calc.AngleToVector(x2 * 6.283185f, distance);
         int index2 = index1 * 6;
-        this.Verts[index2].Color = (__Null) color;
-        this.Verts[index2].TextureCoordinate = (__Null) new Vector2(num1, 0.01f);
-        this.Verts[index2].Position = (__Null) new Vector3((float) vector1.X, top, (float) vector1.Y);
-        this.Verts[index2 + 1].Color = (__Null) color;
-        this.Verts[index2 + 1].TextureCoordinate = (__Null) new Vector2(num2, 0.01f);
-        this.Verts[index2 + 1].Position = (__Null) new Vector3((float) vector2.X, top, (float) vector2.Y);
-        this.Verts[index2 + 2].Color = (__Null) color;
-        this.Verts[index2 + 2].TextureCoordinate = (__Null) new Vector2(num2, 1f);
-        this.Verts[index2 + 2].Position = (__Null) new Vector3((float) vector2.X, bottom, (float) vector2.Y);
-        this.Verts[index2 + 3].Color = (__Null) color;
-        this.Verts[index2 + 3].TextureCoordinate = (__Null) new Vector2(num1, 0.01f);
-        this.Verts[index2 + 3].Position = (__Null) new Vector3((float) vector1.X, top, (float) vector1.Y);
-        this.Verts[index2 + 4].Color = (__Null) color;
-        this.Verts[index2 + 4].TextureCoordinate = (__Null) new Vector2(num2, 1f);
-        this.Verts[index2 + 4].Position = (__Null) new Vector3((float) vector2.X, bottom, (float) vector2.Y);
-        this.Verts[index2 + 5].Color = (__Null) color;
-        this.Verts[index2 + 5].TextureCoordinate = (__Null) new Vector2(num1, 1f);
-        this.Verts[index2 + 5].Position = (__Null) new Vector3((float) vector1.X, bottom, (float) vector1.Y);
+        this.Verts[index2].Color = color;
+        this.Verts[index2].TextureCoordinate = new Vector2(x1, 0.01f);
+        this.Verts[index2].Position = new Vector3(vector1.X, top, vector1.Y);
+        this.Verts[index2 + 1].Color = color;
+        this.Verts[index2 + 1].TextureCoordinate = new Vector2(x2, 0.01f);
+        this.Verts[index2 + 1].Position = new Vector3(vector2.X, top, vector2.Y);
+        this.Verts[index2 + 2].Color = color;
+        this.Verts[index2 + 2].TextureCoordinate = new Vector2(x2, 1f);
+        this.Verts[index2 + 2].Position = new Vector3(vector2.X, bottom, vector2.Y);
+        this.Verts[index2 + 3].Color = color;
+        this.Verts[index2 + 3].TextureCoordinate = new Vector2(x1, 0.01f);
+        this.Verts[index2 + 3].Position = new Vector3(vector1.X, top, vector1.Y);
+        this.Verts[index2 + 4].Color = color;
+        this.Verts[index2 + 4].TextureCoordinate = new Vector2(x2, 1f);
+        this.Verts[index2 + 4].Position = new Vector3(vector2.X, bottom, vector2.Y);
+        this.Verts[index2 + 5].Color = color;
+        this.Verts[index2 + 5].TextureCoordinate = new Vector2(x1, 1f);
+        this.Verts[index2 + 5].Position = new Vector3(vector1.X, bottom, vector1.Y);
       }
     }
 
     public void Rotate(float amount)
     {
       for (int index = 0; index < this.Verts.Length; ++index)
-      {
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ref __Null local = ref (^(Vector2&) ref this.Verts[index].TextureCoordinate).X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + amount;
-      }
+        this.Verts[index].TextureCoordinate.X += amount;
     }
 
     public void Draw(Matrix matrix, RasterizerState rstate = null)
     {
-      Engine.Graphics.get_GraphicsDevice().set_DepthStencilState((DepthStencilState) DepthStencilState.Default);
-      Engine.Graphics.get_GraphicsDevice().set_RasterizerState(rstate == null ? MountainModel.CullCCRasterizer : rstate);
-      Engine.Graphics.get_GraphicsDevice().get_SamplerStates().set_Item(0, (SamplerState) SamplerState.LinearWrap);
-      Engine.Graphics.get_GraphicsDevice().set_BlendState((BlendState) BlendState.AlphaBlend);
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(0, (Microsoft.Xna.Framework.Graphics.Texture) this.Texture.Texture);
+      Engine.Graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+      Engine.Graphics.GraphicsDevice.RasterizerState = rstate == null ? MountainModel.CullCCRasterizer : rstate;
+      Engine.Graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+      Engine.Graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+      Engine.Graphics.GraphicsDevice.Textures[0] = (Microsoft.Xna.Framework.Graphics.Texture) this.Texture.Texture;
       for (int index = 0; index < this.Verts.Length; ++index)
-        this.Verts[index].Color = (__Null) this.Color;
-      GFX.FxTexture.get_Parameters().get_Item("World").SetValue(matrix);
-      using (List<EffectPass>.Enumerator enumerator = GFX.FxTexture.get_CurrentTechnique().get_Passes().GetEnumerator())
+        this.Verts[index].Color = this.Color;
+      GFX.FxTexture.Parameters["World"].SetValue(matrix);
+      foreach (EffectPass pass in GFX.FxTexture.CurrentTechnique.Passes)
       {
-        while (enumerator.MoveNext())
-        {
-          enumerator.Current.Apply();
-          Engine.Graphics.get_GraphicsDevice().DrawUserPrimitives<VertexPositionColorTexture>((PrimitiveType) 0, (M0[]) this.Verts, 0, this.Verts.Length / 3);
-        }
+        pass.Apply();
+        Engine.Graphics.GraphicsDevice.DrawUserPrimitives<VertexPositionColorTexture>(PrimitiveType.TriangleList, this.Verts, 0, this.Verts.Length / 3);
       }
     }
   }
 }
+

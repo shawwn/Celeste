@@ -15,9 +15,9 @@ namespace Celeste
   [Tracked(false)]
   public class Water : Entity
   {
-    public static readonly Color FillColor = Color.op_Multiply(Color.get_LightSkyBlue(), 0.3f);
-    public static readonly Color SurfaceColor = Color.op_Multiply(Color.get_LightSkyBlue(), 0.8f);
-    public static readonly Color RayTopColor = Color.op_Multiply(Color.get_LightSkyBlue(), 0.6f);
+    public static readonly Color FillColor = Color.LightSkyBlue * 0.3f;
+    public static readonly Color SurfaceColor = Color.LightSkyBlue * 0.8f;
+    public static readonly Color RayTopColor = Color.LightSkyBlue * 0.6f;
     public static readonly Vector2 RayAngle = new Vector2(-4f, 8f).SafeNormalize();
     public List<Water.Surface> Surfaces = new List<Water.Surface>();
     private HashSet<WaterInteraction> contains = new HashSet<WaterInteraction>();
@@ -29,7 +29,7 @@ namespace Celeste
     private Water.Tension playerBottomTension;
 
     public Water(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), true, data.Bool("hasBottom", false), (float) data.Width, (float) data.Height)
+      : this(data.Position + offset, true, data.Bool("hasBottom", false), (float) data.Width, (float) data.Height)
     {
     }
 
@@ -49,31 +49,16 @@ namespace Celeste
       int num = 8;
       if (topSurface)
       {
-        this.TopSurface = new Water.Surface(Vector2.op_Addition(this.Position, new Vector2(width / 2f, (float) num)), new Vector2(0.0f, -1f), width, height);
+        this.TopSurface = new Water.Surface(this.Position + new Vector2(width / 2f, (float) num), new Vector2(0.0f, -1f), width, height);
         this.Surfaces.Add(this.TopSurface);
-        ref __Null local1 = ref this.fill.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(int&) ref local1 = ^(int&) ref local1 + num;
-        ref __Null local2 = ref this.fill.Height;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(int&) ref local2 = ^(int&) ref local2 - num;
+        this.fill.Y += num;
+        this.fill.Height -= num;
       }
       if (bottomSurface)
       {
-        this.BottomSurface = new Water.Surface(Vector2.op_Addition(this.Position, new Vector2(width / 2f, height - (float) num)), new Vector2(0.0f, 1f), width, height);
+        this.BottomSurface = new Water.Surface(this.Position + new Vector2(width / 2f, height - (float) num), new Vector2(0.0f, 1f), width, height);
         this.Surfaces.Add(this.BottomSurface);
-        ref __Null local = ref this.fill.Height;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(int&) ref local = ^(int&) ref local - num;
+        this.fill.Height -= num;
       }
       this.Add((Component) new DisplacementRenderHook(new Action(this.RenderDisplacement)));
     }
@@ -102,12 +87,12 @@ namespace Celeste
         bool flag2 = this.CollideCheck(entity);
         if (flag1 != flag2)
         {
-          if (entity.Center.Y <= this.Center.Y && this.TopSurface != null)
+          if ((double) entity.Center.Y <= (double) this.Center.Y && this.TopSurface != null)
             this.TopSurface.DoRipple(entity.Center, 1f);
-          else if (entity.Center.Y > this.Center.Y && this.BottomSurface != null)
+          else if ((double) entity.Center.Y > (double) this.Center.Y && this.BottomSurface != null)
             this.BottomSurface.DoRipple(entity.Center, 1f);
           bool flag3 = component.IsDashing();
-          int num = entity.Center.Y >= this.Center.Y || this.Scene.CollideCheck<Solid>(new Rectangle((int) entity.Center.X - 4, (int) entity.Center.Y, 8, 16)) ? 0 : 1;
+          int num = (double) entity.Center.Y >= (double) this.Center.Y || this.Scene.CollideCheck<Solid>(new Rectangle((int) entity.Center.X - 4, (int) entity.Center.Y, 8, 16)) ? 0 : 1;
           if (flag1)
           {
             if (flag3)
@@ -149,8 +134,7 @@ namespace Celeste
 
     public void RenderDisplacement()
     {
-      Color color;
-      ((Color) ref color).\u002Ector(0.5f, 0.5f, 0.25f, 1f);
+      Color color = new Color(0.5f, 0.5f, 0.25f, 1f);
       int index1 = 0;
       int length1 = this.grid.GetLength(0);
       int length2 = this.grid.GetLength(1);
@@ -255,19 +239,20 @@ namespace Celeste
         this.surfaceStartIndex = (num1 + num2) * 6;
         this.mesh = new VertexPositionColor[(num1 * 2 + num2) * 6];
         for (int fillStartIndex = this.fillStartIndex; fillStartIndex < this.fillStartIndex + num1 * 6; ++fillStartIndex)
-          this.mesh[fillStartIndex].Color = (__Null) Water.FillColor;
+          this.mesh[fillStartIndex].Color = Water.FillColor;
         for (int rayStartIndex = this.rayStartIndex; rayStartIndex < this.rayStartIndex + num2 * 6; ++rayStartIndex)
-          this.mesh[rayStartIndex].Color = (__Null) Color.get_Transparent();
+          this.mesh[rayStartIndex].Color = Color.Transparent;
         for (int surfaceStartIndex = this.surfaceStartIndex; surfaceStartIndex < this.surfaceStartIndex + num1 * 6; ++surfaceStartIndex)
-          this.mesh[surfaceStartIndex].Color = (__Null) Water.SurfaceColor;
+          this.mesh[surfaceStartIndex].Color = Water.SurfaceColor;
       }
 
       public float GetPointAlong(Vector2 position)
       {
         Vector2 vector2_1 = this.Outwards.Perpendicular();
-        Vector2 lineA = Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2)));
-        Vector2 vector2_2 = Vector2.op_Subtraction(lineA, Calc.ClosestPointOnLine(lineA, Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (this.Width / 2))), position));
-        return ((Vector2) ref vector2_2).Length();
+        Vector2 lineA = this.Position + vector2_1 * (float) (-this.Width / 2);
+        Vector2 lineB = this.Position + vector2_1 * (float) (this.Width / 2);
+        Vector2 vector2_2 = Calc.ClosestPointOnLine(lineA, lineB, position);
+        return (lineA - vector2_2).Length();
       }
 
       public Water.Tension SetTension(Vector2 position, float strength)
@@ -346,23 +331,23 @@ namespace Celeste
           float surfaceHeight1 = this.GetSurfaceHeight((float) num2);
           int num3 = Math.Min(num1 + 4, this.Width);
           float surfaceHeight2 = this.GetSurfaceHeight((float) num3);
-          this.mesh[fillStartIndex].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num2))), Vector2.op_Multiply(this.Outwards, surfaceHeight1)), 0.0f);
-          this.mesh[fillStartIndex + 1].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num3))), Vector2.op_Multiply(this.Outwards, surfaceHeight2)), 0.0f);
-          this.mesh[fillStartIndex + 2].Position = (__Null) new Vector3(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num2))), 0.0f);
-          this.mesh[fillStartIndex + 3].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num3))), Vector2.op_Multiply(this.Outwards, surfaceHeight2)), 0.0f);
-          this.mesh[fillStartIndex + 4].Position = (__Null) new Vector3(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num3))), 0.0f);
-          this.mesh[fillStartIndex + 5].Position = (__Null) new Vector3(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num2))), 0.0f);
-          this.mesh[surfaceStartIndex].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num2))), Vector2.op_Multiply(this.Outwards, surfaceHeight1 + 1f)), 0.0f);
-          this.mesh[surfaceStartIndex + 1].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num3))), Vector2.op_Multiply(this.Outwards, surfaceHeight2 + 1f)), 0.0f);
-          this.mesh[surfaceStartIndex + 2].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num2))), Vector2.op_Multiply(this.Outwards, surfaceHeight1)), 0.0f);
-          this.mesh[surfaceStartIndex + 3].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num3))), Vector2.op_Multiply(this.Outwards, surfaceHeight2 + 1f)), 0.0f);
-          this.mesh[surfaceStartIndex + 4].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num3))), Vector2.op_Multiply(this.Outwards, surfaceHeight2)), 0.0f);
-          this.mesh[surfaceStartIndex + 5].Position = (__Null) new Vector3(Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) (-this.Width / 2 + num2))), Vector2.op_Multiply(this.Outwards, surfaceHeight1)), 0.0f);
+          this.mesh[fillStartIndex].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num2) + this.Outwards * surfaceHeight1, 0.0f);
+          this.mesh[fillStartIndex + 1].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num3) + this.Outwards * surfaceHeight2, 0.0f);
+          this.mesh[fillStartIndex + 2].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num2), 0.0f);
+          this.mesh[fillStartIndex + 3].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num3) + this.Outwards * surfaceHeight2, 0.0f);
+          this.mesh[fillStartIndex + 4].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num3), 0.0f);
+          this.mesh[fillStartIndex + 5].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num2), 0.0f);
+          this.mesh[surfaceStartIndex].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num2) + this.Outwards * (surfaceHeight1 + 1f), 0.0f);
+          this.mesh[surfaceStartIndex + 1].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num3) + this.Outwards * (surfaceHeight2 + 1f), 0.0f);
+          this.mesh[surfaceStartIndex + 2].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num2) + this.Outwards * surfaceHeight1, 0.0f);
+          this.mesh[surfaceStartIndex + 3].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num3) + this.Outwards * (surfaceHeight2 + 1f), 0.0f);
+          this.mesh[surfaceStartIndex + 4].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num3) + this.Outwards * surfaceHeight2, 0.0f);
+          this.mesh[surfaceStartIndex + 5].Position = new Vector3(this.Position + vector2_1 * (float) (-this.Width / 2 + num2) + this.Outwards * surfaceHeight1, 0.0f);
           num1 += 4;
           fillStartIndex += 6;
           surfaceStartIndex += 6;
         }
-        Vector2 vector2_2 = Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2_1, (float) -this.Width / 2f));
+        Vector2 vector2_2 = this.Position + vector2_1 * ((float) -this.Width / 2f);
         int rayStartIndex = this.rayStartIndex;
         foreach (Water.Ray ray in this.Rays)
         {
@@ -378,19 +363,19 @@ namespace Celeste
           float position2 = Math.Min((float) this.Width, ray.Position + ray.Width / 2f);
           float num3 = Math.Min((float) this.BodyHeight, 0.7f * ray.Length);
           float num4 = 0.3f * ray.Length;
-          Vector2 vector2_3 = Vector2.op_Addition(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, position1)), Vector2.op_Multiply(this.Outwards, this.GetSurfaceHeight(position1)));
-          Vector2 vector2_4 = Vector2.op_Addition(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, position2)), Vector2.op_Multiply(this.Outwards, this.GetSurfaceHeight(position2)));
-          Vector2 vector2_5 = Vector2.op_Subtraction(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, position2 - num4)), Vector2.op_Multiply(this.Outwards, num3));
-          Vector2 vector2_6 = Vector2.op_Subtraction(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, position1 - num4)), Vector2.op_Multiply(this.Outwards, num3));
-          this.mesh[rayStartIndex].Position = (__Null) new Vector3(vector2_3, 0.0f);
-          this.mesh[rayStartIndex].Color = (__Null) Color.op_Multiply(Water.RayTopColor, num2);
-          this.mesh[rayStartIndex + 1].Position = (__Null) new Vector3(vector2_4, 0.0f);
-          this.mesh[rayStartIndex + 1].Color = (__Null) Color.op_Multiply(Water.RayTopColor, num2);
-          this.mesh[rayStartIndex + 2].Position = (__Null) new Vector3(vector2_6, 0.0f);
-          this.mesh[rayStartIndex + 3].Position = (__Null) new Vector3(vector2_4, 0.0f);
-          this.mesh[rayStartIndex + 3].Color = (__Null) Color.op_Multiply(Water.RayTopColor, num2);
-          this.mesh[rayStartIndex + 4].Position = (__Null) new Vector3(vector2_5, 0.0f);
-          this.mesh[rayStartIndex + 5].Position = (__Null) new Vector3(vector2_6, 0.0f);
+          Vector2 vector2_3 = vector2_2 + vector2_1 * position1 + this.Outwards * this.GetSurfaceHeight(position1);
+          Vector2 vector2_4 = vector2_2 + vector2_1 * position2 + this.Outwards * this.GetSurfaceHeight(position2);
+          Vector2 vector2_5 = vector2_2 + vector2_1 * (position2 - num4) - this.Outwards * num3;
+          Vector2 vector2_6 = vector2_2 + vector2_1 * (position1 - num4) - this.Outwards * num3;
+          this.mesh[rayStartIndex].Position = new Vector3(vector2_3, 0.0f);
+          this.mesh[rayStartIndex].Color = Water.RayTopColor * num2;
+          this.mesh[rayStartIndex + 1].Position = new Vector3(vector2_4, 0.0f);
+          this.mesh[rayStartIndex + 1].Color = Water.RayTopColor * num2;
+          this.mesh[rayStartIndex + 2].Position = new Vector3(vector2_6, 0.0f);
+          this.mesh[rayStartIndex + 3].Position = new Vector3(vector2_4, 0.0f);
+          this.mesh[rayStartIndex + 3].Color = Water.RayTopColor * num2;
+          this.mesh[rayStartIndex + 4].Position = new Vector3(vector2_5, 0.0f);
+          this.mesh[rayStartIndex + 5].Position = new Vector3(vector2_6, 0.0f);
           rayStartIndex += 6;
         }
       }
@@ -428,3 +413,4 @@ namespace Celeste
     }
   }
 }
+

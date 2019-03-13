@@ -38,12 +38,12 @@ namespace Monocle
 
     public ParticleType()
     {
-      this.Color = this.Color2 = Color.get_White();
+      this.Color = this.Color2 = Color.White;
       this.ColorMode = ParticleType.ColorModes.Static;
       this.FadeMode = ParticleType.FadeModes.None;
       this.SpeedMin = this.SpeedMax = 0.0f;
       this.SpeedMultiplier = 1f;
-      this.Acceleration = Vector2.get_Zero();
+      this.Acceleration = Vector2.Zero;
       this.Friction = 0.0f;
       this.Direction = this.DirectionRange = 0.0f;
       this.LifeMin = this.LifeMax = 0.0f;
@@ -155,3 +155,4 @@ namespace Monocle
     }
   }
 }
+

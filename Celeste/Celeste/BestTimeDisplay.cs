@@ -12,8 +12,8 @@ namespace Celeste
 {
   public class BestTimeDisplay : Component
   {
-    private static readonly Color IconColor = Color.Lerp(Calc.HexToColor("7CFF70"), Color.get_Black(), 0.25f);
-    private static readonly Color FullClearColor = Color.Lerp(Calc.HexToColor("FF3D57"), Color.get_Black(), 0.25f);
+    private static readonly Color IconColor = Color.Lerp(Calc.HexToColor("7CFF70"), Color.Black, 0.25f);
+    private static readonly Color FullClearColor = Color.Lerp(Calc.HexToColor("FF3D57"), Color.Black, 0.25f);
     public Vector2 Position;
     private TimeSpan time;
     private string sTime;
@@ -87,20 +87,20 @@ namespace Celeste
     {
       if (!this.WillRender)
         return;
-      Vector2 vector2 = Vector2.op_Subtraction(this.RenderPosition, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), this.wiggler.Value), 3f));
-      Color color = Color.get_White();
+      Vector2 vector2 = this.RenderPosition - Vector2.UnitY * this.wiggler.Value * 3f;
+      Color color = Color.White;
       if ((double) this.flashTimer > 0.0 && this.Scene.BetweenRawInterval(0.05f))
         color = StrawberriesCounter.FlashColor;
       if (this.icon != null)
-        this.icon.DrawOutlineCentered(Vector2.op_Addition(vector2, new Vector2(-4f, -3f)), this.iconColor);
-      ActiveFont.DrawOutline(this.sTime, Vector2.op_Addition(vector2, new Vector2(0.0f, 4f)), new Vector2(0.5f, 0.0f), Vector2.get_One(), color, 2f, Color.get_Black());
+        this.icon.DrawOutlineCentered(vector2 + new Vector2(-4f, -3f), this.iconColor);
+      ActiveFont.DrawOutline(this.sTime, vector2 + new Vector2(0.0f, 4f), new Vector2(0.5f, 0.0f), Vector2.One, color, 2f, Color.Black);
     }
 
     public Vector2 RenderPosition
     {
       get
       {
-        return Vector2.op_Addition(this.Entity.Position, this.Position).Round();
+        return (this.Entity.Position + this.Position).Round();
       }
     }
 
@@ -120,3 +120,4 @@ namespace Celeste
     }
   }
 }
+

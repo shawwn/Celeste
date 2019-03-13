@@ -36,7 +36,7 @@ namespace Celeste
     private Sprite sprite;
 
     public FinalBossShot()
-      : base(Vector2.get_Zero())
+      : base(Vector2.Zero)
     {
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create("badeline_projectile")));
       this.Collider = (Collider) new Hitbox(4f, 4f, -2f, -2f);
@@ -80,11 +80,11 @@ namespace Celeste
 
     private void InitSpeed()
     {
-      this.speed = this.target == null ? Vector2.op_Subtraction(this.targetPt, this.Center).SafeNormalize(100f) : Vector2.op_Subtraction(this.target.Center, this.Center).SafeNormalize(100f);
+      this.speed = this.target == null ? (this.targetPt - this.Center).SafeNormalize(100f) : (this.target.Center - this.Center).SafeNormalize(100f);
       if ((double) this.angleOffset != 0.0)
         this.speed = this.speed.Rotate(this.angleOffset);
       this.perp = this.speed.Perpendicular().SafeNormalize();
-      this.particleDir = Vector2.op_UnaryNegation(this.speed).Angle();
+      this.particleDir = (-this.speed).Angle();
     }
 
     public override void Added(Scene scene)
@@ -114,19 +114,19 @@ namespace Celeste
       {
         if ((double) this.cantKillTimer > 0.0)
           this.cantKillTimer -= Engine.DeltaTime;
-        this.anchor = Vector2.op_Addition(this.anchor, Vector2.op_Multiply(this.speed, Engine.DeltaTime));
-        this.Position = Vector2.op_Addition(this.anchor, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Multiply(this.perp, this.sineMult), this.sine.Value), 3f));
+        this.anchor += this.speed * Engine.DeltaTime;
+        this.Position = this.anchor + this.perp * this.sineMult * this.sine.Value * 3f;
         this.sineMult = Calc.Approach(this.sineMult, 1f, 2f * Engine.DeltaTime);
-        if (this.dead)
-          return;
-        bool flag = this.level.IsInCamera(this.Position, 8f);
-        if (flag && !this.hasBeenInCamera)
-          this.hasBeenInCamera = true;
-        else if (!flag && this.hasBeenInCamera)
-          this.Destroy();
-        if (!this.Scene.OnInterval(0.04f))
-          return;
-        this.level.ParticlesFG.Emit(FinalBossShot.P_Trail, 1, this.Center, Vector2.op_Multiply(Vector2.get_One(), 2f), this.particleDir);
+        if (!this.dead)
+        {
+          bool flag = this.level.IsInCamera(this.Position, 8f);
+          if (flag && !this.hasBeenInCamera)
+            this.hasBeenInCamera = true;
+          else if (!flag && this.hasBeenInCamera)
+            this.Destroy();
+          if (this.Scene.OnInterval(0.04f))
+            this.level.ParticlesFG.Emit(FinalBossShot.P_Trail, 1, this.Center, Vector2.One * 2f, this.particleDir);
+        }
       }
     }
 
@@ -134,14 +134,14 @@ namespace Celeste
     {
       Color color = this.sprite.Color;
       Vector2 position = this.sprite.Position;
-      this.sprite.Color = Color.get_Black();
-      this.sprite.Position = Vector2.op_Addition(position, new Vector2(-1f, 0.0f));
+      this.sprite.Color = Color.Black;
+      this.sprite.Position = position + new Vector2(-1f, 0.0f);
       this.sprite.Render();
-      this.sprite.Position = Vector2.op_Addition(position, new Vector2(1f, 0.0f));
+      this.sprite.Position = position + new Vector2(1f, 0.0f);
       this.sprite.Render();
-      this.sprite.Position = Vector2.op_Addition(position, new Vector2(0.0f, -1f));
+      this.sprite.Position = position + new Vector2(0.0f, -1f);
       this.sprite.Render();
-      this.sprite.Position = Vector2.op_Addition(position, new Vector2(0.0f, 1f));
+      this.sprite.Position = position + new Vector2(0.0f, 1f);
       this.sprite.Render();
       this.sprite.Color = color;
       this.sprite.Position = position;
@@ -161,7 +161,7 @@ namespace Celeste
       if ((double) this.cantKillTimer > 0.0)
         this.Destroy();
       else
-        player.Die(Vector2.op_Subtraction(player.Center, this.Position).SafeNormalize(), false, true);
+        player.Die((player.Center - this.Position).SafeNormalize(), false, true);
     }
 
     public enum ShotPatterns
@@ -172,3 +172,4 @@ namespace Celeste
     }
   }
 }
+

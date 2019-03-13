@@ -1,6 +1,6 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Player
-// Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// Assembly: Celeste, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null
 // MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
 // Assembly location: M:\code\bin\Celeste\Celeste.exe
 
@@ -24,13 +24,16 @@ namespace Celeste
     public static readonly Color NormalHairColor = Calc.HexToColor("AC3232");
     public static readonly Color FlyPowerHairColor = Calc.HexToColor("F2EB6D");
     public static readonly Color UsedHairColor = Calc.HexToColor("44B7FF");
-    public static readonly Color FlashHairColor = Color.get_White();
+    public static readonly Color FlashHairColor = Color.White;
     public static readonly Color TwoDashesHairColor = Calc.HexToColor("ff6def");
     public static readonly Color NormalBadelineHairColor = BadelineOldsite.HairColor;
-    public static readonly Color UsedBadelineHairColor = Color.Lerp(BadelineOldsite.HairColor, Color.get_Black(), 0.5f);
+    public static readonly Color UsedBadelineHairColor = Color.Lerp(BadelineOldsite.HairColor, Color.Black, 0.5f);
     public static readonly Color TwoDashesBadelineHairColor = Calc.HexToColor("ff6def");
     public float Stamina = 110f;
     public bool DummyAutoAnimate = true;
+    public bool FlipInReflection = false;
+    public int StrawberryCollectIndex = 0;
+    public float StrawberryCollectResetTimer = 0.0f;
     private float wallSlideTimer = 1.2f;
     private List<Player.ChaserStateSound> activeSounds = new List<Player.ChaserStateSound>();
     private readonly Hitbox normalHitbox = new Hitbox(8f, 11f, -4f, -11f);
@@ -43,6 +46,7 @@ namespace Celeste
     private Vector2 duckingLightOffset = new Vector2(0.0f, -3f);
     private List<Entity> temp = new List<Entity>();
     private Color starFlyColor = Calc.HexToColor("ffd65c");
+    public bool DummyMoving = false;
     public bool DummyGravity = true;
     public bool DummyFriction = true;
     public bool DummyMaxspeed = true;
@@ -193,7 +197,6 @@ namespace Celeste
     public Vector2 PreviousPosition;
     public Vector2 ForceStrongWindHair;
     public Vector2? OverrideDashDirection;
-    public bool FlipInReflection;
     public bool JustRespawned;
     private Level level;
     private Collision onCollideH;
@@ -205,8 +208,6 @@ namespace Celeste
     private bool wasDucking;
     private int climbTriggerDir;
     private float idleTimer;
-    public int StrawberryCollectIndex;
-    public float StrawberryCollectResetTimer;
     private Hitbox hurtbox;
     private float jumpGraceTimer;
     public bool AutoJump;
@@ -334,7 +335,6 @@ namespace Celeste
     private SimpleCurve cassetteFlyCurve;
     private float cassetteFlyLerp;
     private Vector2 attractTo;
-    public bool DummyMoving;
     private Facings IntroWalkDirection;
     private Tween respawnTween;
 
@@ -385,17 +385,12 @@ namespace Celeste
       this.StateMachine.SetCallbacks(22, new Func<int>(this.AttractUpdate), (Func<IEnumerator>) null, new Action(this.AttractBegin), new Action(this.AttractEnd));
       this.Add((Component) this.StateMachine);
       this.Add((Component) (this.Leader = new Leader(new Vector2(0.0f, -8f))));
-      this.lastAim = Vector2.get_UnitX();
+      this.lastAim = Vector2.UnitX;
       this.Facing = Facings.Right;
       this.chaserStates = new List<Player.ChaserState>();
       this.triggersInside = new HashSet<Trigger>();
-      this.Add((Component) (this.Light = new VertexLight(this.normalLightOffset, Color.get_White(), 1f, 32, 64)));
-      this.Add((Component) new WaterInteraction((Func<bool>) (() =>
-      {
-        if (this.StateMachine.State != 2)
-          return this.StateMachine.State == 18;
-        return true;
-      })));
+      this.Add((Component) (this.Light = new VertexLight(this.normalLightOffset, Color.White, 1f, 32, 64)));
+      this.Add((Component) new WaterInteraction((Func<bool>) (() => this.StateMachine.State == 2 || this.StateMachine.State == 18)));
       this.Add((Component) new WindMover(new Action<Vector2>(this.WindMove)));
       this.Add((Component) (this.wallSlideSfx = new SoundSource()));
       this.Add((Component) (this.swimSurfaceLoopSfx = new SoundSource()));
@@ -404,15 +399,15 @@ namespace Celeste
         if (this.Scene == null || this.Dead)
           return;
         int currentAnimationFrame = this.Sprite.CurrentAnimationFrame;
-        if (anim.Equals("runSlow_carry") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("runFast") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || (anim.Equals("runSlow") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("walk") && (currentAnimationFrame == 0 || currentAnimationFrame == 6)) || (anim.Equals("runStumble") && currentAnimationFrame == 6 || anim.Equals("flip") && currentAnimationFrame == 4 || anim.Equals("runWind") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("idleC") && this.Sprite.Mode == PlayerSpriteMode.MadelineNoBackpack && (currentAnimationFrame == 3 || currentAnimationFrame == 6 || (currentAnimationFrame == 8 || currentAnimationFrame == 11))) || (anim.Equals("carryTheoWalk") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("push") && (currentAnimationFrame == 8 || currentAnimationFrame == 15)))
+        if (anim.Equals("runSlow_carry") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("runFast") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || (anim.Equals("runSlow") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("walk") && (currentAnimationFrame == 0 || currentAnimationFrame == 6)) || (anim.Equals("runStumble") && currentAnimationFrame == 6 || anim.Equals("flip") && currentAnimationFrame == 4 || anim.Equals("runWind") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("idleC") && this.Sprite.Mode == PlayerSpriteMode.MadelineNoBackpack && (currentAnimationFrame == 3 || currentAnimationFrame == 6 || (currentAnimationFrame == 8 || currentAnimationFrame == 11))) || anim.Equals("carryTheoWalk") && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim.Equals("push") && (currentAnimationFrame == 8 || currentAnimationFrame == 15))
         {
-          Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Platform>(Vector2.op_Addition(this.Position, Vector2.get_UnitY()), this.temp));
+          Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Platform>(this.Position + Vector2.UnitY, this.temp));
           if (platformByPriority != null)
             this.Play("event:/char/madeline/footstep", "surface_index", (float) platformByPriority.GetStepSoundIndex((Entity) this));
         }
         else if (anim.Equals("climbUp") && currentAnimationFrame == 5 || anim.Equals("climbDown") && currentAnimationFrame == 5)
         {
-          Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Solid>(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing)), this.temp));
+          Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Solid>(this.Center + Vector2.UnitX * (float) this.Facing, this.temp));
           if (platformByPriority != null)
             this.Play("event:/char/madeline/handhold", "surface_index", (float) platformByPriority.GetWallSoundIndex(this, (int) this.Facing));
         }
@@ -420,36 +415,26 @@ namespace Celeste
           this.Play("event:/char/madeline/campfire_stand", (string) null, 0.0f);
         else if (anim.Equals("sitDown") && currentAnimationFrame == 12)
           this.Play("event:/char/madeline/summit_sit", (string) null, 0.0f);
-        if (!anim.Equals("push") || currentAnimationFrame != 8 && currentAnimationFrame != 15)
-          return;
-        Dust.BurstFG(Vector2.op_Addition(this.Position, new Vector2((float) (-(int) this.Facing * 5), -1f)), new Vector2((float) -(int) this.Facing, -0.5f).Angle(), 1, 0.0f);
+        if (anim.Equals("push") && (currentAnimationFrame == 8 || currentAnimationFrame == 15))
+          Dust.BurstFG(this.Position + new Vector2((float) (-(int) this.Facing * 5), -1f), new Vector2((float) -(int) this.Facing, -0.5f).Angle(), 1, 0.0f);
       });
       this.Sprite.OnLastFrame = (Action<string>) (anim =>
       {
-        if (this.Scene == null || this.Dead || (!(this.Sprite.CurrentAnimationID == "idle") || this.level.InCutscene) || ((double) this.idleTimer <= 3.0 || !Calc.Random.Chance(0.2f)))
+        if (this.Scene == null || this.Dead || (!(this.Sprite.CurrentAnimationID == "idle") || this.level.InCutscene) || (double) this.idleTimer <= 3.0 || !Calc.Random.Chance(0.2f))
           return;
         string id = this.Sprite.Mode != PlayerSpriteMode.Madeline ? Player.idleNoBackpackOptions.Choose() : (this.level.CoreMode == Session.CoreModes.Hot ? Player.idleWarmOptions : Player.idleColdOptions).Choose();
-        if (string.IsNullOrEmpty(id))
-          return;
-        this.Sprite.Play(id, false, false);
-        if (this.Sprite.Mode == PlayerSpriteMode.Madeline)
+        if (!string.IsNullOrEmpty(id))
         {
-          if (id == "idleB")
+          this.Sprite.Play(id, false, false);
+          if (this.Sprite.Mode == PlayerSpriteMode.Madeline)
           {
-            this.idleSfx = this.Play("event:/char/madeline/idle_scratch", (string) null, 0.0f);
+            if (id == "idleB")
+              this.idleSfx = this.Play("event:/char/madeline/idle_scratch", (string) null, 0.0f);
+            else if (id == "idleC")
+              this.idleSfx = this.Play("event:/char/madeline/idle_sneeze", (string) null, 0.0f);
           }
-          else
-          {
-            if (!(id == "idleC"))
-              return;
-            this.idleSfx = this.Play("event:/char/madeline/idle_sneeze", (string) null, 0.0f);
-          }
-        }
-        else
-        {
-          if (!(id == "idleA"))
-            return;
-          this.idleSfx = this.Play("event:/char/madeline/idle_crackknuckles", (string) null, 0.0f);
+          else if (id == "idleA")
+            this.idleSfx = this.Play("event:/char/madeline/idle_crackknuckles", (string) null, 0.0f);
         }
       });
       this.Sprite.OnChange = (Action<string, string>) ((last, next) =>
@@ -477,10 +462,7 @@ namespace Celeste
       base.Added(scene);
       this.level = this.SceneAs<Level>();
       this.lastDashes = this.Dashes = this.MaxDashes;
-      double x1 = (double) this.X;
-      Rectangle bounds = this.level.Bounds;
-      double x2 = (double) (float) ((Rectangle) ref bounds).get_Center().X;
-      if (x1 > x2 && this.IntroType != Player.IntroTypes.None)
+      if ((double) this.X > (double) this.level.Bounds.Center.X && this.IntroType != Player.IntroTypes.None)
         this.Facing = Facings.Left;
       switch (this.IntroType)
       {
@@ -549,34 +531,29 @@ namespace Celeste
 
     public override void Render()
     {
-      if (SaveData.Instance.Assists.InvisibleMotion && this.InControl && (!this.onGround && this.StateMachine.State != 1 && this.StateMachine.State != 3 || (double) ((Vector2) ref this.Speed).LengthSquared() > 800.0))
+      if (SaveData.Instance.Assists.InvisibleMotion && this.InControl && (!this.onGround && this.StateMachine.State != 1 && this.StateMachine.State != 3 || (double) this.Speed.LengthSquared() > 800.0))
         return;
       Vector2 renderPosition = this.Sprite.RenderPosition;
       this.Sprite.RenderPosition = this.Sprite.RenderPosition.Floor();
       if (this.StateMachine.State == 14)
       {
-        DeathEffect.Draw(Vector2.op_Addition(this.Center, this.deadOffset), this.Hair.Color, this.introEase);
+        DeathEffect.Draw(this.Center + this.deadOffset, this.Hair.Color, this.introEase);
       }
       else
       {
         if (this.StateMachine.State != 19)
         {
           if (this.IsTired && this.flash)
-            this.Sprite.Color = Color.get_Red();
+            this.Sprite.Color = Color.Red;
           else
-            this.Sprite.Color = Color.get_White();
+            this.Sprite.Color = Color.White;
         }
         if (this.reflection.IsRendering && this.FlipInReflection)
         {
           this.Facing = (Facings) -(int) this.Facing;
           this.Hair.Facing = this.Facing;
         }
-        ref __Null local1 = ref this.Sprite.Scale.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 * (float) this.Facing;
+        this.Sprite.Scale.X *= (float) this.Facing;
         if (this.sweatSprite.LastAnimationID == "idle")
         {
           this.sweatSprite.Scale = this.Sprite.Scale;
@@ -584,20 +561,15 @@ namespace Celeste
         else
         {
           this.sweatSprite.Scale.Y = this.Sprite.Scale.Y;
-          this.sweatSprite.Scale.X = (__Null) ((double) Math.Abs((float) this.Sprite.Scale.X) * (double) Math.Sign((float) this.sweatSprite.Scale.X));
+          this.sweatSprite.Scale.X = Math.Abs(this.Sprite.Scale.X) * (float) Math.Sign(this.sweatSprite.Scale.X);
         }
         base.Render();
         if (this.Sprite.CurrentAnimationID == "startStarFly")
         {
           float num = (float) this.Sprite.CurrentAnimationFrame / (float) this.Sprite.CurrentAnimationTotalFrames;
-          GFX.Game.GetAtlasSubtexturesAt("characters/player/startStarFlyWhite", this.Sprite.CurrentAnimationFrame).Draw(this.Sprite.RenderPosition, this.Sprite.Origin, Color.op_Multiply(this.starFlyColor, num), this.Sprite.Scale, this.Sprite.Rotation, (SpriteEffects) 0);
+          GFX.Game.GetAtlasSubtexturesAt("characters/player/startStarFlyWhite", this.Sprite.CurrentAnimationFrame).Draw(this.Sprite.RenderPosition, this.Sprite.Origin, this.starFlyColor * num, this.Sprite.Scale, this.Sprite.Rotation, SpriteEffects.None);
         }
-        ref __Null local2 = ref this.Sprite.Scale.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 * (float) this.Facing;
+        this.Sprite.Scale.X *= (float) this.Facing;
         if (this.reflection.IsRendering && this.FlipInReflection)
         {
           this.Facing = (Facings) -(int) this.Facing;
@@ -612,7 +584,7 @@ namespace Celeste
       base.DebugRender(camera);
       Collider collider = this.Collider;
       this.Collider = (Collider) this.hurtbox;
-      Draw.HollowRect(this.Collider, Color.get_Lime());
+      Draw.HollowRect(this.Collider, Color.Lime);
       this.Collider = collider;
     }
 
@@ -643,17 +615,17 @@ namespace Celeste
       this.idleTimer += Engine.DeltaTime;
       if (this.level != null && this.level.InCutscene)
         this.idleTimer = -5f;
-      else if (this.Speed.X != 0.0 || this.Speed.Y != 0.0)
+      else if ((double) this.Speed.X != 0.0 || (double) this.Speed.Y != 0.0)
         this.idleTimer = 0.0f;
       if (!this.Dead)
         Audio.MusicUnderwater = this.UnderwaterMusicCheck();
-      if (this.JustRespawned && Vector2.op_Inequality(this.Speed, Vector2.get_Zero()))
+      if (this.JustRespawned && this.Speed != Vector2.Zero)
         this.JustRespawned = false;
       if (this.StateMachine.State == 9)
         this.onGround = this.OnSafeGround = false;
-      else if (this.Speed.Y >= 0.0)
+      else if ((double) this.Speed.Y >= 0.0)
       {
-        Platform platform = (Platform) this.CollideFirst<Solid>(Vector2.op_Addition(this.Position, Vector2.get_UnitY())) ?? (Platform) this.CollideFirstOutside<JumpThru>(Vector2.op_Addition(this.Position, Vector2.get_UnitY()));
+        Platform platform = (Platform) this.CollideFirst<Solid>(this.Position + Vector2.UnitY) ?? (Platform) this.CollideFirstOutside<JumpThru>(this.Position + Vector2.UnitY);
         if (platform != null)
         {
           this.onGround = true;
@@ -681,7 +653,7 @@ namespace Celeste
       this.highestAirY = !this.onGround ? Math.Min(this.Y, this.highestAirY) : this.Y;
       if (this.Scene.OnInterval(0.05f))
         this.flash = !this.flash;
-      if (this.wallSlideDir != 0)
+      if ((uint) this.wallSlideDir > 0U)
       {
         this.wallSlideTimer = Math.Max(this.wallSlideTimer - Engine.DeltaTime, 0.0f);
         this.wallSlideDir = 0;
@@ -691,7 +663,7 @@ namespace Celeste
         this.wallBoostTimer -= Engine.DeltaTime;
         if (this.moveX == this.wallBoostDir)
         {
-          this.Speed.X = (__Null) (130.0 * (double) this.moveX);
+          this.Speed.X = 130f * (float) this.moveX;
           this.Stamina += 27.5f;
           this.wallBoostTimer = 0.0f;
           this.sweatSprite.Play("idle", false, false);
@@ -722,7 +694,7 @@ namespace Celeste
       {
         if (this.StateMachine.State == 3)
           this.RefillDash();
-        else if (this.onGround && (this.CollideCheck<Solid, NegaBlock>(Vector2.op_Addition(this.Position, Vector2.get_UnitY())) || this.CollideCheckOutside<JumpThru>(Vector2.op_Addition(this.Position, Vector2.get_UnitY()))) && (!this.CollideCheck<Spikes>(this.Position) || SaveData.Instance.Assists.Invincible))
+        else if (this.onGround && (this.CollideCheck<Solid, NegaBlock>(this.Position + Vector2.UnitY) || this.CollideCheckOutside<JumpThru>(this.Position + Vector2.UnitY)) && (!this.CollideCheck<Spikes>(this.Position) || SaveData.Instance.Assists.Invincible))
           this.RefillDash();
       }
       if ((double) this.varJumpTimer > 0.0)
@@ -750,16 +722,16 @@ namespace Celeste
       }
       if (this.climbHopSolid != null && !this.climbHopSolid.Collidable)
         this.climbHopSolid = (Solid) null;
-      else if (this.climbHopSolid != null && Vector2.op_Inequality(this.climbHopSolid.Position, this.climbHopSolidPosition))
+      else if (this.climbHopSolid != null && this.climbHopSolid.Position != this.climbHopSolidPosition)
       {
-        Vector2 vector2 = Vector2.op_Subtraction(this.climbHopSolid.Position, this.climbHopSolidPosition);
+        Vector2 vector2 = this.climbHopSolid.Position - this.climbHopSolidPosition;
         this.climbHopSolidPosition = this.climbHopSolid.Position;
         this.MoveHExact((int) vector2.X, (Collision) null, (Solid) null);
         this.MoveVExact((int) vector2.Y, (Collision) null, (Solid) null);
       }
       if ((double) this.noWindTimer > 0.0)
         this.noWindTimer -= Engine.DeltaTime;
-      if (this.moveX != 0 && this.InControl && (this.StateMachine.State != 1 && this.StateMachine.State != 8) && (this.StateMachine.State != 5 && this.StateMachine.State != 6))
+      if (this.moveX != 0 && this.InControl && (this.StateMachine.State != 1 && this.StateMachine.State != 8) && this.StateMachine.State != 5 && this.StateMachine.State != 6)
       {
         Facings moveX = (Facings) this.moveX;
         if (moveX != this.Facing && this.Ducking)
@@ -769,36 +741,36 @@ namespace Celeste
       this.lastAim = Input.GetAimVector(this.Facing);
       if ((double) this.wallSpeedRetentionTimer > 0.0)
       {
-        if (Math.Sign((float) this.Speed.X) == -Math.Sign(this.wallSpeedRetained))
+        if (Math.Sign(this.Speed.X) == -Math.Sign(this.wallSpeedRetained))
           this.wallSpeedRetentionTimer = 0.0f;
-        else if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) Math.Sign(this.wallSpeedRetained)))))
+        else if (!this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) Math.Sign(this.wallSpeedRetained)))
         {
-          this.Speed.X = (__Null) (double) this.wallSpeedRetained;
+          this.Speed.X = this.wallSpeedRetained;
           this.wallSpeedRetentionTimer = 0.0f;
         }
         else
           this.wallSpeedRetentionTimer -= Engine.DeltaTime;
       }
-      if (this.hopWaitX != 0)
+      if ((uint) this.hopWaitX > 0U)
       {
-        if (Math.Sign((float) this.Speed.X) == -this.hopWaitX || this.Speed.Y > 0.0)
+        if (Math.Sign(this.Speed.X) == -this.hopWaitX || (double) this.Speed.Y > 0.0)
           this.hopWaitX = 0;
-        else if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.hopWaitX))))
+        else if (!this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) this.hopWaitX))
         {
           this.lowFrictionStopTimer = 0.15f;
-          this.Speed.X = (__Null) (double) this.hopWaitXSpeed;
+          this.Speed.X = this.hopWaitXSpeed;
           this.hopWaitX = 0;
         }
       }
       if ((double) this.windTimeout > 0.0)
         this.windTimeout -= Engine.DeltaTime;
       Vector2 vector2_1 = this.windDirection;
-      if ((double) ((Vector2) ref this.ForceStrongWindHair).Length() > 0.0)
+      if ((double) this.ForceStrongWindHair.Length() > 0.0)
         vector2_1 = this.ForceStrongWindHair;
-      if ((double) this.windTimeout > 0.0 && vector2_1.X != 0.0)
+      if ((double) this.windTimeout > 0.0 && (double) vector2_1.X != 0.0)
       {
         this.windHairTimer += Engine.DeltaTime * 8f;
-        this.Hair.StepPerSegment = new Vector2((float) (vector2_1.X * 5.0), (float) Math.Sin((double) this.windHairTimer));
+        this.Hair.StepPerSegment = new Vector2(vector2_1.X * 5f, (float) Math.Sin((double) this.windHairTimer));
         this.Hair.StepInFacingPerSegment = 0.0f;
         this.Hair.StepApproach = 128f;
         this.Hair.StepYSinePerSegment = 0.0f;
@@ -809,12 +781,7 @@ namespace Celeste
         this.Hair.StepInFacingPerSegment = 0.0f;
         this.Hair.StepApproach = 90f;
         this.Hair.StepYSinePerSegment = 1f;
-        ref __Null local = ref this.Hair.StepPerSegment.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + (float) (vector2_1.Y * 2.0);
+        this.Hair.StepPerSegment.Y += vector2_1.Y * 2f;
       }
       else
       {
@@ -822,12 +789,7 @@ namespace Celeste
         this.Hair.StepInFacingPerSegment = 0.5f;
         this.Hair.StepApproach = 64f;
         this.Hair.StepYSinePerSegment = 0.0f;
-        ref __Null local = ref this.Hair.StepPerSegment.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + (float) (vector2_1.Y * 0.5);
+        this.Hair.StepPerSegment.Y += vector2_1.Y * 0.5f;
       }
       if (this.StateMachine.State == 5)
         this.Sprite.HairCount = 1;
@@ -837,7 +799,7 @@ namespace Celeste
         this.minHoldTimer -= Engine.DeltaTime;
       if (this.launched)
       {
-        if ((double) ((Vector2) ref this.Speed).LengthSquared() < 19600.0)
+        if ((double) this.Speed.LengthSquared() < 19600.0)
         {
           this.launched = false;
         }
@@ -851,7 +813,7 @@ namespace Celeste
             this.launchedTimer = 0.0f;
           }
           else if (Calc.OnInterval(this.launchedTimer, launchedTimer, 0.15f))
-            this.level.Add((Entity) Engine.Pooler.Create<SpeedRing>().Init(this.Center, this.Speed.Angle(), Color.get_White()));
+            this.level.Add((Entity) Engine.Pooler.Create<SpeedRing>().Init(this.Center, this.Speed.Angle(), Color.White));
         }
       }
       else
@@ -866,23 +828,23 @@ namespace Celeste
         this.wasTired = false;
       base.Update();
       this.Light.Position = !this.Ducking ? this.normalLightOffset : this.duckingLightOffset;
-      if (!this.onGround && this.Speed.Y <= 0.0 && (this.StateMachine.State != 1 || this.lastClimbMove == -1) && (this.CollideCheck<JumpThru>() && !this.JumpThruBoostBlockedCheck()))
+      if (!this.onGround && (double) this.Speed.Y <= 0.0 && (this.StateMachine.State != 1 || this.lastClimbMove == -1) && this.CollideCheck<JumpThru>() && !this.JumpThruBoostBlockedCheck())
         this.MoveV(-40f * Engine.DeltaTime, (Collision) null, (Solid) null);
-      if (!this.onGround && this.DashAttacking && this.DashDir.Y == 0.0 && (this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 3f))) || this.CollideCheckOutside<JumpThru>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 3f)))))
+      if (!this.onGround && this.DashAttacking && (double) this.DashDir.Y == 0.0 && (this.CollideCheck<Solid>(this.Position + Vector2.UnitY * 3f) || this.CollideCheckOutside<JumpThru>(this.Position + Vector2.UnitY * 3f)))
         this.MoveVExact(3, (Collision) null, (Solid) null);
-      if (this.Speed.Y > 0.0 && this.CanUnDuck && (this.Collider != this.starFlyHitbox && !this.onGround) && (double) this.jumpGraceTimer <= 0.0)
+      if ((double) this.Speed.Y > 0.0 && this.CanUnDuck && (this.Collider != this.starFlyHitbox && !this.onGround) && (double) this.jumpGraceTimer <= 0.0)
         this.Ducking = false;
       if (this.StateMachine.State != 9 && this.StateMachine.State != 22)
-        this.MoveH((float) this.Speed.X * Engine.DeltaTime, this.onCollideH, (Solid) null);
+        this.MoveH(this.Speed.X * Engine.DeltaTime, this.onCollideH, (Solid) null);
       if (this.StateMachine.State != 9 && this.StateMachine.State != 22)
-        this.MoveV((float) this.Speed.Y * Engine.DeltaTime, this.onCollideV, (Solid) null);
+        this.MoveV(this.Speed.Y * Engine.DeltaTime, this.onCollideV, (Solid) null);
       if (this.StateMachine.State == 3)
       {
-        if (this.Speed.Y < 0.0 && this.Speed.Y >= -60.0)
+        if ((double) this.Speed.Y < 0.0 && (double) this.Speed.Y >= -60.0)
         {
           while (!this.SwimCheck())
           {
-            this.Speed.Y = (__Null) 0.0;
+            this.Speed.Y = 0.0f;
             if (this.MoveVExact(1, (Collision) null, (Solid) null))
               break;
           }
@@ -893,7 +855,7 @@ namespace Celeste
       else if (this.StateMachine.State == 1 && this.SwimCheck())
       {
         Water water = this.CollideFirst<Water>(this.Position);
-        if (water != null && this.Center.Y < water.Center.Y)
+        if (water != null && (double) this.Center.Y < (double) water.Center.Y)
         {
           do
             ;
@@ -904,11 +866,11 @@ namespace Celeste
         else
           this.StateMachine.State = 3;
       }
-      if ((this.Sprite.CurrentAnimationID == null || !this.Sprite.CurrentAnimationID.Equals("wallslide") ? 0 : (this.Speed.Y > 0.0 ? 1 : 0)) != 0)
+      if (this.Sprite.CurrentAnimationID != null && this.Sprite.CurrentAnimationID.Equals("wallslide") && (double) this.Speed.Y > 0.0)
       {
         if (!this.wallSlideSfx.Playing)
           this.Loop(this.wallSlideSfx, "event:/char/madeline/wallslide");
-        Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Solid>(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing)), this.temp));
+        Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Solid>(this.Center + Vector2.UnitX * (float) this.Facing, this.temp));
         if (platformByPriority != null)
           this.wallSlideSfx.Param("surface_index", (float) platformByPriority.GetWallSoundIndex(this, (int) this.Facing));
       }
@@ -950,7 +912,7 @@ namespace Celeste
           Vector2 position = this.level.Camera.Position;
           Vector2 cameraTarget = this.CameraTarget;
           float num = this.StateMachine.State == 20 ? 8f : 1f;
-          this.level.Camera.Position = Vector2.op_Addition(position, Vector2.op_Multiply(Vector2.op_Subtraction(cameraTarget, position), 1f - (float) Math.Pow(0.00999999977648258 / (double) num, (double) Engine.DeltaTime)));
+          this.level.Camera.Position = position + (cameraTarget - position) * (1f - (float) Math.Pow(0.00999999977648258 / (double) num, (double) Engine.DeltaTime));
         }
       }
       if (!this.Dead && this.StateMachine.State != 21)
@@ -980,7 +942,7 @@ namespace Celeste
         else if (this.onGround)
           this.Play("event:/char/madeline/stand", (string) null, 0.0f);
       }
-      if (this.Speed.X != 0.0 && (this.StateMachine.State == 3 && !this.SwimUnderwaterCheck() || this.StateMachine.State == 0 && this.CollideCheck<Water>(this.Position)))
+      if ((double) this.Speed.X != 0.0 && (this.StateMachine.State == 3 && !this.SwimUnderwaterCheck() || this.StateMachine.State == 0 && this.CollideCheck<Water>(this.Position)))
       {
         if (!this.swimSurfaceLoopSfx.Playing)
           this.swimSurfaceLoopSfx.Play("event:/char/madeline/water_move_shallow", (string) null, 0.0f);
@@ -1062,9 +1024,9 @@ namespace Celeste
 
     private void UpdateSprite()
     {
-      this.Sprite.Scale.X = (__Null) (double) Calc.Approach((float) this.Sprite.Scale.X, 1f, 1.75f * Engine.DeltaTime);
-      this.Sprite.Scale.Y = (__Null) (double) Calc.Approach((float) this.Sprite.Scale.Y, 1f, 1.75f * Engine.DeltaTime);
-      if (this.InControl && this.Sprite.CurrentAnimationID != "throw" && (this.StateMachine.State != 20 && this.StateMachine.State != 18) && (this.StateMachine.State != 19 && this.StateMachine.State != 21))
+      this.Sprite.Scale.X = Calc.Approach(this.Sprite.Scale.X, 1f, 1.75f * Engine.DeltaTime);
+      this.Sprite.Scale.Y = Calc.Approach(this.Sprite.Scale.Y, 1f, 1.75f * Engine.DeltaTime);
+      if (this.InControl && this.Sprite.CurrentAnimationID != "throw" && (this.StateMachine.State != 20 && this.StateMachine.State != 18) && this.StateMachine.State != 19 && this.StateMachine.State != 21)
       {
         if (this.StateMachine.State == 22)
           this.Sprite.Play("fallFast", false, false);
@@ -1092,7 +1054,7 @@ namespace Celeste
         {
           if (this.DashAttacking)
           {
-            if (this.onGround && this.DashDir.Y == 0.0 && (!this.Ducking && this.Speed.X != 0.0) && this.moveX == -Math.Sign((float) this.Speed.X))
+            if (this.onGround && (double) this.DashDir.Y == 0.0 && (!this.Ducking && (double) this.Speed.X != 0.0) && this.moveX == -Math.Sign(this.Speed.X))
             {
               if (this.Scene.OnInterval(0.02f))
                 Dust.Burst(this.Position, -1.570796f, 1);
@@ -1107,7 +1069,7 @@ namespace Celeste
               this.Sprite.Play("climbUp", false, false);
             else if (this.lastClimbMove > 0)
               this.Sprite.Play("wallslide", false, false);
-            else if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) this.Facing, 6f))))
+            else if (!this.CollideCheck<Solid>(this.Position + new Vector2((float) this.Facing, 6f)))
               this.Sprite.Play("dangling", false, false);
             else if ((int) Input.MoveX == -(int) this.Facing)
             {
@@ -1122,15 +1084,15 @@ namespace Celeste
           else if (this.onGround)
           {
             this.fastJump = false;
-            if (this.Holding == null && this.moveX != 0 && this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.moveX))))
+            if (this.Holding == null && this.moveX != 0 && this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) this.moveX))
               this.Sprite.Play("push", false, false);
-            else if ((double) Math.Abs((float) this.Speed.X) <= 25.0 && this.moveX == 0)
+            else if ((double) Math.Abs(this.Speed.X) <= 25.0 && this.moveX == 0)
             {
               if (this.Holding != null)
                 this.Sprite.Play("idle_carry", false, false);
-              else if (!this.Scene.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) this.Facing, 2f))) && !this.Scene.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) ((int) this.Facing * 4), 2f))) && !this.CollideCheck<JumpThru>(Vector2.op_Addition(this.Position, new Vector2((float) ((int) this.Facing * 4), 2f))))
+              else if (!this.Scene.CollideCheck<Solid>(this.Position + new Vector2((float) this.Facing, 2f)) && !this.Scene.CollideCheck<Solid>(this.Position + new Vector2((float) ((int) this.Facing * 4), 2f)) && !this.CollideCheck<JumpThru>(this.Position + new Vector2((float) ((int) this.Facing * 4), 2f)))
                 this.Sprite.Play("edge", false, false);
-              else if (!this.Scene.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) -(int) this.Facing, 2f))) && !this.Scene.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) (-(int) this.Facing * 4), 2f))) && !this.CollideCheck<JumpThru>(Vector2.op_Addition(this.Position, new Vector2((float) (-(int) this.Facing * 4), 2f))))
+              else if (!this.Scene.CollideCheck<Solid>(this.Position + new Vector2((float) -(int) this.Facing, 2f)) && !this.Scene.CollideCheck<Solid>(this.Position + new Vector2((float) (-(int) this.Facing * 4), 2f)) && !this.CollideCheck<JumpThru>(this.Position + new Vector2((float) (-(int) this.Facing * 4), 2f)))
                 this.Sprite.Play("edgeBack", false, false);
               else if (Input.MoveY.Value == -1)
               {
@@ -1142,18 +1104,18 @@ namespace Celeste
             }
             else if (this.Holding != null)
               this.Sprite.Play("runSlow_carry", false, false);
-            else if (Math.Sign((float) this.Speed.X) == -this.moveX && this.moveX != 0)
+            else if (Math.Sign(this.Speed.X) == -this.moveX && (uint) this.moveX > 0U)
             {
-              if ((double) Math.Abs((float) this.Speed.X) > 90.0)
+              if ((double) Math.Abs(this.Speed.X) > 90.0)
                 this.Sprite.Play("skid", false, false);
               else if (this.Sprite.CurrentAnimationID != "skid")
                 this.Sprite.Play("flip", false, false);
             }
-            else if (this.windDirection.X != 0.0 && (double) this.windTimeout > 0.0 && this.Facing == (Facings) -Math.Sign((float) this.windDirection.X))
+            else if ((double) this.windDirection.X != 0.0 && (double) this.windTimeout > 0.0 && this.Facing == (Facings) -Math.Sign(this.windDirection.X))
               this.Sprite.Play("runWind", false, false);
             else if (!this.Sprite.Running || this.Sprite.CurrentAnimationID == "runWind")
             {
-              if ((double) Math.Abs((float) this.Speed.X) < 45.0)
+              if ((double) Math.Abs(this.Speed.X) < 45.0)
                 this.Sprite.Play("runSlow", false, false);
               else
                 this.Sprite.Play("runFast", false, false);
@@ -1161,11 +1123,11 @@ namespace Celeste
           }
           else if (this.wallSlideDir != 0 && this.Holding == null)
             this.Sprite.Play("wallslide", false, false);
-          else if (this.Speed.Y < 0.0)
+          else if ((double) this.Speed.Y < 0.0)
           {
             if (this.Holding != null)
               this.Sprite.Play("jumpSlow_carry", false, false);
-            else if (this.fastJump || (double) Math.Abs((float) this.Speed.X) > 90.0)
+            else if (this.fastJump || (double) Math.Abs(this.Speed.X) > 90.0)
             {
               this.fastJump = true;
               this.Sprite.Play("jumpFast", false, false);
@@ -1175,7 +1137,7 @@ namespace Celeste
           }
           else if (this.Holding != null)
             this.Sprite.Play("fallSlow_carry", false, false);
-          else if (this.fastJump || this.Speed.Y >= 160.0 || this.level.InSpace)
+          else if (this.fastJump || (double) this.Speed.Y >= 160.0 || this.level.InSpace)
           {
             this.fastJump = true;
             if (this.Sprite.LastAnimationID != "fallFast")
@@ -1195,122 +1157,76 @@ namespace Celeste
 
     public void CreateSplitParticles()
     {
-      this.level.Particles.Emit(Player.P_Split, 16, this.Center, Vector2.op_Multiply(Vector2.get_One(), 6f));
+      this.level.Particles.Emit(Player.P_Split, 16, this.Center, Vector2.One * 6f);
     }
 
     public Vector2 CameraTarget
     {
       get
       {
-        Vector2 vector2_1 = (Vector2) null;
-        Vector2 vector2_2;
-        ((Vector2) ref vector2_2).\u002Ector(this.X - 160f, this.Y - 90f);
+        Vector2 vector2_1 = new Vector2();
+        Vector2 vector2_2 = new Vector2(this.X - 160f, this.Y - 90f);
         if (this.StateMachine.State != 18)
-          vector2_2 = Vector2.op_Addition(vector2_2, new Vector2((float) this.level.CameraOffset.X, (float) this.level.CameraOffset.Y));
+          vector2_2 += new Vector2(this.level.CameraOffset.X, this.level.CameraOffset.Y);
         if (this.StateMachine.State == 19)
         {
-          ref __Null local1 = ref vector2_2.X;
-          ^(float&) ref local1 = ^(float&) ref local1 + (float) (0.200000002980232 * this.Speed.X);
-          ref __Null local2 = ref vector2_2.Y;
-          ^(float&) ref local2 = ^(float&) ref local2 + (float) (0.200000002980232 * this.Speed.Y);
+          vector2_2.X += 0.2f * this.Speed.X;
+          vector2_2.Y += 0.2f * this.Speed.Y;
         }
         else if (this.StateMachine.State == 5)
         {
-          ref __Null local1 = ref vector2_2.X;
-          ^(float&) ref local1 = ^(float&) ref local1 + (float) (48 * Math.Sign((float) this.Speed.X));
-          ref __Null local2 = ref vector2_2.Y;
-          ^(float&) ref local2 = ^(float&) ref local2 + (float) (48 * Math.Sign((float) this.Speed.Y));
+          vector2_2.X += (float) (48 * Math.Sign(this.Speed.X));
+          vector2_2.Y += (float) (48 * Math.Sign(this.Speed.Y));
         }
         else if (this.StateMachine.State == 10)
-        {
-          ref __Null local = ref vector2_2.Y;
-          ^(float&) ref local = ^(float&) ref local - 64f;
-        }
+          vector2_2.Y -= 64f;
         else if (this.StateMachine.State == 18)
-        {
-          ref __Null local = ref vector2_2.Y;
-          ^(float&) ref local = ^(float&) ref local + 32f;
-        }
-        if ((double) ((Vector2) ref this.CameraAnchorLerp).Length() > 0.0)
+          vector2_2.Y += 32f;
+        if ((double) this.CameraAnchorLerp.Length() > 0.0)
         {
           if (this.CameraAnchorIgnoreX && !this.CameraAnchorIgnoreY)
-            vector2_2.Y = (__Null) (double) MathHelper.Lerp((float) vector2_2.Y, (float) this.CameraAnchor.Y, (float) this.CameraAnchorLerp.Y);
+            vector2_2.Y = MathHelper.Lerp(vector2_2.Y, this.CameraAnchor.Y, this.CameraAnchorLerp.Y);
           else if (!this.CameraAnchorIgnoreX && this.CameraAnchorIgnoreY)
-            vector2_2.X = (__Null) (double) MathHelper.Lerp((float) vector2_2.X, (float) this.CameraAnchor.X, (float) this.CameraAnchorLerp.X);
-          else if (this.CameraAnchorLerp.X == this.CameraAnchorLerp.Y)
+            vector2_2.X = MathHelper.Lerp(vector2_2.X, this.CameraAnchor.X, this.CameraAnchorLerp.X);
+          else if ((double) this.CameraAnchorLerp.X == (double) this.CameraAnchorLerp.Y)
           {
-            vector2_2 = Vector2.Lerp(vector2_2, this.CameraAnchor, (float) this.CameraAnchorLerp.X);
+            vector2_2 = Vector2.Lerp(vector2_2, this.CameraAnchor, this.CameraAnchorLerp.X);
           }
           else
           {
-            vector2_2.X = (__Null) (double) MathHelper.Lerp((float) vector2_2.X, (float) this.CameraAnchor.X, (float) this.CameraAnchorLerp.X);
-            vector2_2.Y = (__Null) (double) MathHelper.Lerp((float) vector2_2.Y, (float) this.CameraAnchor.Y, (float) this.CameraAnchorLerp.Y);
+            vector2_2.X = MathHelper.Lerp(vector2_2.X, this.CameraAnchor.X, this.CameraAnchorLerp.X);
+            vector2_2.Y = MathHelper.Lerp(vector2_2.Y, this.CameraAnchor.Y, this.CameraAnchorLerp.Y);
           }
         }
-        ref Vector2 local3 = ref vector2_1;
-        __Null x1 = vector2_2.X;
-        Rectangle bounds1 = this.level.Bounds;
-        double left = (double) ((Rectangle) ref bounds1).get_Left();
-        Rectangle bounds2 = this.level.Bounds;
-        double num1 = (double) (((Rectangle) ref bounds2).get_Right() - 320);
-        double num2 = (double) MathHelper.Clamp((float) x1, (float) left, (float) num1);
-        local3.X = (__Null) num2;
-        ref Vector2 local4 = ref vector2_1;
-        __Null y1 = vector2_2.Y;
-        Rectangle bounds3 = this.level.Bounds;
-        double top = (double) ((Rectangle) ref bounds3).get_Top();
-        bounds3 = this.level.Bounds;
-        double num3 = (double) (((Rectangle) ref bounds3).get_Bottom() - 180);
-        double num4 = (double) MathHelper.Clamp((float) y1, (float) top, (float) num3);
-        local4.Y = (__Null) num4;
-        if (this.level.CameraLockMode != Level.CameraLockModes.None)
+        vector2_1.X = MathHelper.Clamp(vector2_2.X, (float) this.level.Bounds.Left, (float) (this.level.Bounds.Right - 320));
+        vector2_1.Y = MathHelper.Clamp(vector2_2.Y, (float) this.level.Bounds.Top, (float) (this.level.Bounds.Bottom - 180));
+        if ((uint) this.level.CameraLockMode > 0U)
         {
           CameraLocker component = this.Scene.Tracker.GetComponent<CameraLocker>();
           if (this.level.CameraLockMode != Level.CameraLockModes.BoostSequence)
           {
-            vector2_1.X = (__Null) (double) Math.Max((float) vector2_1.X, this.level.Camera.X);
+            vector2_1.X = Math.Max(vector2_1.X, this.level.Camera.X);
             if (component != null)
-            {
-              ref Vector2 local1 = ref vector2_1;
-              __Null x2 = vector2_1.X;
-              bounds3 = this.level.Bounds;
-              double num5 = (double) Math.Max((float) ((Rectangle) ref bounds3).get_Left(), component.Entity.X - component.MaxXOffset);
-              double num6 = (double) Math.Min((float) x2, (float) num5);
-              local1.X = (__Null) num6;
-            }
+              vector2_1.X = Math.Min(vector2_1.X, Math.Max((float) this.level.Bounds.Left, component.Entity.X - component.MaxXOffset));
           }
           if (this.level.CameraLockMode == Level.CameraLockModes.FinalBoss)
           {
-            vector2_1.Y = (__Null) (double) Math.Max((float) vector2_1.Y, this.level.Camera.Y);
+            vector2_1.Y = Math.Max(vector2_1.Y, this.level.Camera.Y);
             if (component != null)
-            {
-              ref Vector2 local1 = ref vector2_1;
-              __Null y2 = vector2_1.Y;
-              bounds3 = this.level.Bounds;
-              double num5 = (double) Math.Max((float) ((Rectangle) ref bounds3).get_Top(), component.Entity.Y - component.MaxYOffset);
-              double num6 = (double) Math.Min((float) y2, (float) num5);
-              local1.Y = (__Null) num6;
-            }
+              vector2_1.Y = Math.Min(vector2_1.Y, Math.Max((float) this.level.Bounds.Top, component.Entity.Y - component.MaxYOffset));
           }
           else if (this.level.CameraLockMode == Level.CameraLockModes.BoostSequence)
           {
             this.level.CameraUpwardMaxY = Math.Min(this.level.Camera.Y + 180f, this.level.CameraUpwardMaxY);
-            vector2_1.Y = (__Null) (double) Math.Min((float) vector2_1.Y, this.level.CameraUpwardMaxY);
+            vector2_1.Y = Math.Min(vector2_1.Y, this.level.CameraUpwardMaxY);
             if (component != null)
-            {
-              ref Vector2 local1 = ref vector2_1;
-              __Null y2 = vector2_1.Y;
-              bounds3 = this.level.Bounds;
-              double num5 = (double) Math.Min((float) (((Rectangle) ref bounds3).get_Bottom() - 180), component.Entity.Y - component.MaxYOffset);
-              double num6 = (double) Math.Max((float) y2, (float) num5);
-              local1.Y = (__Null) num6;
-            }
+              vector2_1.Y = Math.Max(vector2_1.Y, Math.Min((float) (this.level.Bounds.Bottom - 180), component.Entity.Y - component.MaxYOffset));
           }
         }
         foreach (Entity entity in this.Scene.Tracker.GetEntities<Killbox>())
         {
-          if (entity.Collidable && (double) this.Top < (double) entity.Bottom && ((double) this.Right > (double) entity.Left && (double) this.Left < (double) entity.Right))
-            vector2_1.Y = (__Null) (double) Math.Min((float) vector2_1.Y, entity.Top - 180f);
+          if (entity.Collidable && ((double) this.Top < (double) entity.Bottom && (double) this.Right > (double) entity.Left && (double) this.Left < (double) entity.Right))
+            vector2_1.Y = Math.Min(vector2_1.Y, entity.Top - 180f);
         }
         return vector2_1;
       }
@@ -1410,16 +1326,16 @@ namespace Celeste
 
     public bool TransitionTo(Vector2 target, Vector2 direction)
     {
-      this.MoveTowardsX((float) target.X, 60f * Engine.DeltaTime, (Collision) null);
-      this.MoveTowardsY((float) target.Y, 60f * Engine.DeltaTime, (Collision) null);
+      this.MoveTowardsX(target.X, 60f * Engine.DeltaTime, (Collision) null);
+      this.MoveTowardsY(target.Y, 60f * Engine.DeltaTime, (Collision) null);
       this.UpdateHair(false);
       this.UpdateCarry();
-      if (!Vector2.op_Equality(this.Position, target))
+      if (!(this.Position == target))
         return false;
       this.ZeroRemainderX();
       this.ZeroRemainderY();
-      this.Speed.X = (__Null) (double) (int) Math.Round((double) this.Speed.X);
-      this.Speed.Y = (__Null) (double) (int) Math.Round((double) this.Speed.Y);
+      this.Speed.X = (float) (int) Math.Round((double) this.Speed.X);
+      this.Speed.Y = (float) (int) Math.Round((double) this.Speed.Y);
       return true;
     }
 
@@ -1432,23 +1348,23 @@ namespace Celeste
       if (this.StateMachine.State != 5 && this.StateMachine.State != 18 && this.StateMachine.State != 19)
       {
         this.StateMachine.State = 0;
-        this.Speed.Y = (__Null) (double) Math.Max(0.0f, (float) this.Speed.Y);
+        this.Speed.Y = Math.Max(0.0f, this.Speed.Y);
         this.AutoJump = false;
         this.varJumpTimer = 0.0f;
       }
       foreach (Entity entity in this.Scene.Tracker.GetEntities<Platform>())
       {
-        if (!(entity is SolidTiles) && this.CollideCheckOutside(entity, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), this.Height))))
+        if (!(entity is SolidTiles) && this.CollideCheckOutside(entity, this.Position + Vector2.UnitY * this.Height))
           entity.Collidable = false;
       }
     }
 
     public void BeforeUpTransition()
     {
-      this.Speed.X = (__Null) 0.0;
+      this.Speed.X = 0.0f;
       if (this.StateMachine.State != 5 && this.StateMachine.State != 18 && this.StateMachine.State != 19)
       {
-        this.varJumpSpeed = (float) (double) (this.Speed.Y = (__Null) -105f);
+        this.varJumpSpeed = this.Speed.Y = -105f;
         this.StateMachine.State = this.StateMachine.State != 10 ? 0 : 13;
         this.AutoJump = true;
         this.AutoJumpTimer = 0.0f;
@@ -1469,8 +1385,7 @@ namespace Celeste
 
     private bool LaunchedBoostCheck()
     {
-      Vector2 liftBoost = this.LiftBoost;
-      if ((double) ((Vector2) ref liftBoost).LengthSquared() >= 10000.0 && (double) ((Vector2) ref this.Speed).LengthSquared() >= 48400.0)
+      if ((double) this.LiftBoost.LengthSquared() >= 10000.0 && (double) this.Speed.LengthSquared() >= 48400.0)
       {
         this.launched = true;
         return true;
@@ -1485,9 +1400,9 @@ namespace Celeste
       {
         case 1:
           this.StateMachine.State = 0;
-          this.varJumpSpeed = (float) (double) (this.Speed.Y = (__Null) -60f);
+          this.varJumpSpeed = this.Speed.Y = -60f;
           this.varJumpTimer = 0.15f;
-          this.Speed.X = (__Null) (130.0 * (double) -(int) this.Facing);
+          this.Speed.X = 130f * (float) -(int) this.Facing;
           this.AutoJump = true;
           this.AutoJumpTimer = 0.0f;
           this.sweatSprite.Play("jump", true, false);
@@ -1499,7 +1414,7 @@ namespace Celeste
           break;
         case 5:
         case 9:
-          this.Speed = this.Speed.X < 0.0 || this.Speed.X == 0.0 && this.Speed.Y < 0.0 ? this.Speed.Rotate(0.1745329f) : this.Speed.Rotate(-0.1745329f);
+          this.Speed = (double) this.Speed.X >= 0.0 && ((double) this.Speed.X != 0.0 || (double) this.Speed.Y >= 0.0) ? this.Speed.Rotate(-0.1745329f) : this.Speed.Rotate(0.1745329f);
           break;
         case 10:
           return;
@@ -1518,16 +1433,16 @@ namespace Celeste
         case 17:
           return;
         case 19:
-          this.Speed = this.Speed.X <= 0.0 ? this.Speed.Rotate(-0.6981317f) : this.Speed.Rotate(0.6981317f);
+          this.Speed = (double) this.Speed.X <= 0.0 ? this.Speed.Rotate(-0.6981317f) : this.Speed.Rotate(0.6981317f);
           break;
         case 21:
           return;
         default:
           this.StateMachine.State = 0;
-          this.Speed.X = (__Null) (double) Calc.Approach((float) this.Speed.X, 0.0f, 40f);
-          if (this.Speed.Y > -60.0)
+          this.Speed.X = Calc.Approach(this.Speed.X, 0.0f, 40f);
+          if ((double) this.Speed.Y > -60.0)
           {
-            this.varJumpSpeed = (float) (double) (this.Speed.Y = (__Null) -60f);
+            this.varJumpSpeed = this.Speed.Y = -60f;
             this.varJumpTimer = 0.15f;
             this.AutoJump = true;
             this.AutoJumpTimer = 0.0f;
@@ -1551,15 +1466,10 @@ namespace Celeste
       this.dashGliderBoostTimer = 0.0f;
       this.wallSlideTimer = 1.2f;
       this.wallBoostTimer = 0.0f;
-      ref __Null local = ref this.Speed.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local + 40f * (float) this.moveX;
-      this.Speed.Y = (__Null) -105.0;
-      this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
-      this.varJumpSpeed = (float) this.Speed.Y;
+      this.Speed.X += 40f * (float) this.moveX;
+      this.Speed.Y = -105f;
+      this.Speed += this.LiftBoost;
+      this.varJumpSpeed = this.Speed.Y;
       this.LaunchedBoostCheck();
       if (playSfx)
       {
@@ -1586,30 +1496,20 @@ namespace Celeste
       this.dashGliderBoostTimer = 0.0f;
       this.wallSlideTimer = 1.2f;
       this.wallBoostTimer = 0.0f;
-      this.Speed.X = (__Null) (260.0 * (double) this.Facing);
-      this.Speed.Y = (__Null) -105.0;
-      this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
+      this.Speed.X = 260f * (float) this.Facing;
+      this.Speed.Y = -105f;
+      this.Speed += this.LiftBoost;
       this.Play("event:/char/madeline/jump", (string) null, 0.0f);
       if (this.Ducking)
       {
         this.Ducking = false;
-        ref __Null local1 = ref this.Speed.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 * 1.25f;
-        ref __Null local2 = ref this.Speed.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 * 0.5f;
+        this.Speed.X *= 1.25f;
+        this.Speed.Y *= 0.5f;
         this.Play("event:/char/madeline/jump_superslide", (string) null, 0.0f);
       }
       else
         this.Play("event:/char/madeline/jump_super", (string) null, 0.0f);
-      this.varJumpSpeed = (float) this.Speed.Y;
+      this.varJumpSpeed = this.Speed.Y;
       this.launched = true;
       this.Sprite.Scale = new Vector2(0.6f, 1.4f);
       Dust.Burst(this.BottomCenter, -1.570796f, 4);
@@ -1619,13 +1519,13 @@ namespace Celeste
     private bool WallJumpCheck(int dir)
     {
       int num = 3;
-      bool flag = this.DashAttacking && this.DashDir.X == 0.0 && this.DashDir.Y == -1.0;
+      bool flag = this.DashAttacking && (double) this.DashDir.X == 0.0 && (double) this.DashDir.Y == -1.0;
       if (flag)
       {
         Spikes.Directions directions = dir <= 0 ? Spikes.Directions.Right : Spikes.Directions.Left;
         foreach (Spikes entity in this.level.Tracker.GetEntities<Spikes>())
         {
-          if (entity.Direction == directions && this.CollideCheck((Entity) entity, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) dir), 5f))))
+          if (entity.Direction == directions && this.CollideCheck((Entity) entity, this.Position + Vector2.UnitX * (float) dir * 5f))
           {
             flag = false;
             break;
@@ -1634,9 +1534,7 @@ namespace Celeste
       }
       if (flag)
         num = 5;
-      if (this.ClimbBoundsCheck(dir))
-        return this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) dir), (float) num)));
-      return false;
+      return this.ClimbBoundsCheck(dir) && this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) dir * (float) num);
     }
 
     private void WallJump(int dir)
@@ -1651,31 +1549,31 @@ namespace Celeste
       this.wallSlideTimer = 1.2f;
       this.wallBoostTimer = 0.0f;
       this.lowFrictionStopTimer = 0.15f;
-      if (this.moveX != 0)
+      if ((uint) this.moveX > 0U)
       {
         this.forceMoveX = dir;
         this.forceMoveXTimer = 0.16f;
       }
-      if (Vector2.op_Equality(this.LiftSpeed, Vector2.get_Zero()))
+      if (this.LiftSpeed == Vector2.Zero)
       {
-        Solid solid = this.CollideFirst<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), 3f)));
+        Solid solid = this.CollideFirst<Solid>(this.Position + Vector2.UnitX * 3f);
         if (solid != null)
           this.LiftSpeed = solid.LiftSpeed;
       }
-      this.Speed.X = (__Null) (130.0 * (double) dir);
-      this.Speed.Y = (__Null) -105.0;
-      this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
-      this.varJumpSpeed = (float) this.Speed.Y;
+      this.Speed.X = 130f * (float) dir;
+      this.Speed.Y = -105f;
+      this.Speed += this.LiftBoost;
+      this.varJumpSpeed = this.Speed.Y;
       this.LaunchedBoostCheck();
-      Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Platform>(Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) dir), 4f)), this.temp));
+      Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Platform>(this.Position - Vector2.UnitX * (float) dir * 4f, this.temp));
       if (platformByPriority != null)
         this.Play("event:/char/madeline/landing", "surface_index", (float) platformByPriority.GetWallSoundIndex(this, -dir));
       this.Play(dir < 0 ? "event:/char/madeline/jump_wall_right" : "event:/char/madeline/jump_wall_left", (string) null, 0.0f);
       this.Sprite.Scale = new Vector2(0.6f, 1.4f);
       if (dir == -1)
-        Dust.Burst(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), 2f)), -2.356194f, 4);
+        Dust.Burst(this.Center + Vector2.UnitX * 2f, -2.356194f, 4);
       else
-        Dust.Burst(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), -2f)), -0.7853982f, 4);
+        Dust.Burst(this.Center + Vector2.UnitX * -2f, -0.7853982f, 4);
       ++SaveData.Instance.TotalWallJumps;
     }
 
@@ -1690,18 +1588,18 @@ namespace Celeste
       this.dashGliderBoostTimer = 0.0f;
       this.wallSlideTimer = 1.2f;
       this.wallBoostTimer = 0.0f;
-      this.Speed.X = (__Null) (170.0 * (double) dir);
-      this.Speed.Y = (__Null) -160.0;
-      this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
-      this.varJumpSpeed = (float) this.Speed.Y;
+      this.Speed.X = 170f * (float) dir;
+      this.Speed.Y = -160f;
+      this.Speed += this.LiftBoost;
+      this.varJumpSpeed = this.Speed.Y;
       this.launched = true;
       this.Play(dir < 0 ? "event:/char/madeline/jump_wall_right" : "event:/char/madeline/jump_wall_left", (string) null, 0.0f);
       this.Play("event:/char/madeline/jump_superwall", (string) null, 0.0f);
       this.Sprite.Scale = new Vector2(0.6f, 1.4f);
       if (dir == -1)
-        Dust.Burst(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), 2f)), -2.356194f, 4);
+        Dust.Burst(this.Center + Vector2.UnitX * 2f, -2.356194f, 4);
       else
-        Dust.Burst(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), -2f)), -0.7853982f, 4);
+        Dust.Burst(this.Center + Vector2.UnitX * -2f, -0.7853982f, 4);
       ++SaveData.Instance.TotalWallJumps;
     }
 
@@ -1723,12 +1621,12 @@ namespace Celeste
       if (this.Facing == Facings.Right)
       {
         this.Play("event:/char/madeline/jump_climb_right", (string) null, 0.0f);
-        Dust.Burst(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), 2f)), -2.356194f, 4);
+        Dust.Burst(this.Center + Vector2.UnitX * 2f, -2.356194f, 4);
       }
       else
       {
         this.Play("event:/char/madeline/jump_climb_left", (string) null, 0.0f);
-        Dust.Burst(Vector2.op_Addition(this.Center, Vector2.op_Multiply(Vector2.get_UnitX(), -2f)), -0.7853982f, 4);
+        Dust.Burst(this.Center + Vector2.UnitX * -2f, -0.7853982f, 4);
       }
     }
 
@@ -1754,7 +1652,7 @@ namespace Celeste
       this.dashGliderBoostTimer = 0.0f;
       this.wallSlideTimer = 1.2f;
       this.wallBoostTimer = 0.0f;
-      this.varJumpSpeed = (float) (double) (this.Speed.Y = (__Null) -140f);
+      this.varJumpSpeed = this.Speed.Y = -140f;
       this.launched = false;
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
       this.Sprite.Scale = new Vector2(0.6f, 1.4f);
@@ -1783,10 +1681,10 @@ namespace Celeste
       this.dashGliderBoostTimer = 0.0f;
       this.wallSlideTimer = 1.2f;
       this.wallBoostTimer = 0.0f;
-      this.Speed.X = (__Null) 0.0;
-      this.varJumpSpeed = (float) (double) (this.Speed.Y = (__Null) -185f);
+      this.Speed.X = 0.0f;
+      this.varJumpSpeed = this.Speed.Y = -185f;
       this.launched = false;
-      this.level.DirectionalShake(Vector2.op_UnaryNegation(Vector2.get_UnitY()), 0.1f);
+      this.level.DirectionalShake(-Vector2.UnitY, 0.1f);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
       this.Sprite.Scale = new Vector2(0.5f, 1.5f);
       this.Collider = collider;
@@ -1816,9 +1714,9 @@ namespace Celeste
       this.forceMoveXTimer = 0.3f;
       this.wallBoostTimer = 0.0f;
       this.launched = false;
-      this.Speed.X = (__Null) (240.0 * (double) dir);
-      this.varJumpSpeed = (float) (double) (this.Speed.Y = (__Null) -140f);
-      this.level.DirectionalShake(Vector2.op_Multiply(Vector2.get_UnitX(), (float) dir), 0.1f);
+      this.Speed.X = 240f * (float) dir;
+      this.varJumpSpeed = this.Speed.Y = -140f;
+      this.level.DirectionalShake(Vector2.UnitX * (float) dir, 0.1f);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
       this.Sprite.Scale = new Vector2(1.5f, 0.5f);
       this.Collider = collider;
@@ -1826,9 +1724,9 @@ namespace Celeste
 
     public void Rebound(int direction = 0)
     {
-      this.Speed.X = (__Null) ((double) direction * 120.0);
-      this.Speed.Y = (__Null) -120.0;
-      this.varJumpSpeed = (float) this.Speed.Y;
+      this.Speed.X = (float) direction * 120f;
+      this.Speed.Y = -120f;
+      this.varJumpSpeed = this.Speed.Y;
       this.varJumpTimer = 0.15f;
       this.AutoJump = true;
       this.AutoJumpTimer = 0.0f;
@@ -1844,10 +1742,10 @@ namespace Celeste
 
     public void ReflectBounce(Vector2 direction)
     {
-      if (direction.X != 0.0)
-        this.Speed.X = (__Null) (direction.X * 220.0);
-      if (direction.Y != 0.0)
-        this.Speed.Y = (__Null) (direction.Y * 220.0);
+      if ((double) direction.X != 0.0)
+        this.Speed.X = direction.X * 220f;
+      if ((double) direction.Y != 0.0)
+        this.Speed.Y = direction.Y * 220f;
       this.AutoJumpTimer = 0.0f;
       this.dashAttackTimer = 0.0f;
       this.dashGliderBoostTimer = 0.0f;
@@ -1920,7 +1818,7 @@ namespace Celeste
       this.Dead = true;
       this.Leader.LoseFollowers();
       this.Depth = -1000000;
-      this.Speed = Vector2.get_Zero();
+      this.Speed = Vector2.Zero;
       this.StateMachine.Locked = true;
       this.Collidable = false;
       this.Drop();
@@ -1937,7 +1835,9 @@ namespace Celeste
         });
       this.Scene.Add((Entity) playerDeadBody);
       this.Scene.Remove((Entity) this);
-      this.Scene.Tracker.GetEntity<Lookout>()?.StopInteracting();
+      Lookout entity = this.Scene.Tracker.GetEntity<Lookout>();
+      if (entity != null)
+        entity.StopInteracting();
       return playerDeadBody;
     }
 
@@ -1946,12 +1846,12 @@ namespace Celeste
       get
       {
         Vector2 liftSpeed = this.LiftSpeed;
-        if ((double) Math.Abs((float) liftSpeed.X) > 250.0)
-          liftSpeed.X = (__Null) (250.0 * (double) Math.Sign((float) liftSpeed.X));
-        if (liftSpeed.Y > 0.0)
-          liftSpeed.Y = (__Null) 0.0;
-        else if (liftSpeed.Y < -130.0)
-          liftSpeed.Y = (__Null) -130.0;
+        if ((double) Math.Abs(liftSpeed.X) > 250.0)
+          liftSpeed.X = 250f * (float) Math.Sign(liftSpeed.X);
+        if ((double) liftSpeed.Y > 0.0)
+          liftSpeed.Y = 0.0f;
+        else if ((double) liftSpeed.Y < -130.0)
+          liftSpeed.Y = -130f;
         return liftSpeed;
       }
     }
@@ -1960,9 +1860,7 @@ namespace Celeste
     {
       get
       {
-        if (this.Collider != this.duckHitbox)
-          return this.Collider == this.duckHurtbox;
-        return true;
+        return this.Collider == this.duckHitbox || this.Collider == this.duckHurtbox;
       }
       set
       {
@@ -1987,9 +1885,9 @@ namespace Celeste
           return true;
         Collider collider = this.Collider;
         this.Collider = (Collider) this.normalHitbox;
-        int num = !this.CollideCheck<Solid>() ? 1 : 0;
+        bool flag = !this.CollideCheck<Solid>();
         this.Collider = collider;
-        return num != 0;
+        return flag;
       }
     }
 
@@ -1997,9 +1895,9 @@ namespace Celeste
     {
       Vector2 position = this.Position;
       this.Position = at;
-      int num = this.CanUnDuck ? 1 : 0;
+      bool canUnDuck = this.CanUnDuck;
       this.Position = position;
-      return num != 0;
+      return canUnDuck;
     }
 
     public bool DuckFreeAt(Vector2 at)
@@ -2008,10 +1906,10 @@ namespace Celeste
       Collider collider = this.Collider;
       this.Position = at;
       this.Collider = (Collider) this.duckHitbox;
-      int num = !this.CollideCheck<Solid>() ? 1 : 0;
+      bool flag = !this.CollideCheck<Solid>();
       this.Position = position;
       this.Collider = collider;
-      return num != 0;
+      return flag;
     }
 
     private void Duck()
@@ -2033,7 +1931,7 @@ namespace Celeste
       if (this.Holding.Scene == null)
         this.Holding = (Holdable) null;
       else
-        this.Holding.Carry(Vector2.op_Addition(Vector2.op_Addition(this.Position, this.carryOffset), Vector2.op_Multiply(Vector2.get_UnitY(), this.Sprite.CarryYOffset)));
+        this.Holding.Carry(this.Position + this.carryOffset + Vector2.UnitY * this.Sprite.CarryYOffset);
     }
 
     public void Swat(int dir)
@@ -2065,13 +1963,8 @@ namespace Celeste
       else
       {
         Input.Rumble(RumbleStrength.Strong, RumbleLength.Short);
-        this.Holding.Release(Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing));
-        ref __Null local = ref this.Speed.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + 80f * (float) -(int) this.Facing;
+        this.Holding.Release(Vector2.UnitX * (float) this.Facing);
+        this.Speed.X += 80f * (float) -(int) this.Facing;
       }
       this.Play("event:/char/madeline/crystaltheo_throw", (string) null, 0.0f);
       this.Sprite.Play("throw", false, false);
@@ -2083,7 +1976,7 @@ namespace Celeste
       if (this.Holding == null)
         return;
       Input.Rumble(RumbleStrength.Light, RumbleLength.Short);
-      this.Holding.Release(Vector2.get_Zero());
+      this.Holding.Release(Vector2.Zero);
       this.Holding = (Holdable) null;
     }
 
@@ -2097,17 +1990,17 @@ namespace Celeste
       if (this.StateMachine.State == 9)
         return this.CollideCheck((Entity) solid);
       if (this.StateMachine.State == 1 || this.StateMachine.State == 6)
-        return this.CollideCheck((Entity) solid, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing)));
-      if (this.climbTriggerDir != 0)
-        return this.CollideCheck((Entity) solid, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.climbTriggerDir)));
+        return this.CollideCheck((Entity) solid, this.Position + Vector2.UnitX * (float) this.Facing);
+      if ((uint) this.climbTriggerDir > 0U)
+        return this.CollideCheck((Entity) solid, this.Position + Vector2.UnitX * (float) this.climbTriggerDir);
       return base.IsRiding(solid);
     }
 
     public override bool IsRiding(JumpThru jumpThru)
     {
-      if (this.StateMachine.State == 9 || this.StateMachine.State == 1 || this.Speed.Y < 0.0)
+      if (this.StateMachine.State == 9)
         return false;
-      return base.IsRiding(jumpThru);
+      return this.StateMachine.State != 1 && (double) this.Speed.Y >= 0.0 && base.IsRiding(jumpThru);
     }
 
     public bool BounceCheck(float y)
@@ -2121,87 +2014,68 @@ namespace Celeste
         this.CurrentBooster.PlayerReleased();
       this.RefillDash();
       this.RefillStamina();
-      Vector2 vector2 = Vector2.op_Subtraction(this.Center, from).SafeNormalize();
-      if (vector2.Y > -0.200000002980232 && vector2.Y <= 0.400000005960464)
-        vector2.Y = (__Null) -0.200000002980232;
-      this.Speed = Vector2.op_Multiply(vector2, 220f);
-      ref __Null local = ref this.Speed.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local * 1.5f;
-      if ((double) Math.Abs((float) this.Speed.X) >= 100.0)
+      Vector2 vector2 = (this.Center - from).SafeNormalize();
+      if ((double) vector2.Y > -0.200000002980232 && (double) vector2.Y <= 0.400000005960464)
+        vector2.Y = -0.2f;
+      this.Speed = vector2 * 220f;
+      this.Speed.X *= 1.5f;
+      if ((double) Math.Abs(this.Speed.X) >= 100.0)
         return;
-      if (this.Speed.X == 0.0)
-        this.Speed.X = (__Null) ((double) -(int) this.Facing * 100.0);
-      else
-        this.Speed.X = (__Null) ((double) Math.Sign((float) this.Speed.X) * 100.0);
+      this.Speed.X = (double) this.Speed.X != 0.0 ? (float) Math.Sign(this.Speed.X) * 100f : (float) -(int) this.Facing * 100f;
     }
 
     private void WindMove(Vector2 move)
     {
-      if (this.JustRespawned || (double) this.noWindTimer > 0.0 || (!this.InControl || this.StateMachine.State == 4) || (this.StateMachine.State == 2 || this.StateMachine.State == 10))
+      if (this.JustRespawned || (double) this.noWindTimer > 0.0 || (!this.InControl || this.StateMachine.State == 4) || this.StateMachine.State == 2 || this.StateMachine.State == 10)
         return;
-      if (move.X != 0.0 && this.StateMachine.State != 1)
+      Rectangle bounds;
+      if ((double) move.X != 0.0 && this.StateMachine.State != 1)
       {
         this.windTimeout = 0.2f;
-        this.windDirection.X = (__Null) (double) Math.Sign((float) move.X);
-        if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) -Math.Sign((float) move.X)), 3f))))
+        this.windDirection.X = (float) Math.Sign(move.X);
+        if (!this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) -Math.Sign(move.X) * 3f))
         {
           if (this.Ducking && this.onGround)
-          {
-            ref __Null local = ref move.X;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local * 0.0f;
-          }
-          if (move.X < 0.0)
+            move.X *= 0.0f;
+          if ((double) move.X < 0.0)
           {
             ref Vector2 local = ref move;
-            // ISSUE: variable of the null type
-            __Null x = move.X;
-            Rectangle bounds = this.level.Bounds;
-            double num1 = (double) ((Rectangle) ref bounds).get_Left() - (this.ExactPosition.X + (double) this.Collider.Left);
+            double x = (double) move.X;
+            bounds = this.level.Bounds;
+            double num1 = (double) bounds.Left - ((double) this.ExactPosition.X + (double) this.Collider.Left);
             double num2 = (double) Math.Max((float) x, (float) num1);
-            local.X = (__Null) num2;
+            local.X = (float) num2;
           }
           else
           {
             ref Vector2 local = ref move;
-            // ISSUE: variable of the null type
-            __Null x = move.X;
-            Rectangle bounds = this.level.Bounds;
-            double num1 = (double) ((Rectangle) ref bounds).get_Right() - (this.ExactPosition.X + (double) this.Collider.Right);
+            double x = (double) move.X;
+            bounds = this.level.Bounds;
+            double num1 = (double) bounds.Right - ((double) this.ExactPosition.X + (double) this.Collider.Right);
             double num2 = (double) Math.Min((float) x, (float) num1);
-            local.X = (__Null) num2;
+            local.X = (float) num2;
           }
-          this.MoveH((float) move.X, (Collision) null, (Solid) null);
+          this.MoveH(move.X, (Collision) null, (Solid) null);
         }
       }
-      if (move.Y == 0.0)
-        return;
-      this.windTimeout = 0.2f;
-      this.windDirection.Y = (__Null) (double) Math.Sign((float) move.Y);
-      double bottom = (double) this.Bottom;
-      Rectangle bounds1 = this.level.Bounds;
-      double top = (double) ((Rectangle) ref bounds1).get_Top();
-      if (bottom <= top || this.Speed.Y >= 0.0 && this.OnGround(1))
-        return;
-      if (this.StateMachine.State == 1)
+      if ((double) move.Y != 0.0)
       {
-        if (move.Y <= 0.0 || (double) this.climbNoMoveTimer > 0.0)
-          return;
-        ref __Null local = ref move.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 0.4f;
+        this.windTimeout = 0.2f;
+        this.windDirection.Y = (float) Math.Sign(move.Y);
+        double bottom = (double) this.Bottom;
+        bounds = this.level.Bounds;
+        double top = (double) bounds.Top;
+        if (bottom > top && ((double) this.Speed.Y < 0.0 || !this.OnGround(1)))
+        {
+          if (this.StateMachine.State == 1)
+          {
+            if ((double) move.Y <= 0.0 || (double) this.climbNoMoveTimer > 0.0)
+              return;
+            move.Y *= 0.4f;
+          }
+          this.MoveV(move.Y, (Collision) null, (Solid) null);
+        }
       }
-      this.MoveV((float) move.Y, (Collision) null, (Solid) null);
     }
 
     private void OnCollideH(CollisionData data)
@@ -2211,25 +2085,20 @@ namespace Celeste
       {
         if ((double) this.starFlyTimer < 0.200000002980232)
         {
-          this.Speed.X = (__Null) 0.0;
+          this.Speed.X = 0.0f;
         }
         else
         {
           this.Play("event:/game/06_reflection/feather_state_bump", (string) null, 0.0f);
           Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-          ref __Null local = ref this.Speed.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local * -0.5f;
+          this.Speed.X *= -0.5f;
         }
       }
       else
       {
         if (this.StateMachine.State == 9)
           return;
-        if (this.DashAttacking && data.Hit != null && (data.Hit.OnDashCollide != null && data.Direction.X == (double) Math.Sign((float) this.DashDir.X)))
+        if (this.DashAttacking && data.Hit != null && data.Hit.OnDashCollide != null && (double) data.Direction.X == (double) Math.Sign(this.DashDir.X))
         {
           DashCollisionResults collisionResults = data.Hit.OnDashCollide(this, data.Direction);
           if (this.StateMachine.State == 5)
@@ -2237,10 +2106,10 @@ namespace Celeste
           switch (collisionResults)
           {
             case DashCollisionResults.Rebound:
-              this.Rebound(-Math.Sign((float) this.Speed.X));
+              this.Rebound(-Math.Sign(this.Speed.X));
               return;
             case DashCollisionResults.Bounce:
-              this.ReflectBounce(new Vector2((float) -Math.Sign((float) this.Speed.X), 0.0f));
+              this.ReflectBounce(new Vector2((float) -Math.Sign(this.Speed.X), 0.0f));
               return;
             case DashCollisionResults.Ignore:
               return;
@@ -2248,28 +2117,28 @@ namespace Celeste
         }
         if (this.StateMachine.State == 2 || this.StateMachine.State == 5)
         {
-          if (this.onGround && this.DuckFreeAt(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) Math.Sign((float) this.Speed.X)))))
+          if (this.onGround && this.DuckFreeAt(this.Position + Vector2.UnitX * (float) Math.Sign(this.Speed.X)))
           {
             this.Ducking = true;
             return;
           }
-          if (this.Speed.Y == 0.0 && this.Speed.X != 0.0)
+          if ((double) this.Speed.Y == 0.0 && (double) this.Speed.X != 0.0)
           {
             for (int index1 = 1; index1 <= 4; ++index1)
             {
               for (int index2 = 1; index2 >= -1; index2 -= 2)
               {
-                if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) Math.Sign((float) this.Speed.X), (float) (index1 * index2)))))
+                if (!this.CollideCheck<Solid>(this.Position + new Vector2((float) Math.Sign(this.Speed.X), (float) (index1 * index2))))
                 {
                   this.MoveVExact(index1 * index2, (Collision) null, (Solid) null);
-                  this.MoveHExact(Math.Sign((float) this.Speed.X), (Collision) null, (Solid) null);
+                  this.MoveHExact(Math.Sign(this.Speed.X), (Collision) null, (Solid) null);
                   return;
                 }
               }
             }
           }
         }
-        if (this.DreamDashCheck(Vector2.op_Multiply(Vector2.get_UnitX(), (float) Math.Sign((float) this.Speed.X))))
+        if (this.DreamDashCheck(Vector2.UnitX * (float) Math.Sign(this.Speed.X)))
         {
           this.StateMachine.State = 9;
           this.dashAttackTimer = 0.0f;
@@ -2279,12 +2148,12 @@ namespace Celeste
         {
           if ((double) this.wallSpeedRetentionTimer <= 0.0)
           {
-            this.wallSpeedRetained = (float) this.Speed.X;
+            this.wallSpeedRetained = this.Speed.X;
             this.wallSpeedRetentionTimer = 0.06f;
           }
           if (data.Hit != null && data.Hit.OnCollide != null)
             data.Hit.OnCollide(data.Direction);
-          this.Speed.X = (__Null) 0.0;
+          this.Speed.X = 0.0f;
           this.dashAttackTimer = 0.0f;
           this.dashGliderBoostTimer = 0.0f;
           if (this.StateMachine.State != 5)
@@ -2303,23 +2172,18 @@ namespace Celeste
       {
         if ((double) this.starFlyTimer < 0.200000002980232)
         {
-          this.Speed.Y = (__Null) 0.0;
+          this.Speed.Y = 0.0f;
         }
         else
         {
           this.Play("event:/game/06_reflection/feather_state_bump", (string) null, 0.0f);
           Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-          ref __Null local = ref this.Speed.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local * -0.5f;
+          this.Speed.Y *= -0.5f;
         }
       }
       else if (this.StateMachine.State == 3)
       {
-        this.Speed.Y = (__Null) 0.0;
+        this.Speed.Y = 0.0f;
       }
       else
       {
@@ -2327,7 +2191,7 @@ namespace Celeste
           return;
         if (data.Hit != null && data.Hit.OnDashCollide != null)
         {
-          if (this.DashAttacking && data.Direction.Y == (double) Math.Sign((float) this.DashDir.Y))
+          if (this.DashAttacking && (double) data.Direction.Y == (double) Math.Sign(this.DashDir.Y))
           {
             DashCollisionResults collisionResults = data.Hit.OnDashCollide(this, data.Direction);
             if (this.StateMachine.State == 5)
@@ -2338,7 +2202,7 @@ namespace Celeste
                 this.Rebound(0);
                 return;
               case DashCollisionResults.Bounce:
-                this.ReflectBounce(new Vector2(0.0f, (float) -Math.Sign((float) this.Speed.Y)));
+                this.ReflectBounce(new Vector2(0.0f, (float) -Math.Sign(this.Speed.Y)));
                 return;
               case DashCollisionResults.Ignore:
                 return;
@@ -2350,15 +2214,15 @@ namespace Celeste
             return;
           }
         }
-        if (this.Speed.Y > 0.0)
+        if ((double) this.Speed.Y > 0.0)
         {
           if ((this.StateMachine.State == 2 || this.StateMachine.State == 5) && !this.dashStartedOnGround)
           {
-            if (this.Speed.X <= 0.0)
+            if ((double) this.Speed.X <= 0.0)
             {
               for (int moveH = -1; moveH >= -4; --moveH)
               {
-                if (!this.OnGround(Vector2.op_Addition(this.Position, new Vector2((float) moveH, 0.0f)), 1))
+                if (!this.OnGround(this.Position + new Vector2((float) moveH, 0.0f), 1))
                 {
                   this.MoveHExact(moveH, (Collision) null, (Solid) null);
                   this.MoveVExact(1, (Collision) null, (Solid) null);
@@ -2366,11 +2230,11 @@ namespace Celeste
                 }
               }
             }
-            if (this.Speed.X >= 0.0)
+            if ((double) this.Speed.X >= 0.0)
             {
               for (int moveH = 1; moveH <= 4; ++moveH)
               {
-                if (!this.OnGround(Vector2.op_Addition(this.Position, new Vector2((float) moveH, 0.0f)), 1))
+                if (!this.OnGround(this.Position + new Vector2((float) moveH, 0.0f), 1))
                 {
                   this.MoveHExact(moveH, (Collision) null, (Solid) null);
                   this.MoveVExact(1, (Collision) null, (Solid) null);
@@ -2379,37 +2243,32 @@ namespace Celeste
               }
             }
           }
-          if (this.DreamDashCheck(Vector2.op_Multiply(Vector2.get_UnitY(), (float) Math.Sign((float) this.Speed.Y))))
+          if (this.DreamDashCheck(Vector2.UnitY * (float) Math.Sign(this.Speed.Y)))
           {
             this.StateMachine.State = 9;
             this.dashAttackTimer = 0.0f;
             this.dashGliderBoostTimer = 0.0f;
             return;
           }
-          if (this.DashDir.X != 0.0 && this.DashDir.Y > 0.0 && this.Speed.Y > 0.0)
+          if ((double) this.DashDir.X != 0.0 && (double) this.DashDir.Y > 0.0 && (double) this.Speed.Y > 0.0)
           {
-            this.DashDir.X = (__Null) (double) Math.Sign((float) this.DashDir.X);
-            this.DashDir.Y = (__Null) 0.0;
-            this.Speed.Y = (__Null) 0.0;
-            ref __Null local = ref this.Speed.X;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local * 1.2f;
+            this.DashDir.X = (float) Math.Sign(this.DashDir.X);
+            this.DashDir.Y = 0.0f;
+            this.Speed.Y = 0.0f;
+            this.Speed.X *= 1.2f;
             this.Ducking = true;
           }
           if (this.StateMachine.State != 1)
           {
-            float num = Math.Min((float) (this.Speed.Y / 240.0), 1f);
-            this.Sprite.Scale.X = (__Null) (double) MathHelper.Lerp(1f, 1.6f, num);
-            this.Sprite.Scale.Y = (__Null) (double) MathHelper.Lerp(1f, 0.4f, num);
-            if (this.Speed.Y >= 80.0)
+            float amount = Math.Min(this.Speed.Y / 240f, 1f);
+            this.Sprite.Scale.X = MathHelper.Lerp(1f, 1.6f, amount);
+            this.Sprite.Scale.Y = MathHelper.Lerp(1f, 0.4f, amount);
+            if ((double) this.Speed.Y >= 80.0)
               Dust.Burst(this.Position, new Vector2(0.0f, -1f).Angle(), 8);
-            if ((double) this.highestAirY < (double) this.Y - 50.0 && this.Speed.Y >= 160.0 && (double) Math.Abs((float) this.Speed.X) >= 90.0)
+            if ((double) this.highestAirY < (double) this.Y - 50.0 && (double) this.Speed.Y >= 160.0 && (double) Math.Abs(this.Speed.X) >= 90.0)
               this.Sprite.Play("runStumble", false, false);
             Input.Rumble(RumbleStrength.Light, RumbleLength.Short);
-            Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Platform>(Vector2.op_Addition(this.Position, new Vector2(0.0f, 1f)), this.temp));
+            Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Platform>(this.Position + new Vector2(0.0f, 1f), this.temp));
             if (platformByPriority != null)
             {
               int landSoundIndex = platformByPriority.GetLandSoundIndex((Entity) this);
@@ -2423,29 +2282,29 @@ namespace Celeste
         }
         else
         {
-          if (this.Speed.Y < 0.0)
+          if ((double) this.Speed.Y < 0.0)
           {
             int num = 4;
-            if (this.DashAttacking && this.Speed.X == 0.0)
+            if (this.DashAttacking && (double) this.Speed.X == 0.0)
               num = 5;
-            if (this.Speed.X <= 0.0)
+            if ((double) this.Speed.X <= 0.0)
             {
               for (int index = 1; index <= num; ++index)
               {
-                if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) -index, -1f))))
+                if (!this.CollideCheck<Solid>(this.Position + new Vector2((float) -index, -1f)))
                 {
-                  this.Position = Vector2.op_Addition(this.Position, new Vector2((float) -index, -1f));
+                  this.Position = this.Position + new Vector2((float) -index, -1f);
                   return;
                 }
               }
             }
-            if (this.Speed.X >= 0.0)
+            if ((double) this.Speed.X >= 0.0)
             {
               for (int index = 1; index <= num; ++index)
               {
-                if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) index, -1f))))
+                if (!this.CollideCheck<Solid>(this.Position + new Vector2((float) index, -1f)))
                 {
-                  this.Position = Vector2.op_Addition(this.Position, new Vector2((float) index, -1f));
+                  this.Position = this.Position + new Vector2((float) index, -1f);
                   return;
                 }
               }
@@ -2453,7 +2312,7 @@ namespace Celeste
             if ((double) this.varJumpTimer < 0.150000005960464)
               this.varJumpTimer = 0.0f;
           }
-          if (this.DreamDashCheck(Vector2.op_Multiply(Vector2.get_UnitY(), (float) Math.Sign((float) this.Speed.Y))))
+          if (this.DreamDashCheck(Vector2.UnitY * (float) Math.Sign(this.Speed.Y)))
           {
             this.StateMachine.State = 9;
             this.dashAttackTimer = 0.0f;
@@ -2465,7 +2324,7 @@ namespace Celeste
           data.Hit.OnCollide(data.Direction);
         this.dashAttackTimer = 0.0f;
         this.dashGliderBoostTimer = 0.0f;
-        this.Speed.Y = (__Null) 0.0;
+        this.Speed.Y = 0.0f;
         if (this.StateMachine.State != 5)
           return;
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
@@ -2476,34 +2335,33 @@ namespace Celeste
 
     private bool DreamDashCheck(Vector2 dir)
     {
-      if (this.Inventory.DreamDash && this.DashAttacking && (dir.X == (double) Math.Sign((float) this.DashDir.X) || dir.Y == (double) Math.Sign((float) this.DashDir.Y)))
+      if (this.Inventory.DreamDash && this.DashAttacking && ((double) dir.X == (double) Math.Sign(this.DashDir.X) || (double) dir.Y == (double) Math.Sign(this.DashDir.Y)))
       {
-        DreamBlock dreamBlock = this.CollideFirst<DreamBlock>(Vector2.op_Addition(this.Position, dir));
+        DreamBlock dreamBlock = this.CollideFirst<DreamBlock>(this.Position + dir);
         if (dreamBlock != null)
         {
-          if (this.CollideCheck<Solid, DreamBlock>(Vector2.op_Addition(this.Position, dir)))
+          if (this.CollideCheck<Solid, DreamBlock>(this.Position + dir))
           {
-            Vector2 vector2;
-            ((Vector2) ref vector2).\u002Ector(Math.Abs((float) dir.Y), Math.Abs((float) dir.X));
+            Vector2 vector2 = new Vector2(Math.Abs(dir.Y), Math.Abs(dir.X));
             bool flag1;
             bool flag2;
-            if (dir.X != 0.0)
+            if ((double) dir.X != 0.0)
             {
-              flag1 = this.Speed.Y <= 0.0;
-              flag2 = this.Speed.Y >= 0.0;
+              flag1 = (double) this.Speed.Y <= 0.0;
+              flag2 = (double) this.Speed.Y >= 0.0;
             }
             else
             {
-              flag1 = this.Speed.X <= 0.0;
-              flag2 = this.Speed.X >= 0.0;
+              flag1 = (double) this.Speed.X <= 0.0;
+              flag2 = (double) this.Speed.X >= 0.0;
             }
             if (flag1)
             {
               for (int index = -1; index >= -4; --index)
               {
-                if (!this.CollideCheck<Solid, DreamBlock>(Vector2.op_Addition(Vector2.op_Addition(this.Position, dir), Vector2.op_Multiply(vector2, (float) index))))
+                if (!this.CollideCheck<Solid, DreamBlock>(this.Position + dir + vector2 * (float) index))
                 {
-                  this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2, (float) index));
+                  this.Position = this.Position + vector2 * (float) index;
                   this.dreamBlock = dreamBlock;
                   return true;
                 }
@@ -2513,9 +2371,9 @@ namespace Celeste
             {
               for (int index = 1; index <= 4; ++index)
               {
-                if (!this.CollideCheck<Solid, DreamBlock>(Vector2.op_Addition(Vector2.op_Addition(this.Position, dir), Vector2.op_Multiply(vector2, (float) index))))
+                if (!this.CollideCheck<Solid, DreamBlock>(this.Position + dir + vector2 * (float) index))
                 {
-                  this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(vector2, (float) index));
+                  this.Position = this.Position + vector2 * (float) index;
                   this.dreamBlock = dreamBlock;
                   return true;
                 }
@@ -2532,7 +2390,7 @@ namespace Celeste
 
     public void OnBoundsH()
     {
-      this.Speed.X = (__Null) 0.0;
+      this.Speed.X = 0.0f;
       if (this.StateMachine.State != 5)
         return;
       this.StateMachine.State = 0;
@@ -2540,7 +2398,7 @@ namespace Celeste
 
     public void OnBoundsV()
     {
-      this.Speed.Y = (__Null) 0.0;
+      this.Speed.Y = 0.0f;
       if (this.StateMachine.State != 5)
         return;
       this.StateMachine.State = 0;
@@ -2571,7 +2429,7 @@ namespace Celeste
       }
       if (!this.TrySquishWiggle(data))
       {
-        this.Die(Vector2.get_Zero(), false, true);
+        this.Die(Vector2.Zero, false, true);
       }
       else
       {
@@ -2595,15 +2453,7 @@ namespace Celeste
 
     public bool ClimbBoundsCheck(int dir)
     {
-      double num1 = (double) this.Left + (double) (dir * 2);
-      Rectangle bounds1 = this.level.Bounds;
-      double left = (double) ((Rectangle) ref bounds1).get_Left();
-      if (num1 < left)
-        return false;
-      double num2 = (double) this.Right + (double) (dir * 2);
-      Rectangle bounds2 = this.level.Bounds;
-      double right = (double) ((Rectangle) ref bounds2).get_Right();
-      return num2 < right;
+      return (double) this.Left + (double) (dir * 2) >= (double) this.level.Bounds.Left && (double) this.Right + (double) (dir * 2) < (double) this.level.Bounds.Right;
     }
 
     public void ClimbTrigger(int dir)
@@ -2613,14 +2463,12 @@ namespace Celeste
 
     public bool ClimbCheck(int dir, int yAdd = 0)
     {
-      if (this.ClimbBoundsCheck(dir) && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) yAdd)), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), 2f), (float) this.Facing))))
-        return this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) (dir * 2), (float) yAdd)));
-      return false;
+      return this.ClimbBoundsCheck(dir) && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitY * (float) yAdd + Vector2.UnitX * 2f * (float) this.Facing) && this.CollideCheck<Solid>(this.Position + new Vector2((float) (dir * 2), (float) yAdd));
     }
 
     private int NormalUpdate()
     {
-      if (this.LiftBoost.Y < 0.0 && this.wasOnGround && (!this.onGround && this.Speed.Y >= 0.0))
+      if ((double) this.LiftBoost.Y < 0.0 && this.wasOnGround && !this.onGround && (double) this.Speed.Y >= 0.0)
         this.Speed.Y = this.LiftBoost.Y;
       if (this.Holding == null)
       {
@@ -2631,7 +2479,7 @@ namespace Celeste
             if (component.Check(this) && this.Pickup(component))
               return 8;
           }
-          if (this.Speed.Y >= 0.0 && Math.Sign((float) this.Speed.X) != -(int) this.Facing)
+          if ((double) this.Speed.Y >= 0.0 && Math.Sign(this.Speed.X) != -(int) this.Facing)
           {
             if (this.ClimbCheck((int) this.Facing, 0))
             {
@@ -2640,11 +2488,11 @@ namespace Celeste
                 return 1;
               this.ClimbTrigger((int) this.Facing);
             }
-            if (!SaveData.Instance.Assists.NoGrabbing && (int) Input.MoveY < 1 && this.level.Wind.Y <= 0.0)
+            if (!SaveData.Instance.Assists.NoGrabbing && (int) Input.MoveY < 1 && (double) this.level.Wind.Y <= 0.0)
             {
               for (int index = 1; index <= 2; ++index)
               {
-                if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) -index))) && this.ClimbCheck((int) this.Facing, -index))
+                if (!this.CollideCheck<Solid>(this.Position + Vector2.UnitY * (float) -index) && this.ClimbCheck((int) this.Facing, -index))
                 {
                   this.MoveVExact(-index, (Collision) null, (Solid) null);
                   this.Ducking = false;
@@ -2656,7 +2504,7 @@ namespace Celeste
         }
         if (this.CanDash)
         {
-          this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
+          this.Speed += this.LiftBoost;
           return this.StartDash();
         }
         if (this.Ducking)
@@ -2668,16 +2516,16 @@ namespace Celeste
               this.Ducking = false;
               this.Sprite.Scale = new Vector2(0.8f, 1.2f);
             }
-            else if (this.Speed.X == 0.0)
+            else if ((double) this.Speed.X == 0.0)
             {
               for (int index = 4; index > 0; --index)
               {
-                if (this.CanUnDuckAt(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) index))))
+                if (this.CanUnDuckAt(this.Position + Vector2.UnitX * (float) index))
                 {
                   this.MoveH(50f * Engine.DeltaTime, (Collision) null, (Solid) null);
                   break;
                 }
-                if (this.CanUnDuckAt(Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) index))))
+                if (this.CanUnDuckAt(this.Position - Vector2.UnitX * (float) index))
                 {
                   this.MoveH(-50f * Engine.DeltaTime, (Collision) null, (Solid) null);
                   break;
@@ -2686,7 +2534,7 @@ namespace Celeste
             }
           }
         }
-        else if (this.onGround && (int) Input.MoveY == 1 && this.Speed.Y >= 0.0)
+        else if (this.onGround && (int) Input.MoveY == 1 && (double) this.Speed.Y >= 0.0)
         {
           this.Ducking = true;
           this.Sprite.Scale = new Vector2(1.4f, 0.6f);
@@ -2696,7 +2544,7 @@ namespace Celeste
       {
         if (!Input.Grab.Check && (double) this.minHoldTimer <= 0.0)
           this.Throw();
-        if (!this.Ducking && this.onGround && ((int) Input.MoveY == 1 && this.Speed.Y >= 0.0))
+        if (!this.Ducking && this.onGround && (int) Input.MoveY == 1 && (double) this.Speed.Y >= 0.0)
         {
           this.Drop();
           this.Ducking = true;
@@ -2705,7 +2553,7 @@ namespace Celeste
       }
       if (this.Ducking && this.onGround)
       {
-        this.Speed.X = (__Null) (double) Calc.Approach((float) this.Speed.X, 0.0f, 500f * Engine.DeltaTime);
+        this.Speed.X = Calc.Approach(this.Speed.X, 0.0f, 500f * Engine.DeltaTime);
       }
       else
       {
@@ -2717,7 +2565,7 @@ namespace Celeste
         float num2 = this.Holding == null || !this.Holding.SlowRun ? 90f : 70f;
         if (this.level.InSpace)
           num2 *= 0.6f;
-        this.Speed.X = (double) Math.Abs((float) this.Speed.X) <= (double) num2 || Math.Sign((float) this.Speed.X) != this.moveX ? (__Null) (double) Calc.Approach((float) this.Speed.X, num2 * (float) this.moveX, 1000f * num1 * Engine.DeltaTime) : (__Null) (double) Calc.Approach((float) this.Speed.X, num2 * (float) this.moveX, 400f * num1 * Engine.DeltaTime);
+        this.Speed.X = (double) Math.Abs(this.Speed.X) <= (double) num2 || Math.Sign(this.Speed.X) != this.moveX ? Calc.Approach(this.Speed.X, num2 * (float) this.moveX, 1000f * num1 * Engine.DeltaTime) : Calc.Approach(this.Speed.X, num2 * (float) this.moveX, 400f * num1 * Engine.DeltaTime);
       }
       float target1 = 160f;
       float target2 = 240f;
@@ -2726,15 +2574,15 @@ namespace Celeste
         target1 *= 0.6f;
         target2 *= 0.6f;
       }
-      if ((int) Input.MoveY == 1 && this.Speed.Y >= (double) target1)
+      if ((int) Input.MoveY == 1 && (double) this.Speed.Y >= (double) target1)
       {
         this.maxFall = Calc.Approach(this.maxFall, target2, 300f * Engine.DeltaTime);
-        float num1 = target1 + (float) (((double) target2 - (double) target1) * 0.5);
-        if (this.Speed.Y >= (double) num1)
+        float num = target1 + (float) (((double) target2 - (double) target1) * 0.5);
+        if ((double) this.Speed.Y >= (double) num)
         {
-          float num2 = Math.Min(1f, (float) ((this.Speed.Y - (double) num1) / ((double) target2 - (double) num1)));
-          this.Sprite.Scale.X = (__Null) (double) MathHelper.Lerp(1f, 0.5f, num2);
-          this.Sprite.Scale.Y = (__Null) (double) MathHelper.Lerp(1f, 1.5f, num2);
+          float amount = Math.Min(1f, (float) (((double) this.Speed.Y - (double) num) / ((double) target2 - (double) num)));
+          this.Sprite.Scale.X = MathHelper.Lerp(1f, 0.5f, amount);
+          this.Sprite.Scale.Y = MathHelper.Lerp(1f, 1.5f, amount);
         }
       }
       else
@@ -2744,31 +2592,31 @@ namespace Celeste
         float target3 = this.maxFall;
         if (((Facings) this.moveX == this.Facing || this.moveX == 0 && Input.Grab.Check) && Input.MoveY.Value != 1)
         {
-          if (this.Speed.Y >= 0.0 && (double) this.wallSlideTimer > 0.0 && (this.Holding == null && this.ClimbBoundsCheck((int) this.Facing)) && (this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing))) && this.CanUnDuck))
+          if ((double) this.Speed.Y >= 0.0 && (double) this.wallSlideTimer > 0.0 && (this.Holding == null && this.ClimbBoundsCheck((int) this.Facing)) && this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) this.Facing) && this.CanUnDuck)
           {
             this.Ducking = false;
             this.wallSlideDir = (int) this.Facing;
           }
-          if (this.wallSlideDir != 0)
+          if ((uint) this.wallSlideDir > 0U)
           {
             if (Input.Grab.Check)
               this.ClimbTrigger(this.wallSlideDir);
-            if ((double) this.wallSlideTimer > 0.600000023841858 && ClimbBlocker.Check((Scene) this.level, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.wallSlideDir))))
+            if ((double) this.wallSlideTimer > 0.600000023841858 && ClimbBlocker.Check((Scene) this.level, (Entity) this, this.Position + Vector2.UnitX * (float) this.wallSlideDir))
               this.wallSlideTimer = 0.6f;
             target3 = MathHelper.Lerp(160f, 20f, this.wallSlideTimer / 1.2f);
             if ((double) this.wallSlideTimer / 1.20000004768372 > 0.649999976158142)
               this.CreateWallSlideParticles(this.wallSlideDir);
           }
         }
-        float num = (double) Math.Abs((float) this.Speed.Y) >= 40.0 || !Input.Jump.Check && !this.AutoJump ? 1f : 0.5f;
+        float num = (double) Math.Abs(this.Speed.Y) >= 40.0 || !Input.Jump.Check && !this.AutoJump ? 1f : 0.5f;
         if (this.level.InSpace)
           num *= 0.6f;
-        this.Speed.Y = (__Null) (double) Calc.Approach((float) this.Speed.Y, target3, 900f * num * Engine.DeltaTime);
+        this.Speed.Y = Calc.Approach(this.Speed.Y, target3, 900f * num * Engine.DeltaTime);
       }
       if ((double) this.varJumpTimer > 0.0)
       {
         if (this.AutoJump || Input.Jump.Check)
-          this.Speed.Y = (__Null) (double) Math.Min((float) this.Speed.Y, this.varJumpSpeed);
+          this.Speed.Y = Math.Min(this.Speed.Y, this.varJumpSpeed);
         else
           this.varJumpTimer = 0.0f;
       }
@@ -2781,7 +2629,7 @@ namespace Celeste
           bool canUnDuck = this.CanUnDuck;
           if (canUnDuck && this.WallJumpCheck(1))
           {
-            if (this.Facing == Facings.Right && Input.Grab.Check && (!SaveData.Instance.Assists.NoGrabbing && (double) this.Stamina > 0.0) && (this.Holding == null && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), 3f)))))
+            if (this.Facing == Facings.Right && Input.Grab.Check && (!SaveData.Instance.Assists.NoGrabbing && (double) this.Stamina > 0.0) && this.Holding == null && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * 3f))
               this.ClimbJump();
             else if (this.DashAttacking && this.SuperWallJumpAngleCheck)
               this.SuperWallJump(-1);
@@ -2790,7 +2638,7 @@ namespace Celeste
           }
           else if (canUnDuck && this.WallJumpCheck(-1))
           {
-            if (this.Facing == Facings.Left && Input.Grab.Check && (!SaveData.Instance.Assists.NoGrabbing && (double) this.Stamina > 0.0) && (this.Holding == null && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), -3f)))))
+            if (this.Facing == Facings.Left && Input.Grab.Check && (!SaveData.Instance.Assists.NoGrabbing && (double) this.Stamina > 0.0) && this.Holding == null && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * -3f))
               this.ClimbJump();
             else if (this.DashAttacking && this.SuperWallJumpAngleCheck)
               this.SuperWallJump(1);
@@ -2800,7 +2648,7 @@ namespace Celeste
           else
           {
             Water water;
-            if ((water = this.CollideFirst<Water>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 2f)))) != null)
+            if ((water = this.CollideFirst<Water>(this.Position + Vector2.UnitY * 2f)) != null)
             {
               this.Jump(true, true);
               water.TopSurface.DoRipple(this.Position, 1f);
@@ -2816,7 +2664,7 @@ namespace Celeste
       if (!this.Scene.OnInterval(0.01f))
         return;
       Vector2 center = this.Center;
-      Dust.Burst(dir != 1 ? Vector2.op_Addition(center, new Vector2(-5f, 4f)) : Vector2.op_Addition(center, new Vector2(5f, 4f)), -1.570796f, 1);
+      Dust.Burst(dir != 1 ? center + new Vector2(-5f, 4f) : center + new Vector2(5f, 4f), -1.570796f, 1);
     }
 
     private bool IsTired
@@ -2848,21 +2696,16 @@ namespace Celeste
     private void ClimbBegin()
     {
       this.AutoJump = false;
-      this.Speed.X = (__Null) 0.0;
-      ref __Null local = ref this.Speed.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local * 0.2f;
+      this.Speed.X = 0.0f;
+      this.Speed.Y *= 0.2f;
       this.wallSlideTimer = 1.2f;
       this.climbNoMoveTimer = 0.1f;
       this.wallBoostTimer = 0.0f;
       this.lastClimbMove = 0;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
-      for (int index = 0; index < 2 && !this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing))); ++index)
-        this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing));
-      Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing)), this.temp));
+      for (int index = 0; index < 2 && !this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) this.Facing); ++index)
+        this.Position = this.Position + Vector2.UnitX * (float) this.Facing;
+      Platform platformByPriority = SurfaceIndex.GetPlatformByPriority(this.CollideAll<Solid>(this.Position + Vector2.UnitX * (float) this.Facing, this.temp));
       if (platformByPriority == null)
         return;
       this.Play("event:/char/madeline/grab", "surface_index", (float) platformByPriority.GetWallSoundIndex(this, (int) this.Facing));
@@ -2897,22 +2740,22 @@ namespace Celeste
       }
       if (this.CanDash)
       {
-        this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
+        this.Speed += this.LiftBoost;
         return this.StartDash();
       }
       if (!Input.Grab.Check)
       {
-        this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
+        this.Speed += this.LiftBoost;
         this.Play("event:/char/madeline/grab_letgo", (string) null, 0.0f);
         return 0;
       }
-      if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing))))
+      if (!this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) this.Facing))
       {
-        if (this.Speed.Y < 0.0)
+        if ((double) this.Speed.Y < 0.0)
         {
           if (this.wallBoosting)
           {
-            this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
+            this.Speed += this.LiftBoost;
             this.Play("event:/char/madeline/grab_letgo", (string) null, 0.0f);
           }
           else
@@ -2927,8 +2770,8 @@ namespace Celeste
         if ((HandleBase) this.conveyorLoopSfx == (HandleBase) null)
           this.conveyorLoopSfx = Audio.Play("event:/game/09_core/conveyor_activate", this.Position, "end", 0.0f);
         Audio.Position(this.conveyorLoopSfx, this.Position);
-        this.Speed.Y = (__Null) (double) Calc.Approach((float) this.Speed.Y, -160f, 600f * Engine.DeltaTime);
-        this.LiftSpeed = Vector2.op_Multiply(Vector2.get_UnitY(), Math.Max((float) this.Speed.Y, -80f));
+        this.Speed.Y = Calc.Approach(this.Speed.Y, -160f, 600f * Engine.DeltaTime);
+        this.LiftSpeed = Vector2.UnitY * Math.Max(this.Speed.Y, -80f);
         Input.Rumble(RumbleStrength.Light, RumbleLength.Short);
       }
       else
@@ -2944,15 +2787,15 @@ namespace Celeste
         bool flag = false;
         if ((double) this.climbNoMoveTimer <= 0.0)
         {
-          if (ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing))))
+          if (ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * (float) this.Facing))
             flag = true;
           else if (Input.MoveY.Value == -1)
           {
             target = -45f;
-            if (this.CollideCheck<Solid>(Vector2.op_Subtraction(this.Position, Vector2.get_UnitY())) || this.ClimbHopBlockedCheck() && this.SlipCheck(-1f))
+            if (this.CollideCheck<Solid>(this.Position - Vector2.UnitY) || this.ClimbHopBlockedCheck() && this.SlipCheck(-1f))
             {
-              if (this.Speed.Y < 0.0)
-                this.Speed.Y = (__Null) 0.0;
+              if ((double) this.Speed.Y < 0.0)
+                this.Speed.Y = 0.0f;
               target = 0.0f;
               flag = true;
             }
@@ -2967,8 +2810,8 @@ namespace Celeste
             target = 80f;
             if (this.onGround)
             {
-              if (this.Speed.Y > 0.0)
-                this.Speed.Y = (__Null) 0.0;
+              if ((double) this.Speed.Y > 0.0)
+                this.Speed.Y = 0.0f;
               target = 0.0f;
             }
             else
@@ -2982,10 +2825,10 @@ namespace Celeste
         this.lastClimbMove = Math.Sign(target);
         if (flag && this.SlipCheck(0.0f))
           target = 30f;
-        this.Speed.Y = (__Null) (double) Calc.Approach((float) this.Speed.Y, target, 900f * Engine.DeltaTime);
+        this.Speed.Y = Calc.Approach(this.Speed.Y, target, 900f * Engine.DeltaTime);
       }
-      if (Input.MoveY.Value != 1 && this.Speed.Y > 0.0 && !this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) this.Facing, 1f))))
-        this.Speed.Y = (__Null) 0.0;
+      if (Input.MoveY.Value != 1 && (double) this.Speed.Y > 0.0 && !this.CollideCheck<Solid>(this.Position + new Vector2((float) this.Facing, 1f)))
+        this.Speed.Y = 0.0f;
       if ((double) this.climbNoMoveTimer <= 0.0)
       {
         if (this.lastClimbMove == -1)
@@ -3016,13 +2859,13 @@ namespace Celeste
         this.PlaySweatEffectDangerOverride("idle");
       if ((double) this.Stamina > 0.0)
         return 1;
-      this.Speed = Vector2.op_Addition(this.Speed, this.LiftBoost);
+      this.Speed += this.LiftBoost;
       return 0;
     }
 
     private WallBooster WallBoosterCheck()
     {
-      if (ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing))))
+      if (ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * (float) this.Facing))
         return (WallBooster) null;
       foreach (WallBooster entity in this.Scene.Tracker.GetEntities<WallBooster>())
       {
@@ -3034,7 +2877,7 @@ namespace Celeste
 
     private void ClimbHop()
     {
-      this.climbHopSolid = this.CollideFirst<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.Facing)));
+      this.climbHopSolid = this.CollideFirst<Solid>(this.Position + Vector2.UnitX * (float) this.Facing);
       this.playFootstepOnLand = 0.5f;
       if (this.climbHopSolid != null)
       {
@@ -3045,10 +2888,10 @@ namespace Celeste
       else
       {
         this.hopWaitX = 0;
-        this.Speed.X = (__Null) ((double) this.Facing * 100.0);
+        this.Speed.X = (float) this.Facing * 100f;
       }
       this.lowFrictionStopTimer = 0.15f;
-      this.Speed.Y = (__Null) (double) Math.Min((float) this.Speed.Y, -120f);
+      this.Speed.Y = Math.Min(this.Speed.Y, -120f);
       this.forceMoveX = 0;
       this.forceMoveXTimer = 0.2f;
       this.fastJump = false;
@@ -3058,10 +2901,8 @@ namespace Celeste
 
     private bool SlipCheck(float addY = 0.0f)
     {
-      Vector2 point = this.Facing != Facings.Right ? Vector2.op_Addition(Vector2.op_Subtraction(this.TopLeft, Vector2.get_UnitX()), Vector2.op_Multiply(Vector2.get_UnitY(), 4f + addY)) : Vector2.op_Addition(this.TopRight, Vector2.op_Multiply(Vector2.get_UnitY(), 4f + addY));
-      if (!this.Scene.CollideCheck<Solid>(point))
-        return !this.Scene.CollideCheck<Solid>(Vector2.op_Addition(point, Vector2.op_Multiply(Vector2.get_UnitY(), addY - 4f)));
-      return false;
+      Vector2 point = this.Facing != Facings.Right ? this.TopLeft - Vector2.UnitX + Vector2.UnitY * (4f + addY) : this.TopRight + Vector2.UnitY * (4f + addY);
+      return !this.Scene.CollideCheck<Solid>(point) && !this.Scene.CollideCheck<Solid>(point + Vector2.UnitY * (addY - 4f));
     }
 
     private bool ClimbHopBlockedCheck()
@@ -3076,7 +2917,7 @@ namespace Celeste
         if (component.HopBlockCheck(this))
           return true;
       }
-      return this.CollideCheck<Solid>(Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 6f)));
+      return this.CollideCheck<Solid>(this.Position - Vector2.UnitY * 6f);
     }
 
     private bool JumpThruBoostBlockedCheck()
@@ -3101,9 +2942,7 @@ namespace Celeste
     {
       get
       {
-        if ((double) this.dashAttackTimer <= 0.0)
-          return this.StateMachine.State == 5;
-        return true;
+        return (double) this.dashAttackTimer > 0.0 || this.StateMachine.State == 5;
       }
     }
 
@@ -3111,11 +2950,7 @@ namespace Celeste
     {
       get
       {
-        if (!Input.Dash.Pressed || (double) this.dashCooldownTimer > 0.0 || this.Dashes <= 0)
-          return false;
-        if (TalkComponent.PlayerOver != null)
-          return !Input.Talk.Pressed;
-        return true;
+        return Input.Dash.Pressed && (double) this.dashCooldownTimer <= 0.0 && this.Dashes > 0 && (TalkComponent.PlayerOver == null || !Input.Talk.Pressed);
       }
     }
 
@@ -3131,8 +2966,8 @@ namespace Celeste
         ++SaveData.Instance.TotalDashes;
         ++this.level.Session.Dashes;
         Stats.Increment(Stat.DASHES, 1);
-        bool flag = this.DashDir.Y < 0.0 || this.DashDir.Y == 0.0 && this.DashDir.X > 0.0;
-        if (Vector2.op_Equality(this.DashDir, Vector2.get_Zero()))
+        bool flag = (double) this.DashDir.Y < 0.0 || (double) this.DashDir.Y == 0.0 && (double) this.DashDir.X > 0.0;
+        if (this.DashDir == Vector2.Zero)
           flag = this.Facing == Facings.Right;
         if (flag)
         {
@@ -3167,7 +3002,7 @@ namespace Celeste
       this.launched = false;
       this.canCurveDash = true;
       if ((double) Engine.TimeRate > 0.25)
-        Celeste.Celeste.Freeze(0.05f);
+        Celeste.Freeze(0.05f);
       this.dashCooldownTimer = 0.2f;
       this.dashRefillCooldownTimer = 0.1f;
       this.StartedDashing = true;
@@ -3180,8 +3015,8 @@ namespace Celeste
       if (SaveData.Instance.Assists.SuperDashing)
         this.dashAttackTimer += 0.15f;
       this.beforeDashSpeed = this.Speed;
-      this.Speed = Vector2.get_Zero();
-      this.DashDir = Vector2.get_Zero();
+      this.Speed = Vector2.Zero;
+      this.DashDir = Vector2.Zero;
       if (!this.onGround && this.Ducking && this.CanUnDuck)
       {
         this.Ducking = false;
@@ -3213,7 +3048,7 @@ namespace Celeste
             this.dashTrailTimer = 0.1f;
         }
       }
-      if (SaveData.Instance.Assists.SuperDashing && this.canCurveDash && (Vector2.op_Inequality(Input.Aim.Value, Vector2.get_Zero()) && Vector2.op_Inequality(this.Speed, Vector2.get_Zero())))
+      if (SaveData.Instance.Assists.SuperDashing && this.canCurveDash && Input.Aim.Value != Vector2.Zero && this.Speed != Vector2.Zero)
       {
         Vector2 aimVector = Input.GetAimVector(Facings.Right);
         if ((double) Vector2.Dot(aimVector, this.Speed.SafeNormalize()) >= -0.100000001490116)
@@ -3228,7 +3063,7 @@ namespace Celeste
         this.StateMachine.ForceState(2);
         return 2;
       }
-      if (this.Holding == null && Input.Grab.Check && (!this.IsTired && this.CanUnDuck))
+      if (this.Holding == null && Input.Grab.Check && !this.IsTired && this.CanUnDuck)
       {
         foreach (Holdable component in this.Scene.Tracker.GetComponents<Holdable>())
         {
@@ -3236,7 +3071,7 @@ namespace Celeste
             return 8;
         }
       }
-      if (this.DashDir.Y == 0.0)
+      if ((double) this.DashDir.Y == 0.0)
       {
         foreach (JumpThru entity in this.Scene.Tracker.GetEntities<JumpThru>())
         {
@@ -3269,7 +3104,7 @@ namespace Celeste
       {
         if (this.WallJumpCheck(1))
         {
-          if (this.Facing == Facings.Right && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), 3f))))
+          if (this.Facing == Facings.Right && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * 3f))
             this.ClimbJump();
           else
             this.WallJump(-1);
@@ -3277,15 +3112,15 @@ namespace Celeste
         }
         if (this.WallJumpCheck(-1))
         {
-          if (this.Facing == Facings.Left && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), -3f))))
+          if (this.Facing == Facings.Left && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * -3f))
             this.ClimbJump();
           else
             this.WallJump(1);
           return 0;
         }
       }
-      if (Vector2.op_Inequality(this.Speed, Vector2.get_Zero()) && this.level.OnInterval(0.02f))
-        this.level.ParticlesFG.Emit(this.wasDashB ? Player.P_DashB : Player.P_DashA, Vector2.op_Addition(this.Center, Calc.Random.Range(Vector2.op_Multiply(Vector2.get_One(), -2f), Vector2.op_Multiply(Vector2.get_One(), 2f))), this.DashDir.Angle());
+      if (this.Speed != Vector2.Zero && this.level.OnInterval(0.02f))
+        this.level.ParticlesFG.Emit(this.wasDashB ? Player.P_DashB : Player.P_DashA, this.Center + Calc.Random.Range(Vector2.One * -2f, Vector2.One * 2f), this.DashDir.Angle());
       return 2;
     }
 
@@ -3293,153 +3128,121 @@ namespace Celeste
     {
       get
       {
-        if ((double) Math.Abs((float) this.DashDir.X) <= 0.200000002980232)
-          return this.DashDir.Y <= -0.75;
-        return false;
+        return (double) Math.Abs(this.DashDir.X) <= 0.200000002980232 && (double) this.DashDir.Y <= -0.75;
       }
     }
 
     private IEnumerator DashCoroutine()
     {
-      Player player = this;
       yield return (object) null;
-      Vector2 lastAim = player.lastAim;
-      if (player.OverrideDashDirection.HasValue)
-        lastAim = player.OverrideDashDirection.Value;
-      Vector2 vector2 = Vector2.op_Multiply(lastAim, 240f);
-      if (Math.Sign((float) player.beforeDashSpeed.X) == Math.Sign((float) vector2.X) && (double) Math.Abs((float) player.beforeDashSpeed.X) > (double) Math.Abs((float) vector2.X))
-        vector2.X = player.beforeDashSpeed.X;
-      player.Speed = vector2;
-      if (player.CollideCheck<Water>())
-        player.Speed = Vector2.op_Multiply(player.Speed, 0.75f);
-      player.DashDir = lastAim;
-      player.SceneAs<Level>().DirectionalShake(player.DashDir, 0.2f);
-      if (player.DashDir.X != 0.0)
-        player.Facing = (Facings) Math.Sign((float) player.DashDir.X);
-      player.CallDashEvents();
-      if (player.StateMachine.PreviousState == 19)
-        player.level.Particles.Emit(FlyFeather.P_Boost, 12, player.Center, Vector2.op_Multiply(Vector2.get_One(), 4f), Vector2.op_UnaryNegation(lastAim).Angle());
-      if (player.onGround && player.DashDir.X != 0.0 && (player.DashDir.Y > 0.0 && player.Speed.Y > 0.0) && (!player.Inventory.DreamDash || !player.CollideCheck<DreamBlock>(Vector2.op_Addition(player.Position, Vector2.get_UnitY()))))
+      Vector2 dir = this.lastAim;
+      if (this.OverrideDashDirection.HasValue)
+        dir = this.OverrideDashDirection.Value;
+      Vector2 newSpeed = dir * 240f;
+      if (Math.Sign(this.beforeDashSpeed.X) == Math.Sign(newSpeed.X) && (double) Math.Abs(this.beforeDashSpeed.X) > (double) Math.Abs(newSpeed.X))
+        newSpeed.X = this.beforeDashSpeed.X;
+      this.Speed = newSpeed;
+      if (this.CollideCheck<Water>())
+        this.Speed *= 0.75f;
+      this.DashDir = dir;
+      this.SceneAs<Level>().DirectionalShake(this.DashDir, 0.2f);
+      if ((double) this.DashDir.X != 0.0)
+        this.Facing = (Facings) Math.Sign(this.DashDir.X);
+      this.CallDashEvents();
+      if (this.StateMachine.PreviousState == 19)
+        this.level.Particles.Emit(FlyFeather.P_Boost, 12, this.Center, Vector2.One * 4f, (-dir).Angle());
+      if (this.onGround && (double) this.DashDir.X != 0.0 && ((double) this.DashDir.Y > 0.0 && (double) this.Speed.Y > 0.0) && (!this.Inventory.DreamDash || !this.CollideCheck<DreamBlock>(this.Position + Vector2.UnitY)))
       {
-        player.DashDir.X = (__Null) (double) Math.Sign((float) player.DashDir.X);
-        player.DashDir.Y = (__Null) 0.0;
-        player.Speed.Y = (__Null) 0.0;
-        ref __Null local = ref player.Speed.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 1.2f;
-        player.Ducking = true;
+        this.DashDir.X = (float) Math.Sign(this.DashDir.X);
+        this.DashDir.Y = 0.0f;
+        this.Speed.Y = 0.0f;
+        this.Speed.X *= 1.2f;
+        this.Ducking = true;
       }
-      SlashFx.Burst(player.Center, player.DashDir.Angle());
-      player.CreateTrail();
+      SlashFx.Burst(this.Center, this.DashDir.Angle());
+      this.CreateTrail();
       if (SaveData.Instance.Assists.SuperDashing)
       {
-        player.dashTrailTimer = 0.1f;
-        player.dashTrailCounter = 2;
+        this.dashTrailTimer = 0.1f;
+        this.dashTrailCounter = 2;
       }
       else
       {
-        player.dashTrailTimer = 0.08f;
-        player.dashTrailCounter = 1;
+        this.dashTrailTimer = 0.08f;
+        this.dashTrailCounter = 1;
       }
-      if (player.DashDir.X != 0.0 && Input.Grab.Check)
+      if ((double) this.DashDir.X != 0.0 && Input.Grab.Check)
       {
-        SwapBlock swapBlock = player.CollideFirst<SwapBlock>(Vector2.op_Addition(player.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) Math.Sign((float) player.DashDir.X))));
-        if (swapBlock != null && swapBlock.Direction.X == (double) Math.Sign((float) player.DashDir.X))
+        SwapBlock swapBlock = this.CollideFirst<SwapBlock>(this.Position + Vector2.UnitX * (float) Math.Sign(this.DashDir.X));
+        if (swapBlock != null && (double) swapBlock.Direction.X == (double) Math.Sign(this.DashDir.X))
         {
-          player.StateMachine.State = 1;
-          player.Speed = Vector2.get_Zero();
+          this.StateMachine.State = 1;
+          this.Speed = Vector2.Zero;
           yield break;
         }
+        else
+          swapBlock = (SwapBlock) null;
       }
-      Vector2 swapCancel = Vector2.get_One();
-      foreach (SwapBlock entity in player.Scene.Tracker.GetEntities<SwapBlock>())
+      Vector2 swapCancel = Vector2.One;
+      foreach (SwapBlock entity in this.Scene.Tracker.GetEntities<SwapBlock>())
       {
-        if (player.CollideCheck((Entity) entity, Vector2.op_Addition(player.Position, Vector2.get_UnitY())) && entity != null && entity.Swapping)
+        SwapBlock swapBlock = entity;
+        if (this.CollideCheck((Entity) swapBlock, this.Position + Vector2.UnitY) && (swapBlock != null && swapBlock.Swapping))
         {
-          if (player.DashDir.X != 0.0 && entity.Direction.X == (double) Math.Sign((float) player.DashDir.X))
-            player.Speed.X = (__Null) (double) (swapCancel.X = (__Null) 0.0f);
-          if (player.DashDir.Y != 0.0 && entity.Direction.Y == (double) Math.Sign((float) player.DashDir.Y))
-            player.Speed.Y = (__Null) (double) (swapCancel.Y = (__Null) 0.0f);
+          if ((double) this.DashDir.X != 0.0 && (double) swapBlock.Direction.X == (double) Math.Sign(this.DashDir.X))
+            this.Speed.X = swapCancel.X = 0.0f;
+          if ((double) this.DashDir.Y != 0.0 && (double) swapBlock.Direction.Y == (double) Math.Sign(this.DashDir.Y))
+            this.Speed.Y = swapCancel.Y = 0.0f;
         }
+        swapBlock = (SwapBlock) null;
       }
       if (SaveData.Instance.Assists.SuperDashing)
         yield return (object) 0.3f;
       else
         yield return (object) 0.15f;
-      player.CreateTrail();
-      player.AutoJump = true;
-      player.AutoJumpTimer = 0.0f;
-      if (player.DashDir.Y <= 0.0)
+      this.CreateTrail();
+      this.AutoJump = true;
+      this.AutoJumpTimer = 0.0f;
+      if ((double) this.DashDir.Y <= 0.0)
       {
-        player.Speed = Vector2.op_Multiply(player.DashDir, 160f);
-        ref __Null local1 = ref player.Speed.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 * (float) swapCancel.X;
-        ref __Null local2 = ref player.Speed.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 * (float) swapCancel.Y;
+        this.Speed = this.DashDir * 160f;
+        this.Speed.X *= swapCancel.X;
+        this.Speed.Y *= swapCancel.Y;
       }
-      if (player.Speed.Y < 0.0)
-      {
-        ref __Null local = ref player.Speed.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 0.75f;
-      }
-      player.StateMachine.State = 0;
+      if ((double) this.Speed.Y < 0.0)
+        this.Speed.Y *= 0.75f;
+      this.StateMachine.State = 0;
     }
 
     private bool SwimCheck()
     {
-      if (this.CollideCheck<Water>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -8f))))
-        return this.CollideCheck<Water>(this.Position);
-      return false;
+      return this.CollideCheck<Water>(this.Position + Vector2.UnitY * -8f) && this.CollideCheck<Water>(this.Position);
     }
 
     private bool SwimUnderwaterCheck()
     {
-      return this.CollideCheck<Water>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -9f)));
+      return this.CollideCheck<Water>(this.Position + Vector2.UnitY * -9f);
     }
 
     private bool SwimJumpCheck()
     {
-      return !this.CollideCheck<Water>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -14f)));
+      return !this.CollideCheck<Water>(this.Position + Vector2.UnitY * -14f);
     }
 
     private bool SwimRiseCheck()
     {
-      return !this.CollideCheck<Water>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -18f)));
+      return !this.CollideCheck<Water>(this.Position + Vector2.UnitY * -18f);
     }
 
     private bool UnderwaterMusicCheck()
     {
-      if (this.CollideCheck<Water>(this.Position))
-        return this.CollideCheck<Water>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -12f)));
-      return false;
+      return this.CollideCheck<Water>(this.Position) && this.CollideCheck<Water>(this.Position + Vector2.UnitY * -12f);
     }
 
     private void SwimBegin()
     {
-      if (this.Speed.Y > 0.0)
-      {
-        ref __Null local = ref this.Speed.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 0.5f;
-      }
+      if ((double) this.Speed.Y > 0.0)
+        this.Speed.Y *= 0.5f;
       this.Stamina = 110f;
     }
 
@@ -3455,7 +3258,7 @@ namespace Celeste
         return 2;
       }
       bool flag = this.SwimUnderwaterCheck();
-      if (!flag && this.Speed.Y >= 0.0 && (Input.Grab.Check && !this.IsTired) && (this.CanUnDuck && Math.Sign((float) this.Speed.X) != -(int) this.Facing && this.ClimbCheck((int) this.Facing, 0)))
+      if (!flag && (double) this.Speed.Y >= 0.0 && (Input.Grab.Check && !this.IsTired) && this.CanUnDuck && (Math.Sign(this.Speed.X) != -(int) this.Facing && this.ClimbCheck((int) this.Facing, 0)))
       {
         if (SaveData.Instance.Assists.NoGrabbing)
           this.ClimbTrigger((int) this.Facing);
@@ -3468,12 +3271,12 @@ namespace Celeste
       Vector2 vector2 = Input.Aim.Value.SafeNormalize();
       float num1 = flag ? 60f : 80f;
       float num2 = 80f;
-      this.Speed.X = (double) Math.Abs((float) this.Speed.X) <= 80.0 || Math.Sign((float) this.Speed.X) != Math.Sign((float) vector2.X) ? (__Null) (double) Calc.Approach((float) this.Speed.X, num1 * (float) vector2.X, 600f * Engine.DeltaTime) : (__Null) (double) Calc.Approach((float) this.Speed.X, num1 * (float) vector2.X, 400f * Engine.DeltaTime);
-      if (vector2.Y == 0.0 && this.SwimRiseCheck())
-        this.Speed.Y = (__Null) (double) Calc.Approach((float) this.Speed.Y, -60f, 600f * Engine.DeltaTime);
-      else if (vector2.Y >= 0.0 || this.SwimUnderwaterCheck())
-        this.Speed.Y = (double) Math.Abs((float) this.Speed.Y) <= 80.0 || Math.Sign((float) this.Speed.Y) != Math.Sign((float) vector2.Y) ? (__Null) (double) Calc.Approach((float) this.Speed.Y, num2 * (float) vector2.Y, 600f * Engine.DeltaTime) : (__Null) (double) Calc.Approach((float) this.Speed.Y, num2 * (float) vector2.Y, 400f * Engine.DeltaTime);
-      if (!flag && this.moveX != 0 && (this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) this.moveX))) && !this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2((float) this.moveX, -3f)))))
+      this.Speed.X = (double) Math.Abs(this.Speed.X) <= 80.0 || Math.Sign(this.Speed.X) != Math.Sign(vector2.X) ? Calc.Approach(this.Speed.X, num1 * vector2.X, 600f * Engine.DeltaTime) : Calc.Approach(this.Speed.X, num1 * vector2.X, 400f * Engine.DeltaTime);
+      if ((double) vector2.Y == 0.0 && this.SwimRiseCheck())
+        this.Speed.Y = Calc.Approach(this.Speed.Y, -60f, 600f * Engine.DeltaTime);
+      else if ((double) vector2.Y >= 0.0 || this.SwimUnderwaterCheck())
+        this.Speed.Y = (double) Math.Abs(this.Speed.Y) <= 80.0 || Math.Sign(this.Speed.Y) != Math.Sign(vector2.Y) ? Calc.Approach(this.Speed.Y, num2 * vector2.Y, 600f * Engine.DeltaTime) : Calc.Approach(this.Speed.Y, num2 * vector2.Y, 400f * Engine.DeltaTime);
+      if (!flag && this.moveX != 0 && this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) this.moveX) && !this.CollideCheck<Solid>(this.Position + new Vector2((float) this.moveX, -3f)))
         this.ClimbHop();
       if (!Input.Jump.Pressed || !this.SwimJumpCheck())
         return 3;
@@ -3484,7 +3287,7 @@ namespace Celeste
     public void Boost(Booster booster)
     {
       this.StateMachine.State = 4;
-      this.Speed = Vector2.get_Zero();
+      this.Speed = Vector2.Zero;
       this.boostTarget = booster.Center;
       this.boostRed = false;
       this.lastBooster = this.CurrentBooster = booster;
@@ -3493,7 +3296,7 @@ namespace Celeste
     public void RedBoost(Booster booster)
     {
       this.StateMachine.State = 4;
-      this.Speed = Vector2.get_Zero();
+      this.Speed = Vector2.Zero;
       this.boostTarget = booster.Center;
       this.boostRed = true;
       this.lastBooster = this.CurrentBooster = booster;
@@ -3510,16 +3313,16 @@ namespace Celeste
 
     private void BoostEnd()
     {
-      Vector2 vector2 = Vector2.op_Subtraction(this.boostTarget, this.Collider.Center).Floor();
-      this.MoveToX((float) vector2.X, (Collision) null);
-      this.MoveToY((float) vector2.Y, (Collision) null);
+      Vector2 vector2 = (this.boostTarget - this.Collider.Center).Floor();
+      this.MoveToX(vector2.X, (Collision) null);
+      this.MoveToY(vector2.Y, (Collision) null);
     }
 
     private int BoostUpdate()
     {
-      Vector2 vector2 = Calc.Approach(this.ExactPosition, Vector2.op_Addition(Vector2.op_Subtraction(this.boostTarget, this.Collider.Center), Vector2.op_Multiply(Input.Aim.Value, 3f)), 80f * Engine.DeltaTime);
-      this.MoveToX((float) vector2.X, (Collision) null);
-      this.MoveToY((float) vector2.Y, (Collision) null);
+      Vector2 vector2 = Calc.Approach(this.ExactPosition, this.boostTarget - this.Collider.Center + Input.Aim.Value * 3f, 80f * Engine.DeltaTime);
+      this.MoveToX(vector2.X, (Collision) null);
+      this.MoveToY(vector2.Y, (Collision) null);
       if (!Input.Dash.Pressed)
         return 4;
       Input.Dash.ConsumePress();
@@ -3536,15 +3339,15 @@ namespace Celeste
     {
       this.calledDashEvents = false;
       this.dashStartedOnGround = false;
-      Celeste.Celeste.Freeze(0.05f);
-      Dust.Burst(this.Position, Vector2.op_UnaryNegation(this.DashDir).Angle(), 8);
+      Celeste.Freeze(0.05f);
+      Dust.Burst(this.Position, (-this.DashDir).Angle(), 8);
       this.dashCooldownTimer = 0.2f;
       this.dashRefillCooldownTimer = 0.1f;
       this.StartedDashing = true;
       this.level.Displacement.AddBurst(this.Center, 0.5f, 0.0f, 80f, 0.666f, Ease.QuadOut, Ease.QuadOut);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       this.dashAttackTimer = 0.3f;
-      this.Speed = Vector2.get_Zero();
+      this.Speed = Vector2.Zero;
       if (this.onGround || !this.Ducking || !this.CanUnDuck)
         return;
       this.Ducking = false;
@@ -3560,7 +3363,7 @@ namespace Celeste
       this.StartedDashing = false;
       if (this.CanDash)
         return this.StartDash();
-      if (this.DashDir.Y == 0.0)
+      if ((double) this.DashDir.Y == 0.0)
       {
         foreach (JumpThru entity in this.Scene.Tracker.GetEntities<JumpThru>())
         {
@@ -3593,7 +3396,7 @@ namespace Celeste
       {
         if (this.WallJumpCheck(1))
         {
-          if (this.Facing == Facings.Right && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), 3f))))
+          if (this.Facing == Facings.Right && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * 3f))
             this.ClimbJump();
           else
             this.WallJump(-1);
@@ -3601,7 +3404,7 @@ namespace Celeste
         }
         if (this.WallJumpCheck(-1))
         {
-          if (this.Facing == Facings.Left && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), -3f))))
+          if (this.Facing == Facings.Left && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * -3f))
             this.ClimbJump();
           else
             this.WallJump(1);
@@ -3613,14 +3416,13 @@ namespace Celeste
 
     private IEnumerator RedDashCoroutine()
     {
-      Player player = this;
       yield return (object) null;
-      player.Speed = Vector2.op_Multiply(player.lastAim, 240f);
-      player.DashDir = player.lastAim;
-      player.SceneAs<Level>().DirectionalShake(player.DashDir, 0.2f);
-      if (player.DashDir.X != 0.0)
-        player.Facing = (Facings) Math.Sign((float) player.DashDir.X);
-      player.CallDashEvents();
+      this.Speed = this.lastAim * 240f;
+      this.DashDir = this.lastAim;
+      this.SceneAs<Level>().DirectionalShake(this.DashDir, 0.2f);
+      if ((double) this.DashDir.X != 0.0)
+        this.Facing = (Facings) Math.Sign(this.DashDir.X);
+      this.CallDashEvents();
     }
 
     private void HitSquashBegin()
@@ -3630,22 +3432,22 @@ namespace Celeste
 
     private int HitSquashUpdate()
     {
-      this.Speed.X = (__Null) (double) Calc.Approach((float) this.Speed.X, 0.0f, 800f * Engine.DeltaTime);
-      this.Speed.Y = (__Null) (double) Calc.Approach((float) this.Speed.Y, 0.0f, 800f * Engine.DeltaTime);
+      this.Speed.X = Calc.Approach(this.Speed.X, 0.0f, 800f * Engine.DeltaTime);
+      this.Speed.Y = Calc.Approach(this.Speed.Y, 0.0f, 800f * Engine.DeltaTime);
       if (Input.Jump.Pressed)
       {
         if (this.onGround)
           this.Jump(true, true);
         else if (this.WallJumpCheck(1))
         {
-          if (this.Facing == Facings.Right && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), 3f))))
+          if (this.Facing == Facings.Right && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * 3f))
             this.ClimbJump();
           else
             this.WallJump(-1);
         }
         else if (this.WallJumpCheck(-1))
         {
-          if (this.Facing == Facings.Left && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), -3f))))
+          if (this.Facing == Facings.Left && Input.Grab.Check && ((double) this.Stamina > 0.0 && this.Holding == null) && !ClimbBlocker.Check(this.Scene, (Entity) this, this.Position + Vector2.UnitX * -3f))
             this.ClimbJump();
           else
             this.WallJump(1);
@@ -3667,35 +3469,28 @@ namespace Celeste
     public Vector2 ExplodeLaunch(Vector2 from, bool snapUp = true)
     {
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      Celeste.Celeste.Freeze(0.1f);
+      Celeste.Freeze(0.1f);
       this.launchApproachX = new float?();
-      Vector2 vector2 = Vector2.op_Subtraction(this.Center, from).SafeNormalize(Vector2.op_UnaryNegation(Vector2.get_UnitY()));
-      float num = Vector2.Dot(vector2, Vector2.get_UnitY());
+      Vector2 vector2 = (this.Center - from).SafeNormalize(-Vector2.UnitY);
+      float num = Vector2.Dot(vector2, Vector2.UnitY);
       if (snapUp && (double) num <= -0.699999988079071)
       {
-        vector2.X = (__Null) 0.0;
-        vector2.Y = (__Null) -1.0;
+        vector2.X = 0.0f;
+        vector2.Y = -1f;
       }
       else if ((double) num <= 0.550000011920929 && (double) num >= -0.550000011920929)
       {
-        vector2.Y = (__Null) 0.0;
-        vector2.X = (__Null) (double) Math.Sign((float) vector2.X);
+        vector2.Y = 0.0f;
+        vector2.X = (float) Math.Sign(vector2.X);
       }
-      this.Speed = Vector2.op_Multiply(280f, vector2);
-      if (this.Speed.Y <= 50.0)
+      this.Speed = 280f * vector2;
+      if ((double) this.Speed.Y <= 50.0)
       {
-        this.Speed.Y = (__Null) (double) Math.Min(-150f, (float) this.Speed.Y);
+        this.Speed.Y = Math.Min(-150f, this.Speed.Y);
         this.AutoJump = true;
       }
-      if (Input.MoveX.Value == Math.Sign((float) this.Speed.X))
-      {
-        ref __Null local = ref this.Speed.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 1.2f;
-      }
+      if (Input.MoveX.Value == Math.Sign(this.Speed.X))
+        this.Speed.X *= 1.2f;
       SlashFx.Burst(this.Center, this.Speed.Angle());
       if (!this.Inventory.NoRefills)
         this.RefillDash();
@@ -3708,8 +3503,8 @@ namespace Celeste
     public void FinalBossPushLaunch(int dir)
     {
       this.launchApproachX = new float?();
-      this.Speed.X = (__Null) (0.899999976158142 * (double) dir * 280.0);
-      this.Speed.Y = (__Null) -150.0;
+      this.Speed.X = (float) (0.899999976158142 * (double) dir * 280.0);
+      this.Speed.Y = -150f;
       this.AutoJump = true;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       SlashFx.Burst(this.Center, this.Speed.Angle());
@@ -3722,8 +3517,8 @@ namespace Celeste
     public void BadelineBoostLaunch(float atX)
     {
       this.launchApproachX = new float?(atX);
-      this.Speed.X = (__Null) 0.0;
-      this.Speed.Y = (__Null) -330.0;
+      this.Speed.X = 0.0f;
+      this.Speed.Y = -330f;
       this.AutoJump = true;
       SlashFx.Burst(this.Center, this.Speed.Angle());
       this.RefillDash();
@@ -3743,9 +3538,9 @@ namespace Celeste
         this.MoveTowardsX(this.launchApproachX.Value, 60f * Engine.DeltaTime, (Collision) null);
       if (this.CanDash)
         return this.StartDash();
-      this.Speed.Y = this.Speed.Y >= 0.0 ? (__Null) (double) Calc.Approach((float) this.Speed.Y, 160f, 225f * Engine.DeltaTime) : (__Null) (double) Calc.Approach((float) this.Speed.Y, 160f, 450f * Engine.DeltaTime);
-      this.Speed.X = (__Null) (double) Calc.Approach((float) this.Speed.X, 0.0f, 200f * Engine.DeltaTime);
-      return (double) ((Vector2) ref this.Speed).Length() < 220.0 ? 0 : 7;
+      this.Speed.Y = (double) this.Speed.Y >= 0.0 ? Calc.Approach(this.Speed.Y, 160f, 225f * Engine.DeltaTime) : Calc.Approach(this.Speed.Y, 160f, 450f * Engine.DeltaTime);
+      this.Speed.X = Calc.Approach(this.Speed.X, 0.0f, 200f * Engine.DeltaTime);
+      return (double) this.Speed.Length() < 220.0 ? 0 : 7;
     }
 
     public void SummitLaunch(float targetX)
@@ -3758,7 +3553,7 @@ namespace Celeste
     {
       this.wallBoostTimer = 0.0f;
       this.Sprite.Play("launch", false, false);
-      this.Speed = Vector2.op_Multiply(Vector2.op_UnaryNegation(Vector2.get_UnitY()), 240f);
+      this.Speed = -Vector2.UnitY * 240f;
       this.summitLaunchParticleTimer = 0.4f;
     }
 
@@ -3766,70 +3561,50 @@ namespace Celeste
     {
       this.summitLaunchParticleTimer -= Engine.DeltaTime;
       if ((double) this.summitLaunchParticleTimer > 0.0 && this.Scene.OnInterval(0.03f))
-        this.level.ParticlesFG.Emit(BadelineBoost.P_Move, 1, this.Center, Vector2.op_Multiply(Vector2.get_One(), 4f));
+        this.level.ParticlesFG.Emit(BadelineBoost.P_Move, 1, this.Center, Vector2.One * 4f);
       this.Facing = Facings.Right;
       this.MoveTowardsX(this.summitLaunchTargetX, 20f * Engine.DeltaTime, (Collision) null);
-      this.Speed = Vector2.op_Multiply(Vector2.op_UnaryNegation(Vector2.get_UnitY()), 240f);
+      this.Speed = -Vector2.UnitY * 240f;
       if (this.level.OnInterval(0.2f))
-        this.level.Add((Entity) Engine.Pooler.Create<SpeedRing>().Init(this.Center, 1.570796f, Color.get_White()));
+        this.level.Add((Entity) Engine.Pooler.Create<SpeedRing>().Init(this.Center, 1.570796f, Color.White));
       return 10;
     }
 
     public void StopSummitLaunch()
     {
       this.StateMachine.State = 0;
-      this.Speed.Y = (__Null) -140.0;
+      this.Speed.Y = -140f;
       this.AutoJump = true;
-      this.varJumpSpeed = (float) this.Speed.Y;
+      this.varJumpSpeed = this.Speed.Y;
     }
 
     private IEnumerator PickupCoroutine()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      Player player = this;
-      Vector2 oldSpeed;
-      float varJump;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        player.Speed = oldSpeed;
-        player.Speed.Y = (__Null) (double) Math.Min((float) player.Speed.Y, 0.0f);
-        player.varJumpTimer = varJump;
-        player.StateMachine.State = 0;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      player.Play("event:/char/madeline/crystaltheo_lift", (string) null, 0.0f);
+      this.Play("event:/char/madeline/crystaltheo_lift", (string) null, 0.0f);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
-      oldSpeed = player.Speed;
-      varJump = player.varJumpTimer;
-      player.Speed = Vector2.get_Zero();
-      Vector2 begin = Vector2.op_Subtraction(player.Holding.Entity.Position, player.Position);
-      Vector2 carryOffsetTarget = Player.CarryOffsetTarget;
-      Vector2 control;
-      ((Vector2) ref control).\u002Ector((float) begin.X + (float) (Math.Sign((float) begin.X) * 2), (float) (Player.CarryOffsetTarget.Y - 2.0));
-      SimpleCurve curve = new SimpleCurve(begin, carryOffsetTarget, control);
-      player.carryOffset = begin;
+      Vector2 oldSpeed = this.Speed;
+      float varJump = this.varJumpTimer;
+      this.Speed = Vector2.Zero;
+      Vector2 begin = this.Holding.Entity.Position - this.Position;
+      Vector2 end = Player.CarryOffsetTarget;
+      Vector2 control = new Vector2(begin.X + (float) (Math.Sign(begin.X) * 2), Player.CarryOffsetTarget.Y - 2f);
+      SimpleCurve curve = new SimpleCurve(begin, end, control);
+      this.carryOffset = begin;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 0.16f, true);
       tween.OnUpdate = (Action<Tween>) (t => this.carryOffset = curve.GetPoint(t.Eased));
-      player.Add((Component) tween);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) tween.Wait();
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.Add((Component) tween);
+      yield return (object) tween.Wait();
+      this.Speed = oldSpeed;
+      this.Speed.Y = Math.Min(this.Speed.Y, 0.0f);
+      this.varJumpTimer = varJump;
+      this.StateMachine.State = 0;
     }
 
     private void DreamDashBegin()
     {
       if (this.dreamSfxLoop == null)
         this.Add((Component) (this.dreamSfxLoop = new SoundSource()));
-      this.Speed = Vector2.op_Multiply(this.DashDir, 240f);
+      this.Speed = this.DashDir * 240f;
       this.TreatNaive = true;
       this.Depth = -12000;
       this.dreamDashCanEndTimer = 0.1f;
@@ -3853,7 +3628,7 @@ namespace Celeste
       this.TreatNaive = false;
       if (this.dreamBlock != null)
       {
-        if (this.DashDir.X != 0.0)
+        if ((double) this.DashDir.X != 0.0)
         {
           this.jumpGraceTimer = 0.1f;
           this.dreamJump = true;
@@ -3872,7 +3647,7 @@ namespace Celeste
     {
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
       Vector2 position = this.Position;
-      this.NaiveMove(Vector2.op_Multiply(this.Speed, Engine.DeltaTime));
+      this.NaiveMove(this.Speed * Engine.DeltaTime);
       if ((double) this.dreamDashCanEndTimer > 0.0)
         this.dreamDashCanEndTimer -= Engine.DeltaTime;
       DreamBlock dreamBlock = this.CollideFirst<DreamBlock>();
@@ -3883,16 +3658,16 @@ namespace Celeste
           if (SaveData.Instance.Assists.Invincible)
           {
             this.Position = position;
-            this.Speed = Vector2.op_Multiply(this.Speed, -1f);
+            this.Speed *= -1f;
             this.Play("event:/game/general/assist_dreamblockbounce", (string) null, 0.0f);
           }
           else
-            this.Die(Vector2.get_Zero(), false, true);
+            this.Die(Vector2.Zero, false, true);
         }
         else if ((double) this.dreamDashCanEndTimer <= 0.0)
         {
-          Celeste.Celeste.Freeze(0.05f);
-          if (Input.Jump.Pressed && this.DashDir.X != 0.0)
+          Celeste.Freeze(0.05f);
+          if (Input.Jump.Pressed && (double) this.DashDir.X != 0.0)
           {
             this.dreamJump = true;
             this.Jump(true, true);
@@ -3901,13 +3676,13 @@ namespace Celeste
           {
             bool flag1 = this.ClimbCheck(-1, 0);
             bool flag2 = this.ClimbCheck(1, 0);
-            if (Input.Grab.Check && (this.DashDir.Y >= 0.0 || this.DashDir.X != 0.0) && (this.moveX == 1 & flag2 || this.moveX == -1 & flag1))
+            if (Input.Grab.Check && ((double) this.DashDir.Y >= 0.0 || (double) this.DashDir.X != 0.0) && (this.moveX == 1 & flag2 || this.moveX == -1 & flag1))
             {
               this.Facing = (Facings) this.moveX;
               if (!SaveData.Instance.Assists.NoGrabbing)
                 return 1;
               this.ClimbTrigger(this.moveX);
-              this.Speed.X = (__Null) 0.0;
+              this.Speed.X = 0.0f;
             }
           }
           return 0;
@@ -3940,11 +3715,10 @@ namespace Celeste
           {
             for (int index4 = -1; index4 <= 1; index4 += 2)
             {
-              Vector2 vector2;
-              ((Vector2) ref vector2).\u002Ector((float) (index1 * index2), (float) (index3 * index4));
-              if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, vector2)))
+              Vector2 vector2 = new Vector2((float) (index1 * index2), (float) (index3 * index4));
+              if (!this.CollideCheck<Solid>(this.Position + vector2))
               {
-                this.Position = Vector2.op_Addition(this.Position, vector2);
+                this.Position = this.Position + vector2;
                 return false;
               }
             }
@@ -4000,14 +3774,14 @@ namespace Celeste
       this.starFlyWarningSfx.Stop(true);
       this.starFlyLoopSfx.Stop(true);
       this.Hair.DrawPlayerSpriteOutline = false;
-      this.Sprite.Color = Color.get_White();
+      this.Sprite.Color = Color.White;
       this.level.Displacement.AddBurst(this.Center, 0.25f, 8f, 32f, 1f, (Ease.Easer) null, (Ease.Easer) null);
       this.starFlyBloom.Visible = false;
       this.Sprite.HairCount = this.startHairCount;
       this.StarFlyReturnToNormalHitbox();
       if (this.StateMachine.State == 2)
         return;
-      this.level.Particles.Emit(FlyFeather.P_Boost, 12, this.Center, Vector2.op_Multiply(Vector2.get_One(), 4f), Vector2.op_UnaryNegation(this.Speed).Angle());
+      this.level.Particles.Emit(FlyFeather.P_Boost, 12, this.Center, Vector2.One * 4f, (-this.Speed).Angle());
     }
 
     private void StarFlyReturnToNormalHitbox()
@@ -4032,31 +3806,31 @@ namespace Celeste
 
     private IEnumerator StarFlyCoroutine()
     {
-      Player player = this;
-      while (player.Sprite.CurrentAnimationID == "startStarFly")
+      while (this.Sprite.CurrentAnimationID == "startStarFly")
         yield return (object) null;
-      while (Vector2.op_Inequality(player.Speed, Vector2.get_Zero()))
+      while (this.Speed != Vector2.Zero)
         yield return (object) null;
       yield return (object) 0.1f;
-      player.Sprite.Color = player.starFlyColor;
-      player.Sprite.HairCount = 7;
-      player.Hair.DrawPlayerSpriteOutline = true;
-      player.level.Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, (Ease.Easer) null, (Ease.Easer) null);
-      player.starFlyTransforming = false;
-      player.starFlyTimer = 2f;
-      player.RefillDash();
-      player.RefillStamina();
-      Vector2 vector2 = Input.Aim.Value;
-      if (Vector2.op_Equality(vector2, Vector2.get_Zero()))
-        vector2 = Vector2.op_Multiply(Vector2.get_UnitX(), (float) player.Facing);
-      player.Speed = Vector2.op_Multiply(vector2, 250f);
-      player.starFlyLastDir = vector2;
-      player.level.Particles.Emit(FlyFeather.P_Boost, 12, player.Center, Vector2.op_Multiply(Vector2.get_One(), 4f), Vector2.op_UnaryNegation(vector2).Angle());
+      this.Sprite.Color = this.starFlyColor;
+      this.Sprite.HairCount = 7;
+      this.Hair.DrawPlayerSpriteOutline = true;
+      this.level.Displacement.AddBurst(this.Center, 0.25f, 8f, 32f, 1f, (Ease.Easer) null, (Ease.Easer) null);
+      this.starFlyTransforming = false;
+      this.starFlyTimer = 2f;
+      this.RefillDash();
+      this.RefillStamina();
+      Vector2 dir = Input.Aim.Value;
+      if (dir == Vector2.Zero)
+        dir = Vector2.UnitX * (float) this.Facing;
+      this.Speed = dir * 250f;
+      this.starFlyLastDir = dir;
+      this.level.Particles.Emit(FlyFeather.P_Boost, 12, this.Center, Vector2.One * 4f, (-dir).Angle());
+      dir = new Vector2();
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      player.level.DirectionalShake(player.starFlyLastDir, 0.3f);
-      while ((double) player.starFlyTimer > 0.5)
+      this.level.DirectionalShake(this.starFlyLastDir, 0.3f);
+      while ((double) this.starFlyTimer > 0.5)
         yield return (object) null;
-      player.starFlyWarningSfx.Play("event:/game/06_reflection/feather_state_warning", (string) null, 0.0f);
+      this.starFlyWarningSfx.Play("event:/game/06_reflection/feather_state_warning", (string) null, 0.0f);
     }
 
     private int StarFlyUpdate()
@@ -4064,19 +3838,19 @@ namespace Celeste
       this.starFlyBloom.Alpha = Calc.Approach(this.starFlyBloom.Alpha, 0.7f, Engine.DeltaTime * 2f);
       if (this.starFlyTransforming)
       {
-        this.Speed = Calc.Approach(this.Speed, Vector2.get_Zero(), 1000f * Engine.DeltaTime);
+        this.Speed = Calc.Approach(this.Speed, Vector2.Zero, 1000f * Engine.DeltaTime);
       }
       else
       {
         Vector2 starFlyLastDir = Input.Aim.Value;
         bool flag1 = false;
-        if (Vector2.op_Equality(starFlyLastDir, Vector2.get_Zero()))
+        if (starFlyLastDir == Vector2.Zero)
         {
           flag1 = true;
           starFlyLastDir = this.starFlyLastDir;
         }
-        Vector2 vec = this.Speed.SafeNormalize(Vector2.get_Zero());
-        Vector2 vector2 = !Vector2.op_Equality(vec, Vector2.get_Zero()) ? vec.RotateTowards(starFlyLastDir.Angle(), 5.585053f * Engine.DeltaTime) : starFlyLastDir;
+        Vector2 vec = this.Speed.SafeNormalize(Vector2.Zero);
+        Vector2 vector2 = !(vec == Vector2.Zero) ? vec.RotateTowards(starFlyLastDir.Angle(), 5.585053f * Engine.DeltaTime) : starFlyLastDir;
         this.starFlyLastDir = vector2;
         float target;
         if (flag1)
@@ -4084,7 +3858,7 @@ namespace Celeste
           this.starFlySpeedLerp = 0.0f;
           target = 91f;
         }
-        else if (Vector2.op_Inequality(vector2, Vector2.get_Zero()) && (double) Vector2.Dot(vector2, starFlyLastDir) >= 0.449999988079071)
+        else if (vector2 != Vector2.Zero && (double) Vector2.Dot(vector2, starFlyLastDir) >= 0.449999988079071)
         {
           this.starFlySpeedLerp = Calc.Approach(this.starFlySpeedLerp, 1f, Engine.DeltaTime / 1f);
           target = MathHelper.Lerp(140f, 190f, this.starFlySpeedLerp);
@@ -4095,10 +3869,10 @@ namespace Celeste
           target = 140f;
         }
         this.starFlyLoopSfx.Param("feather_speed", flag1 ? 0.0f : 1f);
-        float num = Calc.Approach(((Vector2) ref this.Speed).Length(), target, 1000f * Engine.DeltaTime);
-        this.Speed = Vector2.op_Multiply(vector2, num);
+        float num = Calc.Approach(this.Speed.Length(), target, 1000f * Engine.DeltaTime);
+        this.Speed = vector2 * num;
         if (this.level.OnInterval(0.02f))
-          this.level.Particles.Emit(FlyFeather.P_Flying, 1, this.Center, Vector2.op_Multiply(Vector2.get_One(), 2f), Vector2.op_UnaryNegation(this.Speed).Angle());
+          this.level.Particles.Emit(FlyFeather.P_Flying, 1, this.Center, Vector2.One * 2f, (-this.Speed).Angle());
         if (Input.Jump.Pressed)
         {
           if (this.OnGround(3))
@@ -4137,7 +3911,7 @@ namespace Celeste
           {
             if (!SaveData.Instance.Assists.NoGrabbing)
               return 1;
-            this.Speed = Vector2.get_Zero();
+            this.Speed = Vector2.Zero;
             this.ClimbTrigger(dir);
             return 0;
           }
@@ -4148,24 +3922,24 @@ namespace Celeste
         if ((double) this.starFlyTimer <= 0.0)
         {
           if (Input.MoveY.Value == -1)
-            this.Speed.Y = (__Null) -100.0;
+            this.Speed.Y = -100f;
           if (Input.MoveY.Value < 1)
           {
-            this.varJumpSpeed = (float) this.Speed.Y;
+            this.varJumpSpeed = this.Speed.Y;
             this.AutoJump = true;
             this.AutoJumpTimer = 0.0f;
             this.varJumpTimer = 0.2f;
           }
-          if (this.Speed.Y > 0.0)
-            this.Speed.Y = (__Null) 0.0;
-          if ((double) Math.Abs((float) this.Speed.X) > 140.0)
-            this.Speed.X = (__Null) (140.0 * (double) Math.Sign((float) this.Speed.X));
+          if ((double) this.Speed.Y > 0.0)
+            this.Speed.Y = 0.0f;
+          if ((double) Math.Abs(this.Speed.X) > 140.0)
+            this.Speed.X = 140f * (float) Math.Sign(this.Speed.X);
           Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
           return 0;
         }
         if ((double) this.starFlyTimer < 0.5 && this.Scene.OnInterval(0.05f))
         {
-          if (Color.op_Equality(this.Sprite.Color, this.starFlyColor))
+          if (this.Sprite.Color == this.starFlyColor)
             this.Sprite.Color = Player.NormalHairColor;
           else
             this.Sprite.Color = this.starFlyColor;
@@ -4179,7 +3953,7 @@ namespace Celeste
       this.StateMachine.State = 21;
       this.cassetteFlyCurve = new SimpleCurve(this.Position, targetPosition, control);
       this.cassetteFlyLerp = 0.0f;
-      this.Speed = Vector2.get_Zero();
+      this.Speed = Vector2.Zero;
       if (this.Holding == null)
         return;
       this.Drop();
@@ -4202,32 +3976,31 @@ namespace Celeste
 
     private IEnumerator CassetteFlyCoroutine()
     {
-      Player player = this;
-      player.level.CanRetry = false;
-      player.level.FormationBackdrop.Display = true;
-      player.level.FormationBackdrop.Alpha = 0.5f;
-      player.Sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), 1.25f);
-      player.Depth = -2000000;
+      this.level.CanRetry = false;
+      this.level.FormationBackdrop.Display = true;
+      this.level.FormationBackdrop.Alpha = 0.5f;
+      this.Sprite.Scale = Vector2.One * 1.25f;
+      this.Depth = -2000000;
       yield return (object) 0.4f;
-      while ((double) player.cassetteFlyLerp < 1.0)
+      while ((double) this.cassetteFlyLerp < 1.0)
       {
-        if (player.level.OnInterval(0.03f))
-          player.level.Particles.Emit(Player.P_CassetteFly, 2, player.Center, Vector2.op_Multiply(Vector2.get_One(), 4f));
-        player.cassetteFlyLerp = Calc.Approach(player.cassetteFlyLerp, 1f, 1.6f * Engine.DeltaTime);
-        player.Position = player.cassetteFlyCurve.GetPoint(Ease.SineInOut(player.cassetteFlyLerp));
-        player.level.Camera.Position = player.CameraTarget;
+        if (this.level.OnInterval(0.03f))
+          this.level.Particles.Emit(Player.P_CassetteFly, 2, this.Center, Vector2.One * 4f);
+        this.cassetteFlyLerp = Calc.Approach(this.cassetteFlyLerp, 1f, 1.6f * Engine.DeltaTime);
+        this.Position = this.cassetteFlyCurve.GetPoint(Ease.SineInOut(this.cassetteFlyLerp));
+        this.level.Camera.Position = this.CameraTarget;
         yield return (object) null;
       }
-      player.Position = player.cassetteFlyCurve.End;
-      player.Sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), 1.25f);
-      player.Sprite.Y -= 5f;
-      player.Sprite.Play("fallFast", false, false);
+      this.Position = this.cassetteFlyCurve.End;
+      this.Sprite.Scale = Vector2.One * 1.25f;
+      this.Sprite.Y -= 5f;
+      this.Sprite.Play("fallFast", false, false);
       yield return (object) 0.2f;
-      player.level.CanRetry = true;
-      player.level.FormationBackdrop.Display = false;
-      player.level.FormationBackdrop.Alpha = 0.5f;
-      player.StateMachine.State = 0;
-      player.Depth = 0;
+      this.level.CanRetry = true;
+      this.level.FormationBackdrop.Display = false;
+      this.level.FormationBackdrop.Alpha = 0.5f;
+      this.StateMachine.State = 0;
+      this.Depth = 0;
     }
 
     public void StartAttract(Vector2 attractTo)
@@ -4238,7 +4011,7 @@ namespace Celeste
 
     private void AttractBegin()
     {
-      this.Speed = Vector2.get_Zero();
+      this.Speed = Vector2.Zero;
     }
 
     private void AttractEnd()
@@ -4256,8 +4029,8 @@ namespace Celeste
       else
       {
         Vector2 vector2 = Calc.Approach(this.ExactPosition, this.attractTo, 200f * Engine.DeltaTime);
-        this.MoveToX((float) vector2.X, (Collision) null);
-        this.MoveToY((float) vector2.Y, (Collision) null);
+        this.MoveToX(vector2.X, (Collision) null);
+        this.MoveToY(vector2.Y, (Collision) null);
       }
       return 22;
     }
@@ -4266,9 +4039,7 @@ namespace Celeste
     {
       get
       {
-        if (this.StateMachine.State == 22)
-          return Vector2.op_Equality(this.ExactPosition, this.attractTo);
-        return false;
+        return this.StateMachine.State == 22 && this.ExactPosition == this.attractTo;
       }
     }
 
@@ -4285,35 +4056,35 @@ namespace Celeste
         this.Ducking = false;
       if (!this.onGround && this.DummyGravity)
       {
-        float num = (double) Math.Abs((float) this.Speed.Y) >= 40.0 || !Input.Jump.Check && !this.AutoJump ? 1f : 0.5f;
+        float num = (double) Math.Abs(this.Speed.Y) >= 40.0 || !Input.Jump.Check && !this.AutoJump ? 1f : 0.5f;
         if (this.level.InSpace)
           num *= 0.6f;
-        this.Speed.Y = (__Null) (double) Calc.Approach((float) this.Speed.Y, 160f, 900f * num * Engine.DeltaTime);
+        this.Speed.Y = Calc.Approach(this.Speed.Y, 160f, 900f * num * Engine.DeltaTime);
       }
       if ((double) this.varJumpTimer > 0.0)
       {
         if (this.AutoJump || Input.Jump.Check)
-          this.Speed.Y = (__Null) (double) Math.Min((float) this.Speed.Y, this.varJumpSpeed);
+          this.Speed.Y = Math.Min(this.Speed.Y, this.varJumpSpeed);
         else
           this.varJumpTimer = 0.0f;
       }
       if (!this.DummyMoving)
       {
-        if ((double) Math.Abs((float) this.Speed.X) > 90.0 && this.DummyMaxspeed)
-          this.Speed.X = (__Null) (double) Calc.Approach((float) this.Speed.X, 90f * (float) Math.Sign((float) this.Speed.X), 2500f * Engine.DeltaTime);
+        if ((double) Math.Abs(this.Speed.X) > 90.0 && this.DummyMaxspeed)
+          this.Speed.X = Calc.Approach(this.Speed.X, 90f * (float) Math.Sign(this.Speed.X), 2500f * Engine.DeltaTime);
         if (this.DummyFriction)
-          this.Speed.X = (__Null) (double) Calc.Approach((float) this.Speed.X, 0.0f, 1000f * Engine.DeltaTime);
+          this.Speed.X = Calc.Approach(this.Speed.X, 0.0f, 1000f * Engine.DeltaTime);
       }
       if (this.DummyAutoAnimate)
       {
         if (this.onGround)
         {
-          if (this.Speed.X == 0.0)
+          if ((double) this.Speed.X == 0.0)
             this.Sprite.Play("idle", false, false);
           else
             this.Sprite.Play("walk", false, false);
         }
-        else if (this.Speed.Y < 0.0)
+        else if ((double) this.Speed.Y < 0.0)
           this.Sprite.Play("jumpSlow", false, false);
         else
           this.Sprite.Play("fallSlow", false, false);
@@ -4327,26 +4098,25 @@ namespace Celeste
       float speedMultiplier = 1f,
       bool keepWalkingIntoWalls = false)
     {
-      Player player = this;
-      player.StateMachine.State = 11;
-      if ((double) Math.Abs(player.X - x) > 4.0 && !player.Dead)
+      this.StateMachine.State = 11;
+      if ((double) Math.Abs(this.X - x) > 4.0 && !this.Dead)
       {
-        player.DummyMoving = true;
+        this.DummyMoving = true;
         if (walkBackwards)
         {
-          player.Sprite.Rate = -1f;
-          player.Facing = (Facings) Math.Sign(player.X - x);
+          this.Sprite.Rate = -1f;
+          this.Facing = (Facings) Math.Sign(this.X - x);
         }
         else
-          player.Facing = (Facings) Math.Sign(x - player.X);
-        while ((double) Math.Abs(x - player.X) > 4.0 && player.Scene != null && (keepWalkingIntoWalls || !player.CollideCheck<Solid>(Vector2.op_Addition(player.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) Math.Sign(x - player.X))))))
+          this.Facing = (Facings) Math.Sign(x - this.X);
+        while ((double) Math.Abs(x - this.X) > 4.0 && this.Scene != null && (keepWalkingIntoWalls || !this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float) Math.Sign(x - this.X))))
         {
-          player.Speed.X = (__Null) (double) Calc.Approach((float) player.Speed.X, (float) Math.Sign(x - player.X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
+          this.Speed.X = Calc.Approach(this.Speed.X, (float) Math.Sign(x - this.X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
           yield return (object) null;
         }
-        player.Sprite.Rate = 1f;
-        player.Sprite.Play("idle", false, false);
-        player.DummyMoving = false;
+        this.Sprite.Rate = 1f;
+        this.Sprite.Play("idle", false, false);
+        this.DummyMoving = false;
       }
     }
 
@@ -4355,57 +4125,55 @@ namespace Celeste
       bool walkBackwards = false,
       float speedMultiplier = 1f)
     {
-      Player player = this;
-      player.StateMachine.State = 11;
-      if ((double) player.X != (double) x)
+      this.StateMachine.State = 11;
+      if ((double) this.X != (double) x)
       {
-        player.DummyMoving = true;
+        this.DummyMoving = true;
         if (walkBackwards)
         {
-          player.Sprite.Rate = -1f;
-          player.Facing = (Facings) Math.Sign(player.X - (float) x);
+          this.Sprite.Rate = -1f;
+          this.Facing = (Facings) Math.Sign(this.X - (float) x);
         }
         else
-          player.Facing = (Facings) Math.Sign((float) x - player.X);
-        int last = Math.Sign(player.X - (float) x);
-        while ((double) player.X != (double) x && !player.CollideCheck<Solid>(Vector2.op_Addition(player.Position, new Vector2((float) player.Facing, 0.0f))))
+          this.Facing = (Facings) Math.Sign((float) x - this.X);
+        int last = Math.Sign(this.X - (float) x);
+        while ((double) this.X != (double) x && !this.CollideCheck<Solid>(this.Position + new Vector2((float) this.Facing, 0.0f)))
         {
-          player.Speed.X = (__Null) (double) Calc.Approach((float) player.Speed.X, (float) Math.Sign((float) x - player.X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
-          int num = Math.Sign(player.X - (float) x);
-          if (num != last)
+          this.Speed.X = Calc.Approach(this.Speed.X, (float) Math.Sign((float) x - this.X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
+          int next = Math.Sign(this.X - (float) x);
+          if (next != last)
           {
-            player.X = (float) x;
+            this.X = (float) x;
             break;
           }
-          last = num;
+          last = next;
           yield return (object) null;
         }
-        player.Speed.X = (__Null) 0.0;
-        player.Sprite.Rate = 1f;
-        player.Sprite.Play("idle", false, false);
-        player.DummyMoving = false;
+        this.Speed.X = 0.0f;
+        this.Sprite.Rate = 1f;
+        this.Sprite.Play("idle", false, false);
+        this.DummyMoving = false;
       }
     }
 
     public IEnumerator DummyRunTo(float x, bool fastAnim = false)
     {
-      Player player = this;
-      player.StateMachine.State = 11;
-      if ((double) Math.Abs(player.X - x) > 4.0)
+      this.StateMachine.State = 11;
+      if ((double) Math.Abs(this.X - x) > 4.0)
       {
-        player.DummyMoving = true;
+        this.DummyMoving = true;
         if (fastAnim)
-          player.Sprite.Play("runFast", false, false);
-        else if (!player.Sprite.LastAnimationID.StartsWith("run"))
-          player.Sprite.Play("runSlow", false, false);
-        player.Facing = (Facings) Math.Sign(x - player.X);
-        while ((double) Math.Abs(player.X - x) > 4.0)
+          this.Sprite.Play("runFast", false, false);
+        else if (!this.Sprite.LastAnimationID.StartsWith("run"))
+          this.Sprite.Play("runSlow", false, false);
+        this.Facing = (Facings) Math.Sign(x - this.X);
+        while ((double) Math.Abs(this.X - x) > 4.0)
         {
-          player.Speed.X = (__Null) (double) Calc.Approach((float) player.Speed.X, (float) Math.Sign(x - player.X) * 90f, 1000f * Engine.DeltaTime);
+          this.Speed.X = Calc.Approach(this.Speed.X, (float) Math.Sign(x - this.X) * 90f, 1000f * Engine.DeltaTime);
           yield return (object) null;
         }
-        player.Sprite.Play("idle", false, false);
-        player.DummyMoving = false;
+        this.Sprite.Play("idle", false, false);
+        this.DummyMoving = false;
       }
     }
 
@@ -4419,36 +4187,34 @@ namespace Celeste
       this.Facing = Facings.Right;
       if (!this.onGround)
       {
-        Rectangle bounds = this.level.Bounds;
-        int num = ((Rectangle) ref bounds).get_Left() + 160;
-        this.Speed.X = (__Null) (double) Calc.Approach((float) this.Speed.X, 54f * ((double) Math.Abs((float) num - this.X) <= 4.0 ? 0.0f : (float) Math.Sign((float) num - this.X)), 325f * Engine.DeltaTime);
+        int num = this.level.Bounds.Left + 160;
+        this.Speed.X = Calc.Approach(this.Speed.X, 54f * ((double) Math.Abs((float) num - this.X) <= 4.0 ? 0.0f : (float) Math.Sign((float) num - this.X)), 325f * Engine.DeltaTime);
       }
       if (!this.onGround && this.DummyGravity)
-        this.Speed.Y = (__Null) (double) Calc.Approach((float) this.Speed.Y, 320f, 225f * Engine.DeltaTime);
+        this.Speed.Y = Calc.Approach(this.Speed.Y, 320f, 225f * Engine.DeltaTime);
       return 20;
     }
 
     private IEnumerator TempleFallCoroutine()
     {
-      Player player = this;
-      player.Sprite.Play("fallFast", false, false);
-      while (!player.onGround)
+      this.Sprite.Play("fallFast", false, false);
+      while (!this.onGround)
         yield return (object) null;
-      player.Play("event:/char/madeline/mirrortemple_big_landing", (string) null, 0.0f);
-      if (player.Dashes <= 1)
-        player.Sprite.Play("fallPose", false, false);
+      this.Play("event:/char/madeline/mirrortemple_big_landing", (string) null, 0.0f);
+      if (this.Dashes <= 1)
+        this.Sprite.Play("fallPose", false, false);
       else
-        player.Sprite.Play("idle", false, false);
-      player.Sprite.Scale.Y = (__Null) 0.699999988079071;
+        this.Sprite.Play("idle", false, false);
+      this.Sprite.Scale.Y = 0.7f;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      player.level.DirectionalShake(new Vector2(0.0f, 1f), 0.5f);
-      player.Speed.X = (__Null) 0.0;
-      player.level.Particles.Emit(Player.P_SummitLandA, 12, player.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitX(), 3f), -1.570796f);
-      player.level.Particles.Emit(Player.P_SummitLandB, 8, Vector2.op_Subtraction(player.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitX(), 2f)), Vector2.op_Multiply(Vector2.get_UnitX(), 2f), 3.403392f);
-      player.level.Particles.Emit(Player.P_SummitLandB, 8, Vector2.op_Addition(player.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitX(), 2f)), Vector2.op_Multiply(Vector2.get_UnitX(), 2f), -0.2617994f);
+      this.level.DirectionalShake(new Vector2(0.0f, 1f), 0.5f);
+      this.Speed.X = 0.0f;
+      this.level.Particles.Emit(Player.P_SummitLandA, 12, this.BottomCenter, Vector2.UnitX * 3f, -1.570796f);
+      this.level.Particles.Emit(Player.P_SummitLandB, 8, this.BottomCenter - Vector2.UnitX * 2f, Vector2.UnitX * 2f, 3.403392f);
+      this.level.Particles.Emit(Player.P_SummitLandB, 8, this.BottomCenter + Vector2.UnitX * 2f, Vector2.UnitX * 2f, -0.2617994f);
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
         yield return (object) null;
-      player.StateMachine.State = 0;
+      this.StateMachine.State = 0;
     }
 
     private void ReflectionFallBegin()
@@ -4470,7 +4236,7 @@ namespace Celeste
         this.wasDashB = true;
         this.CreateTrail();
       }
-      this.Speed.Y = !this.CollideCheck<Water>() ? (__Null) (double) Calc.Approach((float) this.Speed.Y, 320f, 225f * Engine.DeltaTime) : (__Null) (double) Calc.Approach((float) this.Speed.Y, -20f, 400f * Engine.DeltaTime);
+      this.Speed.Y = !this.CollideCheck<Water>() ? Calc.Approach(this.Speed.Y, 320f, 225f * Engine.DeltaTime) : Calc.Approach(this.Speed.Y, -20f, 400f * Engine.DeltaTime);
       foreach (Entity entity in this.Scene.Tracker.GetEntities<FlyFeather>())
         entity.RemoveSelf();
       CrystalStaticSpinner crystalStaticSpinner = this.Scene.CollideFirst<CrystalStaticSpinner>(new Rectangle((int) ((double) this.X - 6.0), (int) ((double) this.Y - 6.0), 12, 12));
@@ -4479,33 +4245,32 @@ namespace Celeste
         crystalStaticSpinner.Destroy(false);
         this.level.Shake(0.3f);
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-        Celeste.Celeste.Freeze(0.01f);
+        Celeste.Freeze(0.01f);
       }
       return 18;
     }
 
     private IEnumerator ReflectionFallCoroutine()
     {
-      Player player = this;
-      player.Sprite.Play("bigFall", false, false);
-      player.level.StartCutscene(new Action<Level>(player.OnReflectionFallSkip), true, false);
+      this.Sprite.Play("bigFall", false, false);
+      this.level.StartCutscene(new Action<Level>(this.OnReflectionFallSkip), true, false);
       for (float t = 0.0f; (double) t < 2.0; t += Engine.DeltaTime)
       {
-        player.Speed.Y = (__Null) 0.0;
+        this.Speed.Y = 0.0f;
         yield return (object) null;
       }
       FallEffects.Show(true);
-      player.Speed.Y = (__Null) 320.0;
-      while (!player.CollideCheck<Water>())
+      this.Speed.Y = 320f;
+      while (!this.CollideCheck<Water>())
         yield return (object) null;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       FallEffects.Show(false);
-      player.Sprite.Play("bigFallRecover", false, false);
-      player.level.Session.Audio.Music.Event = "event:/music/lvl6/main";
-      player.level.Session.Audio.Apply();
-      player.level.EndCutscene();
+      this.Sprite.Play("bigFallRecover", false, false);
+      this.level.Session.Audio.Music.Event = "event:/music/lvl6/main";
+      this.level.Session.Audio.Apply();
+      this.level.EndCutscene();
       yield return (object) 1.2f;
-      player.StateMachine.State = 0;
+      this.StateMachine.State = 0;
     }
 
     private void OnReflectionFallSkip(Level level)
@@ -4518,9 +4283,9 @@ namespace Celeste
         Session session = level.Session;
         Level level1 = level;
         Rectangle bounds = level.Bounds;
-        double left = (double) ((Rectangle) ref bounds).get_Left();
+        double left = (double) bounds.Left;
         bounds = level.Bounds;
-        double bottom = (double) ((Rectangle) ref bounds).get_Bottom();
+        double bottom = (double) bounds.Bottom;
         Vector2 from = new Vector2((float) left, (float) bottom);
         Vector2? nullable = new Vector2?(level1.GetSpawnPoint(from));
         session.RespawnPoint = nullable;
@@ -4533,116 +4298,92 @@ namespace Celeste
 
     public IEnumerator IntroWalkCoroutine()
     {
-      Player player1 = this;
-      Vector2 start = player1.Position;
-      if (player1.IntroWalkDirection == Facings.Right)
+      Vector2 start = this.Position;
+      if (this.IntroWalkDirection == Facings.Right)
       {
-        Player player2 = player1;
-        Rectangle bounds = player1.level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Left() - 16);
-        player2.X = (float) num;
-        player1.Facing = Facings.Right;
+        this.X = (float) (this.level.Bounds.Left - 16);
+        this.Facing = Facings.Right;
       }
       else
       {
-        Player player2 = player1;
-        Rectangle bounds = player1.level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Right() + 16);
-        player2.X = (float) num;
-        player1.Facing = Facings.Left;
+        this.X = (float) (this.level.Bounds.Right + 16);
+        this.Facing = Facings.Left;
       }
       yield return (object) 0.3f;
-      player1.Sprite.Play("runSlow", false, false);
-      while ((double) Math.Abs(player1.X - (float) start.X) > 2.0 && !player1.CollideCheck<Solid>(Vector2.op_Addition(player1.Position, new Vector2((float) player1.Facing, 0.0f))))
+      this.Sprite.Play("runSlow", false, false);
+      while ((double) Math.Abs(this.X - start.X) > 2.0 && !this.CollideCheck<Solid>(this.Position + new Vector2((float) this.Facing, 0.0f)))
       {
-        player1.MoveTowardsX((float) start.X, 64f * Engine.DeltaTime, (Collision) null);
+        this.MoveTowardsX(start.X, 64f * Engine.DeltaTime, (Collision) null);
         yield return (object) null;
       }
-      player1.Position = start;
-      player1.Sprite.Play("idle", false, false);
+      this.Position = start;
+      this.Sprite.Play("idle", false, false);
       yield return (object) 0.2f;
-      player1.StateMachine.State = 0;
+      this.StateMachine.State = 0;
     }
 
     private IEnumerator IntroJumpCoroutine()
     {
-      Player player1 = this;
-      Vector2 start = player1.Position;
-      bool wasSummitJump = player1.StateMachine.PreviousState == 10;
-      player1.Depth = -1000000;
-      player1.Facing = Facings.Right;
+      Vector2 start = this.Position;
+      bool wasSummitJump = this.StateMachine.PreviousState == 10;
+      this.Depth = -1000000;
+      this.Facing = Facings.Right;
       if (!wasSummitJump)
       {
-        Player player2 = player1;
-        Rectangle bounds = player1.level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Bottom() + 16);
-        player2.Y = (float) num;
+        this.Y = (float) (this.level.Bounds.Bottom + 16);
         yield return (object) 0.5f;
       }
       else
       {
-        ref Vector2 local = ref start;
-        Rectangle bounds = player1.level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Bottom() - 24);
-        local.Y = (__Null) num;
-        player1.MoveToX((float) ((int) Math.Round((double) player1.X / 8.0) * 8), (Collision) null);
+        start.Y = (float) (this.level.Bounds.Bottom - 24);
+        this.MoveToX((float) ((int) Math.Round((double) this.X / 8.0) * 8), (Collision) null);
       }
       if (!wasSummitJump)
-        player1.Sprite.Play("jumpSlow", false, false);
-      while ((double) player1.Y > start.Y - 8.0)
+        this.Sprite.Play("jumpSlow", false, false);
+      while ((double) this.Y > (double) start.Y - 8.0)
       {
-        player1.Y += -120f * Engine.DeltaTime;
+        this.Y += -120f * Engine.DeltaTime;
         yield return (object) null;
       }
-      player1.Speed.Y = (__Null) -100.0;
-      while (player1.Speed.Y < 0.0)
+      this.Speed.Y = -100f;
+      while ((double) this.Speed.Y < 0.0)
       {
-        ref __Null local = ref player1.Speed.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + Engine.DeltaTime * 800f;
+        this.Speed.Y += Engine.DeltaTime * 800f;
         yield return (object) null;
       }
-      player1.Speed.Y = (__Null) 0.0;
+      this.Speed.Y = 0.0f;
       if (wasSummitJump)
       {
         yield return (object) 0.2f;
-        player1.Play("event:/char/madeline/summit_areastart", (string) null, 0.0f);
-        player1.Sprite.Play("launchRecover", false, false);
+        this.Play("event:/char/madeline/summit_areastart", (string) null, 0.0f);
+        this.Sprite.Play("launchRecover", false, false);
         yield return (object) 0.1f;
       }
       else
         yield return (object) 0.1f;
       if (!wasSummitJump)
-        player1.Sprite.Play("fallSlow", false, false);
-      while (!player1.onGround)
+        this.Sprite.Play("fallSlow", false, false);
+      while (!this.onGround)
       {
-        ref __Null local = ref player1.Speed.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + Engine.DeltaTime * 800f;
+        this.Speed.Y += Engine.DeltaTime * 800f;
         yield return (object) null;
       }
-      if (player1.StateMachine.PreviousState != 10)
-        player1.Position = start;
-      player1.Depth = 0;
-      player1.level.DirectionalShake(Vector2.get_UnitY(), 0.3f);
+      if (this.StateMachine.PreviousState != 10)
+        this.Position = start;
+      this.Depth = 0;
+      this.level.DirectionalShake(Vector2.UnitY, 0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       if (wasSummitJump)
       {
-        player1.level.Particles.Emit(Player.P_SummitLandA, 12, player1.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitX(), 3f), -1.570796f);
-        player1.level.Particles.Emit(Player.P_SummitLandB, 8, Vector2.op_Subtraction(player1.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitX(), 2f)), Vector2.op_Multiply(Vector2.get_UnitX(), 2f), 3.403392f);
-        player1.level.Particles.Emit(Player.P_SummitLandB, 8, Vector2.op_Addition(player1.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitX(), 2f)), Vector2.op_Multiply(Vector2.get_UnitX(), 2f), -0.2617994f);
-        player1.level.ParticlesBG.Emit(Player.P_SummitLandC, 30, player1.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitX(), 5f));
+        this.level.Particles.Emit(Player.P_SummitLandA, 12, this.BottomCenter, Vector2.UnitX * 3f, -1.570796f);
+        this.level.Particles.Emit(Player.P_SummitLandB, 8, this.BottomCenter - Vector2.UnitX * 2f, Vector2.UnitX * 2f, 3.403392f);
+        this.level.Particles.Emit(Player.P_SummitLandB, 8, this.BottomCenter + Vector2.UnitX * 2f, Vector2.UnitX * 2f, -0.2617994f);
+        this.level.ParticlesBG.Emit(Player.P_SummitLandC, 30, this.BottomCenter, Vector2.UnitX * 5f);
         yield return (object) 0.35f;
-        for (int index = 0; index < player1.Hair.Nodes.Count; ++index)
-          player1.Hair.Nodes[index] = new Vector2(0.0f, (float) (2 + index));
+        for (int i = 0; i < this.Hair.Nodes.Count; ++i)
+          this.Hair.Nodes[i] = new Vector2(0.0f, (float) (2 + i));
       }
-      player1.StateMachine.State = 0;
+      this.StateMachine.State = 0;
     }
 
     private IEnumerator IntroWakeUpCoroutine()
@@ -4661,29 +4402,27 @@ namespace Celeste
       this.introEase = 1f;
       Vector2 from = this.Position;
       ref Vector2 local1 = ref from;
-      // ISSUE: variable of the null type
-      __Null x = from.X;
+      double x = (double) from.X;
       Rectangle bounds1 = this.level.Bounds;
-      double num1 = (double) ((Rectangle) ref bounds1).get_Left() + 40.0;
+      double num1 = (double) bounds1.Left + 40.0;
       bounds1 = this.level.Bounds;
-      double num2 = (double) ((Rectangle) ref bounds1).get_Right() - 40.0;
+      double num2 = (double) bounds1.Right - 40.0;
       double num3 = (double) MathHelper.Clamp((float) x, (float) num1, (float) num2);
-      local1.X = (__Null) num3;
+      local1.X = (float) num3;
       ref Vector2 local2 = ref from;
-      // ISSUE: variable of the null type
-      __Null y = from.Y;
+      double y = (double) from.Y;
       Rectangle bounds2 = this.level.Bounds;
-      double num4 = (double) ((Rectangle) ref bounds2).get_Top() + 40.0;
+      double num4 = (double) bounds2.Top + 40.0;
       bounds2 = this.level.Bounds;
-      double num5 = (double) ((Rectangle) ref bounds2).get_Bottom() - 40.0;
+      double num5 = (double) bounds2.Bottom - 40.0;
       double num6 = (double) MathHelper.Clamp((float) y, (float) num4, (float) num5);
-      local2.Y = (__Null) num6;
+      local2.Y = (float) num6;
       this.deadOffset = from;
-      from = Vector2.op_Subtraction(from, this.Position);
+      from -= this.Position;
       this.respawnTween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 0.6f, true);
       this.respawnTween.OnUpdate = (Action<Tween>) (t =>
       {
-        this.deadOffset = Vector2.Lerp(from, Vector2.get_Zero(), t.Eased);
+        this.deadOffset = Vector2.Lerp(from, Vector2.Zero, t.Eased);
         this.introEase = 1f - t.Eased;
       });
       this.respawnTween.OnComplete = (Action<Tween>) (t =>
@@ -4699,7 +4438,7 @@ namespace Celeste
     private void IntroRespawnEnd()
     {
       this.Depth = 0;
-      this.deadOffset = Vector2.get_Zero();
+      this.deadOffset = Vector2.Zero;
       this.Remove((Component) this.respawnTween);
       this.respawnTween = (Tween) null;
     }
@@ -4718,94 +4457,82 @@ namespace Celeste
 
     private IEnumerator BirdDashTutorialCoroutine()
     {
-      Player player = this;
       yield return (object) null;
-      player.CreateTrail();
-      player.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, new Action(player.CreateTrail), 0.08f, true));
-      player.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, new Action(player.CreateTrail), 0.15f, true));
-      Vector2 vector2 = new Vector2(1f, -1f).SafeNormalize();
-      player.Facing = Facings.Right;
-      player.Speed = Vector2.op_Multiply(vector2, 240f);
-      player.DashDir = vector2;
-      player.SceneAs<Level>().DirectionalShake(player.DashDir, 0.2f);
-      SlashFx.Burst(player.Center, player.DashDir.Angle());
-      float time;
-      for (time = 0.0f; (double) time < 0.150000005960464; time += Engine.DeltaTime)
+      this.CreateTrail();
+      this.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, new Action(this.CreateTrail), 0.08f, true));
+      this.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, new Action(this.CreateTrail), 0.15f, true));
+      Vector2 aim = new Vector2(1f, -1f).SafeNormalize();
+      this.Facing = Facings.Right;
+      this.Speed = aim * 240f;
+      this.DashDir = aim;
+      this.SceneAs<Level>().DirectionalShake(this.DashDir, 0.2f);
+      SlashFx.Burst(this.Center, this.DashDir.Angle());
+      for (float time = 0.0f; (double) time < 0.150000005960464; time += Engine.DeltaTime)
       {
-        if (Vector2.op_Inequality(player.Speed, Vector2.get_Zero()) && player.level.OnInterval(0.02f))
-          player.level.ParticlesFG.Emit(Player.P_DashA, Vector2.op_Addition(player.Center, Calc.Random.Range(Vector2.op_Multiply(Vector2.get_One(), -2f), Vector2.op_Multiply(Vector2.get_One(), 2f))), player.DashDir.Angle());
+        if (this.Speed != Vector2.Zero && this.level.OnInterval(0.02f))
+          this.level.ParticlesFG.Emit(Player.P_DashA, this.Center + Calc.Random.Range(Vector2.One * -2f, Vector2.One * 2f), this.DashDir.Angle());
         yield return (object) null;
       }
-      player.AutoJump = true;
-      player.AutoJumpTimer = 0.0f;
-      if (player.DashDir.Y <= 0.0)
-        player.Speed = Vector2.op_Multiply(player.DashDir, 160f);
-      if (player.Speed.Y < 0.0)
-      {
-        ref __Null local = ref player.Speed.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 0.75f;
-      }
-      player.Sprite.Play("fallFast", false, false);
+      this.AutoJump = true;
+      this.AutoJumpTimer = 0.0f;
+      if ((double) this.DashDir.Y <= 0.0)
+        this.Speed = this.DashDir * 160f;
+      if ((double) this.Speed.Y < 0.0)
+        this.Speed.Y *= 0.75f;
+      this.Sprite.Play("fallFast", false, false);
       bool climbing = false;
-      while (!player.OnGround(1) && !climbing)
+      while (!this.OnGround(1) && !climbing)
       {
-        player.Speed.Y = (__Null) (double) Calc.Approach((float) player.Speed.Y, 160f, 900f * Engine.DeltaTime);
-        if (player.CollideCheck<Solid>(Vector2.op_Addition(player.Position, new Vector2(1f, 0.0f))))
+        this.Speed.Y = Calc.Approach(this.Speed.Y, 160f, 900f * Engine.DeltaTime);
+        if (this.CollideCheck<Solid>(this.Position + new Vector2(1f, 0.0f)))
           climbing = true;
-        double top = (double) player.Top;
-        Rectangle bounds = player.level.Bounds;
-        double bottom = (double) ((Rectangle) ref bounds).get_Bottom();
-        if (top > bottom)
+        if ((double) this.Top > (double) this.level.Bounds.Bottom)
         {
-          player.level.CancelCutscene();
-          player.Die(Vector2.get_Zero(), false, true);
+          this.level.CancelCutscene();
+          this.Die(Vector2.Zero, false, true);
         }
         yield return (object) null;
       }
       if (climbing)
       {
-        player.Sprite.Play("wallslide", false, false);
-        Dust.Burst(Vector2.op_Addition(player.Position, new Vector2(4f, -6f)), new Vector2(-4f, 0.0f).Angle(), 1);
-        player.Speed.Y = (__Null) 0.0;
+        this.Sprite.Play("wallslide", false, false);
+        Dust.Burst(this.Position + new Vector2(4f, -6f), new Vector2(-4f, 0.0f).Angle(), 1);
+        this.Speed.Y = 0.0f;
         yield return (object) 0.2f;
-        player.Sprite.Play("climbUp", false, false);
-        while (player.CollideCheck<Solid>(Vector2.op_Addition(player.Position, new Vector2(1f, 0.0f))))
+        this.Sprite.Play("climbUp", false, false);
+        while (this.CollideCheck<Solid>(this.Position + new Vector2(1f, 0.0f)))
         {
-          player.Y += -45f * Engine.DeltaTime;
+          this.Y += -45f * Engine.DeltaTime;
           yield return (object) null;
         }
-        player.Play("event:/char/madeline/climb_ledge", (string) null, 0.0f);
-        player.Sprite.Play("jumpFast", false, false);
-        player.Speed.Y = (__Null) -105.0;
-        while (!player.OnGround(1))
+        this.Play("event:/char/madeline/climb_ledge", (string) null, 0.0f);
+        this.Sprite.Play("jumpFast", false, false);
+        this.Speed.Y = -105f;
+        while (!this.OnGround(1))
         {
-          player.Speed.Y = (__Null) (double) Calc.Approach((float) player.Speed.Y, 160f, 900f * Engine.DeltaTime);
-          player.Speed.X = (__Null) 20.0;
+          this.Speed.Y = Calc.Approach(this.Speed.Y, 160f, 900f * Engine.DeltaTime);
+          this.Speed.X = 20f;
           yield return (object) null;
         }
-        player.Speed.X = (__Null) 0.0;
-        player.Speed.Y = (__Null) 0.0;
-        player.Sprite.Play("walk", false, false);
-        for (time = 0.0f; (double) time < 0.5; time += Engine.DeltaTime)
+        this.Speed.X = 0.0f;
+        this.Speed.Y = 0.0f;
+        this.Sprite.Play("walk", false, false);
+        for (float time = 0.0f; (double) time < 0.5; time += Engine.DeltaTime)
         {
-          player.X += 32f * Engine.DeltaTime;
+          this.X += 32f * Engine.DeltaTime;
           yield return (object) null;
         }
-        player.Sprite.Play("tired", false, false);
+        this.Sprite.Play("tired", false, false);
       }
       else
       {
-        player.Sprite.Play("tired", false, false);
-        player.Speed.Y = (__Null) 0.0;
-        while (player.Speed.X != 0.0)
+        this.Sprite.Play("tired", false, false);
+        this.Speed.Y = 0.0f;
+        while ((double) this.Speed.X != 0.0)
         {
-          player.Speed.X = (__Null) (double) Calc.Approach((float) player.Speed.X, 0.0f, 240f * Engine.DeltaTime);
-          if (player.Scene.OnInterval(0.04f))
-            Dust.Burst(Vector2.op_Addition(player.BottomCenter, new Vector2(0.0f, -2f)), -2.356194f, 1);
+          this.Speed.X = Calc.Approach(this.Speed.X, 0.0f, 240f * Engine.DeltaTime);
+          if (this.Scene.OnInterval(0.04f))
+            Dust.Burst(this.BottomCenter + new Vector2(0.0f, -2f), -2.356194f, 1);
           yield return (object) null;
         }
       }
@@ -4941,3 +4668,4 @@ namespace Celeste
     }
   }
 }
+

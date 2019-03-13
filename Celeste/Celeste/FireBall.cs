@@ -89,7 +89,7 @@ namespace Celeste
       if ((double) this.percent >= 1.0)
       {
         this.percent %= 1f;
-        if (this.broken && Vector2.op_Inequality(this.nodes[this.nodes.Length - 1], this.nodes[0]))
+        if (this.broken && this.nodes[this.nodes.Length - 1] != this.nodes[0])
         {
           this.broken = false;
           this.Collidable = true;
@@ -100,7 +100,7 @@ namespace Celeste
       this.PositionTrackSfx();
       if (this.broken || !this.Scene.OnInterval(this.iceMode ? 0.08f : 0.05f))
         return;
-      this.SceneAs<Level>().ParticlesBG.Emit(this.iceMode ? FireBall.P_IceTrail : FireBall.P_FireTrail, 1, this.Center, Vector2.op_Multiply(Vector2.get_One(), 4f));
+      this.SceneAs<Level>().ParticlesBG.Emit(this.iceMode ? FireBall.P_IceTrail : FireBall.P_FireTrail, 1, this.Center, Vector2.One * 4f);
     }
 
     public void PositionTrackSfx()
@@ -108,33 +108,36 @@ namespace Celeste
       if (this.index != 0 || this.trackSfx == null)
         return;
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity == null)
-        return;
-      Vector2? nullable = new Vector2?();
-      for (int index = 1; index < this.nodes.Length; ++index)
+      if (entity != null)
       {
-        Vector2 vector2_1 = Calc.ClosestPointOnLine(this.nodes[index - 1], this.nodes[index], entity.Center);
-        if (nullable.HasValue)
+        Vector2? nullable = new Vector2?();
+        for (int index = 1; index < this.nodes.Length; ++index)
         {
-          Vector2 vector2_2 = Vector2.op_Subtraction(vector2_1, entity.Center);
-          double num1 = (double) ((Vector2) ref vector2_2).Length();
-          vector2_2 = Vector2.op_Subtraction(nullable.Value, entity.Center);
-          double num2 = (double) ((Vector2) ref vector2_2).Length();
-          if (num1 >= num2)
-            continue;
+          Vector2 vector2_1 = Calc.ClosestPointOnLine(this.nodes[index - 1], this.nodes[index], entity.Center);
+          int num1;
+          if (nullable.HasValue)
+          {
+            Vector2 vector2_2 = vector2_1 - entity.Center;
+            double num2 = (double) vector2_2.Length();
+            vector2_2 = nullable.Value - entity.Center;
+            double num3 = (double) vector2_2.Length();
+            num1 = num2 < num3 ? 1 : 0;
+          }
+          else
+            num1 = 1;
+          if (num1 != 0)
+            nullable = new Vector2?(vector2_1);
         }
-        nullable = new Vector2?(vector2_1);
+        if (nullable.HasValue)
+          this.trackSfx.Position = nullable.Value - this.Position;
       }
-      if (!nullable.HasValue)
-        return;
-      this.trackSfx.Position = Vector2.op_Subtraction(nullable.Value, this.Position);
     }
 
     public override void Render()
     {
-      this.sprite.Position = Vector2.op_Multiply(Vector2.op_Multiply(this.hitDir, this.hitWiggler.Value), 8f);
+      this.sprite.Position = this.hitDir * this.hitWiggler.Value * 8f;
       if (!this.broken)
-        this.sprite.DrawOutline(Color.get_Black(), 1);
+        this.sprite.DrawOutline(Color.Black, 1);
       base.Render();
     }
 
@@ -154,7 +157,7 @@ namespace Celeste
 
     private void KillPlayer(Player player)
     {
-      Vector2 direction = Vector2.op_Subtraction(player.Center, this.Center).SafeNormalize();
+      Vector2 direction = (player.Center - this.Center).SafeNormalize();
       if (player.Die(direction, false, true) == null)
         return;
       this.hitDir = direction;
@@ -163,14 +166,14 @@ namespace Celeste
 
     private void OnBounce(Player player)
     {
-      if (!this.iceMode || this.broken || ((double) player.Bottom > (double) this.Y + 4.0 || player.Speed.Y < 0.0))
+      if (!this.iceMode || this.broken || (double) player.Bottom > (double) this.Y + 4.0 || (double) player.Speed.Y < 0.0)
         return;
       Audio.Play("event:/game/09_core/iceball_break", this.Position);
       this.sprite.Play("shatter", false, false);
       this.broken = true;
       this.Collidable = false;
       player.Bounce((float) (int) ((double) this.Y - 2.0));
-      this.SceneAs<Level>().Particles.Emit(FireBall.P_IceBreak, 18, this.Center, Vector2.op_Multiply(Vector2.get_One(), 6f));
+      this.SceneAs<Level>().Particles.Emit(FireBall.P_IceBreak, 18, this.Center, Vector2.One * 6f);
     }
 
     private void OnChangeMode(Session.CoreModes mode)
@@ -193,14 +196,15 @@ namespace Celeste
       if ((double) percent >= 1.0)
         return this.nodes[this.nodes.Length - 1];
       float length = this.lengths[this.lengths.Length - 1];
-      float num1 = length * percent;
+      float num = length * percent;
       int index = 0;
-      while (index < this.lengths.Length - 1 && (double) this.lengths[index + 1] <= (double) num1)
+      while (index < this.lengths.Length - 1 && (double) this.lengths[index + 1] <= (double) num)
         ++index;
       float min = this.lengths[index] / length;
       float max = this.lengths[index + 1] / length;
-      float num2 = Calc.ClampedMap(percent, min, max, 0.0f, 1f);
-      return Vector2.Lerp(this.nodes[index], this.nodes[index + 1], num2);
+      float amount = Calc.ClampedMap(percent, min, max, 0.0f, 1f);
+      return Vector2.Lerp(this.nodes[index], this.nodes[index + 1], amount);
     }
   }
 }
+

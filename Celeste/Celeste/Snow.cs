@@ -14,8 +14,8 @@ namespace Celeste
   {
     public static readonly Color[] ForegroundColors = new Color[2]
     {
-      Color.get_White(),
-      Color.get_CornflowerBlue()
+      Color.White,
+      Color.CornflowerBlue
     };
     public static readonly Color[] BackgroundColors = new Color[2]
     {
@@ -47,18 +47,8 @@ namespace Celeste
         this.linearFade = this.FadeX.Value((scene as Level).Camera.X + 160f);
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        ref __Null local1 = ref this.particles[index].Position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 - this.particles[index].Speed * Engine.DeltaTime;
-        ref __Null local2 = ref this.particles[index].Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 + (float) (Math.Sin((double) this.particles[index].Sin) * (double) this.particles[index].Speed * 0.200000002980232) * Engine.DeltaTime;
+        this.particles[index].Position.X -= this.particles[index].Speed * Engine.DeltaTime;
+        this.particles[index].Position.Y += (float) (Math.Sin((double) this.particles[index].Sin) * (double) this.particles[index].Speed * 0.200000002980232) * Engine.DeltaTime;
         this.particles[index].Sin += Engine.DeltaTime;
       }
     }
@@ -68,12 +58,11 @@ namespace Celeste
       if ((double) this.Alpha <= 0.0 || (double) this.visibleFade <= 0.0 || (double) this.linearFade <= 0.0)
         return;
       for (int index = 0; index < this.blendedColors.Length; ++index)
-        this.blendedColors[index] = Color.op_Multiply(this.colors[index], this.Alpha * this.visibleFade * this.linearFade);
+        this.blendedColors[index] = this.colors[index] * (this.Alpha * this.visibleFade * this.linearFade);
       Camera camera = (scene as Level).Camera;
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        Vector2 position;
-        ((Vector2) ref position).\u002Ector(this.mod((float) this.particles[index].Position.X - camera.X, 320f), this.mod((float) this.particles[index].Position.Y - camera.Y, 180f));
+        Vector2 position = new Vector2(this.mod(this.particles[index].Position.X - camera.X, 320f), this.mod(this.particles[index].Position.Y - camera.Y, 180f));
         Color blendedColor = this.blendedColors[this.particles[index].Color];
         Draw.Pixel.DrawCentered(position, blendedColor);
       }
@@ -101,3 +90,4 @@ namespace Celeste
     }
   }
 }
+

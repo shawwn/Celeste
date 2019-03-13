@@ -30,10 +30,10 @@ namespace Celeste
     public bool Clockwise { get; private set; }
 
     public RotateSpinner(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Depth = -50;
-      this.center = Vector2.op_Addition(data.Nodes[0], offset);
+      this.center = data.Nodes[0] + offset;
       this.Clockwise = data.Bool("clockwise", false);
       this.Collider = (Collider) new Monocle.Circle(6f, 0.0f, 0.0f);
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
@@ -43,15 +43,14 @@ namespace Celeste
         JumpThruChecker = (Func<JumpThru, bool>) (jt => jt.CollidePoint(this.center)),
         OnMove = (Action<Vector2>) (v =>
         {
-          this.center = Vector2.op_Addition(this.center, v);
-          this.Position = Vector2.op_Addition(this.Position, v);
+          this.center += v;
+          this.Position = this.Position + v;
         }),
         OnDestroy = (Action) (() => this.fallOutOfScreen = true)
       });
       this.rotationPercent = this.EaserInverse(Calc.Percent(Calc.WrapAngle(Calc.Angle(this.center, this.Position)), -1.570796f, 4.712389f));
-      Vector2 vector2 = Vector2.op_Subtraction(this.Position, this.center);
-      this.length = ((Vector2) ref vector2).Length();
-      this.Position = Vector2.op_Addition(this.center, Calc.AngleToVector(this.Angle, this.length));
+      this.length = (this.Position - this.center).Length();
+      this.Position = this.center + Calc.AngleToVector(this.Angle, this.length);
     }
 
     private float Easer(float v)
@@ -70,7 +69,7 @@ namespace Celeste
       if (this.Moving)
       {
         if (this.Scene.OnInterval(0.02f))
-          this.SceneAs<Level>().ParticlesBG.Emit(DustStaticSpinner.P_Move, 1, this.Position, Vector2.op_Multiply(Vector2.get_One(), 4f));
+          this.SceneAs<Level>().ParticlesBG.Emit(DustStaticSpinner.P_Move, 1, this.Position, Vector2.One * 4f);
         if (this.Clockwise)
         {
           this.rotationPercent -= Engine.DeltaTime / 1.8f;
@@ -79,29 +78,21 @@ namespace Celeste
         else
           this.rotationPercent += Engine.DeltaTime / 1.8f;
         this.rotationPercent %= 1f;
-        this.Position = Vector2.op_Addition(this.center, Calc.AngleToVector(this.Angle, this.length));
+        this.Position = this.center + Calc.AngleToVector(this.Angle, this.length);
       }
       if (!this.fallOutOfScreen)
         return;
-      ref __Null local = ref this.center.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local + 160f * Engine.DeltaTime;
-      double y = (double) this.Y;
-      Rectangle bounds = (this.Scene as Level).Bounds;
-      double num = (double) (((Rectangle) ref bounds).get_Bottom() + 32);
-      if (y <= num)
-        return;
-      this.RemoveSelf();
+      this.center.Y += 160f * Engine.DeltaTime;
+      if ((double) this.Y > (double) ((this.Scene as Level).Bounds.Bottom + 32))
+        this.RemoveSelf();
     }
 
     public virtual void OnPlayer(Player player)
     {
-      if (player.Die(Vector2.op_Subtraction(player.Position, this.Position).SafeNormalize(), false, true) == null)
+      if (player.Die((player.Position - this.Position).SafeNormalize(), false, true) == null)
         return;
       this.Moving = false;
     }
   }
 }
+

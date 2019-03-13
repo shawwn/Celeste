@@ -8,15 +8,18 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using System;
-using System.Collections.Generic;
 
 namespace Celeste
 {
   [Tracked(false)]
   public class TrailManager : Entity
   {
+    private static BlendState MaxBlendState = new BlendState()
+    {
+      ColorSourceBlend = Blend.DestinationAlpha,
+      AlphaSourceBlend = Blend.DestinationAlpha
+    };
     private TrailManager.Snapshot[] snapshots = new TrailManager.Snapshot[64];
-    private static BlendState MaxBlendState;
     private const int size = 64;
     private const int columns = 8;
     private const int rows = 8;
@@ -56,50 +59,42 @@ namespace Celeste
         return;
       if (this.buffer == null)
         this.buffer = VirtualContent.CreateRenderTarget("trail-manager", 512, 512, false, true, 0);
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.buffer);
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, LightingRenderer.OccludeBlendState);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.buffer);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, LightingRenderer.OccludeBlendState);
       for (int index = 0; index < this.snapshots.Length; ++index)
       {
         if (this.snapshots[index] != null && !this.snapshots[index].Drawn)
-          Draw.Rect((float) (index % 8 * 64), (float) (index / 8 * 64), 64f, 64f, Color.get_Transparent());
+          Draw.Rect((float) (index % 8 * 64), (float) (index / 8 * 64), 64f, 64f, Color.Transparent);
       }
       Draw.SpriteBatch.End();
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) null, (RasterizerState) RasterizerState.CullNone);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, (DepthStencilState) null, RasterizerState.CullNone);
       for (int index1 = 0; index1 < this.snapshots.Length; ++index1)
       {
         if (this.snapshots[index1] != null && !this.snapshots[index1].Drawn)
         {
           TrailManager.Snapshot snapshot = this.snapshots[index1];
-          Vector2 vector2 = Vector2.op_Subtraction(new Vector2((float) (((double) (index1 % 8) + 0.5) * 64.0), (float) (((double) (index1 / 8) + 0.5) * 64.0)), snapshot.Position);
+          Vector2 vector2 = new Vector2((float) (((double) (index1 % 8) + 0.5) * 64.0), (float) (((double) (index1 / 8) + 0.5) * 64.0)) - snapshot.Position;
           if (snapshot.Hair != null)
           {
             for (int index2 = 0; index2 < snapshot.Hair.Nodes.Count; ++index2)
-            {
-              List<Vector2> nodes = snapshot.Hair.Nodes;
-              int index3 = index2;
-              nodes[index3] = Vector2.op_Addition(nodes[index3], vector2);
-            }
+              snapshot.Hair.Nodes[index2] += vector2;
             snapshot.Hair.Render();
             for (int index2 = 0; index2 < snapshot.Hair.Nodes.Count; ++index2)
-            {
-              List<Vector2> nodes = snapshot.Hair.Nodes;
-              int index3 = index2;
-              nodes[index3] = Vector2.op_Subtraction(nodes[index3], vector2);
-            }
+              snapshot.Hair.Nodes[index2] -= vector2;
           }
           Vector2 scale = snapshot.Sprite.Scale;
           snapshot.Sprite.Scale = snapshot.SpriteScale;
           Monocle.Image sprite1 = snapshot.Sprite;
-          sprite1.Position = Vector2.op_Addition(sprite1.Position, vector2);
+          sprite1.Position = sprite1.Position + vector2;
           snapshot.Sprite.Render();
           snapshot.Sprite.Scale = scale;
           Monocle.Image sprite2 = snapshot.Sprite;
-          sprite2.Position = Vector2.op_Subtraction(sprite2.Position, vector2);
+          sprite2.Position = sprite2.Position - vector2;
           snapshot.Drawn = true;
         }
       }
       Draw.SpriteBatch.End();
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, TrailManager.MaxBlendState);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, TrailManager.MaxBlendState);
       Draw.Rect(0.0f, 0.0f, (float) this.buffer.Width, (float) this.buffer.Height, new Color(1f, 1f, 1f, 1f));
       Draw.SpriteBatch.End();
       this.dirty = false;
@@ -157,14 +152,6 @@ namespace Celeste
       }
     }
 
-    static TrailManager()
-    {
-      BlendState blendState = new BlendState();
-      blendState.set_ColorSourceBlend((Blend) 8);
-      blendState.set_AlphaSourceBlend((Blend) 8);
-      TrailManager.MaxBlendState = blendState;
-    }
-
     [Pooled]
     public class Snapshot : Entity
     {
@@ -217,12 +204,11 @@ namespace Celeste
       public override void Render()
       {
         VirtualRenderTarget buffer = this.Manager.buffer;
-        Rectangle rectangle;
-        ((Rectangle) ref rectangle).\u002Ector(this.Index % 8 * 64, this.Index / 8 * 64, 64, 64);
+        Rectangle rectangle = new Rectangle(this.Index % 8 * 64, this.Index / 8 * 64, 64, 64);
         float num = (float) (0.75 * (1.0 - (double) Ease.CubeOut(this.Percent)));
         if (buffer == null)
           return;
-        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) buffer, this.Position, new Rectangle?(rectangle), Color.op_Multiply(this.Color, num), 0.0f, Vector2.op_Multiply(new Vector2(64f, 64f), 0.5f), Vector2.get_One(), (SpriteEffects) 0, 0.0f);
+        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) buffer, this.Position, new Rectangle?(rectangle), this.Color * num, 0.0f, new Vector2(64f, 64f) * 0.5f, Vector2.One, SpriteEffects.None, 0.0f);
       }
 
       public override void Removed(Scene scene)
@@ -234,3 +220,4 @@ namespace Celeste
     }
   }
 }
+

@@ -14,8 +14,8 @@ namespace Celeste
   {
     private static readonly Color[] colors = new Color[2]
     {
-      Color.get_White(),
-      Color.get_LightGray()
+      Color.White,
+      Color.LightGray
     };
     private static readonly Color[] faded = new Color[2];
     public static float SpeedMultiplier = 1f;
@@ -49,10 +49,7 @@ namespace Celeste
     {
       base.Update();
       for (int index = 0; index < this.particles.Length; ++index)
-      {
-        ref Vector2 local = ref this.particles[index].Position;
-        local = Vector2.op_Subtraction(local, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), this.particles[index].Speed), FallEffects.SpeedMultiplier), Engine.DeltaTime));
-      }
+        this.particles[index].Position -= Vector2.UnitY * this.particles[index].Speed * FallEffects.SpeedMultiplier * Engine.DeltaTime;
       this.fade = Calc.Approach(this.fade, this.enabled ? 1f : 0.0f, (this.enabled ? 1f : 4f) * Engine.DeltaTime);
     }
 
@@ -62,14 +59,15 @@ namespace Celeste
         return;
       Camera camera = (this.Scene as Level).Camera;
       for (int index = 0; index < FallEffects.faded.Length; ++index)
-        FallEffects.faded[index] = Color.op_Multiply(FallEffects.colors[index], this.fade);
+        FallEffects.faded[index] = FallEffects.colors[index] * this.fade;
       for (int index = 0; index < this.particles.Length; ++index)
       {
         float height = 8f * FallEffects.SpeedMultiplier;
-        Vector2 vector2 = (Vector2) null;
-        vector2.X = (__Null) (double) this.mod((float) this.particles[index].Position.X - camera.X, 320f);
-        vector2.Y = (__Null) (double) this.mod((float) (this.particles[index].Position.Y - (double) camera.Y - 16.0), 212f);
-        Draw.Rect(Vector2.op_Subtraction(Vector2.op_Addition(vector2, camera.Position), new Vector2(0.0f, height / 2f)), 1f, height, FallEffects.faded[this.particles[index].Color]);
+        Vector2 vector2 = new Vector2();
+        vector2.X = this.mod(this.particles[index].Position.X - camera.X, 320f);
+        vector2.Y = this.mod((float) ((double) this.particles[index].Position.Y - (double) camera.Y - 16.0), 212f);
+        vector2 += camera.Position;
+        Draw.Rect(vector2 - new Vector2(0.0f, height / 2f), 1f, height, FallEffects.faded[this.particles[index].Color]);
       }
     }
 
@@ -86,3 +84,4 @@ namespace Celeste
     }
   }
 }
+

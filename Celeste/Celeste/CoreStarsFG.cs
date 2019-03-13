@@ -13,7 +13,7 @@ namespace Celeste
   {
     private static readonly Color[] colors = new Color[2]
     {
-      Color.get_White(),
+      Color.White,
       Calc.HexToColor("d8baf8")
     };
     private CoreStarsFG.Particle[] particles = new CoreStarsFG.Particle[50];
@@ -44,8 +44,7 @@ namespace Celeste
         if ((double) this.particles[i].Percent >= 1.0)
           this.Reset(i, 0.0f);
         this.particles[i].Percent += Engine.DeltaTime / this.particles[i].Duration;
-        ref Vector2 local = ref this.particles[i].Position;
-        local = Vector2.op_Addition(local, Vector2.op_Multiply(Vector2.op_Multiply(this.particles[i].Direction, this.particles[i].Speed), Engine.DeltaTime));
+        this.particles[i].Position += this.particles[i].Direction * this.particles[i].Speed * Engine.DeltaTime;
         this.particles[i].Direction.Rotate(this.particles[i].Spin * Engine.DeltaTime);
       }
       this.fade = Calc.Approach(this.fade, this.Visible ? 1f : 0.0f, Engine.DeltaTime);
@@ -58,12 +57,12 @@ namespace Celeste
       Camera camera = (level as Level).Camera;
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        Vector2 position = (Vector2) null;
-        position.X = (__Null) (double) this.mod((float) this.particles[index].Position.X - camera.X, 320f);
-        position.Y = (__Null) (double) this.mod((float) this.particles[index].Position.Y - camera.Y, 180f);
+        Vector2 position = new Vector2();
+        position.X = this.mod(this.particles[index].Position.X - camera.X, 320f);
+        position.Y = this.mod(this.particles[index].Position.Y - camera.Y, 180f);
         float percent = this.particles[index].Percent;
         float num = (double) percent >= 0.699999988079071 ? Calc.ClampedMap(percent, 0.7f, 1f, 1f, 0.0f) : Calc.ClampedMap(percent, 0.0f, 0.3f, 0.0f, 1f);
-        Draw.Rect(position, 1f, 1f, Color.op_Multiply(CoreStarsFG.colors[this.particles[index].Color], this.fade * num));
+        Draw.Rect(position, 1f, 1f, CoreStarsFG.colors[this.particles[index].Color] * (this.fade * num));
       }
     }
 
@@ -84,3 +83,4 @@ namespace Celeste
     }
   }
 }
+

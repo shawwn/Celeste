@@ -5,6 +5,7 @@
 // Assembly location: M:\code\bin\Celeste\Celeste.exe
 
 using Monocle;
+using SDL2;
 using System;
 using System.Collections;
 using System.IO;
@@ -15,9 +16,9 @@ namespace Celeste
 {
   public static class UserIO
   {
+    private static readonly string SavePath = UserIO.GetSavePath("Saves");
+    private static readonly string BackupPath = UserIO.GetSavePath("Backups");
     public const string SaveDataTitle = "Celeste Save Data";
-    private const string SavePath = "Saves";
-    private const string BackupPath = "Backups";
     private const string Extension = ".celeste";
     private static bool savingInternal;
     private static bool savingFile;
@@ -25,14 +26,37 @@ namespace Celeste
     private static byte[] savingFileData;
     private static byte[] savingSettingsData;
 
+    private static string GetSavePath(string dir)
+    {
+      string platform = SDL.SDL_GetPlatform();
+      if (platform.Equals("Linux") || platform.Equals("FreeBSD") || platform.Equals("OpenBSD") || platform.Equals("NetBSD"))
+      {
+        string environmentVariable1 = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+        if (!string.IsNullOrEmpty(environmentVariable1))
+          return Path.Combine(environmentVariable1, "Celeste/" + dir);
+        string environmentVariable2 = Environment.GetEnvironmentVariable("HOME");
+        if (!string.IsNullOrEmpty(environmentVariable2))
+          return Path.Combine(environmentVariable2, ".local/share/Celeste/" + dir);
+      }
+      else if (platform.Equals("Mac OS X"))
+      {
+        string environmentVariable = Environment.GetEnvironmentVariable("HOME");
+        if (!string.IsNullOrEmpty(environmentVariable))
+          return Path.Combine(environmentVariable, "Library/Application Support/Celeste/" + dir);
+      }
+      else if (!platform.Equals("Windows"))
+        throw new NotSupportedException("Unhandled SDL2 platform!");
+      return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dir);
+    }
+
     private static string GetHandle(string name)
     {
-      return Path.Combine("Saves", name + ".celeste");
+      return Path.Combine(UserIO.SavePath, name + ".celeste");
     }
 
     private static string GetBackupHandle(string name)
     {
-      return Path.Combine("Backups", name + ".celeste");
+      return Path.Combine(UserIO.BackupPath, name + ".celeste");
     }
 
     public static bool Open(UserIO.Mode mode)
@@ -129,11 +153,13 @@ namespace Celeste
 
     public static byte[] Serialize<T>(T instance)
     {
+      byte[] array;
       using (MemoryStream memoryStream = new MemoryStream())
       {
         new XmlSerializer(typeof (T)).Serialize((Stream) memoryStream, (object) instance);
-        return memoryStream.ToArray();
+        array = memoryStream.ToArray();
       }
+      return array;
     }
 
     public static bool Saving { get; private set; }
@@ -207,3 +233,4 @@ label_14:
     }
   }
 }
+

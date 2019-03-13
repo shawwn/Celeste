@@ -24,8 +24,9 @@ namespace Celeste
       string str = Dialog.Clean("journal_of", (Language) null);
       if (str.Length > 0)
         str += "\n";
-      ActiveFont.Draw(str + SaveData.Instance.Name, new Vector2(805f, 400f), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 2f), Color.op_Multiply(Color.get_Black(), 0.5f));
+      ActiveFont.Draw(str + SaveData.Instance.Name, new Vector2(805f, 400f), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.Black * 0.5f);
       Draw.SpriteBatch.End();
     }
   }
 }
+

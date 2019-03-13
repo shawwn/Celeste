@@ -40,25 +40,24 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS05_Badeline cs05Badeline = this;
-      cs05Badeline.player.StateMachine.State = 11;
-      cs05Badeline.player.StateMachine.Locked = true;
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
       yield return (object) 0.25f;
-      if (cs05Badeline.index == 3)
+      if (this.index == 3)
       {
-        cs05Badeline.player.DummyAutoAnimate = false;
-        cs05Badeline.player.Sprite.Play("tired", false, false);
+        this.player.DummyAutoAnimate = false;
+        this.player.Sprite.Play("tired", false, false);
         yield return (object) 0.2f;
       }
-      while (cs05Badeline.player.Scene != null && !cs05Badeline.player.OnGround(1))
+      while (this.player.Scene != null && !this.player.OnGround(1))
         yield return (object) null;
-      Vector2 screenSpaceFocusPoint = Vector2.op_Addition(Vector2.op_Subtraction(Vector2.op_Multiply(Vector2.op_Addition(cs05Badeline.badeline.Center, cs05Badeline.player.Center), 0.5f), cs05Badeline.Level.Camera.Position), new Vector2(0.0f, -12f));
-      yield return (object) cs05Badeline.Level.ZoomTo(screenSpaceFocusPoint, 2f, 0.5f);
-      yield return (object) Textbox.Say("ch5_shadow_maddy_" + (object) cs05Badeline.index, new Func<IEnumerator>(cs05Badeline.BadelineLeaves));
-      if (!cs05Badeline.moved)
-        cs05Badeline.npc.MoveToNode(cs05Badeline.index, true);
-      yield return (object) cs05Badeline.Level.ZoomBack(0.5f);
-      cs05Badeline.EndCutscene(level, true);
+      Vector2 zoomAt = (this.badeline.Center + this.player.Center) * 0.5f - this.Level.Camera.Position + new Vector2(0.0f, -12f);
+      yield return (object) this.Level.ZoomTo(zoomAt, 2f, 0.5f);
+      yield return (object) Textbox.Say("ch5_shadow_maddy_" + (object) this.index, new Func<IEnumerator>(this.BadelineLeaves));
+      if (!this.moved)
+        this.npc.MoveToNode(this.index, true);
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.EndCutscene(level, true);
     }
 
     public override void OnEnd(Level level)
@@ -82,3 +81,4 @@ namespace Celeste
     }
   }
 }
+

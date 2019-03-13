@@ -21,16 +21,16 @@ namespace Celeste
     public SoundSource LoopingSfx;
 
     public NPC06_Badeline_Crying(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Add((Component) (this.Sprite = GFX.SpriteBank.Create("badeline_boss")));
       this.Sprite.Play("scaredIdle", false, false);
       this.Add((Component) (this.white = new Monocle.Image(GFX.Game["characters/badelineBoss/calm_white"])));
-      this.white.Color = Color.op_Multiply(Color.get_White(), 0.0f);
+      this.white.Color = Color.White * 0.0f;
       this.white.Origin = this.Sprite.Origin;
       this.white.Position = this.Sprite.Position;
       this.Add((Component) (this.bloom = new BloomPoint(new Vector2(0.0f, -6f), 0.0f, 16f)));
-      this.Add((Component) (this.light = new VertexLight(new Vector2(0.0f, -6f), Color.get_White(), 1f, 24, 64)));
+      this.Add((Component) (this.light = new VertexLight(new Vector2(0.0f, -6f), Color.White, 1f, 24, 64)));
       this.Add((Component) (this.LoopingSfx = new SoundSource("event:/char/badeline/boss_idle_ground")));
     }
 
@@ -66,50 +66,55 @@ namespace Celeste
 
     public IEnumerator TurnWhite(float duration)
     {
-      NPC06_Badeline_Crying c06BadelineCrying = this;
       float alpha = 0.0f;
       while ((double) alpha < 1.0)
       {
         alpha += Engine.DeltaTime / duration;
-        c06BadelineCrying.white.Color = Color.op_Multiply(Color.get_White(), alpha);
-        c06BadelineCrying.bloom.Alpha = alpha;
+        this.white.Color = Color.White * alpha;
+        this.bloom.Alpha = alpha;
         yield return (object) null;
       }
-      c06BadelineCrying.Sprite.Visible = false;
+      this.Sprite.Visible = false;
     }
 
     public IEnumerator Disperse()
     {
-      NPC06_Badeline_Crying c06BadelineCrying = this;
       Input.Rumble(RumbleStrength.Light, RumbleLength.Long);
       float size = 1f;
-      while (c06BadelineCrying.orbs.Count < 8)
+      while (this.orbs.Count < 8)
       {
         float to = size - 0.125f;
         while ((double) size > (double) to)
         {
-          c06BadelineCrying.white.Scale = Vector2.op_Multiply(Vector2.get_One(), size);
-          c06BadelineCrying.light.Alpha = size;
-          c06BadelineCrying.bloom.Alpha = size;
+          this.white.Scale = Vector2.One * size;
+          this.light.Alpha = size;
+          this.bloom.Alpha = size;
           size -= Engine.DeltaTime;
           yield return (object) null;
         }
-        NPC06_Badeline_Crying.Orb orb = new NPC06_Badeline_Crying.Orb(c06BadelineCrying.Position);
-        orb.Target = Vector2.op_Addition(c06BadelineCrying.Position, new Vector2(-16f, -40f));
-        c06BadelineCrying.Scene.Add((Entity) orb);
-        c06BadelineCrying.orbs.Add(orb);
+        NPC06_Badeline_Crying.Orb orb = new NPC06_Badeline_Crying.Orb(this.Position);
+        orb.Target = this.Position + new Vector2(-16f, -40f);
+        this.Scene.Add((Entity) orb);
+        this.orbs.Add(orb);
+        orb = (NPC06_Badeline_Crying.Orb) null;
       }
       yield return (object) 3.25f;
       int i = 0;
-      foreach (NPC06_Badeline_Crying.Orb orb in c06BadelineCrying.orbs)
+      foreach (NPC06_Badeline_Crying.Orb orb1 in this.orbs)
       {
+        NPC06_Badeline_Crying.Orb orb = orb1;
         orb.Routine.Replace(orb.CircleRoutine((float) ((double) i / 8.0 * 6.28318548202515)));
         ++i;
         yield return (object) 0.2f;
+        orb = (NPC06_Badeline_Crying.Orb) null;
       }
       yield return (object) 2f;
-      foreach (NPC06_Badeline_Crying.Orb orb in c06BadelineCrying.orbs)
+      foreach (NPC06_Badeline_Crying.Orb orb1 in this.orbs)
+      {
+        NPC06_Badeline_Crying.Orb orb = orb1;
         orb.Routine.Replace(orb.AbsorbRoutine());
+        orb = (NPC06_Badeline_Crying.Orb) null;
+      }
       yield return (object) 1f;
     }
 
@@ -130,7 +135,7 @@ namespace Celeste
         set
         {
           this.ease = value;
-          this.Sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), this.ease);
+          this.Sprite.Scale = Vector2.One * this.ease;
           this.Bloom.Alpha = this.ease;
         }
       }
@@ -147,61 +152,56 @@ namespace Celeste
 
       public IEnumerator FloatRoutine()
       {
-        NPC06_Badeline_Crying.Orb orb = this;
-        Vector2 speed = Vector2.get_Zero();
-        orb.Ease = 0.2f;
+        Vector2 speed = Vector2.Zero;
+        this.Ease = 0.2f;
         while (true)
         {
-          Vector2 target = Vector2.op_Addition(orb.Target, Calc.AngleToVector(Calc.Random.NextFloat(6.283185f), 16f + Calc.Random.NextFloat(40f)));
+          Vector2 target = this.Target + Calc.AngleToVector(Calc.Random.NextFloat(6.283185f), 16f + Calc.Random.NextFloat(40f));
           float reset = 0.0f;
-          while ((double) reset < 1.0)
+          while ((double) reset < 1.0 && (double) (target - this.Position).Length() > 8.0)
           {
-            Vector2 vector2 = Vector2.op_Subtraction(target, orb.Position);
-            if ((double) ((Vector2) ref vector2).Length() > 8.0)
-            {
-              speed = Vector2.op_Addition(speed, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Subtraction(target, orb.Position).SafeNormalize(), 420f), Engine.DeltaTime));
-              if ((double) ((Vector2) ref speed).Length() > 90.0)
-                speed = speed.SafeNormalize(90f);
-              orb.Position = Vector2.op_Addition(orb.Position, Vector2.op_Multiply(speed, Engine.DeltaTime));
-              reset += Engine.DeltaTime;
-              orb.Ease = Calc.Approach(orb.Ease, 1f, Engine.DeltaTime * 4f);
-              yield return (object) null;
-            }
-            else
-              break;
+            Vector2 dir = (target - this.Position).SafeNormalize();
+            speed += dir * 420f * Engine.DeltaTime;
+            if ((double) speed.Length() > 90.0)
+              speed = speed.SafeNormalize(90f);
+            this.Position = this.Position + speed * Engine.DeltaTime;
+            reset += Engine.DeltaTime;
+            this.Ease = Calc.Approach(this.Ease, 1f, Engine.DeltaTime * 4f);
+            yield return (object) null;
+            dir = new Vector2();
           }
-          target = (Vector2) null;
+          target = new Vector2();
         }
       }
 
       public IEnumerator CircleRoutine(float offset)
       {
-        NPC06_Badeline_Crying.Orb orb = this;
-        Vector2 from = orb.Position;
+        Vector2 from = this.Position;
         float ease = 0.0f;
-        Player player = orb.Scene.Tracker.GetEntity<Player>();
+        Player player = this.Scene.Tracker.GetEntity<Player>();
         while (player != null)
         {
-          Vector2 vector2 = Vector2.op_Addition(player.Center, Calc.AngleToVector(orb.Scene.TimeActive * 2f + offset, 24f));
+          float rotation = this.Scene.TimeActive * 2f + offset;
+          Vector2 target = player.Center + Calc.AngleToVector(rotation, 24f);
           ease = Calc.Approach(ease, 1f, Engine.DeltaTime * 2f);
-          orb.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(vector2, from), Ease.CubeInOut(ease)));
+          this.Position = from + (target - from) * Monocle.Ease.CubeInOut(ease);
           yield return (object) null;
+          target = new Vector2();
         }
       }
 
       public IEnumerator AbsorbRoutine()
       {
-        NPC06_Badeline_Crying.Orb orb = this;
-        Player entity = orb.Scene.Tracker.GetEntity<Player>();
-        if (entity != null)
+        Player player = this.Scene.Tracker.GetEntity<Player>();
+        if (player != null)
         {
-          Vector2 from = orb.Position;
-          Vector2 to = entity.Center;
+          Vector2 from = this.Position;
+          Vector2 to = player.Center;
           for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
           {
-            float num = Ease.BigBackIn(p);
-            orb.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), num));
-            orb.Ease = (float) (0.200000002980232 + (1.0 - (double) num) * 0.800000011920929);
+            float e = Monocle.Ease.BigBackIn(p);
+            this.Position = from + (to - from) * e;
+            this.Ease = (float) (0.200000002980232 + (1.0 - (double) e) * 0.800000011920929);
             yield return (object) null;
           }
         }
@@ -209,3 +209,4 @@ namespace Celeste
     }
   }
 }
+

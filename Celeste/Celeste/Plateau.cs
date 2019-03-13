@@ -15,7 +15,7 @@ namespace Celeste
     public LightOcclude Occluder;
 
     public Plateau(EntityData e, Vector2 offset)
-      : base(Vector2.op_Addition(e.Position, offset), 104f, 4f, true)
+      : base(e.Position + offset, 104f, 4f, true)
     {
       this.Collider.Left += 8f;
       this.Add((Component) (this.sprite = new Monocle.Image(GFX.Game["scenery/fallplateau"])));
@@ -25,3 +25,4 @@ namespace Celeste
     }
   }
 }
+

@@ -37,8 +37,8 @@ namespace Celeste
       for (int index = 0; index < this.particles.Length; ++index)
       {
         this.particles[index].Reset(this.Direction);
-        this.particles[index].Position.X = (__Null) (double) Calc.Random.NextFloat((float) Engine.Width);
-        this.particles[index].Position.Y = (__Null) (double) Calc.Random.NextFloat((float) Engine.Height);
+        this.particles[index].Position.X = Calc.Random.NextFloat((float) Engine.Width);
+        this.particles[index].Position.Y = Calc.Random.NextFloat((float) Engine.Height);
       }
     }
 
@@ -49,16 +49,10 @@ namespace Celeste
         this.Alpha = this.AttachAlphaTo.Percent;
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        ref Vector2 local1 = ref this.particles[index].Position;
-        local1 = Vector2.op_Addition(local1, Vector2.op_Multiply(Vector2.op_Multiply(this.Direction, this.particles[index].Speed), Engine.DeltaTime));
-        ref __Null local2 = ref this.particles[index].Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 + (float) (Math.Sin((double) this.particles[index].Sin) * 100.0) * Engine.DeltaTime;
+        this.particles[index].Position += this.Direction * this.particles[index].Speed * Engine.DeltaTime;
+        this.particles[index].Position.Y += (float) (Math.Sin((double) this.particles[index].Sin) * 100.0) * Engine.DeltaTime;
         this.particles[index].Sin += Engine.DeltaTime;
-        if (this.particles[index].Position.X < (double) sbyte.MinValue || this.particles[index].Position.X > (double) (Engine.Width + 128) || (this.particles[index].Position.Y < (double) sbyte.MinValue || this.particles[index].Position.Y > (double) (Engine.Height + 128)))
+        if ((double) this.particles[index].Position.X < (double) sbyte.MinValue || (double) this.particles[index].Position.X > (double) (Engine.Width + 128) || (double) this.particles[index].Position.Y < (double) sbyte.MinValue || (double) this.particles[index].Position.Y > (double) (Engine.Height + 128))
           this.particles[index].Reset(this.Direction);
       }
       this.timer += Engine.DeltaTime;
@@ -66,26 +60,26 @@ namespace Celeste
 
     public override void Render(Scene scene)
     {
-      float num1 = Calc.Clamp(((Vector2) ref this.Direction).Length(), 0.0f, 20f);
-      float num2 = 0.0f;
-      Vector2 one = Vector2.get_One();
-      bool flag = (double) num1 > 1.0;
+      float x = Calc.Clamp(this.Direction.Length(), 0.0f, 20f);
+      float num1 = 0.0f;
+      Vector2 vector2 = Vector2.One;
+      bool flag = (double) x > 1.0;
       if (flag)
       {
-        num2 = this.Direction.Angle();
-        ((Vector2) ref one).\u002Ector(num1, (float) (0.200000002980232 + (1.0 - (double) num1 / 20.0) * 0.800000011920929));
+        num1 = this.Direction.Angle();
+        vector2 = new Vector2(x, (float) (0.200000002980232 + (1.0 - (double) x / 20.0) * 0.800000011920929));
       }
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.Additive, (SamplerState) SamplerState.LinearWrap, (DepthStencilState) null, (RasterizerState) null, (Effect) null, Engine.ScreenMatrix);
-      float num3 = this.Alpha * this.ParticleAlpha;
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, (DepthStencilState) null, (RasterizerState) null, (Effect) null, Engine.ScreenMatrix);
+      float num2 = this.Alpha * this.ParticleAlpha;
       for (int index = 0; index < this.particles.Length; ++index)
       {
         Color color = this.particles[index].Color;
         float rotation = this.particles[index].Rotation;
-        if ((double) num3 < 1.0)
-          color = Color.op_Multiply(color, num3);
-        this.snow.DrawCentered(this.particles[index].Position, color, Vector2.op_Multiply(one, this.particles[index].Scale), flag ? num2 : rotation);
+        if ((double) num2 < 1.0)
+          color *= num2;
+        this.snow.DrawCentered(this.particles[index].Position, color, vector2 * this.particles[index].Scale, flag ? num1 : rotation);
       }
-      Draw.SpriteBatch.Draw(this.overlay.Texture.Texture, Vector2.get_Zero(), new Rectangle?(new Rectangle(-(int) (this.timer * 32f % (float) this.overlay.Width), -(int) (this.timer * 20f % (float) this.overlay.Height), 1920, 1080)), Color.op_Multiply(Color.get_White(), this.Alpha * this.overlayAlpha));
+      Draw.SpriteBatch.Draw(this.overlay.Texture.Texture, Vector2.Zero, new Rectangle?(new Rectangle(-(int) (this.timer * 32f % (float) this.overlay.Width), -(int) (this.timer * 20f % (float) this.overlay.Height), 1920, 1080)), Color.White * (this.Alpha * this.overlayAlpha));
       Draw.SpriteBatch.End();
     }
 
@@ -104,18 +98,19 @@ namespace Celeste
         float val = num * (num * num * num);
         this.Scale = Calc.Map(val, 0.0f, 1f, 0.05f, 0.8f);
         this.Speed = this.Scale * (float) Calc.Random.Range(2500, 5000);
-        if (direction.X < 0.0)
+        if ((double) direction.X < 0.0)
           this.Position = new Vector2((float) (Engine.Width + 128), Calc.Random.NextFloat((float) Engine.Height));
-        else if (direction.X > 0.0)
+        else if ((double) direction.X > 0.0)
           this.Position = new Vector2((float) sbyte.MinValue, Calc.Random.NextFloat((float) Engine.Height));
-        else if (direction.Y > 0.0)
+        else if ((double) direction.Y > 0.0)
           this.Position = new Vector2(Calc.Random.NextFloat((float) Engine.Width), (float) sbyte.MinValue);
-        else if (direction.Y < 0.0)
+        else if ((double) direction.Y < 0.0)
           this.Position = new Vector2(Calc.Random.NextFloat((float) Engine.Width), (float) (Engine.Height + 128));
         this.Sin = Calc.Random.NextFloat(6.283185f);
         this.Rotation = Calc.Random.NextFloat(6.283185f);
-        this.Color = Color.Lerp(Color.get_White(), Color.get_Transparent(), val * 0.8f);
+        this.Color = Color.Lerp(Color.White, Color.Transparent, val * 0.8f);
       }
     }
   }
 }
+

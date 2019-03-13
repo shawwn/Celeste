@@ -28,7 +28,7 @@ namespace Celeste
       this.label = Dialog.Clean("menu_begin", (Language) null);
       this.icon = GFX.Gui["menu/start"];
       this.labelScale = 1f;
-      float num = (float) (ActiveFont.Measure(this.label).X * 1.5);
+      float num = ActiveFont.Measure(this.label).X * 1.5f;
       if ((double) num > 256.0)
         this.labelScale = 256f / num;
       this.Add((Component) (this.bounceWiggler = Wiggler.Create(0.25f, 4f, (Action<float>) null, false, false)));
@@ -54,13 +54,12 @@ namespace Celeste
 
     public override void Render()
     {
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector(0.0f, this.bounceWiggler.Value * 8f);
-      Vector2 vector2_2 = Vector2.op_Addition(Vector2.op_Multiply(Vector2.get_UnitY(), (float) this.icon.Height), new Vector2(0.0f, -Math.Abs(this.bigBounceWiggler.Value * 40f)));
+      Vector2 vector2_1 = new Vector2(0.0f, this.bounceWiggler.Value * 8f);
+      Vector2 vector2_2 = Vector2.UnitY * (float) this.icon.Height + new Vector2(0.0f, -Math.Abs(this.bigBounceWiggler.Value * 40f));
       if (!this.confirmed)
-        vector2_2 = Vector2.op_Addition(vector2_2, vector2_1);
-      this.icon.DrawOutlineJustified(Vector2.op_Addition(this.Position, vector2_2), new Vector2(0.5f, 1f), Color.get_White(), 1f, (float) ((double) this.rotateWiggler.Value * 10.0 * (Math.PI / 180.0)));
-      ActiveFont.DrawOutline(this.label, Vector2.op_Addition(Vector2.op_Addition(this.Position, vector2_1), new Vector2(0.0f, (float) (48 + this.icon.Height))), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 1.5f), this.labelScale), this.SelectionColor, 2f, Color.get_Black());
+        vector2_2 += vector2_1;
+      this.icon.DrawOutlineJustified(this.Position + vector2_2, new Vector2(0.5f, 1f), Color.White, 1f, (float) ((double) this.rotateWiggler.Value * 10.0 * (Math.PI / 180.0)));
+      ActiveFont.DrawOutline(this.label, this.Position + vector2_1 + new Vector2(0.0f, (float) (48 + this.icon.Height)), new Vector2(0.5f, 0.5f), Vector2.One * 1.5f * this.labelScale, this.SelectionColor, 2f, Color.Black);
     }
 
     public override float ButtonHeight
@@ -72,3 +71,4 @@ namespace Celeste
     }
   }
 }
+

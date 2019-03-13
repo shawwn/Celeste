@@ -15,7 +15,8 @@ namespace Celeste
   public class StarJumpController : Entity
   {
     private VertexPositionColor[] vertices = new VertexPositionColor[600];
-    private Color rayColor = Color.op_Multiply(Calc.HexToColor("a3ffff"), 0.25f);
+    private int vertexCount = 0;
+    private Color rayColor = Calc.HexToColor("a3ffff") * 0.25f;
     private StarJumpController.Ray[] rays = new StarJumpController.Ray[100];
     private Level level;
     private Random random;
@@ -27,7 +28,6 @@ namespace Celeste
     private float cameraOffsetTimer;
     public VirtualRenderTarget BlockFill;
     private const int RayCount = 100;
-    private int vertexCount;
 
     public StarJumpController()
     {
@@ -38,14 +38,10 @@ namespace Celeste
     {
       base.Added(scene);
       this.level = this.SceneAs<Level>();
-      Rectangle bounds1 = this.level.Bounds;
-      this.minY = (float) (((Rectangle) ref bounds1).get_Top() + 80);
-      Rectangle bounds2 = this.level.Bounds;
-      this.maxY = (float) (((Rectangle) ref bounds2).get_Top() + 1800);
-      Rectangle bounds3 = this.level.Bounds;
-      this.minX = (float) (((Rectangle) ref bounds3).get_Left() + 80);
-      Rectangle bounds4 = this.level.Bounds;
-      this.maxX = (float) (((Rectangle) ref bounds4).get_Right() - 80);
+      this.minY = (float) (this.level.Bounds.Top + 80);
+      this.maxY = (float) (this.level.Bounds.Top + 1800);
+      this.minX = (float) (this.level.Bounds.Left + 80);
+      this.maxX = (float) (this.level.Bounds.Right - 80);
       this.level.Session.Audio.Music.Event = "event:/music/lvl6/starjump";
       this.level.Session.Audio.Music.Layer(1, 1f);
       this.level.Session.Audio.Music.Layer(2, 0.0f);
@@ -66,7 +62,7 @@ namespace Celeste
         this.level.Session.Audio.Music.Layer(1, Calc.ClampedMap(centerY, this.maxY, this.minY, 1f, 0.0f));
         this.level.Session.Audio.Music.Layer(2, Calc.ClampedMap(centerY, this.maxY, this.minY, 0.0f, 1f));
         this.level.Session.Audio.Apply();
-        if (this.level.CameraOffset.Y == -38.4000015258789)
+        if ((double) this.level.CameraOffset.Y == -38.4000015258789)
         {
           if (entity.StateMachine.State != 19)
           {
@@ -74,7 +70,7 @@ namespace Celeste
             if ((double) this.cameraOffsetTimer >= 0.5)
             {
               this.cameraOffsetTimer = 0.0f;
-              this.level.CameraOffset.Y = (__Null) -12.8000001907349;
+              this.level.CameraOffset.Y = -12.8f;
             }
           }
           else
@@ -86,7 +82,7 @@ namespace Celeste
           if ((double) this.cameraOffsetTimer >= 0.100000001490116)
           {
             this.cameraOffsetTimer = 0.0f;
-            this.level.CameraOffset.Y = (__Null) -38.4000015258789;
+            this.level.CameraOffset.Y = -38.4f;
           }
         }
         else
@@ -115,8 +111,7 @@ namespace Celeste
     {
       Level scene = this.Scene as Level;
       Vector2 vector = Calc.AngleToVector(-1.670796f, 1f);
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector((float) -vector.Y, (float) vector.X);
+      Vector2 vector2_1 = new Vector2(-vector.Y, vector.X);
       int num1 = 0;
       for (int index1 = 0; index1 < this.rays.Length; ++index1)
       {
@@ -129,17 +124,12 @@ namespace Celeste
         float num3 = this.mod(this.rays[index1].Y - scene.Camera.Y * 0.7f, 580f) - 200f;
         float width = this.rays[index1].Width;
         float length = this.rays[index1].Length;
-        Vector2 vector2_2;
-        ((Vector2) ref vector2_2).\u002Ector((float) (int) num2, (float) (int) num3);
-        Color color = Color.op_Multiply(this.rayColor, Ease.CubeInOut(Calc.YoYo(percent)));
-        VertexPositionColor vertexPositionColor1;
-        ((VertexPositionColor) ref vertexPositionColor1).\u002Ector(new Vector3(Vector2.op_Addition(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, width)), Vector2.op_Multiply(vector, length)), 0.0f), color);
-        VertexPositionColor vertexPositionColor2;
-        ((VertexPositionColor) ref vertexPositionColor2).\u002Ector(new Vector3(Vector2.op_Subtraction(vector2_2, Vector2.op_Multiply(vector2_1, width)), 0.0f), color);
-        VertexPositionColor vertexPositionColor3;
-        ((VertexPositionColor) ref vertexPositionColor3).\u002Ector(new Vector3(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, width)), 0.0f), color);
-        VertexPositionColor vertexPositionColor4;
-        ((VertexPositionColor) ref vertexPositionColor4).\u002Ector(new Vector3(Vector2.op_Subtraction(Vector2.op_Subtraction(vector2_2, Vector2.op_Multiply(vector2_1, width)), Vector2.op_Multiply(vector, length)), 0.0f), color);
+        Vector2 vector2_2 = new Vector2((float) (int) num2, (float) (int) num3);
+        Color color = this.rayColor * Ease.CubeInOut(Calc.YoYo(percent));
+        VertexPositionColor vertexPositionColor1 = new VertexPositionColor(new Vector3(vector2_2 + vector2_1 * width + vector * length, 0.0f), color);
+        VertexPositionColor vertexPositionColor2 = new VertexPositionColor(new Vector3(vector2_2 - vector2_1 * width, 0.0f), color);
+        VertexPositionColor vertexPositionColor3 = new VertexPositionColor(new Vector3(vector2_2 + vector2_1 * width, 0.0f), color);
+        VertexPositionColor vertexPositionColor4 = new VertexPositionColor(new Vector3(vector2_2 - vector2_1 * width - vector * length, 0.0f), color);
         VertexPositionColor[] vertices1 = this.vertices;
         int index2 = num1;
         int num4 = index2 + 1;
@@ -180,9 +170,9 @@ namespace Celeste
         this.BlockFill = VirtualContent.CreateRenderTarget("block-fill", 320, 180, false, true, 0);
       if (this.vertexCount <= 0)
         return;
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.BlockFill);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.Lerp(Color.get_Black(), Color.get_LightSkyBlue(), 0.3f));
-      GFX.DrawVertices<VertexPositionColor>(Matrix.get_Identity(), this.vertices, this.vertexCount, (Effect) null, (BlendState) null);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.BlockFill);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Lerp(Color.Black, Color.LightSkyBlue, 0.3f));
+      GFX.DrawVertices<VertexPositionColor>(Matrix.Identity, this.vertices, this.vertexCount, (Effect) null, (BlendState) null);
     }
 
     public override void Removed(Scene scene)
@@ -230,3 +220,4 @@ namespace Celeste
     }
   }
 }
+

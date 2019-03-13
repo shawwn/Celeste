@@ -17,7 +17,7 @@ namespace Celeste
   {
     private static readonly Vector2 TargetPosition = new Vector2(160f, 160f);
     private static readonly Vector2 TweenFrom = new Vector2(-500f, 160f);
-    private static readonly Color UnselectedColor = Color.get_White();
+    private static readonly Color UnselectedColor = Color.White;
     private static readonly Color SelectedColorA = TextMenu.HighlightColorA;
     private static readonly Color SelectedColorB = TextMenu.HighlightColorB;
     private const float IconWidth = 64f;
@@ -45,44 +45,37 @@ namespace Celeste
       foreach (Entity button in this.buttons)
         button.RemoveSelf();
       this.buttons.Clear();
-      Vector2 targetPosition;
-      ((Vector2) ref targetPosition).\u002Ector(320f, 160f);
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(-640f, 0.0f);
-      this.climbButton = new MainMenuClimb((Oui) this, targetPosition, Vector2.op_Addition(targetPosition, vector2), new Action(this.OnBegin));
+      Vector2 targetPosition1 = new Vector2(320f, 160f);
+      Vector2 vector2_1 = new Vector2(-640f, 0.0f);
+      this.climbButton = new MainMenuClimb((Oui) this, targetPosition1, targetPosition1 + vector2_1, new Action(this.OnBegin));
       if (!this.startOnOptions)
         this.climbButton.StartSelected();
       this.buttons.Add((MenuButton) this.climbButton);
-      targetPosition = Vector2.op_Addition(targetPosition, Vector2.op_Multiply(Vector2.get_UnitY(), this.climbButton.ButtonHeight));
-      ref __Null local = ref targetPosition.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local - 140f;
-      if (Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Debug)
+      Vector2 targetPosition2 = targetPosition1 + Vector2.UnitY * this.climbButton.ButtonHeight;
+      targetPosition2.X -= 140f;
+      if (Celeste.PlayMode == Celeste.PlayModes.Debug)
       {
-        MainMenuSmallButton mainMenuSmallButton = new MainMenuSmallButton("menu_debug", "menu/options", (Oui) this, targetPosition, Vector2.op_Addition(targetPosition, vector2), new Action(this.OnDebug));
+        MainMenuSmallButton mainMenuSmallButton = new MainMenuSmallButton("menu_debug", "menu/options", (Oui) this, targetPosition2, targetPosition2 + vector2_1, new Action(this.OnDebug));
         this.buttons.Add((MenuButton) mainMenuSmallButton);
-        targetPosition = Vector2.op_Addition(targetPosition, Vector2.op_Multiply(Vector2.get_UnitY(), mainMenuSmallButton.ButtonHeight));
+        targetPosition2 += Vector2.UnitY * mainMenuSmallButton.ButtonHeight;
       }
-      if (Settings.Instance.Pico8OnMainMenu || Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Debug || Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Event)
+      if (Settings.Instance.Pico8OnMainMenu || Celeste.PlayMode == Celeste.PlayModes.Debug || Celeste.PlayMode == Celeste.PlayModes.Event)
       {
-        MainMenuSmallButton mainMenuSmallButton = new MainMenuSmallButton("menu_pico8", "menu/pico8", (Oui) this, targetPosition, Vector2.op_Addition(targetPosition, vector2), new Action(this.OnPico8));
+        MainMenuSmallButton mainMenuSmallButton = new MainMenuSmallButton("menu_pico8", "menu/pico8", (Oui) this, targetPosition2, targetPosition2 + vector2_1, new Action(this.OnPico8));
         this.buttons.Add((MenuButton) mainMenuSmallButton);
-        targetPosition = Vector2.op_Addition(targetPosition, Vector2.op_Multiply(Vector2.get_UnitY(), mainMenuSmallButton.ButtonHeight));
+        targetPosition2 += Vector2.UnitY * mainMenuSmallButton.ButtonHeight;
       }
-      MainMenuSmallButton mainMenuSmallButton1 = new MainMenuSmallButton("menu_options", "menu/options", (Oui) this, targetPosition, Vector2.op_Addition(targetPosition, vector2), new Action(this.OnOptions));
+      MainMenuSmallButton mainMenuSmallButton1 = new MainMenuSmallButton("menu_options", "menu/options", (Oui) this, targetPosition2, targetPosition2 + vector2_1, new Action(this.OnOptions));
       if (this.startOnOptions)
         mainMenuSmallButton1.StartSelected();
       this.buttons.Add((MenuButton) mainMenuSmallButton1);
-      targetPosition = Vector2.op_Addition(targetPosition, Vector2.op_Multiply(Vector2.get_UnitY(), mainMenuSmallButton1.ButtonHeight));
-      MainMenuSmallButton mainMenuSmallButton2 = new MainMenuSmallButton("menu_credits", "menu/credits", (Oui) this, targetPosition, Vector2.op_Addition(targetPosition, vector2), new Action(this.OnCredits));
+      Vector2 targetPosition3 = targetPosition2 + Vector2.UnitY * mainMenuSmallButton1.ButtonHeight;
+      MainMenuSmallButton mainMenuSmallButton2 = new MainMenuSmallButton("menu_credits", "menu/credits", (Oui) this, targetPosition3, targetPosition3 + vector2_1, new Action(this.OnCredits));
       this.buttons.Add((MenuButton) mainMenuSmallButton2);
-      targetPosition = Vector2.op_Addition(targetPosition, Vector2.op_Multiply(Vector2.get_UnitY(), mainMenuSmallButton2.ButtonHeight));
-      MainMenuSmallButton mainMenuSmallButton3 = new MainMenuSmallButton("menu_exit", "menu/exit", (Oui) this, targetPosition, Vector2.op_Addition(targetPosition, vector2), new Action(this.OnExit));
+      Vector2 targetPosition4 = targetPosition3 + Vector2.UnitY * mainMenuSmallButton2.ButtonHeight;
+      MainMenuSmallButton mainMenuSmallButton3 = new MainMenuSmallButton("menu_exit", "menu/exit", (Oui) this, targetPosition4, targetPosition4 + vector2_1, new Action(this.OnExit));
       this.buttons.Add((MenuButton) mainMenuSmallButton3);
-      targetPosition = Vector2.op_Addition(targetPosition, Vector2.op_Multiply(Vector2.get_UnitY(), mainMenuSmallButton3.ButtonHeight));
+      Vector2 vector2_2 = targetPosition4 + Vector2.UnitY * mainMenuSmallButton3.ButtonHeight;
       for (int index = 0; index < this.buttons.Count; ++index)
       {
         if (index > 0)
@@ -112,20 +105,15 @@ namespace Celeste
         this.Add((Component) new Coroutine(this.Enter((Oui) null), true));
         return true;
       }
-      if (start == Overworld.StartMode.MainMenu)
-      {
-        this.mountainStartFront = true;
-        this.Add((Component) new Coroutine(this.Enter((Oui) null), true));
-        return true;
-      }
-      if (start != Overworld.StartMode.ReturnFromOptions)
-        return start == Overworld.StartMode.ReturnFromPico8;
+      if (start != Overworld.StartMode.MainMenu)
+        return start == Overworld.StartMode.ReturnFromOptions || start == Overworld.StartMode.ReturnFromPico8;
+      this.mountainStartFront = true;
+      this.Add((Component) new Coroutine(this.Enter((Oui) null), true));
       return true;
     }
 
     public override IEnumerator Enter(Oui from)
     {
-      OuiMainMenu ouiMainMenu = this;
       if (from is OuiTitleScreen || from is OuiFileSelect)
       {
         Audio.Play("event:/ui/main/whoosh_list_in");
@@ -133,59 +121,66 @@ namespace Celeste
       }
       if (from is OuiTitleScreen)
       {
-        MenuButton.ClearSelection(ouiMainMenu.Scene);
-        ouiMainMenu.climbButton.StartSelected();
+        MenuButton.ClearSelection(this.Scene);
+        this.climbButton.StartSelected();
       }
-      ouiMainMenu.Visible = true;
-      if (ouiMainMenu.mountainStartFront)
-        ouiMainMenu.Overworld.Mountain.SnapCamera(-1, new MountainCamera(new Vector3(0.0f, 6f, 12f), MountainRenderer.RotateLookAt), false);
-      ouiMainMenu.Overworld.Mountain.GotoRotationMode();
-      ouiMainMenu.Overworld.Maddy.Hide(true);
-      foreach (MenuButton button in ouiMainMenu.buttons)
+      this.Visible = true;
+      if (this.mountainStartFront)
+        this.Overworld.Mountain.SnapCamera(-1, new MountainCamera(new Vector3(0.0f, 6f, 12f), MountainRenderer.RotateLookAt), false);
+      this.Overworld.Mountain.GotoRotationMode();
+      this.Overworld.Maddy.Hide(true);
+      foreach (MenuButton button1 in this.buttons)
+      {
+        MenuButton button = button1;
         button.TweenIn(0.2f);
+        button = (MenuButton) null;
+      }
       yield return (object) 0.2f;
-      ouiMainMenu.Focused = true;
-      ouiMainMenu.mountainStartFront = false;
+      this.Focused = true;
+      this.mountainStartFront = false;
       yield return (object) null;
     }
 
     public override IEnumerator Leave(Oui next)
     {
-      OuiMainMenu ouiMainMenu = this;
-      ouiMainMenu.Focused = false;
+      this.Focused = false;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 0.2f, true);
-      // ISSUE: reference to a compiler-generated method
-      tween.OnUpdate = new Action<Tween>(ouiMainMenu.\u003CLeave\u003Eb__18_0);
-      ouiMainMenu.Add((Component) tween);
-      bool keepClimb = ouiMainMenu.climbButton.Selected && !(next is OuiTitleScreen);
-      foreach (MenuButton button in ouiMainMenu.buttons)
+      tween.OnUpdate = (Action<Tween>) (t =>
       {
-        if (!(button == ouiMainMenu.climbButton & keepClimb))
+        this.ease = 1f - t.Eased;
+        this.Position = Vector2.Lerp(OuiMainMenu.TargetPosition, OuiMainMenu.TweenFrom, t.Eased);
+      });
+      this.Add((Component) tween);
+      bool keepClimb = this.climbButton.Selected && !(next is OuiTitleScreen);
+      foreach (MenuButton button1 in this.buttons)
+      {
+        MenuButton button = button1;
+        if (!(button == this.climbButton & keepClimb))
+        {
           button.TweenOut(0.2f);
+          button = (MenuButton) null;
+        }
       }
       yield return (object) 0.2f;
       if (keepClimb)
-        ouiMainMenu.Add((Component) new Coroutine(ouiMainMenu.SlideClimbOutLate(), true));
+        this.Add((Component) new Coroutine(this.SlideClimbOutLate(), true));
       else
-        ouiMainMenu.Visible = false;
+        this.Visible = false;
     }
 
     private IEnumerator SlideClimbOutLate()
     {
-      OuiMainMenu ouiMainMenu = this;
       yield return (object) 0.2f;
-      ouiMainMenu.climbButton.TweenOut(0.2f);
+      this.climbButton.TweenOut(0.2f);
       yield return (object) 0.2f;
-      ouiMainMenu.Visible = false;
+      this.Visible = false;
     }
 
     public Color SelectionColor
     {
       get
       {
-        if (!Settings.Instance.DisableFlashes && !this.Scene.BetweenInterval(0.1f))
-          return OuiMainMenu.SelectedColorB;
-        return OuiMainMenu.SelectedColorA;
+        return Settings.Instance.DisableFlashes || this.Scene.BetweenInterval(0.1f) ? OuiMainMenu.SelectedColorA : OuiMainMenu.SelectedColorB;
       }
     }
 
@@ -222,7 +217,7 @@ namespace Celeste
     {
       Audio.Play("event:/ui/main/whoosh_list_out");
       Audio.Play("event:/ui/main/button_climb");
-      if (Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Event)
+      if (Celeste.PlayMode == Celeste.PlayModes.Event)
       {
         SaveData.InitializeDebugMode(false);
         this.Overworld.Goto<OuiChapterSelect>();
@@ -271,3 +266,4 @@ namespace Celeste
     }
   }
 }
+

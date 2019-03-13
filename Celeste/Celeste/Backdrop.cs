@@ -13,8 +13,8 @@ namespace Celeste
   public abstract class Backdrop
   {
     public bool UseSpritebatch = true;
-    public Vector2 Scroll = Vector2.get_One();
-    public Color Color = Color.get_White();
+    public Vector2 Scroll = Vector2.One;
+    public Color Color = Color.White;
     public bool LoopX = true;
     public bool LoopY = true;
     public bool InstantIn = true;
@@ -105,3 +105,4 @@ namespace Celeste
     }
   }
 }
+

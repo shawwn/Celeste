@@ -13,8 +13,8 @@ namespace Celeste
 {
   public class ForegroundDebris : Entity
   {
+    private float parallax = 0.0f;
     private Vector2 start;
-    private float parallax;
 
     public ForegroundDebris(Vector2 position)
       : base(position)
@@ -38,17 +38,18 @@ namespace Celeste
     }
 
     public ForegroundDebris(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
     public override void Render()
     {
-      Vector2 vector2 = Vector2.op_Subtraction(Vector2.op_Addition(this.SceneAs<Level>().Camera.Position, Vector2.op_Division(new Vector2(320f, 180f), 2f)), this.start);
+      Vector2 vector2 = this.SceneAs<Level>().Camera.Position + new Vector2(320f, 180f) / 2f - this.start;
       Vector2 position = this.Position;
-      this.Position = Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(vector2, this.parallax));
+      this.Position = this.Position - vector2 * this.parallax;
       base.Render();
       this.Position = position;
     }
   }
 }
+

@@ -72,14 +72,14 @@ namespace Celeste
           if (entity.IsRiding(this))
           {
             if (entity.TreatNaive)
-              entity.NaiveMove(Vector2.op_Multiply(Vector2.get_UnitX(), (float) move));
+              entity.NaiveMove(Vector2.UnitX * (float) move);
             else
               entity.MoveHExact(move, (Collision) null, (Solid) null);
           }
         }
       }
       this.X += (float) move;
-      this.MoveStaticMovers(Vector2.op_Multiply(Vector2.get_UnitX(), (float) move));
+      this.MoveStaticMovers(Vector2.UnitX * (float) move);
     }
 
     public override void MoveVExact(int move)
@@ -94,13 +94,13 @@ namespace Celeste
             {
               this.Collidable = false;
               if (entity.TreatNaive)
-                entity.NaiveMove(Vector2.op_Multiply(Vector2.get_UnitY(), (float) move));
+                entity.NaiveMove(Vector2.UnitY * (float) move);
               else
                 entity.MoveVExact(move, (Collision) null, (Solid) null);
               entity.LiftSpeed = this.LiftSpeed;
               this.Collidable = true;
             }
-            else if (!entity.TreatNaive && this.CollideCheck((Entity) entity, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), (float) move))) && !this.CollideCheck((Entity) entity))
+            else if (!entity.TreatNaive && this.CollideCheck((Entity) entity, this.Position + Vector2.UnitY * (float) move) && !this.CollideCheck((Entity) entity))
             {
               this.Collidable = false;
               entity.MoveVExact((int) ((double) this.Top + (double) move - (double) entity.Bottom), (Collision) null, (Solid) null);
@@ -117,7 +117,7 @@ namespace Celeste
             {
               this.Collidable = false;
               if (entity.TreatNaive)
-                entity.NaiveMove(Vector2.op_Multiply(Vector2.get_UnitY(), (float) move));
+                entity.NaiveMove(Vector2.UnitY * (float) move);
               else
                 entity.MoveVExact(move, (Collision) null, (Solid) null);
               entity.LiftSpeed = this.LiftSpeed;
@@ -127,7 +127,8 @@ namespace Celeste
         }
       }
       this.Y += (float) move;
-      this.MoveStaticMovers(Vector2.op_Multiply(Vector2.get_UnitY(), (float) move));
+      this.MoveStaticMovers(Vector2.UnitY * (float) move);
     }
   }
 }
+

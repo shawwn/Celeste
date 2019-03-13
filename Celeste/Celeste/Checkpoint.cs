@@ -18,7 +18,7 @@ namespace Celeste
     }
 
     public Checkpoint(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
@@ -34,3 +34,4 @@ namespace Celeste
     }
   }
 }
+

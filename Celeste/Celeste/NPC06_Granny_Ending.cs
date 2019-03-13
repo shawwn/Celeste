@@ -14,16 +14,16 @@ namespace Celeste
     private bool talked;
 
     public NPC06_Granny_Ending(EntityData data, Vector2 position)
-      : base(Vector2.op_Addition(data.Position, position))
+      : base(data.Position + position)
     {
       this.Add((Component) (this.Sprite = GFX.SpriteBank.Create("granny")));
-      this.Sprite.Scale.X = (__Null) -1.0;
+      this.Sprite.Scale.X = -1f;
       this.Sprite.Play("idle", false, false);
       this.IdleAnim = "idle";
       this.MoveAnim = "walk";
       this.Maxspeed = 30f;
       this.Visible = false;
-      this.Add((Component) (this.Light = new VertexLight(new Vector2(0.0f, -8f), Color.get_White(), 1f, 16, 32)));
+      this.Add((Component) (this.Light = new VertexLight(new Vector2(0.0f, -8f), Color.White, 1f, 16, 32)));
       this.SetupGrannySpriteSounds();
     }
 
@@ -33,10 +33,12 @@ namespace Celeste
       if (this.talked)
         return;
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity == null || !entity.OnGround(1))
-        return;
-      this.talked = true;
-      this.Scene.Add((Entity) new CS06_Ending(entity, (NPC) this));
+      if (entity != null && entity.OnGround(1))
+      {
+        this.talked = true;
+        this.Scene.Add((Entity) new CS06_Ending(entity, (NPC) this));
+      }
     }
   }
 }
+

@@ -84,9 +84,10 @@ namespace Celeste
       Vector2 from = level.Camera.Position;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / duration)
       {
-        level.Camera.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(target, from), ease(p)));
+        level.Camera.Position = from + (target - from) * ease(p);
         yield return (object) null;
       }
     }
   }
 }
+

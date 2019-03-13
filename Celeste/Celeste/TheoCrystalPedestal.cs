@@ -15,7 +15,7 @@ namespace Celeste
     public bool DroppedTheo;
 
     public TheoCrystalPedestal(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset), 32f, 32f, false)
+      : base(data.Position + offset, 32f, 32f, false)
     {
       this.Add((Component) (this.sprite = new Monocle.Image(GFX.Game["characters/theoCrystal/pedestal"])));
       this.EnableAssistModeChecks = false;
@@ -30,7 +30,7 @@ namespace Celeste
         entity.Speed = new Vector2(0.0f, -300f);
         this.DroppedTheo = true;
         this.Collidable = false;
-        (this.Scene as Level).Flash(Color.get_White(), false);
+        (this.Scene as Level).Flash(Color.White, false);
         Celeste.Celeste.Freeze(0.1f);
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
         Audio.Play("event:/game/05_mirror_temple/crystaltheo_break_free", entity.Position);
@@ -49,9 +49,8 @@ namespace Celeste
       else
       {
         TheoCrystal first = this.Scene.Entities.FindFirst<TheoCrystal>();
-        if (first == null)
-          return;
-        first.Depth = this.Depth + 1;
+        if (first != null)
+          first.Depth = this.Depth + 1;
       }
     }
 
@@ -60,10 +59,11 @@ namespace Celeste
       TheoCrystal entity = this.Scene.Tracker.GetEntity<TheoCrystal>();
       if (entity != null && !this.DroppedTheo)
       {
-        entity.Position = Vector2.op_Addition(this.Position, new Vector2(0.0f, -32f));
+        entity.Position = this.Position + new Vector2(0.0f, -32f);
         entity.OnPedestal = true;
       }
       base.Update();
     }
   }
 }
+

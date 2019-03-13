@@ -13,13 +13,13 @@ namespace Celeste
   {
     private static readonly Color[] hotColors = new Color[2]
     {
-      Color.get_Red(),
-      Color.get_Orange()
+      Color.Red,
+      Color.Orange
     };
     private static readonly Color[] coldColors = new Color[2]
     {
-      Color.get_LightSkyBlue(),
-      Color.get_Teal()
+      Color.LightSkyBlue,
+      Color.Teal
     };
     private HeatWave.Particle[] particles = new HeatWave.Particle[50];
     private Color[] currentColors;
@@ -79,25 +79,17 @@ namespace Celeste
         if (level.CoreMode == Session.CoreModes.Cold)
           num = 0.25f;
         this.particles[i].Percent += Engine.DeltaTime / this.particles[i].Duration;
-        ref Vector2 local1 = ref this.particles[i].Position;
-        local1 = Vector2.op_Addition(local1, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Multiply(this.particles[i].Direction, this.particles[i].Speed), num), Engine.DeltaTime));
+        this.particles[i].Position += this.particles[i].Direction * this.particles[i].Speed * num * Engine.DeltaTime;
         this.particles[i].Direction.Rotate(this.particles[i].Spin * Engine.DeltaTime);
         if (level.CoreMode == Session.CoreModes.Hot)
-        {
-          ref __Null local2 = ref this.particles[i].Position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local2 = ^(float&) ref local2 - 10f * Engine.DeltaTime;
-        }
+          this.particles[i].Position.Y -= 10f * Engine.DeltaTime;
       }
       this.fade = Calc.Approach(this.fade, this.show ? 1f : 0.0f, Engine.DeltaTime);
       this.heat = Calc.Approach(this.heat, !this.show || level.CoreMode != Session.CoreModes.Hot ? 0.0f : 1f, Engine.DeltaTime * 100f);
-      this.mist1.Color = Color.op_Multiply(Color.op_Multiply(Color.Lerp(Calc.HexToColor("639bff"), Calc.HexToColor("f1b22b"), this.heat), this.fade), 0.7f);
-      this.mist2.Color = Color.op_Multiply(Color.op_Multiply(Color.Lerp(Calc.HexToColor("5fcde4"), Calc.HexToColor("f12b3a"), this.heat), this.fade), 0.7f);
-      this.mist1.Speed = Vector2.op_Multiply(new Vector2(4f, -20f), this.heat);
-      this.mist2.Speed = Vector2.op_Multiply(new Vector2(4f, -40f), this.heat);
+      this.mist1.Color = Color.Lerp(Calc.HexToColor("639bff"), Calc.HexToColor("f1b22b"), this.heat) * this.fade * 0.7f;
+      this.mist2.Color = Color.Lerp(Calc.HexToColor("5fcde4"), Calc.HexToColor("f12b3a"), this.heat) * this.fade * 0.7f;
+      this.mist1.Speed = new Vector2(4f, -20f) * this.heat;
+      this.mist2.Speed = new Vector2(4f, -40f) * this.heat;
       this.mist1.Update(scene);
       this.mist2.Update(scene);
       if ((double) this.heat > 0.0)
@@ -114,8 +106,7 @@ namespace Celeste
     {
       if ((double) this.heat <= 0.0)
         return;
-      Color color;
-      ((Color) ref color).\u002Ector(0.5f, 0.5f, 0.1f, 1f);
+      Color color = new Color(0.5f, 0.5f, 0.1f, 1f);
       Draw.Rect(level.Camera.X - 5f, level.Camera.Y - 5f, 370f, 190f, color);
     }
 
@@ -126,14 +117,14 @@ namespace Celeste
       Camera camera = (scene as Level).Camera;
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        Vector2 vector2 = (Vector2) null;
-        vector2.X = (__Null) (double) this.Mod((float) this.particles[index].Position.X - camera.X, 320f);
-        vector2.Y = (__Null) (double) this.Mod((float) this.particles[index].Position.Y - camera.Y, 180f);
-        Vector2 position = vector2;
+        Vector2 position = new Vector2()
+        {
+          X = this.Mod(this.particles[index].Position.X - camera.X, 320f),
+          Y = this.Mod(this.particles[index].Position.Y - camera.Y, 180f)
+        };
         float percent = this.particles[index].Percent;
         float num = (double) percent >= 0.699999988079071 ? Calc.ClampedMap(percent, 0.7f, 1f, 1f, 0.0f) : Calc.ClampedMap(percent, 0.0f, 0.3f, 0.0f, 1f);
-        Color color = Color.op_Multiply(this.currentColors[this.particles[index].Color], this.fade * num);
-        Draw.Rect(position, 1f, 1f, color);
+        Draw.Rect(position, 1f, 1f, this.currentColors[this.particles[index].Color] * (this.fade * num));
       }
       this.mist1.Render(scene);
       this.mist2.Render(scene);
@@ -156,3 +147,4 @@ namespace Celeste
     }
   }
 }
+

@@ -33,7 +33,7 @@ namespace Celeste
     }
 
     public FakeHeart(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
@@ -53,25 +53,25 @@ namespace Celeste
       });
       this.Collider = (Collider) new Hitbox(16f, 16f, -8f, -8f);
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
-      this.Add((Component) (this.ScaleWiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (f => this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) f * 0.25))), false, false)));
+      this.Add((Component) (this.ScaleWiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (f => this.sprite.Scale = Vector2.One * (float) (1.0 + (double) f * 0.25)), false, false)));
       this.Add((Component) (this.bloom = new BloomPoint(0.75f, 16f)));
       Color color;
       switch (areaMode)
       {
         case AreaMode.Normal:
-          color = Color.get_Aqua();
+          color = Color.Aqua;
           this.shineParticle = HeartGem.P_BlueShine;
           break;
         case AreaMode.BSide:
-          color = Color.get_Red();
+          color = Color.Red;
           this.shineParticle = HeartGem.P_RedShine;
           break;
         default:
-          color = Color.get_Gold();
+          color = Color.Gold;
           this.shineParticle = HeartGem.P_GoldShine;
           break;
       }
-      this.Add((Component) (this.light = new VertexLight(Color.Lerp(color, Color.get_White(), 0.5f), 1f, 32, 64)));
+      this.Add((Component) (this.light = new VertexLight(Color.Lerp(color, Color.White, 0.5f), 1f, 32, 64)));
       this.moveWiggler = Wiggler.Create(0.8f, 2f, (Action<float>) null, false, false);
       this.moveWiggler.StartZero = true;
       this.Add((Component) this.moveWiggler);
@@ -81,7 +81,7 @@ namespace Celeste
     {
       this.bounceSfxDelay -= Engine.DeltaTime;
       this.timer += Engine.DeltaTime;
-      this.sprite.Position = Vector2.op_Addition(Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), (float) Math.Sin((double) this.timer * 2.0)), 2f), Vector2.op_Multiply(Vector2.op_Multiply(this.moveWiggleDir, this.moveWiggler.Value), -8f));
+      this.sprite.Position = Vector2.UnitY * (float) Math.Sin((double) this.timer * 2.0) * 2f + this.moveWiggleDir * this.moveWiggler.Value * -8f;
       if ((double) this.respawnTimer > 0.0)
       {
         this.respawnTimer -= Engine.DeltaTime;
@@ -94,7 +94,7 @@ namespace Celeste
       base.Update();
       if (!this.Visible || !this.Scene.OnInterval(0.1f))
         return;
-      this.SceneAs<Level>().Particles.Emit(this.shineParticle, 1, this.Center, Vector2.op_Multiply(Vector2.get_One(), 8f));
+      this.SceneAs<Level>().Particles.Emit(this.shineParticle, 1, this.Center, Vector2.One * 8f);
     }
 
     public void OnHoldable(Holdable h)
@@ -124,7 +124,7 @@ namespace Celeste
         player.PointBounce(this.Center);
         this.moveWiggler.Start();
         this.ScaleWiggler.Start();
-        this.moveWiggleDir = Vector2.op_Subtraction(this.Center, player.Center).SafeNormalize(Vector2.get_UnitY());
+        this.moveWiggleDir = (this.Center - player.Center).SafeNormalize(Vector2.UnitY);
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
       }
     }
@@ -135,10 +135,12 @@ namespace Celeste
         return;
       this.Collidable = this.Visible = false;
       this.respawnTimer = 3f;
-      Celeste.Celeste.Freeze(0.05f);
+      Celeste.Freeze(0.05f);
       this.SceneAs<Level>().Shake(0.3f);
       SlashFx.Burst(this.Position, angle);
-      player?.RefillDash();
+      if (player != null)
+        player.RefillDash();
     }
   }
 }
+

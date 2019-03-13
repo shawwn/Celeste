@@ -98,7 +98,7 @@ namespace Celeste
         PlayerAnimMetadata playerAnimMetadata;
         if (this.Texture != null && PlayerSprite.FrameMetadata.TryGetValue(this.Texture.AtlasPath, out playerAnimMetadata))
           return playerAnimMetadata.HairOffset;
-        return Vector2.get_Zero();
+        return Vector2.Zero;
       }
     }
 
@@ -108,7 +108,7 @@ namespace Celeste
       {
         PlayerAnimMetadata playerAnimMetadata;
         if (this.Texture != null && PlayerSprite.FrameMetadata.TryGetValue(this.Texture.AtlasPath, out playerAnimMetadata))
-          return (float) playerAnimMetadata.CarryYOffset * (float) this.Scale.Y;
+          return (float) playerAnimMetadata.CarryYOffset * this.Scale.Y;
         return 0.0f;
       }
     }
@@ -139,11 +139,7 @@ namespace Celeste
     {
       get
       {
-        if (this.LastAnimationID == null)
-          return false;
-        if (!(this.LastAnimationID == "flip"))
-          return this.LastAnimationID.StartsWith("run");
-        return true;
+        return this.LastAnimationID != null && (this.LastAnimationID == "flip" || this.LastAnimationID.StartsWith("run"));
       }
     }
 
@@ -151,9 +147,7 @@ namespace Celeste
     {
       get
       {
-        if (this.LastAnimationID != null)
-          return this.LastAnimationID.StartsWith("dreamDash");
-        return false;
+        return this.LastAnimationID != null && this.LastAnimationID.StartsWith("dreamDash");
       }
     }
 
@@ -216,3 +210,4 @@ namespace Celeste
     }
   }
 }
+

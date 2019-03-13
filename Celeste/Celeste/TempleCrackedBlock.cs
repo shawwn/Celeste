@@ -13,10 +13,10 @@ namespace Celeste
   [Tracked(false)]
   public class TempleCrackedBlock : Solid
   {
+    private float frame = 0.0f;
     private EntityID eid;
     private bool persistent;
     private MTexture[,,] tiles;
-    private float frame;
     private bool broken;
     private int frames;
 
@@ -50,7 +50,7 @@ namespace Celeste
     }
 
     public TempleCrackedBlock(EntityID eid, EntityData data, Vector2 offset)
-      : this(eid, Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height, data.Bool(nameof (persistent), false))
+      : this(eid, data.Position + offset, (float) data.Width, (float) data.Height, data.Bool(nameof (persistent), false))
     {
     }
 
@@ -73,9 +73,8 @@ namespace Celeste
       if (!this.broken)
         return;
       this.frame += Engine.DeltaTime * 15f;
-      if ((double) this.frame < (double) this.frames)
-        return;
-      this.RemoveSelf();
+      if ((double) this.frame >= (double) this.frames)
+        this.RemoveSelf();
     }
 
     public override void Render()
@@ -86,7 +85,7 @@ namespace Celeste
       for (int index1 = 0; (double) index1 < (double) this.Width / 8.0; ++index1)
       {
         for (int index2 = 0; (double) index2 < (double) this.Height / 8.0; ++index2)
-          this.tiles[index1, index2, frame].Draw(Vector2.op_Addition(this.Position, Vector2.op_Multiply(new Vector2((float) index1, (float) index2), 8f)));
+          this.tiles[index1, index2, frame].Draw(this.Position + new Vector2((float) index1, (float) index2) * 8f);
       }
     }
 
@@ -100,8 +99,9 @@ namespace Celeste
       for (int index1 = 0; (double) index1 < (double) this.Width / 8.0; ++index1)
       {
         for (int index2 = 0; (double) index2 < (double) this.Height / 8.0; ++index2)
-          this.Scene.Add((Entity) Engine.Pooler.Create<Debris>().Init(Vector2.op_Addition(this.Position, new Vector2((float) (index1 * 8 + 4), (float) (index2 * 8 + 4))), '1').BlastFrom(from));
+          this.Scene.Add((Entity) Engine.Pooler.Create<Debris>().Init(this.Position + new Vector2((float) (index1 * 8 + 4), (float) (index2 * 8 + 4)), '1').BlastFrom(from));
       }
     }
   }
 }
+

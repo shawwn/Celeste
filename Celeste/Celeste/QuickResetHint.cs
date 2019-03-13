@@ -22,8 +22,8 @@ namespace Celeste
     public QuickResetHint()
     {
       this.Tag = (int) Tags.HUD;
-      Buttons buttons1 = (Buttons) 256;
-      Buttons buttons2 = (Buttons) 512;
+      Buttons buttons1 = Buttons.LeftShoulder;
+      Buttons buttons2 = Buttons.RightShoulder;
       this.textStart = Dialog.Clean("UI_QUICK_RESTART_TITLE", (Language) null) + " ";
       this.textHold = Dialog.Clean("UI_QUICK_RESTART_HOLD", (Language) null);
       this.textPress = Dialog.Clean("UI_QUICK_RESTART_PRESS", (Language) null);
@@ -35,67 +35,51 @@ namespace Celeste
         (object) buttons2,
         (object) ",  ",
         (object) this.textPress,
-        (object) Celeste.Input.FirstButton(Celeste.Input.Pause)
+        (object) Input.FirstButton(Input.Pause)
       };
       this.keyboardList = new List<object>()
       {
         (object) this.textStart,
         (object) this.textPress,
-        (object) Celeste.Input.FirstKey(Celeste.Input.QuickRestart)
+        (object) Input.FirstKey(Input.QuickRestart)
       };
     }
 
     public override void Render()
     {
-      List<object> objectList = Celeste.Input.GuiInputController() ? this.controllerList : this.keyboardList;
-      float num1 = 0.0f;
+      List<object> objectList = Input.GuiInputController() ? this.controllerList : this.keyboardList;
+      float num = 0.0f;
       foreach (object obj in objectList)
       {
         if (obj is string)
-          num1 += (float) ActiveFont.Measure(obj as string).X;
+          num += ActiveFont.Measure(obj as string).X;
         else if (obj is Buttons)
-          num1 += (float) Celeste.Input.GuiSingleButton((Buttons) obj, "controls/keyboard/oemquestion").Width + 16f;
+          num += (float) Input.GuiSingleButton((Buttons) obj, "controls/keyboard/oemquestion").Width + 16f;
         else if (obj is Keys)
-          num1 += (float) Celeste.Input.GuiKey((Keys) obj, "controls/keyboard/oemquestion").Width + 16f;
+          num += (float) Input.GuiKey((Keys) obj, "controls/keyboard/oemquestion").Width + 16f;
       }
-      float num2 = num1 * 0.75f;
-      Vector2 position;
-      ((Vector2) ref position).\u002Ector((float) ((1920.0 - (double) num2) / 2.0), 980f);
+      Vector2 position = new Vector2((float) ((1920.0 - (double) (num * 0.75f)) / 2.0), 980f);
       foreach (object obj in objectList)
       {
         if (obj is string)
         {
-          ActiveFont.DrawOutline(obj as string, position, new Vector2(0.0f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 0.75f), Color.get_LightGray(), 2f, Color.get_Black());
-          ref __Null local = ref position.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) (ActiveFont.Measure(obj as string).X * 0.75);
+          ActiveFont.DrawOutline(obj as string, position, new Vector2(0.0f, 0.5f), Vector2.One * 0.75f, Color.LightGray, 2f, Color.Black);
+          position.X += ActiveFont.Measure(obj as string).X * 0.75f;
         }
         else if (obj is Buttons)
         {
-          MTexture mtexture = Celeste.Input.GuiSingleButton((Buttons) obj, "controls/keyboard/oemquestion");
-          mtexture.DrawJustified(Vector2.op_Addition(position, new Vector2((float) (((double) mtexture.Width + 16.0) * 0.75 * 0.5), 0.0f)), new Vector2(0.5f, 0.5f), Color.get_White(), 0.75f);
-          ref __Null local = ref position.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) (((double) mtexture.Width + 16.0) * 0.75);
+          MTexture mtexture = Input.GuiSingleButton((Buttons) obj, "controls/keyboard/oemquestion");
+          mtexture.DrawJustified(position + new Vector2((float) (((double) mtexture.Width + 16.0) * 0.75 * 0.5), 0.0f), new Vector2(0.5f, 0.5f), Color.White, 0.75f);
+          position.X += (float) (((double) mtexture.Width + 16.0) * 0.75);
         }
         else if (obj is Keys)
         {
-          MTexture mtexture = Celeste.Input.GuiKey((Keys) obj, "controls/keyboard/oemquestion");
-          mtexture.DrawJustified(Vector2.op_Addition(position, new Vector2((float) (((double) mtexture.Width + 16.0) * 0.75 * 0.5), 0.0f)), new Vector2(0.5f, 0.5f), Color.get_White(), 0.75f);
-          ref __Null local = ref position.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) (((double) mtexture.Width + 16.0) * 0.75);
+          MTexture mtexture = Input.GuiKey((Keys) obj, "controls/keyboard/oemquestion");
+          mtexture.DrawJustified(position + new Vector2((float) (((double) mtexture.Width + 16.0) * 0.75 * 0.5), 0.0f), new Vector2(0.5f, 0.5f), Color.White, 0.75f);
+          position.X += (float) (((double) mtexture.Width + 16.0) * 0.75);
         }
       }
     }
   }
 }
+

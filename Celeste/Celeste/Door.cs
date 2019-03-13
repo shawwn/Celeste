@@ -21,7 +21,7 @@ namespace Celeste
 
     public Door(EntityData data, Vector2 offset)
     {
-      this.Position = Vector2.op_Addition(data.Position, offset);
+      this.Position = data.Position + offset;
       this.Depth = 8999;
       string str = data.Attr("type", "wood");
       if (str == "wood")
@@ -57,7 +57,7 @@ namespace Celeste
         this.sprite.Play("open", false, false);
         if ((double) this.X == (double) x)
           return;
-        this.sprite.Scale.X = (__Null) (double) Math.Sign(x - this.X);
+        this.sprite.Scale.X = (float) Math.Sign(x - this.X);
       }
       else
       {
@@ -80,3 +80,4 @@ namespace Celeste
     }
   }
 }
+

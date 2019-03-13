@@ -40,12 +40,7 @@ namespace Celeste
       base.Update(scene);
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        ref __Null local = ref this.particles[index].Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + this.particles[index].Speed * Engine.DeltaTime;
+        this.particles[index].Position.Y += this.particles[index].Speed * Engine.DeltaTime;
         this.particles[index].RotationCounter += this.particles[index].Spin * Engine.DeltaTime;
       }
       this.fade = Calc.Approach(this.fade, this.Visible ? 1f : 0.0f, Engine.DeltaTime);
@@ -59,12 +54,12 @@ namespace Celeste
       MTexture mtexture = GFX.Game["particles/petal"];
       for (int index = 0; index < this.particles.Length; ++index)
       {
-        Vector2 vector2 = (Vector2) null;
-        vector2.X = (__Null) ((double) this.Mod((float) this.particles[index].Position.X - camera.X, 352f) - 16.0);
-        vector2.Y = (__Null) ((double) this.Mod((float) this.particles[index].Position.Y - camera.Y, 212f) - 16.0);
+        Vector2 vector2 = new Vector2();
+        vector2.X = this.Mod(this.particles[index].Position.X - camera.X, 352f) - 16f;
+        vector2.Y = this.Mod(this.particles[index].Position.Y - camera.Y, 212f) - 16f;
         float angleRadians = (float) (1.57079637050629 + Math.Sin((double) this.particles[index].RotationCounter * (double) this.particles[index].MaxRotate) * 1.0);
-        Vector2 position = Vector2.op_Addition(vector2, Calc.AngleToVector(angleRadians, 4f));
-        mtexture.DrawCentered(position, Color.op_Multiply(Petals.colors[this.particles[index].Color], this.fade), 1f, angleRadians - 0.8f);
+        Vector2 position = vector2 + Calc.AngleToVector(angleRadians, 4f);
+        mtexture.DrawCentered(position, Petals.colors[this.particles[index].Color] * this.fade, 1f, angleRadians - 0.8f);
       }
     }
 
@@ -84,3 +79,4 @@ namespace Celeste
     }
   }
 }
+

@@ -89,7 +89,7 @@ namespace Celeste
 
     public static void Draw(string text, Vector2 position, Color color)
     {
-      ActiveFont.Draw(text, position, Vector2.get_Zero(), Vector2.get_One(), color, 0.0f, Color.get_Transparent(), 0.0f, Color.get_Transparent());
+      ActiveFont.Draw(text, position, Vector2.Zero, Vector2.One, color, 0.0f, Color.Transparent, 0.0f, Color.Transparent);
     }
 
     public static void Draw(
@@ -99,7 +99,7 @@ namespace Celeste
       Vector2 scale,
       Color color)
     {
-      ActiveFont.Draw(text, position, justify, scale, color, 0.0f, Color.get_Transparent(), 0.0f, Color.get_Transparent());
+      ActiveFont.Draw(text, position, justify, scale, color, 0.0f, Color.Transparent, 0.0f, Color.Transparent);
     }
 
     public static void DrawOutline(
@@ -111,7 +111,7 @@ namespace Celeste
       float stroke,
       Color strokeColor)
     {
-      ActiveFont.Draw(text, position, justify, scale, color, 0.0f, Color.get_Transparent(), stroke, strokeColor);
+      ActiveFont.Draw(text, position, justify, scale, color, 0.0f, Color.Transparent, stroke, strokeColor);
     }
 
     public static void DrawEdgeOutline(
@@ -123,9 +123,10 @@ namespace Celeste
       float edgeDepth,
       Color edgeColor,
       float stroke = 0.0f,
-      Color strokeColor = null)
+      Color strokeColor = default (Color))
     {
       ActiveFont.Draw(text, position, justify, scale, color, edgeDepth, edgeColor, stroke, strokeColor);
     }
   }
 }
+

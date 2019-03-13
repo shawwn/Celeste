@@ -58,27 +58,27 @@ namespace Celeste
         case DashSwitch.Sides.Up:
           this.sprite.Position = new Vector2(8f, 0.0f);
           this.sprite.Rotation = -1.570796f;
-          this.pressedTarget = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -8f));
-          this.pressDirection = Vector2.op_UnaryNegation(Vector2.get_UnitY());
+          this.pressedTarget = this.Position + Vector2.UnitY * -8f;
+          this.pressDirection = -Vector2.UnitY;
           break;
         case DashSwitch.Sides.Down:
           this.sprite.Position = new Vector2(8f, 8f);
           this.sprite.Rotation = 1.570796f;
-          this.pressedTarget = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 8f));
-          this.pressDirection = Vector2.get_UnitY();
+          this.pressedTarget = this.Position + Vector2.UnitY * 8f;
+          this.pressDirection = Vector2.UnitY;
           this.startY = this.Y;
           break;
         case DashSwitch.Sides.Left:
           this.sprite.Position = new Vector2(0.0f, 8f);
           this.sprite.Rotation = 3.141593f;
-          this.pressedTarget = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), -8f));
-          this.pressDirection = Vector2.op_UnaryNegation(Vector2.get_UnitX());
+          this.pressedTarget = this.Position + Vector2.UnitX * -8f;
+          this.pressDirection = -Vector2.UnitX;
           break;
         case DashSwitch.Sides.Right:
           this.sprite.Position = new Vector2(8f, 8f);
           this.sprite.Rotation = 0.0f;
-          this.pressedTarget = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), 8f));
-          this.pressDirection = Vector2.get_UnitX();
+          this.pressedTarget = this.Position + Vector2.UnitX * 8f;
+          this.pressDirection = Vector2.UnitX;
           break;
       }
       this.OnDashCollide = new DashCollision(this.OnDashed);
@@ -86,7 +86,7 @@ namespace Celeste
 
     public static DashSwitch Create(EntityData data, Vector2 offset, EntityID id)
     {
-      Vector2 position = Vector2.op_Addition(data.Position, offset);
+      Vector2 position = data.Position + offset;
       bool persistent = data.Bool("persistent", false);
       string spriteName = data.Attr("sprite", "default");
       if (data.Name.Equals("dashSwitchH"))
@@ -106,10 +106,12 @@ namespace Celeste
       if (!this.persistent || !this.SceneAs<Level>().Session.GetFlag(this.FlagName))
         return;
       this.sprite.Play("pushed", false, false);
-      this.Position = Vector2.op_Subtraction(this.pressedTarget, Vector2.op_Multiply(this.pressDirection, 2f));
+      this.Position = this.pressedTarget - this.pressDirection * 2f;
       this.pressed = true;
       this.Collidable = false;
-      this.GetGate()?.StartOpen();
+      TempleGate gate = this.GetGate();
+      if (gate != null)
+        gate.StartOpen();
     }
 
     public override void Update()
@@ -122,7 +124,7 @@ namespace Celeste
       {
         if (playerOnTop.Holding != null)
         {
-          int num = (int) this.OnDashed(playerOnTop, Vector2.get_UnitY());
+          int num = (int) this.OnDashed(playerOnTop, Vector2.UnitY);
         }
         else
         {
@@ -148,7 +150,7 @@ namespace Celeste
 
     public DashCollisionResults OnDashed(Player player, Vector2 direction)
     {
-      if (!this.pressed && Vector2.op_Equality(direction, this.pressDirection))
+      if (!this.pressed && direction == this.pressDirection)
       {
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
         Audio.Play("event:/game/05_mirror_temple/button_activate", this.Position);
@@ -156,20 +158,15 @@ namespace Celeste
         this.pressed = true;
         this.MoveTo(this.pressedTarget);
         this.Collidable = false;
-        this.Position = Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(this.pressDirection, 2f));
-        this.SceneAs<Level>().ParticlesFG.Emit(this.mirrorMode ? DashSwitch.P_PressAMirror : DashSwitch.P_PressA, 10, Vector2.op_Addition(this.Position, this.sprite.Position), Vector2.op_Multiply(direction.Perpendicular(), 6f), this.sprite.Rotation - 3.141593f);
-        this.SceneAs<Level>().ParticlesFG.Emit(this.mirrorMode ? DashSwitch.P_PressBMirror : DashSwitch.P_PressB, 4, Vector2.op_Addition(this.Position, this.sprite.Position), Vector2.op_Multiply(direction.Perpendicular(), 6f), this.sprite.Rotation - 3.141593f);
-        this.GetGate()?.SwitchOpen();
+        this.Position = this.Position - this.pressDirection * 2f;
+        this.SceneAs<Level>().ParticlesFG.Emit(this.mirrorMode ? DashSwitch.P_PressAMirror : DashSwitch.P_PressA, 10, this.Position + this.sprite.Position, direction.Perpendicular() * 6f, this.sprite.Rotation - 3.141593f);
+        this.SceneAs<Level>().ParticlesFG.Emit(this.mirrorMode ? DashSwitch.P_PressBMirror : DashSwitch.P_PressB, 4, this.Position + this.sprite.Position, direction.Perpendicular() * 6f, this.sprite.Rotation - 3.141593f);
+        TempleGate gate = this.GetGate();
+        if (gate != null)
+          gate.SwitchOpen();
         TempleMirrorPortal first = this.Scene.Entities.FindFirst<TempleMirrorPortal>();
         if (first != null)
-        {
-          TempleMirrorPortal templeMirrorPortal = first;
-          double x1 = (double) this.X;
-          Rectangle bounds = (this.Scene as Level).Bounds;
-          double x2 = (double) (float) ((Rectangle) ref bounds).get_Center().X;
-          int side = Math.Sign((float) (x1 - x2));
-          templeMirrorPortal.OnSwitchHit(side);
-        }
+          first.OnSwitchHit(Math.Sign(this.X - (float) (this.Scene as Level).Bounds.Center.X));
         if (this.persistent)
           this.SceneAs<Level>().Session.SetFlag(this.FlagName, true);
       }
@@ -220,3 +217,4 @@ namespace Celeste
     }
   }
 }
+

@@ -36,52 +36,48 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS03_OshiroClutter cs03OshiroClutter = this;
-      cs03OshiroClutter.player.StateMachine.State = 11;
-      cs03OshiroClutter.player.StateMachine.Locked = true;
-      if ((cs03OshiroClutter.index == 1 || cs03OshiroClutter.index == 2 ? -1 : 1) == -1)
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      int side = this.index != 1 && this.index != 2 ? 1 : -1;
+      if (side == -1)
       {
-        yield return (object) cs03OshiroClutter.player.DummyWalkToExact((int) cs03OshiroClutter.oshiro.X - 24, false, 1f);
-        cs03OshiroClutter.player.Facing = Facings.Right;
-        cs03OshiroClutter.oshiro.Sprite.Scale.X = (__Null) -1.0;
+        yield return (object) this.player.DummyWalkToExact((int) this.oshiro.X - 24, false, 1f);
+        this.player.Facing = Facings.Right;
+        this.oshiro.Sprite.Scale.X = -1f;
       }
       else
       {
-        cs03OshiroClutter.Add((Component) new Coroutine(cs03OshiroClutter.oshiro.PaceRight(), true));
-        yield return (object) cs03OshiroClutter.player.DummyWalkToExact((int) cs03OshiroClutter.oshiro.HomePosition.X + 24, false, 1f);
-        cs03OshiroClutter.player.Facing = Facings.Left;
-        cs03OshiroClutter.oshiro.Sprite.Scale.X = (__Null) 1.0;
+        this.Add((Component) new Coroutine(this.oshiro.PaceRight(), true));
+        yield return (object) this.player.DummyWalkToExact((int) this.oshiro.HomePosition.X + 24, false, 1f);
+        this.player.Facing = Facings.Left;
+        this.oshiro.Sprite.Scale.X = 1f;
       }
-      if (cs03OshiroClutter.index < 3)
+      if (this.index < 3)
       {
-        yield return (object) cs03OshiroClutter.Level.ZoomTo(cs03OshiroClutter.oshiro.ZoomPoint, 2f, 0.5f);
-        yield return (object) Textbox.Say("CH3_OSHIRO_CLUTTER" + (object) cs03OshiroClutter.index, new Func<IEnumerator>(cs03OshiroClutter.Collapse), new Func<IEnumerator>(cs03OshiroClutter.oshiro.PaceLeft), new Func<IEnumerator>(cs03OshiroClutter.oshiro.PaceRight));
-        yield return (object) cs03OshiroClutter.Level.ZoomBack(0.5f);
+        yield return (object) this.Level.ZoomTo(this.oshiro.ZoomPoint, 2f, 0.5f);
+        yield return (object) Textbox.Say("CH3_OSHIRO_CLUTTER" + (object) this.index, new Func<IEnumerator>(this.Collapse), new Func<IEnumerator>(this.oshiro.PaceLeft), new Func<IEnumerator>(this.oshiro.PaceRight));
+        yield return (object) this.Level.ZoomBack(0.5f);
         level.Session.SetFlag("oshiro_clutter_door_open", true);
-        if (cs03OshiroClutter.index == 0)
-          cs03OshiroClutter.SetMusic();
-        foreach (ClutterDoor door in cs03OshiroClutter.doors)
+        if (this.index == 0)
+          this.SetMusic();
+        foreach (ClutterDoor door1 in this.doors)
         {
+          ClutterDoor door = door1;
           if (!door.IsLocked(level.Session))
             yield return (object) door.UnlockRoutine();
+          door = (ClutterDoor) null;
         }
       }
       else
       {
-        yield return (object) CutsceneEntity.CameraTo(new Vector2((float) cs03OshiroClutter.Level.Bounds.X, (float) cs03OshiroClutter.Level.Bounds.Y), 0.5f, (Ease.Easer) null, 0.0f);
-        yield return (object) cs03OshiroClutter.Level.ZoomTo(new Vector2(90f, 60f), 2f, 0.5f);
+        yield return (object) CutsceneEntity.CameraTo(new Vector2((float) this.Level.Bounds.X, (float) this.Level.Bounds.Y), 0.5f, (Ease.Easer) null, 0.0f);
+        yield return (object) this.Level.ZoomTo(new Vector2(90f, 60f), 2f, 0.5f);
         yield return (object) Textbox.Say("CH3_OSHIRO_CLUTTER_ENDING");
-        NPC03_Oshiro_Cluttter oshiro = cs03OshiroClutter.oshiro;
-        double x = (double) cs03OshiroClutter.oshiro.X;
-        Rectangle bounds = level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Top() - 32);
-        Vector2 target = new Vector2((float) x, (float) num);
-        int? turnAtEndTo = new int?();
-        yield return (object) oshiro.MoveTo(target, false, turnAtEndTo, false);
-        cs03OshiroClutter.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_05_09b_exit"));
-        yield return (object) cs03OshiroClutter.Level.ZoomBack(0.5f);
+        yield return (object) this.oshiro.MoveTo(new Vector2(this.oshiro.X, (float) (level.Bounds.Top - 32)), false, new int?(), false);
+        this.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_05_09b_exit"));
+        yield return (object) this.Level.ZoomBack(0.5f);
       }
-      cs03OshiroClutter.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator Collapse()
@@ -128,3 +124,4 @@ namespace Celeste
     }
   }
 }
+

@@ -74,46 +74,45 @@ namespace Monocle
         this.animationTimer += Engine.RawDeltaTime * this.Rate;
       else
         this.animationTimer += Engine.DeltaTime * this.Rate;
-      if ((double) Math.Abs(this.animationTimer) < (double) this.currentAnimation.Delay)
-        return;
-      this.CurrentAnimationFrame += Math.Sign(this.animationTimer);
-      this.animationTimer -= (float) Math.Sign(this.animationTimer) * this.currentAnimation.Delay;
-      if (this.CurrentAnimationFrame < 0 || this.CurrentAnimationFrame >= this.currentAnimation.Frames.Length)
+      if ((double) Math.Abs(this.animationTimer) >= (double) this.currentAnimation.Delay)
       {
-        string currentAnimationId1 = this.CurrentAnimationID;
-        if (this.OnLastFrame != null)
-          this.OnLastFrame(this.CurrentAnimationID);
-        string currentAnimationId2 = this.CurrentAnimationID;
-        if (!(currentAnimationId1 == currentAnimationId2))
-          return;
-        if (this.currentAnimation.Goto != null)
+        this.CurrentAnimationFrame += Math.Sign(this.animationTimer);
+        this.animationTimer -= (float) Math.Sign(this.animationTimer) * this.currentAnimation.Delay;
+        if (this.CurrentAnimationFrame < 0 || this.CurrentAnimationFrame >= this.currentAnimation.Frames.Length)
         {
-          this.CurrentAnimationID = this.currentAnimation.Goto.Choose();
-          if (this.OnChange != null)
-            this.OnChange(this.LastAnimationID, this.CurrentAnimationID);
-          this.LastAnimationID = this.CurrentAnimationID;
-          this.currentAnimation = this.animations[this.LastAnimationID];
-          this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? 0 : this.currentAnimation.Frames.Length - 1;
-          this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
-          if (this.OnLoop == null)
-            return;
-          this.OnLoop(this.CurrentAnimationID);
+          string currentAnimationId1 = this.CurrentAnimationID;
+          if (this.OnLastFrame != null)
+            this.OnLastFrame(this.CurrentAnimationID);
+          if (currentAnimationId1 == this.CurrentAnimationID)
+          {
+            if (this.currentAnimation.Goto != null)
+            {
+              this.CurrentAnimationID = this.currentAnimation.Goto.Choose();
+              if (this.OnChange != null)
+                this.OnChange(this.LastAnimationID, this.CurrentAnimationID);
+              this.LastAnimationID = this.CurrentAnimationID;
+              this.currentAnimation = this.animations[this.LastAnimationID];
+              this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? 0 : this.currentAnimation.Frames.Length - 1;
+              this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
+              if (this.OnLoop != null)
+                this.OnLoop(this.CurrentAnimationID);
+            }
+            else
+            {
+              this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? this.currentAnimation.Frames.Length - 1 : 0;
+              this.Animating = false;
+              string currentAnimationId2 = this.CurrentAnimationID;
+              this.CurrentAnimationID = "";
+              this.currentAnimation = (Sprite.Animation) null;
+              this.animationTimer = 0.0f;
+              if (this.OnFinish != null)
+                this.OnFinish(currentAnimationId2);
+            }
+          }
         }
         else
-        {
-          this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? this.currentAnimation.Frames.Length - 1 : 0;
-          this.Animating = false;
-          string currentAnimationId3 = this.CurrentAnimationID;
-          this.CurrentAnimationID = "";
-          this.currentAnimation = (Sprite.Animation) null;
-          this.animationTimer = 0.0f;
-          if (this.OnFinish == null)
-            return;
-          this.OnFinish(currentAnimationId3);
-        }
+          this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
       }
-      else
-        this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
     }
 
     private void SetFrame(MTexture texture)
@@ -122,7 +121,7 @@ namespace Monocle
         return;
       this.Texture = texture;
       if (this.Justify.HasValue)
-        this.Origin = new Vector2((float) this.Texture.Width * (float) this.Justify.Value.X, (float) this.Texture.Height * (float) this.Justify.Value.Y);
+        this.Origin = new Vector2((float) this.Texture.Width * this.Justify.Value.X, (float) this.Texture.Height * this.Justify.Value.Y);
       if (this.OnFrameChange == null)
         return;
       this.OnFrameChange(this.CurrentAnimationID);
@@ -338,9 +337,7 @@ namespace Monocle
 
     public bool Has(string id)
     {
-      if (id != null)
-        return this.animations.ContainsKey(id);
-      return false;
+      return id != null && this.animations.ContainsKey(id);
     }
 
     public void Stop()
@@ -417,9 +414,8 @@ namespace Monocle
       if (this.Texture == null)
         return;
       Rectangle relativeRect = this.Texture.GetRelativeRect(rectangle);
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(-Math.Min((float) rectangle.X - (float) this.Texture.DrawOffset.X, 0.0f), -Math.Min((float) rectangle.Y - (float) this.Texture.DrawOffset.Y, 0.0f));
-      Draw.SpriteBatch.Draw(this.Texture.Texture.Texture, Vector2.op_Addition(this.RenderPosition, offset), new Rectangle?(relativeRect), this.Color, this.Rotation, Vector2.op_Subtraction(this.Origin, vector2), this.Scale, this.Effects, 0.0f);
+      Vector2 vector2 = new Vector2(-Math.Min((float) rectangle.X - this.Texture.DrawOffset.X, 0.0f), -Math.Min((float) rectangle.Y - this.Texture.DrawOffset.Y, 0.0f));
+      Draw.SpriteBatch.Draw(this.Texture.Texture.Texture, this.RenderPosition + offset, new Rectangle?(relativeRect), this.Color, this.Rotation, this.Origin - vector2, this.Scale, this.Effects, 0.0f);
     }
 
     public void LogAnimations()
@@ -444,3 +440,4 @@ namespace Monocle
     }
   }
 }
+

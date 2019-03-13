@@ -14,20 +14,20 @@ namespace Celeste
 {
   public class CS07_Credits : CutsceneEntity
   {
+    public string Event = (string) null;
     private MTexture gradient = GFX.Gui["creditsgradient"].GetSubtexture(0, 1, 1920, 1, (MTexture) null);
     private bool autoWalk = true;
     private bool autoUpdateCamera = true;
     private bool badelineAutoFloat = true;
+    private float badelineWalkApproach = 0.0f;
     private float fade = 1f;
     public const float CameraXOffset = 70f;
     public const float CameraYOffset = -24f;
     public static CS07_Credits Instance;
-    public string Event;
     private Credits credits;
     private Player player;
     private BadelineDummy badeline;
     private bool badelineAutoWalk;
-    private float badelineWalkApproach;
     private Vector2 badelineWalkApproachFrom;
     private float walkOffset;
     private CS07_Credits.Fill fillbg;
@@ -59,199 +59,210 @@ namespace Celeste
 
     private IEnumerator Routine()
     {
-      CS07_Credits cs07Credits1 = this;
-      cs07Credits1.Level.Background.Backdrops.Add((Backdrop) (cs07Credits1.fillbg = new CS07_Credits.Fill()));
-      cs07Credits1.Level.Completed = true;
-      cs07Credits1.Level.Entities.FindFirst<SpeedrunTimerDisplay>()?.RemoveSelf();
-      cs07Credits1.Level.Entities.FindFirst<TotalStrawberriesDisplay>()?.RemoveSelf();
-      cs07Credits1.Level.Entities.FindFirst<GameplayStats>()?.RemoveSelf();
+      this.Level.Background.Backdrops.Add((Backdrop) (this.fillbg = new CS07_Credits.Fill()));
+      this.Level.Completed = true;
+      SpeedrunTimerDisplay timer = this.Level.Entities.FindFirst<SpeedrunTimerDisplay>();
+      if (timer != null)
+        timer.RemoveSelf();
+      TotalStrawberriesDisplay strawbs = this.Level.Entities.FindFirst<TotalStrawberriesDisplay>();
+      if (strawbs != null)
+        strawbs.RemoveSelf();
+      GameplayStats stats = this.Level.Entities.FindFirst<GameplayStats>();
+      if (stats != null)
+        stats.RemoveSelf();
+      timer = (SpeedrunTimerDisplay) null;
+      strawbs = (TotalStrawberriesDisplay) null;
+      stats = (GameplayStats) null;
       yield return (object) null;
-      cs07Credits1.Level.Wipe.Cancel();
+      this.Level.Wipe.Cancel();
       yield return (object) 0.5f;
       float alignment = 1f;
       if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
         alignment = 0.0f;
-      cs07Credits1.credits = new Credits(alignment, 0.6f, false, true);
-      cs07Credits1.credits.AllowInput = false;
+      this.credits = new Credits(alignment, 0.6f, false, true);
+      this.credits.AllowInput = false;
       yield return (object) 3f;
-      cs07Credits1.SetBgFade(0.0f);
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      yield return (object) cs07Credits1.SetupLevel();
-      yield return (object) cs07Credits1.WaitForPlayer();
-      yield return (object) cs07Credits1.FadeTo(1f);
+      this.SetBgFade(0.0f);
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      yield return (object) this.SetupLevel();
+      yield return (object) this.WaitForPlayer();
+      yield return (object) this.FadeTo(1f);
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.1f);
-      yield return (object) cs07Credits1.NextLevel("credits-dashes");
-      yield return (object) cs07Credits1.SetupLevel();
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      yield return (object) cs07Credits1.WaitForPlayer();
-      yield return (object) cs07Credits1.FadeTo(1f);
+      this.SetBgFade(0.1f);
+      yield return (object) this.NextLevel("credits-dashes");
+      yield return (object) this.SetupLevel();
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      yield return (object) this.WaitForPlayer();
+      yield return (object) this.FadeTo(1f);
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.2f);
-      yield return (object) cs07Credits1.NextLevel("credits-walking");
-      yield return (object) cs07Credits1.SetupLevel();
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
+      this.SetBgFade(0.2f);
+      yield return (object) this.NextLevel("credits-walking");
+      yield return (object) this.SetupLevel();
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
       yield return (object) 5.8f;
-      cs07Credits1.badelineAutoFloat = false;
+      this.badelineAutoFloat = false;
       yield return (object) 0.5f;
-      cs07Credits1.badeline.Sprite.Scale.X = (__Null) 1.0;
+      this.badeline.Sprite.Scale.X = 1f;
       yield return (object) 0.5f;
-      cs07Credits1.autoWalk = false;
-      cs07Credits1.player.Speed = Vector2.get_Zero();
-      cs07Credits1.player.Facing = Facings.Right;
+      this.autoWalk = false;
+      this.player.Speed = Vector2.Zero;
+      this.player.Facing = Facings.Right;
       yield return (object) 1.5f;
-      cs07Credits1.badeline.Sprite.Scale.X = (__Null) -1.0;
+      this.badeline.Sprite.Scale.X = -1f;
       yield return (object) 1f;
-      cs07Credits1.badeline.Sprite.Scale.X = (__Null) -1.0;
-      cs07Credits1.badelineAutoWalk = true;
-      cs07Credits1.badelineWalkApproachFrom = cs07Credits1.badeline.Position;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.BadelineApproachWalking(), true));
+      this.badeline.Sprite.Scale.X = -1f;
+      this.badelineAutoWalk = true;
+      this.badelineWalkApproachFrom = this.badeline.Position;
+      this.Add((Component) new Coroutine(this.BadelineApproachWalking(), true));
       yield return (object) 0.7f;
-      cs07Credits1.autoWalk = true;
-      cs07Credits1.player.Facing = Facings.Left;
-      yield return (object) cs07Credits1.WaitForPlayer();
-      yield return (object) cs07Credits1.FadeTo(1f);
+      this.autoWalk = true;
+      this.player.Facing = Facings.Left;
+      yield return (object) this.WaitForPlayer();
+      yield return (object) this.FadeTo(1f);
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.3f);
-      yield return (object) cs07Credits1.NextLevel("credits-tree");
-      yield return (object) cs07Credits1.SetupLevel();
+      this.SetBgFade(0.3f);
+      yield return (object) this.NextLevel("credits-tree");
+      yield return (object) this.SetupLevel();
       Petals petals = new Petals();
-      cs07Credits1.Level.Foreground.Backdrops.Add((Backdrop) petals);
-      cs07Credits1.autoUpdateCamera = false;
-      Vector2 target1 = Vector2.op_Addition(cs07Credits1.Level.Camera.Position, new Vector2(-220f, 32f));
-      Camera camera1 = cs07Credits1.Level.Camera;
-      camera1.Position = Vector2.op_Addition(camera1.Position, new Vector2(-100f, 0.0f));
-      cs07Credits1.badelineWalkApproach = 1f;
-      cs07Credits1.badelineAutoFloat = false;
-      cs07Credits1.badelineAutoWalk = true;
-      cs07Credits1.badeline.Floatness = 0.0f;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      cs07Credits1.Add((Component) new Coroutine(CutsceneEntity.CameraTo(target1, 12f, Ease.Linear, 0.0f), true));
+      this.Level.Foreground.Backdrops.Add((Backdrop) petals);
+      this.autoUpdateCamera = false;
+      Vector2 cameraTo1 = this.Level.Camera.Position + new Vector2(-220f, 32f);
+      this.Level.Camera.Position += new Vector2(-100f, 0.0f);
+      this.badelineWalkApproach = 1f;
+      this.badelineAutoFloat = false;
+      this.badelineAutoWalk = true;
+      this.badeline.Floatness = 0.0f;
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      this.Add((Component) new Coroutine(CutsceneEntity.CameraTo(cameraTo1, 12f, Ease.Linear, 0.0f), true));
       yield return (object) 3.5f;
-      cs07Credits1.badeline.Sprite.Play("idle", false, false);
-      cs07Credits1.badelineAutoWalk = false;
+      this.badeline.Sprite.Play("idle", false, false);
+      this.badelineAutoWalk = false;
       yield return (object) 0.25f;
-      cs07Credits1.autoWalk = false;
-      cs07Credits1.player.Sprite.Play("idle", false, false);
-      cs07Credits1.player.Speed = Vector2.get_Zero();
-      cs07Credits1.player.DummyAutoAnimate = false;
-      cs07Credits1.player.Facing = Facings.Right;
+      this.autoWalk = false;
+      this.player.Sprite.Play("idle", false, false);
+      this.player.Speed = Vector2.Zero;
+      this.player.DummyAutoAnimate = false;
+      this.player.Facing = Facings.Right;
       yield return (object) 0.5f;
-      cs07Credits1.player.Sprite.Play("sitDown", false, false);
+      this.player.Sprite.Play("sitDown", false, false);
       yield return (object) 4f;
-      cs07Credits1.badeline.Sprite.Play("laugh", false, false);
+      this.badeline.Sprite.Play("laugh", false, false);
       yield return (object) 1.75f;
-      yield return (object) cs07Credits1.FadeTo(1f);
-      cs07Credits1.Level.Foreground.Backdrops.Remove((Backdrop) petals);
+      yield return (object) this.FadeTo(1f);
+      this.Level.Foreground.Backdrops.Remove((Backdrop) petals);
       petals = (Petals) null;
+      cameraTo1 = new Vector2();
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.4f);
-      yield return (object) cs07Credits1.NextLevel("credits-clouds");
-      yield return (object) cs07Credits1.SetupLevel();
-      cs07Credits1.autoWalk = false;
-      cs07Credits1.player.Speed = Vector2.get_Zero();
-      cs07Credits1.autoUpdateCamera = false;
-      cs07Credits1.player.ForceCameraUpdate = false;
-      cs07Credits1.badeline.Visible = false;
+      this.SetBgFade(0.4f);
+      yield return (object) this.NextLevel("credits-clouds");
+      yield return (object) this.SetupLevel();
+      this.autoWalk = false;
+      this.player.Speed = Vector2.Zero;
+      this.autoUpdateCamera = false;
+      this.player.ForceCameraUpdate = false;
+      this.badeline.Visible = false;
       Player other = (Player) null;
-      foreach (CreditsTrigger entity in cs07Credits1.Scene.Tracker.GetEntities<CreditsTrigger>())
+      foreach (CreditsTrigger entity in this.Scene.Tracker.GetEntities<CreditsTrigger>())
       {
-        if (entity.Event == "BadelineOffset")
+        CreditsTrigger trigger = entity;
+        if (trigger.Event == "BadelineOffset")
         {
-          other = new Player(entity.Position, PlayerSpriteMode.Badeline);
+          other = new Player(trigger.Position, PlayerSpriteMode.Badeline);
           other.OverrideHairColor = new Color?(BadelineOldsite.HairColor);
           yield return (object) null;
           other.StateMachine.State = 11;
           other.Facing = Facings.Left;
-          cs07Credits1.Scene.Add((Entity) other);
+          this.Scene.Add((Entity) other);
         }
+        trigger = (CreditsTrigger) null;
       }
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      Camera camera2 = cs07Credits1.Level.Camera;
-      camera2.Position = Vector2.op_Addition(camera2.Position, new Vector2(0.0f, -100f));
-      Vector2 target2 = Vector2.op_Addition(cs07Credits1.Level.Camera.Position, new Vector2(0.0f, 160f));
-      cs07Credits1.Add((Component) new Coroutine(CutsceneEntity.CameraTo(target2, 12f, Ease.Linear, 0.0f), true));
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      this.Level.Camera.Position += new Vector2(0.0f, -100f);
+      Vector2 cameraTo2 = this.Level.Camera.Position + new Vector2(0.0f, 160f);
+      this.Add((Component) new Coroutine(CutsceneEntity.CameraTo(cameraTo2, 12f, Ease.Linear, 0.0f), true));
       float playerHighJump = 0.0f;
       float baddyHighJump = 0.0f;
       for (float p = 0.0f; (double) p < 10.0; p += Engine.DeltaTime)
       {
-        if (((double) p > 3.0 && (double) p < 6.0 || (double) p > 9.0) && (cs07Credits1.player.Speed.Y < 0.0 && cs07Credits1.player.OnGround(4)))
+        if (((double) p > 3.0 && (double) p < 6.0 || (double) p > 9.0) && (double) this.player.Speed.Y < 0.0 && this.player.OnGround(4))
           playerHighJump = 0.25f;
-        if ((double) p > 5.0 && (double) p < 8.0 && (other.Speed.Y < 0.0 && other.OnGround(4)))
+        if ((double) p > 5.0 && (double) p < 8.0 && (double) other.Speed.Y < 0.0 && other.OnGround(4))
           baddyHighJump = 0.25f;
         if ((double) playerHighJump > 0.0)
         {
           playerHighJump -= Engine.DeltaTime;
-          cs07Credits1.player.Speed.Y = (__Null) -200.0;
+          this.player.Speed.Y = -200f;
         }
         if ((double) baddyHighJump > 0.0)
         {
           baddyHighJump -= Engine.DeltaTime;
-          other.Speed.Y = (__Null) -200.0;
+          other.Speed.Y = -200f;
         }
         yield return (object) null;
       }
-      yield return (object) cs07Credits1.FadeTo(1f);
+      yield return (object) this.FadeTo(1f);
       other = (Player) null;
+      cameraTo2 = new Vector2();
       yield return (object) 1f;
-      CS07_Credits cs07Credits = cs07Credits1;
-      cs07Credits1.SetBgFade(0.5f);
-      yield return (object) cs07Credits1.NextLevel("credits-resort");
-      yield return (object) cs07Credits1.SetupLevel();
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      cs07Credits1.badelineWalkApproach = 1f;
-      cs07Credits1.badelineAutoFloat = false;
-      cs07Credits1.badelineAutoWalk = true;
-      cs07Credits1.badeline.Floatness = 0.0f;
-      Vector2 vector2 = Vector2.get_Zero();
-      foreach (CreditsTrigger creditsTrigger in cs07Credits1.Scene.Entities.FindAll<CreditsTrigger>())
+      this.SetBgFade(0.5f);
+      yield return (object) this.NextLevel("credits-resort");
+      yield return (object) this.SetupLevel();
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      this.badelineWalkApproach = 1f;
+      this.badelineAutoFloat = false;
+      this.badelineAutoWalk = true;
+      this.badeline.Floatness = 0.0f;
+      Vector2 point = Vector2.Zero;
+      foreach (CreditsTrigger creditsTrigger in this.Scene.Entities.FindAll<CreditsTrigger>())
       {
-        if (creditsTrigger.Event == "Oshiro")
-          vector2 = creditsTrigger.Position;
+        CreditsTrigger credit = creditsTrigger;
+        if (credit.Event == "Oshiro")
+          point = credit.Position;
+        credit = (CreditsTrigger) null;
       }
-      NPC oshiro = new NPC(Vector2.op_Addition(vector2, new Vector2(0.0f, 4f)));
+      NPC oshiro = new NPC(point + new Vector2(0.0f, 4f));
       oshiro.Add((Component) (oshiro.Sprite = (Sprite) new OshiroSprite(1)));
       oshiro.MoveAnim = "sweeping";
       oshiro.IdleAnim = "sweeping";
       oshiro.Sprite.Play("sweeping", false, false);
       oshiro.Maxspeed = 10f;
       oshiro.Depth = -60;
-      cs07Credits1.Scene.Add((Entity) oshiro);
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.DustyRoutine((Entity) oshiro), true));
+      this.Scene.Add((Entity) oshiro);
+      this.Add((Component) new Coroutine(this.DustyRoutine((Entity) oshiro), true));
       yield return (object) 4.8f;
-      Vector2 oshiroTarget = Vector2.op_Addition(oshiro.Position, new Vector2(116f, 0.0f));
+      Vector2 oshiroTarget = oshiro.Position + new Vector2(116f, 0.0f);
       Coroutine oshiroRoutine = new Coroutine(oshiro.MoveTo(oshiroTarget, false, new int?(), false), true);
-      cs07Credits1.Add((Component) oshiroRoutine);
+      this.Add((Component) oshiroRoutine);
       yield return (object) 2f;
-      cs07Credits1.autoUpdateCamera = false;
-      Rectangle bounds1 = cs07Credits1.Level.Bounds;
-      double num = (double) (((Rectangle) ref bounds1).get_Left() + 64);
-      Rectangle bounds2 = cs07Credits1.Level.Bounds;
-      double top = (double) ((Rectangle) ref bounds2).get_Top();
+      this.autoUpdateCamera = false;
+      Rectangle bounds = this.Level.Bounds;
+      double num = (double) (bounds.Left + 64);
+      bounds = this.Level.Bounds;
+      double top = (double) bounds.Top;
       yield return (object) CutsceneEntity.CameraTo(new Vector2((float) num, (float) top), 2f, (Ease.Easer) null, 0.0f);
       yield return (object) 5f;
-      BirdNPC bird = new BirdNPC(Vector2.op_Addition(oshiro.Position, new Vector2(280f, -160f)), BirdNPC.Modes.None);
-      bird.Depth = 10010;
-      bird.Light.Visible = false;
-      cs07Credits1.Scene.Add((Entity) bird);
-      bird.Facing = Facings.Left;
-      bird.Sprite.Play("fall", false, false);
-      Vector2 from = bird.Position;
-      Vector2 to = Vector2.op_Addition(oshiroTarget, new Vector2(50f, -12f));
-      baddyHighJump = 0.0f;
-      while ((double) baddyHighJump < 1.0)
+      BirdNPC bird1 = new BirdNPC(oshiro.Position + new Vector2(280f, -160f), BirdNPC.Modes.None);
+      bird1.Depth = 10010;
+      bird1.Light.Visible = false;
+      this.Scene.Add((Entity) bird1);
+      bird1.Facing = Facings.Left;
+      bird1.Sprite.Play("fall", false, false);
+      Vector2 from = bird1.Position;
+      Vector2 to = oshiroTarget + new Vector2(50f, -12f);
+      float percent = 0.0f;
+      while ((double) percent < 1.0)
       {
-        bird.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), Ease.QuadOut(baddyHighJump)));
-        if ((double) baddyHighJump > 0.5)
+        bird1.Position = from + (to - from) * Ease.QuadOut(percent);
+        if ((double) percent > 0.5)
         {
-          bird.Sprite.Play("fly", false, false);
-          bird.Depth = -1000000;
-          bird.Light.Visible = true;
+          bird1.Sprite.Play("fly", false, false);
+          bird1.Depth = -1000000;
+          bird1.Light.Visible = true;
         }
-        baddyHighJump += Engine.DeltaTime * 0.5f;
+        percent += Engine.DeltaTime * 0.5f;
         yield return (object) null;
       }
-      bird.Position = to;
+      bird1.Position = to;
       oshiroRoutine.RemoveSelf();
       oshiro.Sprite.Play("putBroomAway", false, false);
       oshiro.Sprite.OnFrameChange = (Action<string>) (anim =>
@@ -260,201 +271,201 @@ namespace Celeste
           return;
         Entity entity = new Entity(oshiro.Position);
         entity.Depth = oshiro.Depth + 1;
-        cs07Credits.Scene.Add(entity);
+        this.Scene.Add(entity);
         entity.Add((Component) new Monocle.Image(GFX.Game["characters/oshiro/broom"])
         {
           Origin = oshiro.Sprite.Origin
         });
         oshiro.Sprite.OnFrameChange = (Action<string>) null;
       });
-      bird.Sprite.Play("idle", false, false);
+      bird1.Sprite.Play("idle", false, false);
       yield return (object) 0.5f;
-      bird.Sprite.Play("croak", false, false);
+      bird1.Sprite.Play("croak", false, false);
       yield return (object) 0.6f;
-      from = (Vector2) null;
-      to = (Vector2) null;
+      from = new Vector2();
+      to = new Vector2();
       oshiro.Maxspeed = 40f;
       oshiro.MoveAnim = "move";
       oshiro.IdleAnim = "idle";
-      yield return (object) oshiro.MoveTo(Vector2.op_Addition(oshiroTarget, new Vector2(14f, 0.0f)), false, new int?(), false);
+      yield return (object) oshiro.MoveTo(oshiroTarget + new Vector2(14f, 0.0f), false, new int?(), false);
       yield return (object) 2f;
-      cs07Credits1.Add((Component) new Coroutine(bird.StartleAndFlyAway(), true));
+      this.Add((Component) new Coroutine(bird1.StartleAndFlyAway(), true));
       yield return (object) 0.75f;
-      bird.Light.Visible = false;
-      bird.Depth = 10010;
-      oshiro.Sprite.Scale.X = (__Null) -1.0;
-      yield return (object) cs07Credits1.FadeTo(1f);
-      oshiroTarget = (Vector2) null;
+      bird1.Light.Visible = false;
+      bird1.Depth = 10010;
+      oshiro.Sprite.Scale.X = -1f;
+      yield return (object) this.FadeTo(1f);
+      point = new Vector2();
+      oshiroTarget = new Vector2();
       oshiroRoutine = (Coroutine) null;
-      bird = (BirdNPC) null;
+      bird1 = (BirdNPC) null;
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.6f);
-      yield return (object) cs07Credits1.NextLevel("credits-wallslide");
-      yield return (object) cs07Credits1.SetupLevel();
-      cs07Credits1.badelineAutoFloat = false;
-      cs07Credits1.badeline.Floatness = 0.0f;
-      cs07Credits1.badeline.Sprite.Play("idle", false, false);
-      cs07Credits1.badeline.Sprite.Scale.X = (__Null) 1.0;
-      foreach (CreditsTrigger entity in cs07Credits1.Scene.Tracker.GetEntities<CreditsTrigger>())
+      this.SetBgFade(0.6f);
+      yield return (object) this.NextLevel("credits-wallslide");
+      yield return (object) this.SetupLevel();
+      this.badelineAutoFloat = false;
+      this.badeline.Floatness = 0.0f;
+      this.badeline.Sprite.Play("idle", false, false);
+      this.badeline.Sprite.Scale.X = 1f;
+      foreach (CreditsTrigger entity in this.Scene.Tracker.GetEntities<CreditsTrigger>())
       {
-        if (entity.Event == "BadelineOffset")
-          cs07Credits1.badeline.Position = Vector2.op_Addition(entity.Position, new Vector2(8f, 16f));
+        CreditsTrigger trigger = entity;
+        if (trigger.Event == "BadelineOffset")
+          this.badeline.Position = trigger.Position + new Vector2(8f, 16f);
+        trigger = (CreditsTrigger) null;
       }
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.WaitForPlayer(), true));
-      while ((double) cs07Credits1.player.X > (double) cs07Credits1.badeline.X - 16.0)
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      this.Add((Component) new Coroutine(this.WaitForPlayer(), true));
+      while ((double) this.player.X > (double) this.badeline.X - 16.0)
         yield return (object) null;
-      cs07Credits1.badeline.Sprite.Scale.X = (__Null) -1.0;
+      this.badeline.Sprite.Scale.X = -1f;
       yield return (object) 0.1f;
-      cs07Credits1.badelineAutoWalk = true;
-      cs07Credits1.badelineWalkApproachFrom = cs07Credits1.badeline.Position;
-      cs07Credits1.badelineWalkApproach = 0.0f;
-      cs07Credits1.badeline.Sprite.Play("walk", false, false);
-      while ((double) cs07Credits1.badelineWalkApproach != 1.0)
+      this.badelineAutoWalk = true;
+      this.badelineWalkApproachFrom = this.badeline.Position;
+      this.badelineWalkApproach = 0.0f;
+      this.badeline.Sprite.Play("walk", false, false);
+      while ((double) this.badelineWalkApproach != 1.0)
       {
-        cs07Credits1.badelineWalkApproach = Calc.Approach(cs07Credits1.badelineWalkApproach, 1f, Engine.DeltaTime * 4f);
+        this.badelineWalkApproach = Calc.Approach(this.badelineWalkApproach, 1f, Engine.DeltaTime * 4f);
         yield return (object) null;
       }
-      while ((double) cs07Credits1.player.X > (double) (cs07Credits1.Level.Bounds.X + 160))
+      while ((double) this.player.X > (double) (this.Level.Bounds.X + 160))
         yield return (object) null;
-      yield return (object) cs07Credits1.FadeTo(1f);
+      yield return (object) this.FadeTo(1f);
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.7f);
-      yield return (object) cs07Credits1.NextLevel("credits-payphone");
-      yield return (object) cs07Credits1.SetupLevel();
-      cs07Credits1.player.Speed = Vector2.get_Zero();
-      cs07Credits1.player.Facing = Facings.Left;
-      cs07Credits1.autoWalk = false;
-      cs07Credits1.badeline.Sprite.Play("idle", false, false);
-      cs07Credits1.badeline.Floatness = 0.0f;
-      cs07Credits1.badeline.Y = cs07Credits1.player.Y;
-      cs07Credits1.badeline.Sprite.Scale.X = (__Null) 1.0;
-      cs07Credits1.badelineAutoFloat = false;
-      cs07Credits1.autoUpdateCamera = false;
-      cs07Credits1.Level.Camera.X += 100f;
-      Vector2 target3 = Vector2.op_Addition(cs07Credits1.Level.Camera.Position, new Vector2(-200f, 0.0f));
-      cs07Credits1.Add((Component) new Coroutine(CutsceneEntity.CameraTo(target3, 14f, Ease.Linear, 0.0f), true));
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
+      this.SetBgFade(0.7f);
+      yield return (object) this.NextLevel("credits-payphone");
+      yield return (object) this.SetupLevel();
+      this.player.Speed = Vector2.Zero;
+      this.player.Facing = Facings.Left;
+      this.autoWalk = false;
+      this.badeline.Sprite.Play("idle", false, false);
+      this.badeline.Floatness = 0.0f;
+      this.badeline.Y = this.player.Y;
+      this.badeline.Sprite.Scale.X = 1f;
+      this.badelineAutoFloat = false;
+      this.autoUpdateCamera = false;
+      this.Level.Camera.X += 100f;
+      Vector2 cameraTo3 = this.Level.Camera.Position + new Vector2(-200f, 0.0f);
+      this.Add((Component) new Coroutine(CutsceneEntity.CameraTo(cameraTo3, 14f, Ease.Linear, 0.0f), true));
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
       yield return (object) 1.5f;
-      cs07Credits1.badeline.Sprite.Scale.X = (__Null) -1.0;
+      this.badeline.Sprite.Scale.X = -1f;
       yield return (object) 0.5f;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.badeline.FloatTo(Vector2.op_Addition(cs07Credits1.badeline.Position, new Vector2(16f, -12f)), new int?(-1), false, false), true));
+      this.Add((Component) new Coroutine(this.badeline.FloatTo(this.badeline.Position + new Vector2(16f, -12f), new int?(-1), false, false), true));
       yield return (object) 0.5f;
-      cs07Credits1.player.Facing = Facings.Right;
+      this.player.Facing = Facings.Right;
       yield return (object) 1.5f;
-      oshiroTarget = cs07Credits1.badeline.Position;
-      to = cs07Credits1.player.Center;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.BadelineAround(oshiroTarget, to, cs07Credits1.badeline), true));
+      Vector2 start = this.badeline.Position;
+      Vector2 around = this.player.Center;
+      this.Add((Component) new Coroutine(this.BadelineAround(start, around, this.badeline), true));
       yield return (object) 0.5f;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.BadelineAround(oshiroTarget, to, (BadelineDummy) null), true));
+      this.Add((Component) new Coroutine(this.BadelineAround(start, around, (BadelineDummy) null), true));
       yield return (object) 0.5f;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.BadelineAround(oshiroTarget, to, (BadelineDummy) null), true));
+      this.Add((Component) new Coroutine(this.BadelineAround(start, around, (BadelineDummy) null), true));
       yield return (object) 3f;
-      cs07Credits1.badeline.Sprite.Play("laugh", false, false);
+      this.badeline.Sprite.Play("laugh", false, false);
       yield return (object) 0.5f;
-      cs07Credits1.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.5f;
-      cs07Credits1.player.DummyAutoAnimate = false;
-      cs07Credits1.player.Sprite.Play("sitDown", false, false);
+      this.player.DummyAutoAnimate = false;
+      this.player.Sprite.Play("sitDown", false, false);
       yield return (object) 3f;
-      yield return (object) cs07Credits1.FadeTo(1f);
-      oshiroTarget = (Vector2) null;
-      to = (Vector2) null;
+      yield return (object) this.FadeTo(1f);
+      cameraTo3 = new Vector2();
+      start = new Vector2();
+      around = new Vector2();
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.8f);
-      yield return (object) cs07Credits1.NextLevel("credits-city");
-      yield return (object) cs07Credits1.SetupLevel();
-      BirdNPC first = cs07Credits1.Scene.Entities.FindFirst<BirdNPC>();
-      if (first != null)
-        first.Facing = Facings.Right;
-      cs07Credits1.badelineWalkApproach = 1f;
-      cs07Credits1.badelineAutoFloat = false;
-      cs07Credits1.badelineAutoWalk = true;
-      cs07Credits1.badeline.Floatness = 0.0f;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      yield return (object) cs07Credits1.WaitForPlayer();
-      yield return (object) cs07Credits1.FadeTo(1f);
+      this.SetBgFade(0.8f);
+      yield return (object) this.NextLevel("credits-city");
+      yield return (object) this.SetupLevel();
+      BirdNPC bird2 = this.Scene.Entities.FindFirst<BirdNPC>();
+      if (bird2 != null)
+        bird2.Facing = Facings.Right;
+      this.badelineWalkApproach = 1f;
+      this.badelineAutoFloat = false;
+      this.badelineAutoWalk = true;
+      this.badeline.Floatness = 0.0f;
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      yield return (object) this.WaitForPlayer();
+      yield return (object) this.FadeTo(1f);
+      bird2 = (BirdNPC) null;
       yield return (object) 1f;
-      cs07Credits1.SetBgFade(0.0f);
-      yield return (object) cs07Credits1.NextLevel("credits-prologue");
-      yield return (object) cs07Credits1.SetupLevel();
-      cs07Credits1.badelineWalkApproach = 1f;
-      cs07Credits1.badelineAutoFloat = false;
-      cs07Credits1.badelineAutoWalk = true;
-      cs07Credits1.badeline.Floatness = 0.0f;
-      cs07Credits1.Add((Component) new Coroutine(cs07Credits1.FadeTo(0.0f), true));
-      yield return (object) cs07Credits1.WaitForPlayer();
-      yield return (object) cs07Credits1.FadeTo(1f);
-      while ((double) cs07Credits1.credits.BottomTimer < 2.0)
+      this.SetBgFade(0.0f);
+      yield return (object) this.NextLevel("credits-prologue");
+      yield return (object) this.SetupLevel();
+      this.badelineWalkApproach = 1f;
+      this.badelineAutoFloat = false;
+      this.badelineAutoWalk = true;
+      this.badeline.Floatness = 0.0f;
+      this.Add((Component) new Coroutine(this.FadeTo(0.0f), true));
+      yield return (object) this.WaitForPlayer();
+      yield return (object) this.FadeTo(1f);
+      while ((double) this.credits.BottomTimer < 2.0)
         yield return (object) null;
-      if (!cs07Credits1.gotoEpilogue)
+      if (!this.gotoEpilogue)
       {
-        cs07Credits1.snow = new HiresSnow(0.45f);
-        cs07Credits1.snow.Alpha = 0.0f;
-        // ISSUE: reference to a compiler-generated method
-        cs07Credits1.snow.AttachAlphaTo = (ScreenWipe) new FadeWipe((Scene) cs07Credits1.Level, false, new Action(cs07Credits1.\u003CRoutine\u003Eb__23_0));
-        cs07Credits1.Level.Add((Monocle.Renderer) (cs07Credits1.Level.HiresSnow = cs07Credits1.snow));
+        this.snow = new HiresSnow(0.45f);
+        this.snow.Alpha = 0.0f;
+        this.snow.AttachAlphaTo = (ScreenWipe) new FadeWipe((Scene) this.Level, false, (Action) (() => this.EndCutscene(this.Level, true)));
+        this.Level.Add((Monocle.Renderer) (this.Level.HiresSnow = this.snow));
       }
       else
       {
-        // ISSUE: reference to a compiler-generated method
-        FadeWipe fadeWipe = new FadeWipe((Scene) cs07Credits1.Level, false, new Action(cs07Credits1.\u003CRoutine\u003Eb__23_1));
+        FadeWipe fadeWipe = new FadeWipe((Scene) this.Level, false, (Action) (() => this.EndCutscene(this.Level, true)));
       }
     }
 
     private IEnumerator SetupLevel()
     {
-      CS07_Credits cs07Credits = this;
-      cs07Credits.Level.SnapColorGrade("credits");
-      cs07Credits.player = (Player) null;
-      while ((cs07Credits.player = cs07Credits.Scene.Tracker.GetEntity<Player>()) == null)
+      this.Level.SnapColorGrade("credits");
+      this.player = (Player) null;
+      while ((this.player = this.Scene.Tracker.GetEntity<Player>()) == null)
         yield return (object) null;
-      cs07Credits.Level.Add((Entity) (cs07Credits.badeline = new BadelineDummy(Vector2.op_Addition(cs07Credits.player.Position, new Vector2(16f, -16f)))));
-      cs07Credits.badeline.Floatness = 4f;
-      cs07Credits.badelineAutoFloat = true;
-      cs07Credits.badelineAutoWalk = false;
-      cs07Credits.badelineWalkApproach = 0.0f;
-      cs07Credits.Level.Session.Inventory.Dashes = 1;
-      cs07Credits.player.Dashes = 1;
-      cs07Credits.player.StateMachine.State = 11;
-      cs07Credits.player.DummyFriction = false;
-      cs07Credits.player.DummyMaxspeed = false;
-      cs07Credits.player.Facing = Facings.Left;
-      cs07Credits.autoWalk = true;
-      cs07Credits.autoUpdateCamera = true;
-      cs07Credits.Level.CameraOffset.X = (__Null) 70.0;
-      cs07Credits.Level.CameraOffset.Y = (__Null) -24.0;
-      cs07Credits.Level.Camera.Position = cs07Credits.player.CameraTarget;
+      this.Level.Add((Entity) (this.badeline = new BadelineDummy(this.player.Position + new Vector2(16f, -16f))));
+      this.badeline.Floatness = 4f;
+      this.badelineAutoFloat = true;
+      this.badelineAutoWalk = false;
+      this.badelineWalkApproach = 0.0f;
+      this.Level.Session.Inventory.Dashes = 1;
+      this.player.Dashes = 1;
+      this.player.StateMachine.State = 11;
+      this.player.DummyFriction = false;
+      this.player.DummyMaxspeed = false;
+      this.player.Facing = Facings.Left;
+      this.autoWalk = true;
+      this.autoUpdateCamera = true;
+      this.Level.CameraOffset.X = 70f;
+      this.Level.CameraOffset.Y = -24f;
+      this.Level.Camera.Position = this.player.CameraTarget;
     }
 
     private IEnumerator WaitForPlayer()
     {
-      CS07_Credits cs07Credits = this;
-      while ((double) cs07Credits.player.X > (double) (cs07Credits.Level.Bounds.X + 160))
+      while ((double) this.player.X > (double) (this.Level.Bounds.X + 160))
       {
-        if (cs07Credits.Event != null)
-          yield return (object) cs07Credits.DoEvent(cs07Credits.Event);
-        cs07Credits.Event = (string) null;
+        if (this.Event != null)
+          yield return (object) this.DoEvent(this.Event);
+        this.Event = (string) null;
         yield return (object) null;
       }
     }
 
     private IEnumerator NextLevel(string name)
     {
-      CS07_Credits cs07Credits = this;
-      if (cs07Credits.player != null)
-        cs07Credits.player.RemoveSelf();
-      cs07Credits.player = (Player) null;
-      cs07Credits.Level.OnEndOfFrame += (Action) (() =>
+      if (this.player != null)
+        this.player.RemoveSelf();
+      this.player = (Player) null;
+      this.Level.OnEndOfFrame += (Action) (() =>
       {
         this.Level.UnloadLevel();
         this.Level.Session.Level = name;
         Session session = this.Level.Session;
         Level level = this.Level;
         Rectangle bounds = this.Level.Bounds;
-        double left = (double) ((Rectangle) ref bounds).get_Left();
+        double left = (double) bounds.Left;
         bounds = this.Level.Bounds;
-        double top = (double) ((Rectangle) ref bounds).get_Top();
+        double top = (double) bounds.Top;
         Vector2 from = new Vector2((float) left, (float) top);
         Vector2? nullable = new Vector2?(level.GetSpawnPoint(from));
         session.RespawnPoint = nullable;
@@ -484,46 +495,39 @@ namespace Celeste
 
     private IEnumerator DustyRoutine(Entity oshiro)
     {
-      CS07_Credits cs07Credits = this;
       List<Entity> dusty = new List<Entity>();
       float timer = 0.0f;
-      Vector2 offset = Vector2.op_Addition(oshiro.Position, new Vector2(220f, -24f));
+      Vector2 offset = oshiro.Position + new Vector2(220f, -24f);
       Vector2 start = offset;
-      for (int index = 0; index < 3; ++index)
+      for (int i = 0; i < 3; ++i)
       {
-        Entity entity = new Entity(Vector2.op_Addition(offset, new Vector2((float) (index * 24), 0.0f)))
+        Entity dust = new Entity(offset + new Vector2((float) (i * 24), 0.0f))
         {
           Depth = -50
         };
-        entity.Add((Component) new DustGraphic(true, false, true));
-        Monocle.Image image = new Monocle.Image(GFX.Game["decals/3-resort/brokenbox_" + ((char) (97 + index)).ToString()]);
-        image.JustifyOrigin(0.5f, 1f);
-        image.Position = new Vector2(0.0f, -4f);
-        entity.Add((Component) image);
-        cs07Credits.Scene.Add(entity);
-        dusty.Add(entity);
+        dust.Add((Component) new DustGraphic(true, false, true));
+        Monocle.Image img = new Monocle.Image(GFX.Game["decals/3-resort/brokenbox_" + ((char) (97 + i)).ToString()]);
+        img.JustifyOrigin(0.5f, 1f);
+        img.Position = new Vector2(0.0f, -4f);
+        dust.Add((Component) img);
+        this.Scene.Add(dust);
+        dusty.Add(dust);
+        dust = (Entity) null;
+        img = (Monocle.Image) null;
       }
       yield return (object) 3.8f;
       while (true)
       {
-        for (int index = 0; index < dusty.Count; ++index)
+        for (int i = 0; i < dusty.Count; ++i)
         {
-          Entity entity = dusty[index];
-          entity.X = (float) offset.X + (float) (index * 24);
-          entity.Y = (float) (offset.Y + Math.Sin((double) timer * 4.0 + (double) index * 0.800000011920929) * 4.0);
+          Entity dust = dusty[i];
+          dust.X = offset.X + (float) (i * 24);
+          dust.Y = offset.Y + (float) Math.Sin((double) timer * 4.0 + (double) i * 0.800000011920929) * 4f;
+          dust = (Entity) null;
         }
-        // ISSUE: variable of the null type
-        __Null x = offset.X;
-        Rectangle bounds = cs07Credits.Level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Left() + 120);
-        if (x < num)
-          offset.Y = (__Null) (double) Calc.Approach((float) offset.Y, (float) (start.Y + 16.0), Engine.DeltaTime * 16f);
-        ref __Null local = ref offset.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local - 26f * Engine.DeltaTime;
+        if ((double) offset.X < (double) (this.Level.Bounds.Left + 120))
+          offset.Y = Calc.Approach(offset.Y, start.Y + 16f, Engine.DeltaTime * 16f);
+        offset.X -= 26f * Engine.DeltaTime;
         timer += Engine.DeltaTime;
         yield return (object) null;
       }
@@ -534,22 +538,21 @@ namespace Celeste
       Vector2 around,
       BadelineDummy badeline = null)
     {
-      CS07_Credits cs07Credits = this;
       bool removeAtEnd = badeline == null;
       if (badeline == null)
-        cs07Credits.Scene.Add((Entity) (badeline = new BadelineDummy(start)));
+        this.Scene.Add((Entity) (badeline = new BadelineDummy(start)));
       badeline.Sprite.Play("fallSlow", false, false);
       float angle = Calc.Angle(around, start);
-      Vector2 vector2 = Vector2.op_Subtraction(around, start);
-      float dist = ((Vector2) ref vector2).Length();
+      float dist = (around - start).Length();
       float duration = 3f;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / duration)
       {
-        badeline.Position = Vector2.op_Addition(around, Calc.AngleToVector(angle - p * 2f * 6.283185f, (float) ((double) dist + (double) Calc.YoYo(p) * 16.0 + Math.Sin((double) p * 6.28318548202515 * 4.0) * 5.0)));
-        badeline.Sprite.Scale.X = (__Null) (double) Math.Sign((float) around.X - badeline.X);
+        float a = p * 2f;
+        badeline.Position = around + Calc.AngleToVector(angle - a * 6.283185f, (float) ((double) dist + (double) Calc.YoYo(p) * 16.0 + Math.Sin((double) p * 6.28318548202515 * 4.0) * 5.0));
+        badeline.Sprite.Scale.X = (float) Math.Sign(around.X - badeline.X);
         if (!removeAtEnd)
-          cs07Credits.player.Facing = (Facings) Math.Sign(badeline.X - cs07Credits.player.X);
-        if (cs07Credits.Scene.OnInterval(0.1f))
+          this.player.Facing = (Facings) Math.Sign(badeline.X - this.player.X);
+        if (this.Scene.OnInterval(0.1f))
           TrailManager.Add((Entity) badeline, Player.NormalHairColor, 1f);
         yield return (object) null;
       }
@@ -588,45 +591,44 @@ namespace Celeste
 
     private IEnumerator EventWaitJumpDoubleDash()
     {
-      CS07_Credits cs07Credits = this;
-      cs07Credits.autoWalk = false;
-      cs07Credits.player.DummyFriction = true;
+      this.autoWalk = false;
+      this.player.DummyFriction = true;
       yield return (object) 0.1f;
-      cs07Credits.player.Facing = Facings.Right;
+      this.player.Facing = Facings.Right;
       yield return (object) 0.25f;
-      yield return (object) cs07Credits.BadelineCombine();
-      cs07Credits.player.Dashes = 2;
+      yield return (object) this.BadelineCombine();
+      this.player.Dashes = 2;
       yield return (object) 0.5f;
-      cs07Credits.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.7f;
-      cs07Credits.PlayerJump(-1);
+      this.PlayerJump(-1);
       yield return (object) 0.4f;
-      cs07Credits.player.OverrideDashDirection = new Vector2?(new Vector2(-1f, -1f));
-      cs07Credits.player.StateMachine.State = cs07Credits.player.StartDash();
+      this.player.OverrideDashDirection = new Vector2?(new Vector2(-1f, -1f));
+      this.player.StateMachine.State = this.player.StartDash();
       yield return (object) 0.6f;
-      cs07Credits.player.OverrideDashDirection = new Vector2?(new Vector2(-1f, 0.0f));
-      cs07Credits.player.StateMachine.State = cs07Credits.player.StartDash();
+      this.player.OverrideDashDirection = new Vector2?(new Vector2(-1f, 0.0f));
+      this.player.StateMachine.State = this.player.StartDash();
       yield return (object) 0.6f;
-      cs07Credits.player.OverrideDashDirection = new Vector2?();
-      cs07Credits.player.StateMachine.State = 11;
-      cs07Credits.autoWalk = true;
-      while (!cs07Credits.player.OnGround(1))
+      this.player.OverrideDashDirection = new Vector2?();
+      this.player.StateMachine.State = 11;
+      this.autoWalk = true;
+      while (!this.player.OnGround(1))
         yield return (object) null;
-      cs07Credits.autoWalk = false;
-      cs07Credits.player.DummyFriction = true;
-      cs07Credits.player.Dashes = 2;
+      this.autoWalk = false;
+      this.player.DummyFriction = true;
+      this.player.Dashes = 2;
       yield return (object) 0.5f;
-      cs07Credits.player.Facing = Facings.Right;
+      this.player.Facing = Facings.Right;
       yield return (object) 1f;
-      cs07Credits.Level.Displacement.AddBurst(cs07Credits.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
-      cs07Credits.badeline.Position = cs07Credits.player.Position;
-      cs07Credits.badeline.Visible = true;
-      cs07Credits.badelineAutoFloat = true;
-      cs07Credits.player.Dashes = 1;
+      this.Level.Displacement.AddBurst(this.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
+      this.badeline.Position = this.player.Position;
+      this.badeline.Visible = true;
+      this.badelineAutoFloat = true;
+      this.player.Dashes = 1;
       yield return (object) 0.8f;
-      cs07Credits.player.Facing = Facings.Left;
-      cs07Credits.autoWalk = true;
-      cs07Credits.player.DummyFriction = false;
+      this.player.Facing = Facings.Left;
+      this.autoWalk = true;
+      this.player.DummyFriction = false;
     }
 
     private IEnumerator EventClimbDown()
@@ -636,26 +638,26 @@ namespace Celeste
       yield return (object) 0.1f;
       this.PlayerJump(-1);
       yield return (object) 0.4f;
-      while (!this.player.CollideCheck<Solid>(Vector2.op_Addition(this.player.Position, new Vector2(-1f, 0.0f))))
+      while (!this.player.CollideCheck<Solid>(this.player.Position + new Vector2(-1f, 0.0f)))
         yield return (object) null;
       this.player.DummyAutoAnimate = false;
       this.player.Sprite.Play("wallslide", false, false);
-      while (this.player.CollideCheck<Solid>(Vector2.op_Addition(this.player.Position, new Vector2(-1f, 32f))))
+      while (this.player.CollideCheck<Solid>(this.player.Position + new Vector2(-1f, 32f)))
       {
         this.player.CreateWallSlideParticles(-1);
-        this.player.Speed.Y = (__Null) (double) Math.Min((float) this.player.Speed.Y, 40f);
+        this.player.Speed.Y = Math.Min(this.player.Speed.Y, 40f);
         yield return (object) null;
       }
       this.PlayerJump(1);
       yield return (object) 0.4f;
-      while (!this.player.CollideCheck<Solid>(Vector2.op_Addition(this.player.Position, new Vector2(1f, 0.0f))))
+      while (!this.player.CollideCheck<Solid>(this.player.Position + new Vector2(1f, 0.0f)))
         yield return (object) null;
       this.player.DummyAutoAnimate = false;
       this.player.Sprite.Play("wallslide", false, false);
-      while (!this.player.CollideCheck<Solid>(Vector2.op_Addition(this.player.Position, new Vector2(0.0f, 32f))))
+      while (!this.player.CollideCheck<Solid>(this.player.Position + new Vector2(0.0f, 32f)))
       {
         this.player.CreateWallSlideParticles(1);
-        this.player.Speed.Y = (__Null) (double) Math.Min((float) this.player.Speed.Y, 40f);
+        this.player.Speed.Y = Math.Min(this.player.Speed.Y, 40f);
         yield return (object) null;
       }
       this.PlayerJump(-1);
@@ -665,49 +667,47 @@ namespace Celeste
 
     private IEnumerator EventWait()
     {
-      CS07_Credits cs07Credits = this;
-      cs07Credits.badeline.Sprite.Play("idle", false, false);
-      cs07Credits.badelineAutoWalk = false;
-      cs07Credits.autoWalk = false;
-      cs07Credits.player.DummyFriction = true;
+      this.badeline.Sprite.Play("idle", false, false);
+      this.badelineAutoWalk = false;
+      this.autoWalk = false;
+      this.player.DummyFriction = true;
       yield return (object) 0.1f;
-      cs07Credits.player.DummyAutoAnimate = false;
-      cs07Credits.player.Speed = Vector2.get_Zero();
+      this.player.DummyAutoAnimate = false;
+      this.player.Speed = Vector2.Zero;
       yield return (object) 0.5f;
-      cs07Credits.player.Sprite.Play("lookUp", false, false);
+      this.player.Sprite.Play("lookUp", false, false);
       yield return (object) 2f;
-      BirdNPC first = cs07Credits.Scene.Entities.FindFirst<BirdNPC>();
-      if (first != null)
-        first.AutoFly = true;
+      BirdNPC bird = this.Scene.Entities.FindFirst<BirdNPC>();
+      if (bird != null)
+        bird.AutoFly = true;
       yield return (object) 0.1f;
-      cs07Credits.player.Sprite.Play("idle", false, false);
+      this.player.Sprite.Play("idle", false, false);
       yield return (object) 1f;
-      cs07Credits.autoWalk = true;
-      cs07Credits.player.DummyFriction = false;
-      cs07Credits.player.DummyAutoAnimate = true;
-      cs07Credits.badelineAutoWalk = true;
-      cs07Credits.badelineWalkApproach = 0.0f;
-      cs07Credits.badelineWalkApproachFrom = cs07Credits.badeline.Position;
-      cs07Credits.badeline.Sprite.Play("walk", false, false);
-      while ((double) cs07Credits.badelineWalkApproach < 1.0)
+      this.autoWalk = true;
+      this.player.DummyFriction = false;
+      this.player.DummyAutoAnimate = true;
+      this.badelineAutoWalk = true;
+      this.badelineWalkApproach = 0.0f;
+      this.badelineWalkApproachFrom = this.badeline.Position;
+      this.badeline.Sprite.Play("walk", false, false);
+      while ((double) this.badelineWalkApproach < 1.0)
       {
-        cs07Credits.badelineWalkApproach += Engine.DeltaTime * 4f;
+        this.badelineWalkApproach += Engine.DeltaTime * 4f;
         yield return (object) null;
       }
     }
 
     private IEnumerator BadelineCombine()
     {
-      CS07_Credits cs07Credits = this;
-      Vector2 from = cs07Credits.badeline.Position;
-      cs07Credits.badelineAutoFloat = false;
+      Vector2 from = this.badeline.Position;
+      this.badelineAutoFloat = false;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / 0.25f)
       {
-        cs07Credits.badeline.Position = Vector2.Lerp(from, cs07Credits.player.Position, Ease.CubeIn(p));
+        this.badeline.Position = Vector2.Lerp(from, this.player.Position, Ease.CubeIn(p));
         yield return (object) null;
       }
-      cs07Credits.badeline.Visible = false;
-      cs07Credits.Level.Displacement.AddBurst(cs07Credits.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
+      this.badeline.Visible = false;
+      this.Level.Displacement.AddBurst(this.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
     }
 
     private void PlayerJump(int direction)
@@ -715,7 +715,7 @@ namespace Celeste
       this.player.Facing = (Facings) direction;
       this.player.DummyFriction = false;
       this.player.DummyAutoAnimate = true;
-      this.player.Speed.X = (__Null) (double) (direction * 120);
+      this.player.Speed.X = (float) (direction * 120);
       this.player.Jump(true, true);
       this.player.AutoJump = true;
       this.player.AutoJumpTimer = 2f;
@@ -723,7 +723,7 @@ namespace Celeste
 
     private void SetBgFade(float alpha)
     {
-      this.fillbg.Color = Color.op_Multiply(Color.get_Black(), alpha);
+      this.fillbg.Color = Color.Black * alpha;
     }
 
     public override void Update()
@@ -743,9 +743,9 @@ namespace Celeste
         {
           if (this.player.OnGround(1))
           {
-            this.player.Speed.X = (__Null) -44.7999992370605;
-            bool flag1 = this.player.CollideCheck<Solid>(Vector2.op_Addition(this.player.Position, new Vector2(-20f, 0.0f)));
-            bool flag2 = !this.player.CollideCheck<Solid>(Vector2.op_Addition(this.player.Position, new Vector2(-8f, 1f))) && !this.player.CollideCheck<Solid>(Vector2.op_Addition(this.player.Position, new Vector2(-8f, 32f)));
+            this.player.Speed.X = -44.8f;
+            bool flag1 = this.player.CollideCheck<Solid>(this.player.Position + new Vector2(-20f, 0.0f));
+            bool flag2 = !this.player.CollideCheck<Solid>(this.player.Position + new Vector2(-8f, 1f)) && !this.player.CollideCheck<Solid>(this.player.Position + new Vector2(-8f, 32f));
             if (flag1 | flag2)
             {
               this.player.Jump(true, true);
@@ -754,14 +754,14 @@ namespace Celeste
             }
           }
           else
-            this.player.Speed.X = (__Null) -64.0;
+            this.player.Speed.X = -64f;
         }
         if (this.badeline != null && this.badelineAutoFloat)
         {
           Vector2 position = this.badeline.Position;
-          Vector2 vector2 = Vector2.op_Addition(this.player.Position, new Vector2(16f, -16f));
-          this.badeline.Position = Vector2.op_Addition(position, Vector2.op_Multiply(Vector2.op_Subtraction(vector2, position), 1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime)));
-          this.badeline.Sprite.Scale.X = (__Null) -1.0;
+          Vector2 vector2 = this.player.Position + new Vector2(16f, -16f);
+          this.badeline.Position = position + (vector2 - position) * (1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime));
+          this.badeline.Sprite.Scale.X = -1f;
         }
         if (this.badeline != null && this.badelineAutoWalk)
         {
@@ -774,13 +774,13 @@ namespace Celeste
             this.badeline.Position = chaseState.Position;
             if (this.badeline.Sprite.Has(chaseState.Animation))
               this.badeline.Sprite.Play(chaseState.Animation, false, false);
-            this.badeline.Sprite.Scale.X = (__Null) (double) chaseState.Facing;
+            this.badeline.Sprite.Scale.X = (float) chaseState.Facing;
           }
           else
             this.badeline.Position = Vector2.Lerp(this.badelineWalkApproachFrom, chaseState.Position, this.badelineWalkApproach);
         }
-        if ((double) Math.Abs((float) this.player.Speed.X) > 90.0)
-          this.player.Speed.X = (__Null) (double) Calc.Approach((float) this.player.Speed.X, 90f * (float) Math.Sign((float) this.player.Speed.X), 1000f * Engine.DeltaTime);
+        if ((double) Math.Abs(this.player.Speed.X) > 90.0)
+          this.player.Speed.X = Calc.Approach(this.player.Speed.X, 90f * (float) Math.Sign(this.player.Speed.X), 1000f * Engine.DeltaTime);
       }
       if (this.credits != null)
         this.credits.Update();
@@ -794,8 +794,8 @@ namespace Celeste
       Vector2 position = this.Level.Camera.Position;
       Vector2 cameraTarget = this.player.CameraTarget;
       if (!this.player.OnGround(1))
-        cameraTarget.Y = (__Null) (((double) this.Level.Camera.Y * 2.0 + cameraTarget.Y) / 3.0);
-      this.Level.Camera.Position = Vector2.op_Addition(position, Vector2.op_Multiply(Vector2.op_Subtraction(cameraTarget, position), 1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime)));
+        cameraTarget.Y = (float) (((double) this.Level.Camera.Y * 2.0 + (double) cameraTarget.Y) / 3.0);
+      this.Level.Camera.Position = position + (cameraTarget - position) * (1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime));
       this.Level.Camera.X = (float) (int) cameraTarget.X;
     }
 
@@ -805,12 +805,12 @@ namespace Celeste
       if (!this.Level.Paused)
       {
         if (flag)
-          this.gradient.Draw(new Vector2(1720f, -10f), Vector2.get_Zero(), Color.op_Multiply(Color.get_White(), 0.6f), new Vector2(-1f, 1100f));
+          this.gradient.Draw(new Vector2(1720f, -10f), Vector2.Zero, Color.White * 0.6f, new Vector2(-1f, 1100f));
         else
-          this.gradient.Draw(new Vector2(200f, -10f), Vector2.get_Zero(), Color.op_Multiply(Color.get_White(), 0.6f), new Vector2(1f, 1100f));
+          this.gradient.Draw(new Vector2(200f, -10f), Vector2.Zero, Color.White * 0.6f, new Vector2(1f, 1100f));
       }
       if ((double) this.fade > 0.0)
-        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.get_Black(), Ease.CubeInOut(this.fade)));
+        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * Ease.CubeInOut(this.fade));
       if (this.credits != null && !this.Level.Paused)
         this.credits.Render(new Vector2(flag ? 100f : 1820f, 0.0f));
       base.Render();
@@ -836,3 +836,4 @@ namespace Celeste
     }
   }
 }
+

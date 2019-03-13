@@ -16,15 +16,15 @@ namespace Celeste
   public class Decal : Entity
   {
     public float AnimationSpeed = 12f;
+    private float frame = 0.0f;
     private bool animated = true;
+    private bool parallax = false;
     public const string Root = "decals";
     public const string MirrorMaskRoot = "mirrormasks";
     public string Name;
     private Component image;
     private List<MTexture> textures;
     private Vector2 scale;
-    private float frame;
-    private bool parallax;
     private float parallaxAmount;
 
     public Decal(string texture, Vector2 position, Vector2 scale, int depth)
@@ -72,10 +72,10 @@ namespace Celeste
         case "3-resort/roofedge_b":
         case "3-resort/roofedge_c":
         case "3-resort/roofedge_d":
-          this.MakeSolid(this.scale.X < 0.0 ? 0.0f : -8f, -4f, 8f, 8f, 14, true);
+          this.MakeSolid((double) this.scale.X < 0.0 ? 0.0f : -8f, -4f, 8f, 8f, 14, true);
           break;
         case "3-resort/vent":
-          this.CreateSmoke(Vector2.get_Zero(), false);
+          this.CreateSmoke(Vector2.Zero, false);
           break;
         case "4-cliffside/bridge_a":
           this.MakeSolid(-24f, 0.0f, 48f, 8f, 8, this.Depth != 9000);
@@ -109,7 +109,7 @@ namespace Celeste
         case "5-temple/bg_mirror_shard_i":
         case "5-temple/bg_mirror_shard_j":
         case "5-temple/bg_mirror_shard_k":
-          this.scale.Y = (__Null) 1.0;
+          this.scale.Y = 1f;
           this.MakeMirror(path, false);
           break;
         case "5-temple/bg_mirror_c":
@@ -141,7 +141,7 @@ namespace Celeste
         case "7-summit/cloud_j":
           this.Depth = -13001;
           this.MakeParallax(0.1f);
-          this.scale = Vector2.op_Multiply(this.scale, 1.15f);
+          this.scale *= 1.15f;
           break;
         case "7-summit/summitflag":
           this.Add((Component) new SoundSource("event:/env/local/07_summit/flag_flap"));
@@ -156,8 +156,8 @@ namespace Celeste
         case "9-core/heart_bevel_b":
         case "9-core/heart_bevel_c":
         case "9-core/heart_bevel_d":
-          this.scale.Y = (__Null) 1.0;
-          this.scale.X = (__Null) 1.0;
+          this.scale.Y = 1f;
+          this.scale.X = 1f;
           break;
         case "9-core/rock_e":
           this.Add(this.image = (Component) new Decal.CoreSwapImage(this.textures[0], GFX.Game["decals/9-core/rock_e_ice"]));
@@ -215,7 +215,7 @@ namespace Celeste
       int surfaceSoundIndex,
       bool blockWaterfalls = true)
     {
-      Solid solid = new Solid(Vector2.op_Addition(this.Position, new Vector2(x, y)), w, h, true);
+      Solid solid = new Solid(this.Position + new Vector2(x, y), w, h, true);
       solid.BlockWaterfalls = blockWaterfalls;
       solid.SurfaceSoundIndex = surfaceSoundIndex;
       this.Scene.Add((Entity) solid);
@@ -259,7 +259,7 @@ namespace Celeste
         MTexture mask = atlasSubtexture;
         MirrorSurface surface = new MirrorSurface((Action) null)
         {
-          ReflectionOffset = Vector2.op_Addition(offset, new Vector2(Calc.Random.NextFloat(4f) - 2f, Calc.Random.NextFloat(4f) - 2f))
+          ReflectionOffset = offset + new Vector2(Calc.Random.NextFloat(4f) - 2f, Calc.Random.NextFloat(4f) - 2f)
         };
         surface.OnRender = (Action) (() => mask.DrawCentered(this.Position, surface.ReflectionColor, this.scale));
         this.Add((Component) surface);
@@ -272,21 +272,20 @@ namespace Celeste
       List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures("mirrormasks/" + path);
       for (int index = 0; index < atlasSubtextures.Count; ++index)
       {
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(Calc.Random.NextFloat(4f) - 2f, Calc.Random.NextFloat(4f) - 2f);
+        Vector2 vector2 = new Vector2(Calc.Random.NextFloat(4f) - 2f, Calc.Random.NextFloat(4f) - 2f);
         switch (index)
         {
           case 2:
-            ((Vector2) ref vector2).\u002Ector(4f, 2f);
+            vector2 = new Vector2(4f, 2f);
             break;
           case 6:
-            ((Vector2) ref vector2).\u002Ector(-2f, 0.0f);
+            vector2 = new Vector2(-2f, 0.0f);
             break;
         }
         MTexture mask = atlasSubtextures[index];
         MirrorSurface surface = new MirrorSurface((Action) null)
         {
-          ReflectionOffset = Vector2.op_Addition(offset, vector2)
+          ReflectionOffset = offset + vector2
         };
         surface.OnRender = (Action) (() => mask.DrawCentered(this.Position, surface.ReflectionColor, this.scale));
         this.Add((Component) surface);
@@ -318,7 +317,7 @@ namespace Celeste
     {
       Vector2 position = this.Position;
       if (this.parallax)
-        this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Subtraction(this.Position, Vector2.op_Addition((this.Scene as Level).Camera.Position, new Vector2(160f, 90f))), this.parallaxAmount));
+        this.Position = this.Position + (this.Position - ((this.Scene as Level).Camera.Position + new Vector2(160f, 90f))) * this.parallaxAmount;
       base.Render();
       this.Position = position;
     }
@@ -327,6 +326,7 @@ namespace Celeste
     {
       public float WindMultiplier = 1f;
       private float sineTimer = Calc.Random.NextFloat();
+      public List<List<MTexture>> Segments = (List<List<MTexture>>) null;
       public float WaveSpeed;
       public float WaveAmplitude;
       public int SliceSize;
@@ -334,7 +334,6 @@ namespace Celeste
       public bool EaseDown;
       public float Offset;
       public bool OnlyIfWindy;
-      public List<List<MTexture>> Segments;
 
       public Decal Decal
       {
@@ -353,7 +352,7 @@ namespace Celeste
       {
         if (this.OnlyIfWindy)
         {
-          float x = (float) (this.Scene as Level).Wind.X;
+          float x = (this.Scene as Level).Wind.X;
           this.WindMultiplier = Calc.Approach(this.WindMultiplier, Math.Min(3f, Math.Abs(x) * 0.004f), Engine.DeltaTime * 4f);
           if ((double) x != 0.0)
             this.Offset = (float) Math.Sign(x) * Math.Abs(this.Offset);
@@ -368,9 +367,9 @@ namespace Celeste
         List<MTexture> segment = this.Segments[(int) this.Decal.frame];
         for (int index = 0; index < segment.Count; ++index)
         {
-          float num1 = (this.EaseDown ? (float) index / (float) segment.Count : (float) (1.0 - (double) index / (double) segment.Count)) * this.WindMultiplier;
-          float num2 = (float) (Math.Sin((double) this.sineTimer * (double) this.WaveSpeed + (double) index * (double) this.SliceSinIncrement) * (double) num1 * (double) this.WaveAmplitude + (double) num1 * (double) this.Offset);
-          segment[index].Draw(Vector2.op_Addition(this.Decal.Position, new Vector2(num2, 0.0f)), new Vector2((float) (texture.Width / 2), (float) (texture.Height / 2 - index * this.SliceSize)), Color.get_White(), this.Decal.scale);
+          float num = (this.EaseDown ? (float) index / (float) segment.Count : (float) (1.0 - (double) index / (double) segment.Count)) * this.WindMultiplier;
+          float x = (float) (Math.Sin((double) this.sineTimer * (double) this.WaveSpeed + (double) index * (double) this.SliceSinIncrement) * (double) num * (double) this.WaveAmplitude + (double) num * (double) this.Offset);
+          segment[index].Draw(this.Decal.Position + new Vector2(x, 0.0f), new Vector2((float) (texture.Width / 2), (float) (texture.Height / 2 - index * this.SliceSize)), Color.White, this.Decal.scale);
         }
       }
     }
@@ -392,7 +391,7 @@ namespace Celeste
 
       public override void Render()
       {
-        this.Decal.textures[(int) this.Decal.frame].DrawCentered(this.Decal.Position, Color.get_White(), this.Decal.scale);
+        this.Decal.textures[(int) this.Decal.frame].DrawCentered(this.Decal.Position, Color.White, this.Decal.scale);
       }
     }
 
@@ -418,8 +417,9 @@ namespace Celeste
 
       public override void Render()
       {
-        ((this.Scene as Level).CoreMode == Session.CoreModes.Cold ? this.cold : this.hot).DrawCentered(this.Decal.Position, Color.get_White(), this.Decal.scale);
+        ((this.Scene as Level).CoreMode == Session.CoreModes.Cold ? this.cold : this.hot).DrawCentered(this.Decal.Position, Color.White, this.Decal.scale);
       }
     }
   }
 }
+

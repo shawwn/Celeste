@@ -20,6 +20,8 @@ namespace Monocle
     private string currentText = "";
     private int seekIndex = -1;
     private int tabIndex = -1;
+    private float repeatCounter = 0.0f;
+    private Keys? repeatKey = new Keys?();
     private const float UNDERSCORE_TIME = 0.5f;
     private const float REPEAT_DELAY = 0.5f;
     private const float REPEAT_EVERY = 0.03333334f;
@@ -34,8 +36,6 @@ namespace Monocle
     private float underscoreCounter;
     private List<string> commandHistory;
     private string tabSearch;
-    private float repeatCounter;
-    private Keys? repeatKey;
     private bool canOpen;
 
     public Action[] FunctionKeyActions { get; private set; }
@@ -63,14 +63,14 @@ namespace Monocle
       else
       {
         int length1;
-        for (int index = Engine.Instance.get_Window().get_ClientBounds().Width - 40; Draw.DefaultFont.MeasureString(text).X > (double) index; text = text.Substring(length1 + 1))
+        for (int index = Engine.Instance.Window.ClientBounds.Width - 40; (double) Draw.DefaultFont.MeasureString(text).X > (double) index; text = text.Substring(length1 + 1))
         {
           length1 = -1;
           for (int length2 = 0; length2 < text.Length; ++length2)
           {
             if (text[length2] == ' ')
             {
-              if (Draw.DefaultFont.MeasureString(text.Substring(0, length2)).X <= (double) index)
+              if ((double) Draw.DefaultFont.MeasureString(text.Substring(0, length2)).X <= (double) index)
                 length1 = length2;
               else
                 break;
@@ -82,7 +82,7 @@ namespace Monocle
             break;
         }
         this.drawCommands.Insert(0, new Commands.Line(text, color));
-        int num = (Engine.Instance.get_Window().get_ClientBounds().Height - 100) / 30;
+        int num = (Engine.Instance.Window.ClientBounds.Height - 100) / 30;
         while (this.drawCommands.Count > num)
           this.drawCommands.RemoveAt(this.drawCommands.Count - 1);
       }
@@ -90,14 +90,14 @@ namespace Monocle
 
     public void Log(object obj)
     {
-      this.Log(obj, Color.get_White());
+      this.Log(obj, Color.White);
     }
 
     internal void UpdateClosed()
     {
       if (!this.canOpen)
         this.canOpen = true;
-      else if (MInput.Keyboard.Pressed((Keys) 192, (Keys) 223))
+      else if (MInput.Keyboard.Pressed(Keys.OemTilde, Keys.Oem8))
       {
         this.Open = true;
         this.currentState = Keyboard.GetState();
@@ -121,7 +121,7 @@ namespace Monocle
       }
       if (this.repeatKey.HasValue)
       {
-        if (((KeyboardState) ref this.currentState).get_Item(this.repeatKey.Value) == 1)
+        if (this.currentState[this.repeatKey.Value] == KeyState.Down)
         {
           for (this.repeatCounter += Engine.DeltaTime; (double) this.repeatCounter >= 0.5; this.repeatCounter -= 0.03333334f)
             this.HandleKey(this.repeatKey.Value);
@@ -129,12 +129,11 @@ namespace Monocle
         else
           this.repeatKey = new Keys?();
       }
-      foreach (int pressedKey in ((KeyboardState) ref this.currentState).GetPressedKeys())
+      foreach (Keys pressedKey in this.currentState.GetPressedKeys())
       {
-        Keys key = (Keys) pressedKey;
-        if (((KeyboardState) ref this.oldState).get_Item(key) == null)
+        if (this.oldState[pressedKey] == KeyState.Up)
         {
-          this.HandleKey(key);
+          this.HandleKey(pressedKey);
           break;
         }
       }
@@ -142,25 +141,30 @@ namespace Monocle
 
     private void HandleKey(Keys key)
     {
-      if (key != 9 && key != 160 && (key != 161 && key != 165) && (key != 164 && key != 163 && key != 162))
+      if (key != Keys.Tab && key != Keys.LeftShift && (key != Keys.RightShift && key != Keys.RightAlt) && (key != Keys.LeftAlt && key != Keys.RightControl) && key != Keys.LeftControl)
         this.tabIndex = -1;
-      if (key != 192 && key != 223 && key != 13)
+      int num;
+      if (key != Keys.OemTilde && key != Keys.Oem8 && key != Keys.Enter)
       {
         Keys? repeatKey = this.repeatKey;
         Keys keys = key;
-        if (!(repeatKey.GetValueOrDefault() == keys & repeatKey.HasValue))
-        {
-          this.repeatKey = new Keys?(key);
-          this.repeatCounter = 0.0f;
-        }
+        num = !(repeatKey.GetValueOrDefault() == keys & repeatKey.HasValue) ? 1 : 0;
       }
-      if (key <= 13)
+      else
+        num = 0;
+      if (num != 0)
       {
-        if (key != 8)
+        this.repeatKey = new Keys?(key);
+        this.repeatCounter = 0.0f;
+      }
+      Keys keys1 = key;
+      if (keys1 <= Keys.Enter)
+      {
+        if (keys1 != Keys.Back)
         {
-          if (key != 9)
+          if (keys1 != Keys.Tab)
           {
-            if (key == 13)
+            if (keys1 == Keys.Enter)
             {
               if (this.currentText.Length <= 0)
                 return;
@@ -170,7 +174,7 @@ namespace Monocle
           }
           else
           {
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               if (this.tabIndex == -1)
               {
@@ -180,7 +184,7 @@ namespace Monocle
               else
               {
                 --this.tabIndex;
-                if (this.tabIndex < 0 || this.tabSearch != "" && this.sorted[this.tabIndex].IndexOf(this.tabSearch) != 0)
+                if (this.tabIndex < 0 || this.tabSearch != "" && (uint) this.sorted[this.tabIndex].IndexOf(this.tabSearch) > 0U)
                   this.FindLastTab();
               }
             }
@@ -192,7 +196,7 @@ namespace Monocle
             else
             {
               ++this.tabIndex;
-              if (this.tabIndex >= this.sorted.Count || this.tabSearch != "" && this.sorted[this.tabIndex].IndexOf(this.tabSearch) != 0)
+              if (this.tabIndex >= this.sorted.Count || this.tabSearch != "" && (uint) this.sorted[this.tabIndex].IndexOf(this.tabSearch) > 0U)
                 this.FindFirstTab();
             }
             if (this.tabIndex == -1)
@@ -209,120 +213,118 @@ namespace Monocle
           return;
         }
       }
-      else if (key <= 123)
+      else if (keys1 <= Keys.F12)
       {
-        switch (key - 32)
+        switch (keys1 - 32)
         {
-          case 0:
+          case Keys.None:
             this.currentText += " ";
             return;
-          case 1:
-          case 2:
-          case 3:
-          case 4:
-          case 5:
-          case 7:
-          case 9:
-          case 10:
-          case 11:
-          case 12:
-          case 13:
-          case 15:
+          case (Keys) 1:
+          case (Keys) 2:
+          case (Keys) 3:
+          case (Keys) 4:
+          case (Keys) 5:
+          case (Keys) 7:
+          case Keys.Tab:
+          case (Keys) 10:
+          case (Keys) 11:
+          case (Keys) 12:
+          case Keys.Enter:
+          case (Keys) 15:
             break;
-          case 6:
+          case (Keys) 6:
             if (this.seekIndex >= this.commandHistory.Count - 1)
               return;
             ++this.seekIndex;
             this.currentText = string.Join(" ", this.commandHistory[this.seekIndex]);
             return;
-          case 8:
+          case Keys.Back:
             if (this.seekIndex <= -1)
               return;
             --this.seekIndex;
             if (this.seekIndex == -1)
-            {
               this.currentText = "";
-              return;
-            }
-            this.currentText = string.Join(" ", this.commandHistory[this.seekIndex]);
+            else
+              this.currentText = string.Join(" ", this.commandHistory[this.seekIndex]);
             return;
-          case 14:
+          case (Keys) 14:
             this.currentText = "";
             return;
-          case 16:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 16:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += ")";
               return;
             }
             this.currentText += "0";
             return;
-          case 17:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 17:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "!";
               return;
             }
             this.currentText += "1";
             return;
-          case 18:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 18:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "@";
               return;
             }
             this.currentText += "2";
             return;
-          case 19:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case Keys.Pause:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "#";
               return;
             }
             this.currentText += "3";
             return;
-          case 20:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case Keys.CapsLock:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "$";
               return;
             }
             this.currentText += "4";
             return;
-          case 21:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case Keys.Kana:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "%";
               return;
             }
             this.currentText += "5";
             return;
-          case 22:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 22:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "^";
               return;
             }
             this.currentText += "6";
             return;
-          case 23:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 23:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "&";
               return;
             }
             this.currentText += "7";
             return;
-          case 24:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 24:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "*";
               return;
             }
             this.currentText += "8";
             return;
-          case 25:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case Keys.Kanji:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "(";
               return;
@@ -330,9 +332,9 @@ namespace Monocle
             this.currentText += "9";
             return;
           default:
-            if (key - 112 <= 11)
+            if ((uint) (keys1 - 112) <= 11U)
             {
-              this.ExecuteFunctionKeyAction(key - 112);
+              this.ExecuteFunctionKeyAction((int) (key - 112));
               return;
             }
             break;
@@ -340,91 +342,91 @@ namespace Monocle
       }
       else
       {
-        switch (key - 186)
+        switch (keys1 - 186)
         {
-          case 0:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case Keys.None:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += ":";
               return;
             }
             this.currentText += ";";
             return;
-          case 1:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 1:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "+";
               return;
             }
             this.currentText += "=";
             return;
-          case 2:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 2:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "<";
               return;
             }
             this.currentText += ",";
             return;
-          case 3:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 3:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "_";
               return;
             }
             this.currentText += "-";
             return;
-          case 4:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 4:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += ">";
               return;
             }
             this.currentText += ".";
             return;
-          case 5:
-            if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+          case (Keys) 5:
+            if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
             {
               this.currentText += "?";
               return;
             }
             this.currentText += "/";
             return;
-          case 6:
-label_104:
+          case (Keys) 6:
+label_107:
             this.Open = this.canOpen = false;
             return;
           default:
-            switch (key - 219)
+            switch (keys1 - 219)
             {
-              case 0:
-                if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+              case Keys.None:
+                if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
                 {
                   this.currentText += "{";
                   return;
                 }
                 this.currentText += "[";
                 return;
-              case 2:
-                if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+              case (Keys) 2:
+                if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
                 {
                   this.currentText += "}";
                   return;
                 }
                 this.currentText += "]";
                 return;
-              case 3:
-                if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+              case (Keys) 3:
+                if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
                 {
                   this.currentText += "\"";
                   return;
                 }
                 this.currentText += "'";
                 return;
-              case 4:
-                goto label_104;
-              case 7:
-                if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
+              case (Keys) 4:
+                goto label_107;
+              case (Keys) 7:
+                if (this.currentState[Keys.LeftShift] == KeyState.Down || this.currentState[Keys.RightShift] == KeyState.Down)
                 {
                   this.currentText += "|";
                   return;
@@ -436,10 +438,7 @@ label_104:
       }
       if (key.ToString().Length != 1)
         return;
-      if (((KeyboardState) ref this.currentState).get_Item((Keys) 160) == 1 || ((KeyboardState) ref this.currentState).get_Item((Keys) 161) == 1)
-        this.currentText += key.ToString();
-      else
-        this.currentText += key.ToString().ToLower();
+      this.currentText = this.currentState[Keys.LeftShift] != KeyState.Down && this.currentState[Keys.RightShift] != KeyState.Down ? this.currentText + key.ToString().ToLower() : this.currentText + key.ToString();
     }
 
     private void EnterCommand()
@@ -451,7 +450,7 @@ label_104:
       }, StringSplitOptions.RemoveEmptyEntries);
       if (this.commandHistory.Count == 0 || this.commandHistory[0] != this.currentText)
         this.commandHistory.Insert(0, this.currentText);
-      this.drawCommands.Insert(0, new Commands.Line(this.currentText, Color.get_Aqua()));
+      this.drawCommands.Insert(0, new Commands.Line(this.currentText, Color.Aqua));
       this.currentText = "";
       this.seekIndex = -1;
       string[] args = new string[strArray.Length - 1];
@@ -486,15 +485,15 @@ label_104:
       int viewWidth = Engine.ViewWidth;
       int viewHeight = Engine.ViewHeight;
       Draw.SpriteBatch.Begin();
-      Draw.Rect(10f, (float) (viewHeight - 50), (float) (viewWidth - 20), 40f, Color.op_Multiply(Color.get_Black(), 0.8f));
+      Draw.Rect(10f, (float) (viewHeight - 50), (float) (viewWidth - 20), 40f, Color.Black * 0.8f);
       if (this.underscore)
-        Draw.SpriteBatch.DrawString(Draw.DefaultFont, ">" + this.currentText + "_", new Vector2(20f, (float) (viewHeight - 42)), Color.get_White());
+        Draw.SpriteBatch.DrawString(Draw.DefaultFont, ">" + this.currentText + "_", new Vector2(20f, (float) (viewHeight - 42)), Color.White);
       else
-        Draw.SpriteBatch.DrawString(Draw.DefaultFont, ">" + this.currentText, new Vector2(20f, (float) (viewHeight - 42)), Color.get_White());
+        Draw.SpriteBatch.DrawString(Draw.DefaultFont, ">" + this.currentText, new Vector2(20f, (float) (viewHeight - 42)), Color.White);
       if (this.drawCommands.Count > 0)
       {
         int num = 10 + 30 * this.drawCommands.Count;
-        Draw.Rect(10f, (float) (viewHeight - num - 60), (float) (viewWidth - 20), (float) num, Color.op_Multiply(Color.get_Black(), 0.8f));
+        Draw.Rect(10f, (float) (viewHeight - num - 60), (float) (viewWidth - 20), (float) num, Color.Black * 0.8f);
         for (int index = 0; index < this.drawCommands.Count; ++index)
           Draw.SpriteBatch.DrawString(Draw.DefaultFont, this.drawCommands[index].Text, new Vector2(20f, (float) (viewHeight - 92 - 30 * index)), this.drawCommands[index].Color);
       }
@@ -506,7 +505,7 @@ label_104:
       if (this.commands.ContainsKey(command))
         this.commands[command].Action(args);
       else
-        this.Log((object) ("Command '" + command + "' not found! Type 'help' for list of commands"), Color.get_Yellow());
+        this.Log((object) ("Command '" + command + "' not found! Type 'help' for list of commands"), Color.Yellow);
     }
 
     public void ExecuteFunctionKeyAction(int num)
@@ -520,12 +519,12 @@ label_104:
     {
       foreach (Type type in Assembly.GetCallingAssembly().GetTypes())
       {
-        foreach (MethodInfo method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+        foreach (MethodInfo method in type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
           this.ProcessMethod(method);
       }
       foreach (Type type in Assembly.GetEntryAssembly().GetTypes())
       {
-        foreach (MethodInfo method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+        foreach (MethodInfo method in type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
           this.ProcessMethod(method);
       }
       foreach (KeyValuePair<string, Commands.CommandInfo> command in this.commands)
@@ -537,7 +536,7 @@ label_104:
     {
       Command command = (Command) null;
       object[] customAttributes = method.GetCustomAttributes(typeof (Command), false);
-      if (customAttributes.Length != 0)
+      if ((uint) customAttributes.Length > 0U)
         command = customAttributes[0] as Command;
       if (command == null)
         return;
@@ -628,7 +627,7 @@ label_104:
       }
       catch (Exception ex)
       {
-        Engine.Commands.Log((object) ex.InnerException.Message, Color.get_Yellow());
+        Engine.Commands.Log((object) ex.InnerException.Message, Color.Yellow);
         this.LogStackTrace(ex.InnerException.StackTrace);
       }
     }
@@ -650,7 +649,7 @@ label_104:
         int startIndex3 = str2.LastIndexOf(':');
         if (startIndex3 != -1)
           str2 = str2.Insert(startIndex3 + 1, " ").Insert(startIndex3, " ");
-        Engine.Commands.Log((object) ("-> " + str2.TrimStart()), Color.get_White());
+        Engine.Commands.Log((object) ("-> " + str2.TrimStart()), Color.White);
       }
     }
 
@@ -663,8 +662,8 @@ label_104:
 
     private static bool ArgBool(string arg)
     {
-      if (arg != null && !(arg == "0") && !(arg.ToLower() == "false"))
-        return !(arg.ToLower() == "f");
+      if (arg != null)
+        return !(arg == "0") && !(arg.ToLower() == "false") && !(arg.ToLower() == "f");
       return false;
     }
 
@@ -707,7 +706,7 @@ label_104:
     [Command("vsync", "Enables or disables vertical sync")]
     private static void Vsync(bool enabled = true)
     {
-      Engine.Graphics.set_SynchronizeWithVerticalRetrace(enabled);
+      Engine.Graphics.SynchronizeWithVerticalRetrace = enabled;
       Engine.Graphics.ApplyChanges();
       Engine.Commands.Log((object) ("Vertical Sync " + (enabled ? "Enabled" : "Disabled")));
     }
@@ -727,21 +726,27 @@ label_104:
     private static void Tracker(string mode)
     {
       if (Engine.Scene == null)
-        Engine.Commands.Log((object) "Current Scene is null!");
-      else if (!(mode == "e"))
       {
-        if (!(mode == "c"))
-        {
-          Engine.Commands.Log((object) "-- Entities --");
-          Engine.Scene.Tracker.LogEntities();
-          Engine.Commands.Log((object) "-- Components --");
-          Engine.Scene.Tracker.LogComponents();
-        }
-        else
-          Engine.Scene.Tracker.LogComponents();
+        Engine.Commands.Log((object) "Current Scene is null!");
       }
       else
-        Engine.Scene.Tracker.LogEntities();
+      {
+        string str = mode;
+        if (!(str == "e"))
+        {
+          if (!(str == "c"))
+          {
+            Engine.Commands.Log((object) "-- Entities --");
+            Engine.Scene.Tracker.LogEntities();
+            Engine.Commands.Log((object) "-- Components --");
+            Engine.Scene.Tracker.LogComponents();
+          }
+          else
+            Engine.Scene.Tracker.LogComponents();
+        }
+        else
+          Engine.Scene.Tracker.LogEntities();
+      }
     }
 
     [Command("pooler", "Logs the pooled Entity counts")]
@@ -807,7 +812,7 @@ label_104:
       public Line(string text)
       {
         this.Text = text;
-        this.Color = Color.get_White();
+        this.Color = Color.White;
       }
 
       public Line(string text, Color color)
@@ -818,3 +823,4 @@ label_104:
     }
   }
 }
+

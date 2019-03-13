@@ -35,11 +35,11 @@ namespace Celeste
         return;
       if (this.target == null)
         this.target = VirtualContent.CreateRenderTarget("mirror-surfaces", 320, 180, false, true, 0);
-      Matrix matrix = Matrix.op_Multiply(Matrix.CreateTranslation(32f, 32f, 0.0f), scene.Camera.Matrix);
+      Matrix transformationMatrix = Matrix.CreateTranslation(32f, 32f, 0.0f) * scene.Camera.Matrix;
       components1.Sort((Comparison<Component>) ((a, b) => b.Entity.Depth - a.Entity.Depth));
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) GameplayBuffers.MirrorSources);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone, (Effect) null, matrix);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) GameplayBuffers.MirrorSources);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, (Effect) null, transformationMatrix);
       foreach (MirrorReflection mirrorReflection in components1)
       {
         if ((mirrorReflection.Entity.Visible || mirrorReflection.IgnoreEntityVisible) && mirrorReflection.Visible)
@@ -50,21 +50,21 @@ namespace Celeste
         }
       }
       Draw.SpriteBatch.End();
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) GameplayBuffers.MirrorMasks);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) null, (RasterizerState) RasterizerState.CullNone, (Effect) null, matrix);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) GameplayBuffers.MirrorMasks);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, (DepthStencilState) null, RasterizerState.CullNone, (Effect) null, transformationMatrix);
       foreach (MirrorSurface mirrorSurface in components2)
       {
         if (mirrorSurface.Visible && mirrorSurface.OnRender != null)
           mirrorSurface.OnRender();
       }
       Draw.SpriteBatch.End();
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.target);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) (RenderTarget2D) GameplayBuffers.MirrorSources);
-      GFX.FxMirrors.get_Parameters().get_Item("pixel").SetValue(new Vector2(1f / (float) GameplayBuffers.MirrorMasks.Width, 1f / (float) GameplayBuffers.MirrorMasks.Height));
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) null, (RasterizerState) null, GFX.FxMirrors, Matrix.get_Identity());
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.MirrorMasks, new Vector2(-32f, -32f), Color.get_White());
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.target);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) (RenderTarget2D) GameplayBuffers.MirrorSources;
+      GFX.FxMirrors.Parameters["pixel"].SetValue(new Vector2(1f / (float) GameplayBuffers.MirrorMasks.Width, 1f / (float) GameplayBuffers.MirrorMasks.Height));
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, (DepthStencilState) null, (RasterizerState) null, GFX.FxMirrors, Matrix.Identity);
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.MirrorMasks, new Vector2(-32f, -32f), Color.White);
       Draw.SpriteBatch.End();
     }
 
@@ -72,14 +72,14 @@ namespace Celeste
     {
       if (!this.hasReflections)
         return;
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.target, this.FlooredCamera(), Color.op_Multiply(Color.get_White(), 0.5f));
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.target, this.FlooredCamera(), Color.White * 0.5f);
     }
 
     private Vector2 FlooredCamera()
     {
       Vector2 position = (this.Scene as Level).Camera.Position;
-      position.X = (__Null) (double) (int) Math.Floor((double) position.X);
-      position.Y = (__Null) (double) (int) Math.Floor((double) position.Y);
+      position.X = (float) (int) Math.Floor((double) position.X);
+      position.Y = (float) (int) Math.Floor((double) position.Y);
       return position;
     }
 
@@ -103,3 +103,4 @@ namespace Celeste
     }
   }
 }
+

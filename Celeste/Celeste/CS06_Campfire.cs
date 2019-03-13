@@ -15,6 +15,7 @@ namespace Celeste
 {
   public class CS06_Campfire : CutsceneEntity
   {
+    private float optionEase = 0.0f;
     private Dictionary<string, CS06_Campfire.Option[]> nodes = new Dictionary<string, CS06_Campfire.Option[]>();
     private HashSet<CS06_Campfire.Question> asked = new HashSet<CS06_Campfire.Question>();
     private List<CS06_Campfire.Option> currentOptions = new List<CS06_Campfire.Option>();
@@ -29,7 +30,6 @@ namespace Celeste
     private Vector2 playerCampfirePosition;
     private Vector2 theoCampfirePosition;
     private Selfie selfie;
-    private float optionEase;
     private int currentOptionIndex;
 
     public CS06_Campfire(NPC theo, Player player)
@@ -86,19 +86,13 @@ namespace Celeste
       level.Session.SetFlag("duskbg", true);
       this.plateau = this.Scene.Entities.FindFirst<Plateau>();
       this.bonfire = this.Scene.Tracker.GetEntity<Bonfire>();
-      Camera camera = level.Camera;
-      Rectangle bounds1 = level.Bounds;
-      Vector2 vector2 = new Vector2((float) ((Rectangle) ref bounds1).get_Left(), this.bonfire.Y - 144f);
-      camera.Position = vector2;
+      level.Camera.Position = new Vector2((float) level.Bounds.Left, this.bonfire.Y - 144f);
       level.ZoomSnap(new Vector2(80f, 120f), 2f);
       this.cameraStart = level.Camera.Position;
       this.theo.X = level.Camera.X - 48f;
       this.theoCampfirePosition = new Vector2(this.bonfire.X - 16f, this.bonfire.Y);
       this.player.Light.Alpha = 0.0f;
-      Player player = this.player;
-      Rectangle bounds2 = level.Bounds;
-      double num = (double) (((Rectangle) ref bounds2).get_Left() - 40);
-      player.X = (float) num;
+      this.player.X = (float) (level.Bounds.Left - 40);
       this.player.StateMachine.State = 11;
       this.player.StateMachine.Locked = true;
       this.playerCampfirePosition = new Vector2(this.bonfire.X + 20f, this.bonfire.Y);
@@ -124,99 +118,101 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS06_Campfire cs06Campfire = this;
       yield return (object) 0.1f;
-      cs06Campfire.Add((Component) new Coroutine(cs06Campfire.PlayerLightApproach(), true));
+      this.Add((Component) new Coroutine(this.PlayerLightApproach(), true));
       Coroutine camTo;
-      cs06Campfire.Add((Component) (camTo = new Coroutine(CutsceneEntity.CameraTo(new Vector2(level.Camera.X + 90f, level.Camera.Y), 6f, Ease.CubeIn, 0.0f), true)));
-      cs06Campfire.player.DummyAutoAnimate = false;
-      cs06Campfire.player.Sprite.Play("carryTheoWalk", false, false);
+      this.Add((Component) (camTo = new Coroutine(CutsceneEntity.CameraTo(new Vector2(level.Camera.X + 90f, level.Camera.Y), 6f, Ease.CubeIn, 0.0f), true)));
+      this.player.DummyAutoAnimate = false;
+      this.player.Sprite.Play("carryTheoWalk", false, false);
       for (float p = 0.0f; (double) p < 3.5; p += Engine.DeltaTime)
       {
         SpotlightWipe.FocusPoint = new Vector2(40f, 120f);
-        cs06Campfire.player.NaiveMove(new Vector2(32f * Engine.DeltaTime, 0.0f));
+        this.player.NaiveMove(new Vector2(32f * Engine.DeltaTime, 0.0f));
         yield return (object) null;
       }
-      cs06Campfire.player.Sprite.Play("carryTheoCollapse", false, false);
-      Audio.Play("event:/char/madeline/theo_collapse", cs06Campfire.player.Position);
+      this.player.Sprite.Play("carryTheoCollapse", false, false);
+      Audio.Play("event:/char/madeline/theo_collapse", this.player.Position);
       yield return (object) 0.3f;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      Vector2 position = Vector2.op_Addition(cs06Campfire.player.Position, new Vector2(16f, 1f));
-      cs06Campfire.Level.ParticlesFG.Emit(Payphone.P_Snow, 2, position, Vector2.op_Multiply(Vector2.get_UnitX(), 4f));
-      cs06Campfire.Level.ParticlesFG.Emit(Payphone.P_SnowB, 12, position, Vector2.op_Multiply(Vector2.get_UnitX(), 10f));
+      Vector2 at = this.player.Position + new Vector2(16f, 1f);
+      this.Level.ParticlesFG.Emit(Payphone.P_Snow, 2, at, Vector2.UnitX * 4f);
+      this.Level.ParticlesFG.Emit(Payphone.P_SnowB, 12, at, Vector2.UnitX * 10f);
       yield return (object) 0.7f;
       FadeWipe fade = new FadeWipe((Scene) level, false, (Action) null);
       fade.Duration = 1.5f;
       fade.EndTimer = 2.5f;
       yield return (object) fade.Wait();
-      cs06Campfire.bonfire.SetMode(Bonfire.Mode.Lit);
+      this.bonfire.SetMode(Bonfire.Mode.Lit);
       yield return (object) 2.45f;
       camTo.Cancel();
-      cs06Campfire.theo.Position = cs06Campfire.theoCampfirePosition;
-      cs06Campfire.theo.Sprite.Play("sleep", false, false);
-      cs06Campfire.theo.Sprite.SetAnimationFrame(cs06Campfire.theo.Sprite.CurrentAnimationTotalFrames - 1);
-      cs06Campfire.player.Position = cs06Campfire.playerCampfirePosition;
-      cs06Campfire.player.Facing = Facings.Left;
-      cs06Campfire.player.Sprite.Play("asleep", false, false);
+      this.theo.Position = this.theoCampfirePosition;
+      this.theo.Sprite.Play("sleep", false, false);
+      this.theo.Sprite.SetAnimationFrame(this.theo.Sprite.CurrentAnimationTotalFrames - 1);
+      this.player.Position = this.playerCampfirePosition;
+      this.player.Facing = Facings.Left;
+      this.player.Sprite.Play("asleep", false, false);
       level.Session.SetFlag("starsbg", true);
       level.Session.SetFlag("duskbg", false);
       fade.EndTimer = 0.0f;
-      FadeWipe fadeWipe1 = new FadeWipe((Scene) level, true, (Action) null);
+      FadeWipe fadeWipe = new FadeWipe((Scene) level, true, (Action) null);
       yield return (object) null;
       level.ResetZoom();
-      level.Camera.Position = new Vector2(cs06Campfire.bonfire.X - 160f, cs06Campfire.bonfire.Y - 140f);
+      level.Camera.Position = new Vector2(this.bonfire.X - 160f, this.bonfire.Y - 140f);
       yield return (object) 3f;
       Audio.SetMusic("event:/music/lvl6/madeline_and_theo", true, true);
       yield return (object) 1.5f;
-      // ISSUE: reference to a compiler-generated method
-      cs06Campfire.Add((Component) Wiggler.Create(0.6f, 3f, new Action<float>(cs06Campfire.\u003CCutscene\u003Eb__21_0), true, true));
-      cs06Campfire.Level.Particles.Emit(NPC01_Theo.P_YOLO, 4, Vector2.op_Addition(cs06Campfire.theo.Position, new Vector2(-4f, -14f)), Vector2.op_Multiply(Vector2.get_One(), 3f));
+      this.Add((Component) Wiggler.Create(0.6f, 3f, (Action<float>) (v => this.theo.Sprite.Scale = Vector2.One * (float) (1.0 + 0.100000001490116 * (double) v)), true, true));
+      this.Level.Particles.Emit(NPC01_Theo.P_YOLO, 4, this.theo.Position + new Vector2(-4f, -14f), Vector2.One * 3f);
       yield return (object) 0.5f;
-      cs06Campfire.theo.Sprite.Play("wakeup", false, false);
+      this.theo.Sprite.Play("wakeup", false, false);
       yield return (object) 1f;
-      cs06Campfire.player.Sprite.Play("halfWakeUp", false, false);
+      this.player.Sprite.Play("halfWakeUp", false, false);
       yield return (object) 0.25f;
       yield return (object) Textbox.Say("ch6_theo_intro");
-      string key = "start";
-      while (!string.IsNullOrEmpty(key) && cs06Campfire.nodes.ContainsKey(key))
+      string node = "start";
+      while (!string.IsNullOrEmpty(node) && this.nodes.ContainsKey(node))
       {
-        cs06Campfire.currentOptionIndex = 0;
-        cs06Campfire.currentOptions = new List<CS06_Campfire.Option>();
-        foreach (CS06_Campfire.Option option in cs06Campfire.nodes[key])
+        this.currentOptionIndex = 0;
+        this.currentOptions = new List<CS06_Campfire.Option>();
+        CS06_Campfire.Option[] optionArray = this.nodes[node];
+        for (int index = 0; index < optionArray.Length; ++index)
         {
-          if (option.CanAsk(cs06Campfire.asked))
-            cs06Campfire.currentOptions.Add(option);
+          CS06_Campfire.Option option = optionArray[index];
+          if (option.CanAsk(this.asked))
+            this.currentOptions.Add(option);
+          option = (CS06_Campfire.Option) null;
         }
-        if (cs06Campfire.currentOptions.Count > 0)
+        optionArray = (CS06_Campfire.Option[]) null;
+        if (this.currentOptions.Count > 0)
         {
           Audio.Play("event:/ui/game/chatoptions_appear");
-          while ((double) (cs06Campfire.optionEase += Engine.DeltaTime * 4f) < 1.0)
+          while ((double) (this.optionEase += Engine.DeltaTime * 4f) < 1.0)
             yield return (object) null;
-          cs06Campfire.optionEase = 1f;
+          this.optionEase = 1f;
           yield return (object) 0.25f;
           while (!Input.MenuConfirm.Pressed)
           {
-            if (Input.MenuUp.Pressed && cs06Campfire.currentOptionIndex > 0)
+            if (Input.MenuUp.Pressed && this.currentOptionIndex > 0)
             {
               Audio.Play("event:/ui/game/chatoptions_roll_up");
-              --cs06Campfire.currentOptionIndex;
+              --this.currentOptionIndex;
             }
-            else if (Input.MenuDown.Pressed && cs06Campfire.currentOptionIndex < cs06Campfire.currentOptions.Count - 1)
+            else if (Input.MenuDown.Pressed && this.currentOptionIndex < this.currentOptions.Count - 1)
             {
               Audio.Play("event:/ui/game/chatoptions_roll_down");
-              ++cs06Campfire.currentOptionIndex;
+              ++this.currentOptionIndex;
             }
             yield return (object) null;
           }
           Audio.Play("event:/ui/game/chatoptions_select");
-          while ((double) (cs06Campfire.optionEase -= Engine.DeltaTime * 4f) > 0.0)
+          while ((double) (this.optionEase -= Engine.DeltaTime * 4f) > 0.0)
             yield return (object) null;
-          CS06_Campfire.Option selected = cs06Campfire.currentOptions[cs06Campfire.currentOptionIndex];
-          cs06Campfire.asked.Add(selected.Question);
-          cs06Campfire.currentOptions = (List<CS06_Campfire.Option>) null;
-          yield return (object) Textbox.Say(selected.Question.Answer, new Func<IEnumerator>(cs06Campfire.WaitABit), new Func<IEnumerator>(cs06Campfire.SelfieSequence), new Func<IEnumerator>(cs06Campfire.BeerSequence));
-          key = selected.Goto;
-          if (!string.IsNullOrEmpty(key))
+          CS06_Campfire.Option selected = this.currentOptions[this.currentOptionIndex];
+          this.asked.Add(selected.Question);
+          this.currentOptions = (List<CS06_Campfire.Option>) null;
+          yield return (object) Textbox.Say(selected.Question.Answer, new Func<IEnumerator>(this.WaitABit), new Func<IEnumerator>(this.SelfieSequence), new Func<IEnumerator>(this.BeerSequence));
+          node = selected.Goto;
+          if (!string.IsNullOrEmpty(node))
             selected = (CS06_Campfire.Option) null;
           else
             break;
@@ -224,10 +220,10 @@ namespace Celeste
         else
           break;
       }
-      FadeWipe fadeWipe2 = new FadeWipe((Scene) level, false, (Action) null);
-      fadeWipe2.Duration = 3f;
-      yield return (object) fadeWipe2.Wait();
-      cs06Campfire.EndCutscene(level, true);
+      FadeWipe wipe = new FadeWipe((Scene) level, false, (Action) null);
+      wipe.Duration = 3f;
+      yield return (object) wipe.Wait();
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator WaitABit()
@@ -237,34 +233,32 @@ namespace Celeste
 
     private IEnumerator SelfieSequence()
     {
-      CS06_Campfire cs06Campfire = this;
-      cs06Campfire.Add((Component) new Coroutine(cs06Campfire.Level.ZoomTo(new Vector2(160f, 105f), 2f, 0.5f), true));
+      this.Add((Component) new Coroutine(this.Level.ZoomTo(new Vector2(160f, 105f), 2f, 0.5f), true));
       yield return (object) 0.1f;
-      cs06Campfire.theo.Sprite.Play("idle", false, false);
-      // ISSUE: reference to a compiler-generated method
-      cs06Campfire.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, new Action(cs06Campfire.\u003CSelfieSequence\u003Eb__23_0), 0.25f, true));
-      cs06Campfire.player.DummyAutoAnimate = true;
-      yield return (object) cs06Campfire.player.DummyWalkToExact((int) ((double) cs06Campfire.theo.X + 5.0), false, 0.7f);
+      this.theo.Sprite.Play("idle", false, false);
+      this.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, (Action) (() => this.theo.Sprite.Scale.X = -1f), 0.25f, true));
+      this.player.DummyAutoAnimate = true;
+      yield return (object) this.player.DummyWalkToExact((int) ((double) this.theo.X + 5.0), false, 0.7f);
       yield return (object) 0.2f;
-      Audio.Play("event:/game/02_old_site/theoselfie_foley", cs06Campfire.theo.Position);
-      cs06Campfire.theo.Sprite.Play("takeSelfie", false, false);
+      Audio.Play("event:/game/02_old_site/theoselfie_foley", this.theo.Position);
+      this.theo.Sprite.Play("takeSelfie", false, false);
       yield return (object) 1f;
-      cs06Campfire.selfie = new Selfie(cs06Campfire.SceneAs<Level>());
-      cs06Campfire.Scene.Add((Entity) cs06Campfire.selfie);
-      yield return (object) cs06Campfire.selfie.PictureRoutine("selfieCampfire");
-      cs06Campfire.selfie = (Selfie) null;
+      this.selfie = new Selfie(this.SceneAs<Level>());
+      this.Scene.Add((Entity) this.selfie);
+      yield return (object) this.selfie.PictureRoutine("selfieCampfire");
+      this.selfie = (Selfie) null;
       yield return (object) 0.5f;
-      yield return (object) cs06Campfire.Level.ZoomBack(0.5f);
+      yield return (object) this.Level.ZoomBack(0.5f);
       yield return (object) 0.2f;
-      cs06Campfire.theo.Sprite.Scale.X = (__Null) 1.0;
-      yield return (object) cs06Campfire.player.DummyWalkToExact((int) cs06Campfire.playerCampfirePosition.X, false, 0.7f);
-      cs06Campfire.theo.Sprite.Play("wakeup", false, false);
+      this.theo.Sprite.Scale.X = 1f;
+      yield return (object) this.player.DummyWalkToExact((int) this.playerCampfirePosition.X, false, 0.7f);
+      this.theo.Sprite.Play("wakeup", false, false);
       yield return (object) 0.1;
-      cs06Campfire.player.DummyAutoAnimate = false;
-      cs06Campfire.player.Facing = Facings.Left;
-      cs06Campfire.player.Sprite.Play("sleep", false, false);
+      this.player.DummyAutoAnimate = false;
+      this.player.Facing = Facings.Left;
+      this.player.Sprite.Play("sleep", false, false);
       yield return (object) 2f;
-      cs06Campfire.player.Sprite.Play("halfWakeUp", false, false);
+      this.player.Sprite.Play("halfWakeUp", false, false);
     }
 
     private IEnumerator BeerSequence()
@@ -290,19 +284,19 @@ namespace Celeste
       level.Session.Dreaming = true;
       level.Add((Entity) new StarJumpController());
       level.Add((Entity) new CS06_StarJumpEnd(this.theo, this.player, this.playerCampfirePosition, this.cameraStart));
-      level.Add((Entity) new FlyFeather(Vector2.op_Addition(level.LevelOffset, new Vector2(272f, 2616f)), false, false));
+      level.Add((Entity) new FlyFeather(level.LevelOffset + new Vector2(272f, 2616f), false, false));
       this.SetBloom(1f);
       this.bonfire.Activated = false;
       this.bonfire.SetMode(Bonfire.Mode.Lit);
       this.theo.Sprite.Play("sleep", false, false);
       this.theo.Sprite.SetAnimationFrame(this.theo.Sprite.CurrentAnimationTotalFrames - 1);
-      this.theo.Sprite.Scale.X = (__Null) 1.0;
+      this.theo.Sprite.Scale.X = 1f;
       this.theo.Position = this.theoCampfirePosition;
       this.player.Sprite.Play("asleep", false, false);
       this.player.Position = this.playerCampfirePosition;
       this.player.StateMachine.Locked = false;
       this.player.StateMachine.State = 15;
-      this.player.Speed = Vector2.get_Zero();
+      this.player.Speed = Vector2.Zero;
       this.player.Facing = Facings.Left;
       level.Camera.Position = this.player.CameraTarget;
       if (this.WasSkipped)
@@ -336,11 +330,7 @@ namespace Celeste
       int num = 0;
       foreach (CS06_Campfire.Option currentOption in this.currentOptions)
       {
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(260f, (float) (120.0 + 160.0 * (double) num));
-        Vector2 position = vector2;
-        double optionEase = (double) this.optionEase;
-        currentOption.Render(position, (float) optionEase);
+        currentOption.Render(new Vector2(260f, (float) (120.0 + 160.0 * (double) num)), this.optionEase);
         ++num;
       }
     }
@@ -421,55 +411,38 @@ namespace Celeste
       public void Render(Vector2 position, float ease)
       {
         float num1 = Ease.CubeOut(ease);
-        float num2 = Ease.CubeInOut(this.Highlight);
-        ref __Null local1 = ref position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + (float) (-32.0 * (1.0 - (double) num1));
-        ref __Null local2 = ref position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 + num2 * 32f;
-        Color color1 = Color.op_Multiply(Color.Lerp(Color.get_Gray(), Color.get_White(), num2), num1);
-        float alpha = MathHelper.Lerp(0.6f, 1f, num2) * num1;
-        Color color2 = Color.op_Multiply(Color.get_White(), (float) (0.5 + (double) num2 * 0.5));
-        GFX.Portraits[this.Question.Textbox].Draw(position, Vector2.get_Zero(), color1);
+        float amount = Ease.CubeInOut(this.Highlight);
+        position.Y += (float) (-32.0 * (1.0 - (double) num1));
+        position.X += amount * 32f;
+        Color color1 = Color.Lerp(Color.Gray, Color.White, amount) * num1;
+        float alpha = MathHelper.Lerp(0.6f, 1f, amount) * num1;
+        Color color2 = Color.White * (float) (0.5 + (double) amount * 0.5);
+        GFX.Portraits[this.Question.Textbox].Draw(position, Vector2.Zero, color1);
         Facings facings = this.Question.PortraitSide;
         if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
           facings = (Facings) -(int) facings;
-        float num3 = 100f;
-        this.Question.Portrait.Scale = Vector2.op_Multiply(Vector2.get_One(), num3 / this.Question.PortraitSize);
+        float num2 = 100f;
+        this.Question.Portrait.Scale = Vector2.One * (num2 / this.Question.PortraitSize);
         if (facings == Facings.Right)
         {
-          this.Question.Portrait.Position = Vector2.op_Addition(position, new Vector2((float) (1380.0 - (double) num3 * 0.5), 70f));
-          ref __Null local3 = ref this.Question.Portrait.Scale.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local3 = ^(float&) ref local3 * -1f;
+          this.Question.Portrait.Position = position + new Vector2((float) (1380.0 - (double) num2 * 0.5), 70f);
+          this.Question.Portrait.Scale.X *= -1f;
         }
         else
-          this.Question.Portrait.Position = Vector2.op_Addition(position, new Vector2((float) (20.0 + (double) num3 * 0.5), 70f));
-        this.Question.Portrait.Color = Color.op_Multiply(color2, num1);
+          this.Question.Portrait.Position = position + new Vector2((float) (20.0 + (double) num2 * 0.5), 70f);
+        this.Question.Portrait.Color = color2 * num1;
         this.Question.Portrait.Render();
-        float num4 = (float) ((140.0 - (double) ActiveFont.LineHeight * 0.699999988079071) / 2.0);
-        Vector2 position1;
-        ((Vector2) ref position1).\u002Ector(0.0f, (float) (position.Y + 70.0));
-        Vector2 justify;
-        ((Vector2) ref justify).\u002Ector(0.0f, 0.5f);
+        float num3 = (float) ((140.0 - (double) ActiveFont.LineHeight * 0.699999988079071) / 2.0);
+        Vector2 position1 = new Vector2(0.0f, position.Y + 70f);
+        Vector2 justify = new Vector2(0.0f, 0.5f);
         if (facings == Facings.Right)
         {
-          justify.X = (__Null) 1.0;
-          position1.X = (__Null) (position.X + 1400.0 - 20.0 - (double) num4 - (double) num3);
+          justify.X = 1f;
+          position1.X = (float) ((double) position.X + 1400.0 - 20.0) - num3 - num2;
         }
         else
-          position1.X = (__Null) (position.X + 20.0 + (double) num4 + (double) num3);
-        this.Question.AskText.Draw(position1, justify, Vector2.op_Multiply(Vector2.get_One(), 0.7f), alpha, 0, int.MaxValue);
+          position1.X = position.X + 20f + num3 + num2;
+        this.Question.AskText.Draw(position1, justify, Vector2.One * 0.7f, alpha, 0, int.MaxValue);
       }
     }
 
@@ -509,3 +482,4 @@ namespace Celeste
     }
   }
 }
+

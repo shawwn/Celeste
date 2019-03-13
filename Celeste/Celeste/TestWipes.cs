@@ -13,7 +13,7 @@ namespace Celeste
 {
   public class TestWipes : Scene
   {
-    private Color lastColor = Color.get_White();
+    private Color lastColor = Color.White;
     private Coroutine coroutine;
 
     public TestWipes()
@@ -23,47 +23,46 @@ namespace Celeste
 
     private IEnumerator routine()
     {
-      TestWipes testWipes = this;
       float dur = 1f;
       yield return (object) 1f;
       while (true)
       {
-        ScreenWipe.WipeColor = Color.get_Black();
-        new CurtainWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        ScreenWipe.WipeColor = Color.Black;
+        new CurtainWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
         ScreenWipe.WipeColor = Calc.HexToColor("ff0034");
-        new AngledWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        new AngledWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
         ScreenWipe.WipeColor = Calc.HexToColor("0b0960");
-        new DreamWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        new DreamWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
         ScreenWipe.WipeColor = Calc.HexToColor("39bf00");
-        new KeyDoorWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        new KeyDoorWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
         ScreenWipe.WipeColor = Calc.HexToColor("4376b3");
-        new WindWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        new WindWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
         ScreenWipe.WipeColor = Calc.HexToColor("ffae00");
-        new DropWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        new DropWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
         ScreenWipe.WipeColor = Calc.HexToColor("cc54ff");
-        new FallWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        new FallWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
         ScreenWipe.WipeColor = Calc.HexToColor("ff007a");
-        new MountainWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        new MountainWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
-        ScreenWipe.WipeColor = Color.get_White();
-        new HeartWipe((Scene) testWipes, false, (Action) null).Duration = dur;
+        this.lastColor = ScreenWipe.WipeColor;
+        ScreenWipe.WipeColor = Color.White;
+        new HeartWipe((Scene) this, false, (Action) null).Duration = dur;
         yield return (object) dur;
-        testWipes.lastColor = ScreenWipe.WipeColor;
+        this.lastColor = ScreenWipe.WipeColor;
       }
     }
 
@@ -82,3 +81,4 @@ namespace Celeste
     }
   }
 }
+

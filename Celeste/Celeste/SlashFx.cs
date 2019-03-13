@@ -31,7 +31,7 @@ namespace Celeste
 
     public override void Update()
     {
-      this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(this.Direction, 8f), Engine.DeltaTime));
+      this.Position = this.Position + this.Direction * 8f * Engine.DeltaTime;
       base.Update();
     }
 
@@ -49,3 +49,4 @@ namespace Celeste
     }
   }
 }
+

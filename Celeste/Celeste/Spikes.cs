@@ -14,8 +14,8 @@ namespace Celeste
   [Tracked(false)]
   public class Spikes : Entity
   {
-    public Color EnabledColor = Color.get_White();
-    public Color DisabledColor = Color.get_White();
+    public Color EnabledColor = Color.White;
+    public Color DisabledColor = Color.White;
     public const string TentacleType = "tentacles";
     public Spikes.Directions Direction;
     private PlayerCollider pc;
@@ -62,7 +62,7 @@ namespace Celeste
     }
 
     public Spikes(EntityData data, Vector2 offset, Spikes.Directions dir)
-      : this(Vector2.op_Addition(data.Position, offset), Spikes.GetSize(data, dir), dir, data.Attr("type", "default"))
+      : this(data.Position + offset, Spikes.GetSize(data, dir), dir, data.Attr("type", "default"))
     {
     }
 
@@ -101,19 +101,19 @@ namespace Celeste
           {
             case Spikes.Directions.Up:
               image.JustifyOrigin(0.5f, 1f);
-              image.Position = Vector2.op_Addition(Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) index + 0.5f), 8f), Vector2.get_UnitY());
+              image.Position = Vector2.UnitX * ((float) index + 0.5f) * 8f + Vector2.UnitY;
               break;
             case Spikes.Directions.Down:
               image.JustifyOrigin(0.5f, 0.0f);
-              image.Position = Vector2.op_Subtraction(Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) index + 0.5f), 8f), Vector2.get_UnitY());
+              image.Position = Vector2.UnitX * ((float) index + 0.5f) * 8f - Vector2.UnitY;
               break;
             case Spikes.Directions.Left:
               image.JustifyOrigin(1f, 0.5f);
-              image.Position = Vector2.op_Addition(Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), (float) index + 0.5f), 8f), Vector2.get_UnitX());
+              image.Position = Vector2.UnitY * ((float) index + 0.5f) * 8f + Vector2.UnitX;
               break;
             case Spikes.Directions.Right:
               image.JustifyOrigin(0.0f, 0.5f);
-              image.Position = Vector2.op_Subtraction(Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), (float) index + 0.5f), 8f), Vector2.get_UnitX());
+              image.Position = Vector2.UnitY * ((float) index + 0.5f) * 8f - Vector2.UnitX;
               break;
           }
           this.Add((Component) image);
@@ -125,8 +125,8 @@ namespace Celeste
     {
       Sprite sprite = GFX.SpriteBank.Create("tentacles");
       sprite.Play(Calc.Random.Next(3).ToString(), true, true);
-      sprite.Position = Vector2.op_Multiply(Vector2.op_Multiply(this.Direction == Spikes.Directions.Up || this.Direction == Spikes.Directions.Down ? Vector2.get_UnitX() : Vector2.get_UnitY(), i + 0.5f), 16f);
-      sprite.Scale.X = (__Null) (double) Calc.Random.Choose<int>(-1, 1);
+      sprite.Position = (this.Direction == Spikes.Directions.Up || this.Direction == Spikes.Directions.Down ? Vector2.UnitX : Vector2.UnitY) * (i + 0.5f) * 16f;
+      sprite.Scale.X = (float) Calc.Random.Choose<int>(-1, 1);
       sprite.SetAnimationFrame(Calc.Random.Next(sprite.CurrentAnimationTotalFrames));
       if (this.Direction == Spikes.Directions.Up)
       {
@@ -176,13 +176,13 @@ namespace Celeste
 
     private void OnShake(Vector2 amount)
     {
-      this.imageOffset = Vector2.op_Addition(this.imageOffset, amount);
+      this.imageOffset += amount;
     }
 
     public override void Render()
     {
       Vector2 position = this.Position;
-      this.Position = Vector2.op_Addition(this.Position, this.imageOffset);
+      this.Position = this.Position + this.imageOffset;
       base.Render();
       this.Position = position;
     }
@@ -194,8 +194,8 @@ namespace Celeste
         Monocle.Image image = component as Monocle.Image;
         if (image != null)
         {
-          Vector2 vector2 = Vector2.op_Subtraction(origin, this.Position);
-          image.Origin = Vector2.op_Subtraction(Vector2.op_Addition(image.Origin, vector2), image.Position);
+          Vector2 vector2 = origin - this.Position;
+          image.Origin = image.Origin + vector2 - image.Position;
           image.Position = vector2;
         }
       }
@@ -206,22 +206,22 @@ namespace Celeste
       switch (this.Direction)
       {
         case Spikes.Directions.Up:
-          if (player.Speed.Y < 0.0 || (double) player.Bottom > (double) this.Bottom)
+          if ((double) player.Speed.Y < 0.0 || (double) player.Bottom > (double) this.Bottom)
             break;
           player.Die(new Vector2(0.0f, -1f), false, true);
           break;
         case Spikes.Directions.Down:
-          if (player.Speed.Y > 0.0)
+          if ((double) player.Speed.Y > 0.0)
             break;
           player.Die(new Vector2(0.0f, 1f), false, true);
           break;
         case Spikes.Directions.Left:
-          if (player.Speed.X < 0.0)
+          if ((double) player.Speed.X < 0.0)
             break;
           player.Die(new Vector2(-1f, 0.0f), false, true);
           break;
         case Spikes.Directions.Right:
-          if (player.Speed.X > 0.0)
+          if ((double) player.Speed.X > 0.0)
             break;
           player.Die(new Vector2(1f, 0.0f), false, true);
           break;
@@ -230,10 +230,14 @@ namespace Celeste
 
     private static int GetSize(EntityData data, Spikes.Directions dir)
     {
-      if ((uint) dir <= 1U)
-        return data.Width;
-      int num = (int) (dir - 2);
-      return data.Height;
+      switch (dir)
+      {
+        case Spikes.Directions.Up:
+        case Spikes.Directions.Down:
+          return data.Width;
+        default:
+          return data.Height;
+      }
     }
 
     private bool IsRiding(Solid solid)
@@ -241,13 +245,13 @@ namespace Celeste
       switch (this.Direction)
       {
         case Spikes.Directions.Up:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Addition(this.Position, Vector2.get_UnitY()));
+          return this.CollideCheckOutside((Entity) solid, this.Position + Vector2.UnitY);
         case Spikes.Directions.Down:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Subtraction(this.Position, Vector2.get_UnitY()));
+          return this.CollideCheckOutside((Entity) solid, this.Position - Vector2.UnitY);
         case Spikes.Directions.Left:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Addition(this.Position, Vector2.get_UnitX()));
+          return this.CollideCheckOutside((Entity) solid, this.Position + Vector2.UnitX);
         case Spikes.Directions.Right:
-          return this.CollideCheckOutside((Entity) solid, Vector2.op_Subtraction(this.Position, Vector2.get_UnitX()));
+          return this.CollideCheckOutside((Entity) solid, this.Position - Vector2.UnitX);
         default:
           return false;
       }
@@ -257,7 +261,7 @@ namespace Celeste
     {
       if (this.Direction != Spikes.Directions.Up)
         return false;
-      return this.CollideCheck((Entity) jumpThru, Vector2.op_Addition(this.Position, Vector2.get_UnitY()));
+      return this.CollideCheck((Entity) jumpThru, this.Position + Vector2.UnitY);
     }
 
     public enum Directions
@@ -269,3 +273,4 @@ namespace Celeste
     }
   }
 }
+

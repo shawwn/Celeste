@@ -19,51 +19,43 @@ namespace Celeste
       : base(scene, wipeIn, onComplete)
     {
       for (int index = 0; index < this.vertexBuffer.Length; ++index)
-        this.vertexBuffer[index].Color = (__Null) ScreenWipe.WipeColor;
+        this.vertexBuffer[index].Color = ScreenWipe.WipeColor;
     }
 
     public override void Render(Scene scene)
     {
       float percent = this.Percent;
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector(960f, (float) (1080.0 - 2160.0 * (double) percent));
-      Vector2 vector2_2;
-      ((Vector2) ref vector2_2).\u002Ector(-10f, (float) (2160.0 * (1.0 - (double) percent)));
-      Vector2 vector2_3;
-      ((Vector2) ref vector2_3).\u002Ector((float) this.Right, (float) (2160.0 * (1.0 - (double) percent)));
+      Vector2 vector2_1 = new Vector2(960f, (float) (1080.0 - 2160.0 * (double) percent));
+      Vector2 vector2_2 = new Vector2(-10f, (float) (2160.0 * (1.0 - (double) percent)));
+      Vector2 vector2_3 = new Vector2((float) this.Right, (float) (2160.0 * (1.0 - (double) percent)));
       if (!this.WipeIn)
       {
-        this.vertexBuffer[0].Position = (__Null) new Vector3(vector2_1, 0.0f);
-        this.vertexBuffer[1].Position = (__Null) new Vector3(vector2_2, 0.0f);
-        this.vertexBuffer[2].Position = (__Null) new Vector3(vector2_3, 0.0f);
-        this.vertexBuffer[3].Position = (__Null) new Vector3(vector2_2, 0.0f);
-        this.vertexBuffer[4].Position = (__Null) new Vector3(vector2_3, 0.0f);
-        this.vertexBuffer[5].Position = (__Null) new Vector3((float) vector2_2.X, (float) (vector2_2.Y + 1080.0 + 10.0), 0.0f);
-        this.vertexBuffer[6].Position = (__Null) new Vector3(vector2_3, 0.0f);
-        this.vertexBuffer[8].Position = (__Null) new Vector3((float) vector2_3.X, (float) (vector2_3.Y + 1080.0 + 10.0), 0.0f);
-        this.vertexBuffer[7].Position = (__Null) new Vector3((float) vector2_2.X, (float) (vector2_2.Y + 1080.0 + 10.0), 0.0f);
+        this.vertexBuffer[0].Position = new Vector3(vector2_1, 0.0f);
+        this.vertexBuffer[1].Position = new Vector3(vector2_2, 0.0f);
+        this.vertexBuffer[2].Position = new Vector3(vector2_3, 0.0f);
+        this.vertexBuffer[3].Position = new Vector3(vector2_2, 0.0f);
+        this.vertexBuffer[4].Position = new Vector3(vector2_3, 0.0f);
+        this.vertexBuffer[5].Position = new Vector3(vector2_2.X, (float) ((double) vector2_2.Y + 1080.0 + 10.0), 0.0f);
+        this.vertexBuffer[6].Position = new Vector3(vector2_3, 0.0f);
+        this.vertexBuffer[8].Position = new Vector3(vector2_3.X, (float) ((double) vector2_3.Y + 1080.0 + 10.0), 0.0f);
+        this.vertexBuffer[7].Position = new Vector3(vector2_2.X, (float) ((double) vector2_2.Y + 1080.0 + 10.0), 0.0f);
       }
       else
       {
-        this.vertexBuffer[0].Position = (__Null) new Vector3((float) vector2_2.X, (float) (vector2_1.Y - 1080.0 - 10.0), 0.0f);
-        this.vertexBuffer[1].Position = (__Null) new Vector3((float) vector2_3.X, (float) (vector2_1.Y - 1080.0 - 10.0), 0.0f);
-        this.vertexBuffer[2].Position = (__Null) new Vector3(vector2_1, 0.0f);
-        this.vertexBuffer[3].Position = (__Null) new Vector3((float) vector2_2.X, (float) (vector2_1.Y - 1080.0 - 10.0), 0.0f);
-        this.vertexBuffer[4].Position = (__Null) new Vector3(vector2_1, 0.0f);
-        this.vertexBuffer[5].Position = (__Null) new Vector3(vector2_2, 0.0f);
-        this.vertexBuffer[6].Position = (__Null) new Vector3((float) vector2_3.X, (float) (vector2_1.Y - 1080.0 - 10.0), 0.0f);
-        this.vertexBuffer[7].Position = (__Null) new Vector3(vector2_3, 0.0f);
-        this.vertexBuffer[8].Position = (__Null) new Vector3(vector2_1, 0.0f);
+        this.vertexBuffer[0].Position = new Vector3(vector2_2.X, (float) ((double) vector2_1.Y - 1080.0 - 10.0), 0.0f);
+        this.vertexBuffer[1].Position = new Vector3(vector2_3.X, (float) ((double) vector2_1.Y - 1080.0 - 10.0), 0.0f);
+        this.vertexBuffer[2].Position = new Vector3(vector2_1, 0.0f);
+        this.vertexBuffer[3].Position = new Vector3(vector2_2.X, (float) ((double) vector2_1.Y - 1080.0 - 10.0), 0.0f);
+        this.vertexBuffer[4].Position = new Vector3(vector2_1, 0.0f);
+        this.vertexBuffer[5].Position = new Vector3(vector2_2, 0.0f);
+        this.vertexBuffer[6].Position = new Vector3(vector2_3.X, (float) ((double) vector2_1.Y - 1080.0 - 10.0), 0.0f);
+        this.vertexBuffer[7].Position = new Vector3(vector2_3, 0.0f);
+        this.vertexBuffer[8].Position = new Vector3(vector2_1, 0.0f);
       }
       for (int index = 0; index < this.vertexBuffer.Length; ++index)
-      {
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        (^(Vector3&) ref this.vertexBuffer[index].Position).Y = (__Null) (1080.0 - (^(Vector3&) ref this.vertexBuffer[index].Position).Y);
-      }
+        this.vertexBuffer[index].Position.Y = 1080f - this.vertexBuffer[index].Position.Y;
       ScreenWipe.DrawPrimitives(this.vertexBuffer);
     }
   }
 }
+

@@ -12,6 +12,7 @@ namespace Celeste
   [Tracked(false)]
   public class Payphone : Entity
   {
+    private float lightFlickerTimer = 0.0f;
     private float lightFlickerFor = 0.1f;
     public static ParticleType P_Snow;
     public static ParticleType P_SnowB;
@@ -20,7 +21,6 @@ namespace Celeste
     public Monocle.Image Blink;
     private VertexLight light;
     private BloomPoint bloom;
-    private float lightFlickerTimer;
     private int lastFrame;
     private SoundSource buzzSfx;
 
@@ -33,7 +33,7 @@ namespace Celeste
       this.Add((Component) (this.Blink = new Monocle.Image(GFX.Game["cutscenes/payphone/blink"])));
       this.Blink.Origin = this.Sprite.Origin;
       this.Blink.Visible = false;
-      this.Add((Component) (this.light = new VertexLight(new Vector2(-6f, -45f), Color.get_White(), 1f, 8, 96)));
+      this.Add((Component) (this.light = new VertexLight(new Vector2(-6f, -45f), Color.White, 1f, 8, 96)));
       this.light.Spotlight = true;
       this.light.SpotlightDirection = new Vector2(0.0f, 1f).Angle();
       this.Add((Component) (this.bloom = new BloomPoint(new Vector2(-6f, -45f), 0.8f, 8f)));
@@ -77,9 +77,9 @@ namespace Celeste
       if (this.Sprite.CurrentAnimationID == "eat" && this.Sprite.CurrentAnimationFrame == 5 && this.lastFrame != this.Sprite.CurrentAnimationFrame)
       {
         Level level = this.SceneAs<Level>();
-        level.ParticlesFG.Emit(Payphone.P_Snow, 10, Vector2.op_Addition(level.Camera.Position, new Vector2(236f, 152f)), new Vector2(10f, 0.0f));
-        level.ParticlesFG.Emit(Payphone.P_SnowB, 8, Vector2.op_Addition(level.Camera.Position, new Vector2(236f, 152f)), new Vector2(6f, 0.0f));
-        level.DirectionalShake(Vector2.get_UnitY(), 0.3f);
+        level.ParticlesFG.Emit(Payphone.P_Snow, 10, level.Camera.Position + new Vector2(236f, 152f), new Vector2(10f, 0.0f));
+        level.ParticlesFG.Emit(Payphone.P_SnowB, 8, level.Camera.Position + new Vector2(236f, 152f), new Vector2(6f, 0.0f));
+        level.DirectionalShake(Vector2.UnitY, 0.3f);
         Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       }
       if (this.Sprite.CurrentAnimationID == "eat" && this.Sprite.CurrentAnimationFrame == this.Sprite.CurrentAnimationTotalFrames - 5 && this.lastFrame != this.Sprite.CurrentAnimationFrame)
@@ -88,3 +88,4 @@ namespace Celeste
     }
   }
 }
+

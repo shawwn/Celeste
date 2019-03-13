@@ -26,7 +26,7 @@ namespace Celeste
       this.player = player;
       this.boss = boss;
       this.playerTargetX = playerTargetX;
-      this.bossEndPosition = Vector2.op_Addition(boss.Position, new Vector2(0.0f, -16f));
+      this.bossEndPosition = boss.Position + new Vector2(0.0f, -16f);
     }
 
     public override void OnBegin(Level level)
@@ -36,42 +36,35 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS06_BossIntro cs06BossIntro1 = this;
-      cs06BossIntro1.player.StateMachine.State = 11;
-      cs06BossIntro1.player.StateMachine.Locked = true;
-      while (!cs06BossIntro1.player.Dead && !cs06BossIntro1.player.OnGround(1))
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      while (!this.player.Dead && !this.player.OnGround(1))
         yield return (object) null;
-      while (cs06BossIntro1.player.Dead)
+      while (this.player.Dead)
         yield return (object) null;
-      cs06BossIntro1.player.Facing = Facings.Right;
-      CS06_BossIntro cs06BossIntro2 = cs06BossIntro1;
-      double num1 = ((double) cs06BossIntro1.player.X + (double) cs06BossIntro1.boss.X) / 2.0 - 160.0;
-      Rectangle bounds = level.Bounds;
-      double num2 = (double) (((Rectangle) ref bounds).get_Bottom() - 180);
-      Coroutine coroutine = new Coroutine(CutsceneEntity.CameraTo(new Vector2((float) num1, (float) num2), 1f, (Ease.Easer) null, 0.0f), true);
-      cs06BossIntro2.Add((Component) coroutine);
+      this.player.Facing = Facings.Right;
+      this.Add((Component) new Coroutine(CutsceneEntity.CameraTo(new Vector2((float) (((double) this.player.X + (double) this.boss.X) / 2.0 - 160.0), (float) (level.Bounds.Bottom - 180)), 1f, (Ease.Easer) null, 0.0f), true));
       yield return (object) 0.5f;
-      if (!cs06BossIntro1.player.Dead)
-        yield return (object) cs06BossIntro1.player.DummyWalkToExact((int) ((double) cs06BossIntro1.playerTargetX - 8.0), false, 1f);
-      cs06BossIntro1.player.Facing = Facings.Right;
-      yield return (object) Textbox.Say("ch6_boss_start", new Func<IEnumerator>(cs06BossIntro1.BadelineFloat), new Func<IEnumerator>(cs06BossIntro1.PlayerStepForward));
+      if (!this.player.Dead)
+        yield return (object) this.player.DummyWalkToExact((int) ((double) this.playerTargetX - 8.0), false, 1f);
+      this.player.Facing = Facings.Right;
+      yield return (object) Textbox.Say("ch6_boss_start", new Func<IEnumerator>(this.BadelineFloat), new Func<IEnumerator>(this.PlayerStepForward));
       yield return (object) level.ZoomBack(0.5f);
-      cs06BossIntro1.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator BadelineFloat()
     {
-      CS06_BossIntro cs06BossIntro = this;
-      cs06BossIntro.Add((Component) new Coroutine(cs06BossIntro.Level.ZoomTo(new Vector2(170f, 110f), 2f, 1f), true));
-      Audio.Play("event:/char/badeline/boss_prefight_getup", cs06BossIntro.boss.Position);
-      cs06BossIntro.boss.Sitting = false;
-      cs06BossIntro.boss.NormalSprite.Play("fallSlow", false, false);
-      cs06BossIntro.boss.NormalSprite.Scale.X = (__Null) -1.0;
-      cs06BossIntro.boss.Add((Component) (cs06BossIntro.animator = new BadelineAutoAnimator()));
-      float fromY = cs06BossIntro.boss.Y;
+      this.Add((Component) new Coroutine(this.Level.ZoomTo(new Vector2(170f, 110f), 2f, 1f), true));
+      Audio.Play("event:/char/badeline/boss_prefight_getup", this.boss.Position);
+      this.boss.Sitting = false;
+      this.boss.NormalSprite.Play("fallSlow", false, false);
+      this.boss.NormalSprite.Scale.X = -1f;
+      this.boss.Add((Component) (this.animator = new BadelineAutoAnimator()));
+      float fromY = this.boss.Y;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        cs06BossIntro.boss.Position.Y = (__Null) (double) MathHelper.Lerp(fromY, (float) cs06BossIntro.bossEndPosition.Y, Ease.CubeInOut(p));
+        this.boss.Position.Y = MathHelper.Lerp(fromY, this.bossEndPosition.Y, Ease.CubeInOut(p));
         yield return (object) null;
       }
     }
@@ -86,23 +79,16 @@ namespace Celeste
       if (this.WasSkipped && this.player != null)
       {
         this.player.X = this.playerTargetX;
-        while (!this.player.OnGround(1))
-        {
-          double y = (double) this.player.Y;
-          Rectangle bounds = level.Bounds;
-          double bottom = (double) ((Rectangle) ref bounds).get_Bottom();
-          if (y < bottom)
-            ++this.player.Y;
-          else
-            break;
-        }
+        Player player;
+        for (; !this.player.OnGround(1) && (double) this.player.Y < (double) level.Bounds.Bottom; ++player.Y)
+          player = this.player;
       }
       this.player.StateMachine.Locked = false;
       this.player.StateMachine.State = 0;
       this.boss.Position = this.bossEndPosition;
       if (this.boss.NormalSprite != null)
       {
-        this.boss.NormalSprite.Scale.X = (__Null) -1.0;
+        this.boss.NormalSprite.Scale.X = -1f;
         this.boss.NormalSprite.Play("laugh", false, false);
       }
       this.boss.Sitting = false;
@@ -112,3 +98,4 @@ namespace Celeste
     }
   }
 }
+

@@ -21,7 +21,7 @@ namespace Celeste
 
     public static SoundEmitter Play(string sfx, Entity follow, Vector2? offset = null)
     {
-      SoundEmitter soundEmitter = new SoundEmitter(sfx, follow, offset.HasValue ? offset.Value : Vector2.get_Zero());
+      SoundEmitter soundEmitter = new SoundEmitter(sfx, follow, offset.HasValue ? offset.Value : Vector2.Zero);
       Engine.Scene.Add((Entity) soundEmitter);
       return soundEmitter;
     }
@@ -40,7 +40,7 @@ namespace Celeste
     private SoundEmitter(string sfx, Entity follow, Vector2 offset)
     {
       this.Add((Component) (this.Source = new SoundSource()));
-      this.Position = Vector2.op_Addition(follow.Position, offset);
+      this.Position = follow.Position + offset;
       this.Source.Play(sfx, (string) null, 0.0f);
       this.Source.DisposeOnTransition = false;
       this.Tag = (int) Tags.Persistent | (int) Tags.TransitionUpdate;
@@ -61,3 +61,4 @@ namespace Celeste
     }
   }
 }
+

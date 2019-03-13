@@ -15,11 +15,12 @@ namespace Celeste
     public Vector2 Target;
 
     public RespawnTargetTrigger(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Collider = (Collider) new Hitbox((float) data.Width, (float) data.Height, 0.0f, 0.0f);
-      this.Target = Vector2.op_Addition(data.Nodes[0], offset);
+      this.Target = data.Nodes[0] + offset;
       this.Visible = this.Active = false;
     }
   }
 }
+

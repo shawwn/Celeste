@@ -18,17 +18,17 @@ namespace Celeste
   {
     private List<string> list = new List<string>();
     private Vector2 listScroll = new Vector2(64f, 64f);
+    private string current = (string) null;
     private List<object> elements = new List<object>();
     private Vector2 textboxScroll = new Vector2(0.0f, 0.0f);
+    private float delay = 0.0f;
     private Language language;
     private const float scale = 0.6f;
-    private string current;
-    private float delay;
 
     public PreviewDialog(Language language = null, float listScroll = 64f, float textboxScroll = 0.0f, string dialog = null)
     {
-      this.listScroll.Y = (__Null) (double) listScroll;
-      this.textboxScroll.Y = (__Null) (double) textboxScroll;
+      this.listScroll.Y = listScroll;
+      this.textboxScroll.Y = textboxScroll;
       if (language != null)
         this.SetLanguage(language);
       if (dialog != null)
@@ -38,7 +38,7 @@ namespace Celeste
 
     public override void Update()
     {
-      if (!Engine.Instance.get_IsActive())
+      if (!Engine.Instance.IsActive)
         this.delay = 0.1f;
       else if ((double) this.delay > 0.0)
       {
@@ -54,7 +54,7 @@ namespace Celeste
             Textbox textbox = element as Textbox;
             if (textbox != null)
             {
-              textbox.RenderOffset = Vector2.op_Addition(this.textboxScroll, Vector2.op_Multiply(Vector2.get_UnitY(), num));
+              textbox.RenderOffset = this.textboxScroll + Vector2.UnitY * num;
               num += 300f;
               if (textbox.Scene != null)
                 textbox.Update();
@@ -62,22 +62,12 @@ namespace Celeste
             else
               num += (float) (this.language.FontSize.LineHeight + 50);
           }
-          ref __Null local1 = ref this.textboxScroll.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local1 = ^(float&) ref local1 + (float) MInput.Mouse.WheelDelta * Engine.DeltaTime * ActiveFont.LineHeight;
-          ref __Null local2 = ref this.textboxScroll.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local2 = ^(float&) ref local2 - (float) (Celeste.Input.Aim.Value.Y * (double) Engine.DeltaTime * (double) ActiveFont.LineHeight * 20.0);
-          this.textboxScroll.Y = (__Null) (double) Calc.Clamp((float) this.textboxScroll.Y, 716f - num, 64f);
-          if (MInput.Keyboard.Pressed((Keys) 27) || Celeste.Input.MenuConfirm.Pressed)
+          this.textboxScroll.Y += (float) MInput.Mouse.WheelDelta * Engine.DeltaTime * ActiveFont.LineHeight;
+          this.textboxScroll.Y -= (float) ((double) Input.Aim.Value.Y * (double) Engine.DeltaTime * (double) ActiveFont.LineHeight * 20.0);
+          this.textboxScroll.Y = Calc.Clamp(this.textboxScroll.Y, 716f - num, 64f);
+          if (MInput.Keyboard.Pressed(Keys.Escape) || Input.MenuConfirm.Pressed)
             this.ClearTextboxes();
-          else if (MInput.Keyboard.Pressed((Keys) 32))
+          else if (MInput.Keyboard.Pressed(Keys.Space))
           {
             string current = this.current;
             this.ClearTextboxes();
@@ -88,19 +78,9 @@ namespace Celeste
         }
         else
         {
-          ref __Null local1 = ref this.listScroll.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local1 = ^(float&) ref local1 + (float) MInput.Mouse.WheelDelta * Engine.DeltaTime * ActiveFont.LineHeight;
-          ref __Null local2 = ref this.listScroll.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local2 = ^(float&) ref local2 - (float) (Celeste.Input.Aim.Value.Y * (double) Engine.DeltaTime * (double) ActiveFont.LineHeight * 20.0);
-          this.listScroll.Y = (__Null) (double) Calc.Clamp((float) this.listScroll.Y, (float) (1016.0 - (double) this.list.Count * (double) ActiveFont.LineHeight * 0.600000023841858), 64f);
+          this.listScroll.Y += (float) MInput.Mouse.WheelDelta * Engine.DeltaTime * ActiveFont.LineHeight;
+          this.listScroll.Y -= (float) ((double) Input.Aim.Value.Y * (double) Engine.DeltaTime * (double) ActiveFont.LineHeight * 20.0);
+          this.listScroll.Y = Calc.Clamp(this.listScroll.Y, (float) (1016.0 - (double) this.list.Count * (double) ActiveFont.LineHeight * 0.600000023841858), 64f);
           if (this.language != null)
           {
             if (MInput.Mouse.PressedLeftButton)
@@ -114,7 +94,7 @@ namespace Celeste
                 }
               }
             }
-            if (MInput.Keyboard.Pressed((Keys) 27) || Celeste.Input.MenuConfirm.Pressed)
+            if (MInput.Keyboard.Pressed(Keys.Escape) || Input.MenuConfirm.Pressed)
             {
               this.listScroll = new Vector2(64f, 64f);
               this.language = (Language) null;
@@ -135,15 +115,15 @@ namespace Celeste
             }
           }
         }
-        if (MInput.Keyboard.Pressed((Keys) 113))
+        if (MInput.Keyboard.Pressed(Keys.F2))
         {
-          Celeste.Celeste.ReloadPortraits();
-          Engine.Scene = (Scene) new PreviewDialog(this.language, (float) this.listScroll.Y, (float) this.textboxScroll.Y, this.current);
+          Celeste.ReloadPortraits();
+          Engine.Scene = (Scene) new PreviewDialog(this.language, this.listScroll.Y, this.textboxScroll.Y, this.current);
         }
-        if (!MInput.Keyboard.Pressed((Keys) 112) || this.language == null)
+        if (!MInput.Keyboard.Pressed(Keys.F1) || this.language == null)
           return;
-        Celeste.Celeste.ReloadDialog();
-        Engine.Scene = (Scene) new PreviewDialog(Dialog.Languages[this.language.Id], (float) this.listScroll.Y, (float) this.textboxScroll.Y, this.current);
+        Celeste.ReloadDialog();
+        Engine.Scene = (Scene) new PreviewDialog(Dialog.Languages[this.language.Id], this.listScroll.Y, this.textboxScroll.Y, this.current);
       }
     }
 
@@ -155,7 +135,7 @@ namespace Celeste
           this.Remove((Entity) (element as Textbox));
       }
       this.current = (string) null;
-      this.textboxScroll = Vector2.get_Zero();
+      this.textboxScroll = Vector2.Zero;
     }
 
     private void SetCurrent(string id)
@@ -180,7 +160,7 @@ namespace Celeste
           }
           this.Add((Entity) textbox2);
           this.elements.Add((object) textbox2);
-          textbox2.RenderOffset = Vector2.op_Addition(this.textboxScroll, Vector2.op_Multiply(Vector2.get_UnitY(), (float) (1 + page * 300)));
+          textbox2.RenderOffset = this.textboxScroll + Vector2.UnitY * (float) (1 + page * 300);
           textbox1 = textbox2;
           ++page;
         }
@@ -207,13 +187,13 @@ namespace Celeste
     {
       get
       {
-        return Vector2.Transform(new Vector2((float) ((MouseState) ref MInput.Mouse.CurrentState).get_X(), (float) ((MouseState) ref MInput.Mouse.CurrentState).get_Y()), Matrix.Invert(Engine.ScreenMatrix));
+        return Vector2.Transform(new Vector2((float) MInput.Mouse.CurrentState.X, (float) MInput.Mouse.CurrentState.Y), Matrix.Invert(Engine.ScreenMatrix));
       }
     }
 
     private void RenderContent()
     {
-      Draw.Rect(0.0f, 0.0f, 960f, 1080f, Color.op_Multiply(Color.get_DarkSlateGray(), 0.25f));
+      Draw.Rect(0.0f, 0.0f, 960f, 1080f, Color.DarkSlateGray * 0.25f);
       if (this.current != null)
       {
         int num1 = 1;
@@ -226,18 +206,18 @@ namespace Celeste
             if (textbox.Opened && this.language.Font.Sizes.Count > 0)
             {
               textbox.Render();
-              this.language.Font.DrawOutline(this.language.FontFaceSize, "#" + num1.ToString(), Vector2.op_Addition(textbox.RenderOffset, new Vector2(32f, 64f)), Vector2.get_Zero(), Vector2.op_Multiply(Vector2.get_One(), 0.5f), Color.get_White(), 2f, Color.get_Black());
+              this.language.Font.DrawOutline(this.language.FontFaceSize, "#" + num1.ToString(), textbox.RenderOffset + new Vector2(32f, 64f), Vector2.Zero, Vector2.One * 0.5f, Color.White, 2f, Color.Black);
               ++num1;
               num2 += 300;
             }
           }
           else
           {
-            this.language.Font.DrawOutline(this.language.FontFaceSize, element.ToString(), Vector2.op_Addition(this.textboxScroll, new Vector2(128f, (float) (num2 + 50 + this.language.FontSize.LineHeight))), new Vector2(0.0f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 0.5f), Color.get_White(), 2f, Color.get_Black());
+            this.language.Font.DrawOutline(this.language.FontFaceSize, element.ToString(), this.textboxScroll + new Vector2(128f, (float) (num2 + 50 + this.language.FontSize.LineHeight)), new Vector2(0.0f, 0.5f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
             num2 += this.language.FontSize.LineHeight + 50;
           }
         }
-        ActiveFont.DrawOutline(this.current, new Vector2(1888f, 32f), new Vector2(1f, 0.0f), Vector2.op_Multiply(Vector2.get_One(), 0.5f), Color.get_Red(), 2f, Color.get_Black());
+        ActiveFont.DrawOutline(this.current, new Vector2(1888f, 32f), new Vector2(1f, 0.0f), Vector2.One * 0.5f, Color.Red, 2f, Color.Black);
       }
       else if (this.language != null)
       {
@@ -245,7 +225,7 @@ namespace Celeste
         foreach (string text in this.list)
         {
           if (this.language.Font.Sizes.Count > 0)
-            this.language.Font.Draw(this.language.FontFaceSize, text, Vector2.op_Addition(this.listScroll, new Vector2(0.0f, (float) ((double) i * (double) ActiveFont.LineHeight * 0.600000023841858))), Vector2.get_Zero(), Vector2.op_Multiply(Vector2.get_One(), 0.6f), this.MouseOverOption(i) ? Color.get_White() : Color.get_Gray());
+            this.language.Font.Draw(this.language.FontFaceSize, text, this.listScroll + new Vector2(0.0f, (float) ((double) i * (double) ActiveFont.LineHeight * 0.600000023841858)), Vector2.Zero, Vector2.One * 0.6f, this.MouseOverOption(i) ? Color.White : Color.Gray);
           ++i;
         }
       }
@@ -254,19 +234,17 @@ namespace Celeste
         int i = 0;
         foreach (KeyValuePair<string, Language> language in Dialog.Languages)
         {
-          language.Value.FontSize.Draw(language.Value.Label, Vector2.op_Addition(this.listScroll, new Vector2(0.0f, (float) ((double) i * (double) ActiveFont.LineHeight * 0.600000023841858))), Vector2.get_Zero(), Vector2.op_Multiply(Vector2.get_One(), 0.6f), this.MouseOverOption(i) ? Color.get_White() : Color.get_Gray());
+          language.Value.FontSize.Draw(language.Value.Label, this.listScroll + new Vector2(0.0f, (float) ((double) i * (double) ActiveFont.LineHeight * 0.600000023841858)), Vector2.Zero, Vector2.One * 0.6f, this.MouseOverOption(i) ? Color.White : Color.Gray);
           ++i;
         }
       }
-      Draw.Rect((float) (this.Mouse.X - 12.0), (float) (this.Mouse.Y - 4.0), 24f, 8f, Color.get_Red());
-      Draw.Rect((float) (this.Mouse.X - 4.0), (float) (this.Mouse.Y - 12.0), 8f, 24f, Color.get_Red());
+      Draw.Rect(this.Mouse.X - 12f, this.Mouse.Y - 4f, 24f, 8f, Color.Red);
+      Draw.Rect(this.Mouse.X - 4f, this.Mouse.Y - 12f, 8f, 24f, Color.Red);
     }
 
     private bool MouseOverOption(int i)
     {
-      if (this.Mouse.X > this.listScroll.X && this.Mouse.Y > this.listScroll.Y + (double) i * (double) ActiveFont.LineHeight * 0.600000023841858 && (double) MInput.Mouse.X < 960.0)
-        return this.Mouse.Y < this.listScroll.Y + (double) (i + 1) * (double) ActiveFont.LineHeight * 0.600000023841858;
-      return false;
+      return (double) this.Mouse.X > (double) this.listScroll.X && (double) this.Mouse.Y > (double) this.listScroll.Y + (double) i * (double) ActiveFont.LineHeight * 0.600000023841858 && (double) MInput.Mouse.X < 960.0 && (double) this.Mouse.Y < (double) this.listScroll.Y + (double) (i + 1) * (double) ActiveFont.LineHeight * 0.600000023841858;
     }
 
     private class Renderer : HiresRenderer
@@ -287,3 +265,4 @@ namespace Celeste
     }
   }
 }
+

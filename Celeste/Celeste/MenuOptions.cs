@@ -63,7 +63,7 @@ namespace Celeste
       if (MenuOptions.window != null)
         MenuOptions.window.Visible = !Settings.Instance.Fullscreen;
       if ((double) MenuOptions.menu.Height > (double) MenuOptions.menu.ScrollableMinSize)
-        MenuOptions.menu.Position.Y = (__Null) (double) MenuOptions.menu.ScrollTargetY;
+        MenuOptions.menu.Position.Y = MenuOptions.menu.ScrollTargetY;
       return MenuOptions.menu;
     }
 
@@ -97,7 +97,7 @@ namespace Celeste
     private static void SetVSync(bool on)
     {
       Settings.Instance.VSync = on;
-      Engine.Graphics.set_SynchronizeWithVerticalRetrace(Settings.Instance.VSync);
+      Engine.Graphics.SynchronizeWithVerticalRetrace = Settings.Instance.VSync;
       Engine.Graphics.ApplyChanges();
     }
 
@@ -191,3 +191,4 @@ namespace Celeste
     }
   }
 }
+

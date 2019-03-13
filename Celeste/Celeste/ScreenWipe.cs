@@ -14,7 +14,7 @@ namespace Celeste
 {
   public abstract class ScreenWipe : Monocle.Renderer
   {
-    public static Color WipeColor = Color.get_Black();
+    public static Color WipeColor = Color.Black;
     public float Duration = 0.5f;
     public Scene Scene;
     public bool WipeIn;
@@ -77,9 +77,8 @@ namespace Celeste
         scene.Remove((Monocle.Renderer) this);
         if (scene is Level && (scene as Level).Wipe == this)
           (scene as Level).Wipe = (ScreenWipe) null;
-        if (this.OnComplete == null)
-          return;
-        this.OnComplete();
+        if (this.OnComplete != null)
+          this.OnComplete();
       }
     }
 
@@ -93,8 +92,8 @@ namespace Celeste
 
     public static void DrawPrimitives(VertexPositionColor[] vertices)
     {
-      Viewport viewport = Engine.Graphics.get_GraphicsDevice().get_Viewport();
-      GFX.DrawVertices<VertexPositionColor>(Matrix.CreateScale((float) ((Viewport) ref viewport).get_Width() / 1920f), vertices, vertices.Length, (Effect) null, (BlendState) null);
+      GFX.DrawVertices<VertexPositionColor>(Matrix.CreateScale((float) Engine.Graphics.GraphicsDevice.Viewport.Width / 1920f), vertices, vertices.Length, (Effect) null, (BlendState) null);
     }
   }
 }
+

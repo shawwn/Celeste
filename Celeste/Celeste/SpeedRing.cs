@@ -35,7 +35,7 @@ namespace Celeste
     public override void Update()
     {
       this.lerp += 3f * Engine.DeltaTime;
-      this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Multiply(this.normal, 10f), Engine.DeltaTime));
+      this.Position = this.Position + this.normal * 10f * Engine.DeltaTime;
       if ((double) this.lerp < 1.0)
         return;
       this.RemoveSelf();
@@ -43,10 +43,10 @@ namespace Celeste
 
     public override void Render()
     {
-      Color color = Color.op_Multiply(this.color, MathHelper.Lerp(0.6f, 0.0f, this.lerp));
-      if (((Color) ref color).get_A() <= (byte) 0)
+      Color color = this.color * MathHelper.Lerp(0.6f, 0.0f, this.lerp);
+      if (color.A <= (byte) 0)
         return;
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.SpeedRings, Vector2.op_Addition(this.Position, new Vector2(-32f, -32f)), new Rectangle?(new Rectangle(this.index % 4 * 64, this.index / 4 * 64, 64, 64)), color);
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.SpeedRings, this.Position + new Vector2(-32f, -32f), new Rectangle?(new Rectangle(this.index % 4 * 64, this.index / 4 * 64, 64, 64)), color);
     }
 
     private void DrawRing(Vector2 position)
@@ -56,8 +56,8 @@ namespace Celeste
       for (int index = 1; index <= 8; ++index)
       {
         Vector2 vectorAtAngle = this.GetVectorAtAngle((float) index * 0.3926991f, maxRadius);
-        Draw.Line(Vector2.op_Addition(position, vector2), Vector2.op_Addition(position, vectorAtAngle), Color.get_White());
-        Draw.Line(Vector2.op_Subtraction(position, vector2), Vector2.op_Subtraction(position, vectorAtAngle), Color.get_White());
+        Draw.Line(position + vector2, position + vectorAtAngle, Color.White);
+        Draw.Line(position - vector2, position - vectorAtAngle, Color.White);
         vector2 = vectorAtAngle;
       }
     }
@@ -66,7 +66,7 @@ namespace Celeste
     {
       Vector2 vector = Calc.AngleToVector(radians, 1f);
       float num = MathHelper.Lerp(maxRadius, maxRadius * 0.5f, Math.Abs(Vector2.Dot(vector, this.normal)));
-      return Vector2.op_Multiply(vector, num);
+      return vector * num;
     }
 
     public static void DrawToBuffer(Level level)
@@ -75,9 +75,9 @@ namespace Celeste
       int num = 0;
       if (entities.Count <= 0)
         return;
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) GameplayBuffers.SpeedRings);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) GameplayBuffers.SpeedRings);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
       foreach (SpeedRing speedRing in entities)
       {
         speedRing.index = num;
@@ -88,3 +88,4 @@ namespace Celeste
     }
   }
 }
+

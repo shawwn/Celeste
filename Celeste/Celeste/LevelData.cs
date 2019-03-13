@@ -48,100 +48,98 @@ namespace Celeste
 
     public LevelData(BinaryPacker.Element data)
     {
-      this.Bounds = (Rectangle) null;
+      this.Bounds = new Rectangle();
       foreach (KeyValuePair<string, object> attribute in data.Attributes)
       {
         switch (attribute.Key)
         {
           case "alt_music":
             this.AltMusic = (string) attribute.Value;
-            continue;
+            break;
           case "ambience":
             this.Ambience = (string) attribute.Value;
-            continue;
+            break;
           case "ambienceProgress":
             string s1 = attribute.Value.ToString();
             if (string.IsNullOrEmpty(s1) || !int.TryParse(s1, out this.AmbienceProgress))
             {
               this.AmbienceProgress = -1;
-              continue;
+              break;
             }
-            continue;
+            break;
           case "c":
             this.EditorColorIndex = (int) attribute.Value;
-            continue;
+            break;
           case "cameraOffsetX":
-            this.CameraOffset.X = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
-            continue;
+            this.CameraOffset.X = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            break;
           case "cameraOffsetY":
-            this.CameraOffset.Y = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
-            continue;
+            this.CameraOffset.Y = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            break;
           case "dark":
             this.Dark = (bool) attribute.Value;
-            continue;
+            break;
           case "delayAltMusicFade":
             this.DelayAltMusic = (bool) attribute.Value;
-            continue;
+            break;
           case "disableDownTransition":
             this.DisableDownTransition = (bool) attribute.Value;
-            continue;
+            break;
           case "height":
-            this.Bounds.Height = (__Null) (int) attribute.Value;
+            this.Bounds.Height = (int) attribute.Value;
             if (this.Bounds.Height == 184)
             {
-              this.Bounds.Height = (__Null) 180;
-              continue;
+              this.Bounds.Height = 180;
+              break;
             }
-            continue;
+            break;
           case "music":
             this.Music = (string) attribute.Value;
-            continue;
+            break;
           case "musicLayer1":
             this.MusicLayers[0] = (bool) attribute.Value ? 1f : 0.0f;
-            continue;
+            break;
           case "musicLayer2":
             this.MusicLayers[1] = (bool) attribute.Value ? 1f : 0.0f;
-            continue;
+            break;
           case "musicLayer3":
             this.MusicLayers[2] = (bool) attribute.Value ? 1f : 0.0f;
-            continue;
+            break;
           case "musicLayer4":
             this.MusicLayers[3] = (bool) attribute.Value ? 1f : 0.0f;
-            continue;
+            break;
           case "musicProgress":
             string s2 = attribute.Value.ToString();
             if (string.IsNullOrEmpty(s2) || !int.TryParse(s2, out this.MusicProgress))
             {
               this.MusicProgress = -1;
-              continue;
+              break;
             }
-            continue;
+            break;
           case "name":
             this.Name = attribute.Value.ToString().Substring(4);
-            continue;
+            break;
           case "space":
             this.Space = (bool) attribute.Value;
-            continue;
+            break;
           case "underwater":
             this.Underwater = (bool) attribute.Value;
-            continue;
+            break;
           case "whisper":
             this.MusicWhispers = (bool) attribute.Value;
-            continue;
+            break;
           case "width":
-            this.Bounds.Width = (__Null) (int) attribute.Value;
-            continue;
+            this.Bounds.Width = (int) attribute.Value;
+            break;
           case "windPattern":
             this.WindPattern = (WindController.Patterns) Enum.Parse(typeof (WindController.Patterns), (string) attribute.Value);
-            continue;
+            break;
           case "x":
-            this.Bounds.X = (__Null) (int) attribute.Value;
-            continue;
+            this.Bounds.X = (int) attribute.Value;
+            break;
           case "y":
-            this.Bounds.Y = (__Null) (int) attribute.Value;
-            continue;
-          default:
-            continue;
+            this.Bounds.Y = (int) attribute.Value;
+            break;
         }
       }
       this.Spawns = new List<Vector2>();
@@ -232,18 +230,18 @@ namespace Celeste
           if (attribute.Key == "id")
             entityData.ID = (int) attribute.Value;
           else if (attribute.Key == "x")
-            entityData.Position.X = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            entityData.Position.X = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
           else if (attribute.Key == "y")
-            entityData.Position.Y = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            entityData.Position.Y = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
           else if (attribute.Key == "width")
             entityData.Width = (int) attribute.Value;
           else if (attribute.Key == "height")
             entityData.Height = (int) attribute.Value;
           else if (attribute.Key == "originX")
-            entityData.Origin.X = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            entityData.Origin.X = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
           else if (attribute.Key == "originY")
           {
-            entityData.Origin.Y = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            entityData.Origin.Y = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
           }
           else
           {
@@ -259,9 +257,9 @@ namespace Celeste
         foreach (KeyValuePair<string, object> attribute in entity.Children[index].Attributes)
         {
           if (attribute.Key == "x")
-            entityData.Nodes[index].X = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            entityData.Nodes[index].X = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
           else if (attribute.Key == "y")
-            entityData.Nodes[index].Y = (__Null) (double) Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
+            entityData.Nodes[index].Y = Convert.ToSingle(attribute.Value, (IFormatProvider) CultureInfo.InvariantCulture);
         }
       }
       return entityData;
@@ -269,16 +267,14 @@ namespace Celeste
 
     public bool Check(Vector2 at)
     {
-      if (at.X >= (double) ((Rectangle) ref this.Bounds).get_Left() && at.Y >= (double) ((Rectangle) ref this.Bounds).get_Top() && at.X < (double) ((Rectangle) ref this.Bounds).get_Right())
-        return at.Y < (double) ((Rectangle) ref this.Bounds).get_Bottom();
-      return false;
+      return (double) at.X >= (double) this.Bounds.Left && (double) at.Y >= (double) this.Bounds.Top && (double) at.X < (double) this.Bounds.Right && (double) at.Y < (double) this.Bounds.Bottom;
     }
 
     public Rectangle TileBounds
     {
       get
       {
-        return new Rectangle(this.Bounds.X / 8, this.Bounds.Y / 8, (int) Math.Ceiling((double) (float) this.Bounds.Width / 8.0), (int) Math.Ceiling((double) (float) this.Bounds.Height / 8.0));
+        return new Rectangle(this.Bounds.X / 8, this.Bounds.Y / 8, (int) Math.Ceiling((double) this.Bounds.Width / 8.0), (int) Math.Ceiling((double) this.Bounds.Height / 8.0));
       }
     }
 
@@ -290,20 +286,12 @@ namespace Celeste
       }
       set
       {
-        for (int index1 = 0; index1 < this.Spawns.Count; ++index1)
-        {
-          List<Vector2> spawns = this.Spawns;
-          int index2 = index1;
-          spawns[index2] = Vector2.op_Subtraction(spawns[index2], this.Position);
-        }
-        this.Bounds.X = (__Null) (int) value.X;
-        this.Bounds.Y = (__Null) (int) value.Y;
-        for (int index1 = 0; index1 < this.Spawns.Count; ++index1)
-        {
-          List<Vector2> spawns = this.Spawns;
-          int index2 = index1;
-          spawns[index2] = Vector2.op_Addition(spawns[index2], this.Position);
-        }
+        for (int index = 0; index < this.Spawns.Count; ++index)
+          this.Spawns[index] -= this.Position;
+        this.Bounds.X = (int) value.X;
+        this.Bounds.Y = (int) value.Y;
+        for (int index = 0; index < this.Spawns.Count; ++index)
+          this.Spawns[index] += this.Position;
       }
     }
 
@@ -319,3 +307,4 @@ namespace Celeste
     }
   }
 }
+

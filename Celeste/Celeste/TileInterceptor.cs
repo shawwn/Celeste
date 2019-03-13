@@ -27,13 +27,13 @@ namespace Celeste
     public TileInterceptor(TileGrid applyToGrid, bool highPriority)
       : base(false, false)
     {
-      this.Intercepter = (Action<MTexture, Vector2, Point>) ((t, v, p) => applyToGrid.Tiles[(int) p.X, (int) p.Y] = t);
+      this.Intercepter = (Action<MTexture, Vector2, Point>) ((t, v, p) => applyToGrid.Tiles[p.X, p.Y] = t);
       this.HighPriority = highPriority;
     }
 
     public static bool TileCheck(Scene scene, MTexture tile, Vector2 at)
     {
-      at = Vector2.op_Addition(at, Vector2.op_Multiply(Vector2.get_One(), 4f));
+      at += Vector2.One * 4f;
       TileInterceptor tileInterceptor1 = (TileInterceptor) null;
       List<Component> components = scene.Tracker.GetComponents<TileInterceptor>();
       for (int index = components.Count - 1; index >= 0; --index)
@@ -48,10 +48,10 @@ namespace Celeste
       }
       if (tileInterceptor1 == null)
         return false;
-      Point point;
-      ((Point) ref point).\u002Ector((int) ((at.X - (double) tileInterceptor1.Entity.X) / 8.0), (int) ((at.Y - (double) tileInterceptor1.Entity.Y) / 8.0));
+      Point point = new Point((int) (((double) at.X - (double) tileInterceptor1.Entity.X) / 8.0), (int) (((double) at.Y - (double) tileInterceptor1.Entity.Y) / 8.0));
       tileInterceptor1.Intercepter(tile, at, point);
       return true;
     }
   }
 }
+

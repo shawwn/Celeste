@@ -13,11 +13,11 @@ namespace Celeste
   public class Godrays : Backdrop
   {
     private VertexPositionColor[] vertices = new VertexPositionColor[36];
-    private Color rayColor = Color.op_Multiply(Calc.HexToColor("f52b63"), 0.5f);
+    private int vertexCount = 0;
+    private Color rayColor = Calc.HexToColor("f52b63") * 0.5f;
     private Godrays.Ray[] rays = new Godrays.Ray[6];
+    private float fade = 0.0f;
     private const int RayCount = 6;
-    private int vertexCount;
-    private float fade;
 
     public Godrays()
     {
@@ -38,8 +38,7 @@ namespace Celeste
         return;
       Player entity = level.Tracker.GetEntity<Player>();
       Vector2 vector = Calc.AngleToVector(-1.670796f, 1f);
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector((float) -vector.Y, (float) vector.X);
+      Vector2 vector2_1 = new Vector2(-vector.Y, vector.X);
       int num1 = 0;
       for (int index1 = 0; index1 < this.rays.Length; ++index1)
       {
@@ -52,24 +51,18 @@ namespace Celeste
         float num3 = this.Mod(this.rays[index1].Y - level.Camera.Y * 0.9f, 244f) - 32f;
         float width = this.rays[index1].Width;
         float length = this.rays[index1].Length;
-        Vector2 vector2_2;
-        ((Vector2) ref vector2_2).\u002Ector((float) (int) num2, (float) (int) num3);
-        Color color = Color.op_Multiply(Color.op_Multiply(this.rayColor, Ease.CubeInOut(Calc.Clamp((float) (((double) percent < 0.5 ? (double) percent : 1.0 - (double) percent) * 2.0), 0.0f, 1f))), this.fade);
+        Vector2 vector2_2 = new Vector2((float) (int) num2, (float) (int) num3);
+        Color color = this.rayColor * Ease.CubeInOut(Calc.Clamp((float) (((double) percent < 0.5 ? (double) percent : 1.0 - (double) percent) * 2.0), 0.0f, 1f)) * this.fade;
         if (entity != null)
         {
-          Vector2 vector2_3 = Vector2.op_Subtraction(Vector2.op_Addition(vector2_2, level.Camera.Position), entity.Position);
-          float num4 = ((Vector2) ref vector2_3).Length();
+          float num4 = (vector2_2 + level.Camera.Position - entity.Position).Length();
           if ((double) num4 < 64.0)
-            color = Color.op_Multiply(color, (float) (0.25 + 0.75 * ((double) num4 / 64.0)));
+            color *= (float) (0.25 + 0.75 * ((double) num4 / 64.0));
         }
-        VertexPositionColor vertexPositionColor1;
-        ((VertexPositionColor) ref vertexPositionColor1).\u002Ector(new Vector3(Vector2.op_Addition(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, width)), Vector2.op_Multiply(vector, length)), 0.0f), color);
-        VertexPositionColor vertexPositionColor2;
-        ((VertexPositionColor) ref vertexPositionColor2).\u002Ector(new Vector3(Vector2.op_Subtraction(vector2_2, Vector2.op_Multiply(vector2_1, width)), 0.0f), color);
-        VertexPositionColor vertexPositionColor3;
-        ((VertexPositionColor) ref vertexPositionColor3).\u002Ector(new Vector3(Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_1, width)), 0.0f), color);
-        VertexPositionColor vertexPositionColor4;
-        ((VertexPositionColor) ref vertexPositionColor4).\u002Ector(new Vector3(Vector2.op_Subtraction(Vector2.op_Subtraction(vector2_2, Vector2.op_Multiply(vector2_1, width)), Vector2.op_Multiply(vector, length)), 0.0f), color);
+        VertexPositionColor vertexPositionColor1 = new VertexPositionColor(new Vector3(vector2_2 + vector2_1 * width + vector * length, 0.0f), color);
+        VertexPositionColor vertexPositionColor2 = new VertexPositionColor(new Vector3(vector2_2 - vector2_1 * width, 0.0f), color);
+        VertexPositionColor vertexPositionColor3 = new VertexPositionColor(new Vector3(vector2_2 + vector2_1 * width, 0.0f), color);
+        VertexPositionColor vertexPositionColor4 = new VertexPositionColor(new Vector3(vector2_2 - vector2_1 * width - vector * length, 0.0f), color);
         VertexPositionColor[] vertices1 = this.vertices;
         int index2 = num1;
         int num5 = index2 + 1;
@@ -113,7 +106,7 @@ namespace Celeste
     {
       if (this.vertexCount <= 0 || (double) this.fade <= 0.0)
         return;
-      GFX.DrawVertices<VertexPositionColor>(Matrix.get_Identity(), this.vertices, this.vertexCount, (Effect) null, (BlendState) null);
+      GFX.DrawVertices<VertexPositionColor>(Matrix.Identity, this.vertices, this.vertexCount, (Effect) null, (BlendState) null);
     }
 
     private struct Ray
@@ -137,3 +130,4 @@ namespace Celeste
     }
   }
 }
+

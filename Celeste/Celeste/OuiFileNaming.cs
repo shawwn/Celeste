@@ -13,18 +13,18 @@ namespace Celeste
 {
   public class OuiFileNaming : Oui
   {
+    private int index = 0;
+    private int line = 0;
     private bool selectingOptions = true;
-    private Color unselectColor = Color.get_LightGray();
+    private Color unselectColor = Color.LightGray;
     private Color selectColorA = Calc.HexToColor("84FF54");
     private Color selectColorB = Calc.HexToColor("FCFF59");
-    private Color disableColor = Color.get_DarkSlateBlue();
+    private Color disableColor = Color.DarkSlateBlue;
     public string StartingName;
     public OuiFileSelectSlot FileSlot;
     public const int MaxNameLength = 12;
     public const int MinNameLength = 1;
     private string[] letters;
-    private int index;
-    private int line;
     private float widestLetter;
     private float widestLine;
     private int widestLineCount;
@@ -65,7 +65,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Addition(this.Position, new Vector2((float) ((1920.0 - (double) this.boxWidth) / 2.0), (float) (360.0 + (680.0 - (double) this.boxHeight) / 2.0)));
+        return this.Position + new Vector2((float) ((1920.0 - (double) this.boxWidth) / 2.0), (float) (360.0 + (680.0 - (double) this.boxHeight) / 2.0));
       }
     }
 
@@ -78,76 +78,82 @@ namespace Celeste
 
     public override IEnumerator Enter(Oui from)
     {
-      OuiFileNaming ouiFileNaming = this;
-      if (ouiFileNaming.Name == Dialog.Clean("FILE_DEFAULT", (Language) null))
-        ouiFileNaming.Name = "";
-      ouiFileNaming.Overworld.ShowInputUI = false;
-      ouiFileNaming.selectingOptions = false;
-      ouiFileNaming.optionsIndex = 0;
-      ouiFileNaming.index = 0;
-      ouiFileNaming.line = 0;
-      string str = Dialog.Clean("name_letters", (Language) null);
-      ouiFileNaming.letters = str.Split('\n');
-      foreach (char text in str)
+      if (this.Name == Dialog.Clean("FILE_DEFAULT", (Language) null))
+        this.Name = "";
+      this.Overworld.ShowInputUI = false;
+      this.selectingOptions = false;
+      this.optionsIndex = 0;
+      this.index = 0;
+      this.line = 0;
+      string chars = Dialog.Clean("name_letters", (Language) null);
+      this.letters = chars.Split('\n');
+      string str = chars;
+      for (int index = 0; index < str.Length; ++index)
       {
-        float x = (float) ActiveFont.Measure(text).X;
-        if ((double) x > (double) ouiFileNaming.widestLetter)
-          ouiFileNaming.widestLetter = x;
+        char letter = str[index];
+        float size = ActiveFont.Measure(letter).X;
+        if ((double) size > (double) this.widestLetter)
+          this.widestLetter = size;
       }
-      ouiFileNaming.widestLineCount = 0;
-      foreach (string letter in ouiFileNaming.letters)
+      str = (string) null;
+      this.widestLineCount = 0;
+      string[] strArray = this.letters;
+      for (int index = 0; index < strArray.Length; ++index)
       {
-        if (letter.Length > ouiFileNaming.widestLineCount)
-          ouiFileNaming.widestLineCount = letter.Length;
+        string l = strArray[index];
+        if (l.Length > this.widestLineCount)
+          this.widestLineCount = l.Length;
+        l = (string) null;
       }
-      ouiFileNaming.widestLine = (float) ouiFileNaming.widestLineCount * ouiFileNaming.widestLetter;
-      ouiFileNaming.lineHeight = ActiveFont.LineHeight;
-      ouiFileNaming.lineSpacing = ActiveFont.LineHeight * 0.1f;
-      ouiFileNaming.boxPadding = ouiFileNaming.widestLetter;
-      ouiFileNaming.optionsScale = 0.75f;
-      ouiFileNaming.cancel = Dialog.Clean("name_back", (Language) null);
-      ouiFileNaming.space = Dialog.Clean("name_space", (Language) null);
-      ouiFileNaming.backspace = Dialog.Clean("name_backspace", (Language) null);
-      ouiFileNaming.accept = Dialog.Clean("name_accept", (Language) null);
-      ouiFileNaming.cancelWidth = (float) ActiveFont.Measure(ouiFileNaming.cancel).X * ouiFileNaming.optionsScale;
-      ouiFileNaming.spaceWidth = (float) ActiveFont.Measure(ouiFileNaming.space).X * ouiFileNaming.optionsScale;
-      ouiFileNaming.backspaceWidth = (float) ActiveFont.Measure(ouiFileNaming.backspace).X * ouiFileNaming.optionsScale;
-      ouiFileNaming.beginWidth = (float) ActiveFont.Measure(ouiFileNaming.accept).X * ouiFileNaming.optionsScale;
-      ouiFileNaming.optionsWidth = (float) ((double) ouiFileNaming.cancelWidth + (double) ouiFileNaming.spaceWidth + (double) ouiFileNaming.backspaceWidth + (double) ouiFileNaming.beginWidth + (double) ouiFileNaming.widestLetter * 3.0);
-      ouiFileNaming.boxWidth = Math.Max(ouiFileNaming.widestLine, ouiFileNaming.optionsWidth) + ouiFileNaming.boxPadding * 2f;
-      ouiFileNaming.boxHeight = (float) ((double) (ouiFileNaming.letters.Length + 1) * (double) ouiFileNaming.lineHeight + (double) ouiFileNaming.letters.Length * (double) ouiFileNaming.lineSpacing + (double) ouiFileNaming.boxPadding * 3.0);
-      ouiFileNaming.Visible = true;
-      Vector2 posFrom = ouiFileNaming.Position;
-      Vector2 posTo = Vector2.get_Zero();
+      strArray = (string[]) null;
+      this.widestLine = (float) this.widestLineCount * this.widestLetter;
+      chars = (string) null;
+      this.lineHeight = ActiveFont.LineHeight;
+      this.lineSpacing = ActiveFont.LineHeight * 0.1f;
+      this.boxPadding = this.widestLetter;
+      this.optionsScale = 0.75f;
+      this.cancel = Dialog.Clean("name_back", (Language) null);
+      this.space = Dialog.Clean("name_space", (Language) null);
+      this.backspace = Dialog.Clean("name_backspace", (Language) null);
+      this.accept = Dialog.Clean("name_accept", (Language) null);
+      this.cancelWidth = ActiveFont.Measure(this.cancel).X * this.optionsScale;
+      this.spaceWidth = ActiveFont.Measure(this.space).X * this.optionsScale;
+      this.backspaceWidth = ActiveFont.Measure(this.backspace).X * this.optionsScale;
+      this.beginWidth = ActiveFont.Measure(this.accept).X * this.optionsScale;
+      this.optionsWidth = (float) ((double) this.cancelWidth + (double) this.spaceWidth + (double) this.backspaceWidth + (double) this.beginWidth + (double) this.widestLetter * 3.0);
+      this.boxWidth = Math.Max(this.widestLine, this.optionsWidth) + this.boxPadding * 2f;
+      this.boxHeight = (float) ((double) (this.letters.Length + 1) * (double) this.lineHeight + (double) this.letters.Length * (double) this.lineSpacing + (double) this.boxPadding * 3.0);
+      this.Visible = true;
+      Vector2 posFrom = this.Position;
+      Vector2 posTo = Vector2.Zero;
       for (float t = 0.0f; (double) t < 1.0; t += Engine.DeltaTime * 2f)
       {
-        ouiFileNaming.ease = Ease.CubeIn(t);
-        ouiFileNaming.Position = Vector2.op_Addition(posFrom, Vector2.op_Multiply(Vector2.op_Subtraction(posTo, posFrom), Ease.CubeInOut(t)));
+        this.ease = Ease.CubeIn(t);
+        this.Position = posFrom + (posTo - posFrom) * Ease.CubeInOut(t);
         yield return (object) null;
       }
-      ouiFileNaming.ease = 1f;
-      posFrom = (Vector2) null;
-      posTo = (Vector2) null;
+      this.ease = 1f;
+      posFrom = new Vector2();
+      posTo = new Vector2();
       yield return (object) 0.2f;
-      ouiFileNaming.Focused = true;
+      this.Focused = true;
       yield return (object) 0.2f;
-      ouiFileNaming.wiggler.Start();
+      this.wiggler.Start();
     }
 
     public override IEnumerator Leave(Oui next)
     {
-      OuiFileNaming ouiFileNaming = this;
-      ouiFileNaming.Overworld.ShowInputUI = true;
-      ouiFileNaming.Focused = false;
-      Vector2 posFrom = ouiFileNaming.Position;
+      this.Overworld.ShowInputUI = true;
+      this.Focused = false;
+      Vector2 posFrom = this.Position;
       Vector2 posTo = new Vector2(0.0f, 1080f);
       for (float t = 0.0f; (double) t < 1.0; t += Engine.DeltaTime * 2f)
       {
-        ouiFileNaming.ease = 1f - Ease.CubeIn(t);
-        ouiFileNaming.Position = Vector2.op_Addition(posFrom, Vector2.op_Multiply(Vector2.op_Subtraction(posTo, posFrom), Ease.CubeInOut(t)));
+        this.ease = 1f - Ease.CubeIn(t);
+        this.Position = posFrom + (posTo - posFrom) * Ease.CubeInOut(t);
         yield return (object) null;
       }
-      ouiFileNaming.Visible = false;
+      this.Visible = false;
     }
 
     public override void Update()
@@ -191,21 +197,29 @@ namespace Celeste
         }
         else if (Input.MenuDown.Pressed && !this.selectingOptions)
         {
-          for (int index = this.line + 1; index < this.letters.Length; ++index)
+          int index = this.line + 1;
+          while (true)
           {
-            if (this.index < this.letters[index].Length && this.letters[index][this.index] != ' ')
+            if (index < this.letters.Length)
             {
-              this.line = index;
-              goto label_18;
+              if (this.index >= this.letters[index].Length || this.letters[index][this.index] == ' ')
+                ++index;
+              else
+                goto label_15;
             }
+            else
+              break;
           }
           this.selectingOptions = true;
+          goto label_18;
+label_15:
+          this.line = index;
 label_18:
           if (this.selectingOptions)
           {
             float num1 = (float) this.index * this.widestLetter;
             float num2 = this.boxWidth - this.boxPadding * 2f;
-            this.optionsIndex = this.Name.Length == 0 || (double) num1 < (double) this.cancelWidth + ((double) num2 - (double) this.cancelWidth - (double) this.beginWidth - (double) this.backspaceWidth - (double) this.spaceWidth - (double) this.widestLetter * 3.0) / 2.0 ? 0 : ((double) num1 >= (double) num2 - (double) this.beginWidth - (double) this.backspaceWidth - (double) this.widestLetter * 2.0 ? ((double) num1 >= (double) num2 - (double) this.beginWidth - (double) this.widestLetter ? 3 : 2) : 1);
+            this.optionsIndex = this.Name.Length != 0 && (double) num1 >= (double) this.cancelWidth + ((double) num2 - (double) this.cancelWidth - (double) this.beginWidth - (double) this.backspaceWidth - (double) this.spaceWidth - (double) this.widestLetter * 3.0) / 2.0 ? ((double) num1 >= (double) num2 - (double) this.beginWidth - (double) this.backspaceWidth - (double) this.widestLetter * 2.0 ? ((double) num1 >= (double) num2 - (double) this.beginWidth - (double) this.widestLetter ? 3 : 2) : 1) : 0;
           }
           this.wiggler.Start();
           Audio.Play("event:/ui/main/rename_entry_rollover");
@@ -316,55 +330,35 @@ label_18:
 
     public override void Render()
     {
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), 0.8f), this.ease));
-      Vector2 vector2 = Vector2.op_Addition(this.boxtopleft, new Vector2(this.boxPadding, this.boxPadding));
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * 0.8f * this.ease);
+      Vector2 vector2 = this.boxtopleft + new Vector2(this.boxPadding, this.boxPadding);
       int num1 = 0;
       foreach (string letter in this.letters)
       {
         for (int index = 0; index < letter.Length; ++index)
         {
           bool selected = num1 == this.line && index == this.index && !this.selectingOptions;
-          Vector2 scale = Vector2.op_Multiply(Vector2.get_One(), selected ? 1.2f : 1f);
-          Vector2 at = Vector2.op_Addition(vector2, Vector2.op_Division(new Vector2(this.widestLetter, this.lineHeight), 2f));
+          Vector2 scale = Vector2.One * (selected ? 1.2f : 1f);
+          Vector2 at = vector2 + new Vector2(this.widestLetter, this.lineHeight) / 2f;
           if (selected)
-            at = Vector2.op_Addition(at, Vector2.op_Multiply(new Vector2(0.0f, this.wiggler.Value), 8f));
+            at += new Vector2(0.0f, this.wiggler.Value) * 8f;
           this.DrawOptionText(letter[index].ToString(), at, new Vector2(0.5f, 0.5f), scale, selected, false);
-          ref __Null local = ref vector2.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + this.widestLetter;
+          vector2.X += this.widestLetter;
         }
-        vector2.X = (__Null) (this.boxtopleft.X + (double) this.boxPadding);
-        ref __Null local1 = ref vector2.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + (this.lineHeight + this.lineSpacing);
+        vector2.X = this.boxtopleft.X + this.boxPadding;
+        vector2.Y += this.lineHeight + this.lineSpacing;
         ++num1;
       }
       float num2 = this.wiggler.Value * 8f;
-      vector2.Y = (__Null) (this.boxtopleft.Y + (double) this.boxHeight - (double) this.lineHeight - (double) this.boxPadding);
-      Draw.Rect((float) vector2.X, (float) (vector2.Y - (double) this.boxPadding * 0.5), this.boxWidth - this.boxPadding * 2f, 4f, Color.get_White());
-      this.DrawOptionText(this.cancel, Vector2.op_Addition(vector2, new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 0 ? 0.0f : num2))), new Vector2(0.0f, 1f), Vector2.op_Multiply(Vector2.get_One(), this.optionsScale), this.selectingOptions && this.optionsIndex == 0, false);
-      vector2.X = (__Null) (this.boxtopleft.X + (double) this.boxWidth - (double) this.backspaceWidth - (double) this.widestLetter - (double) this.spaceWidth - (double) this.widestLetter - (double) this.beginWidth - (double) this.boxPadding);
-      this.DrawOptionText(this.space, Vector2.op_Addition(vector2, new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 1 ? 0.0f : num2))), new Vector2(0.0f, 1f), Vector2.op_Multiply(Vector2.get_One(), this.optionsScale), this.selectingOptions && this.optionsIndex == 1, this.Name.Length == 0 || !this.Focused);
-      ref __Null local2 = ref vector2.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local2 = ^(float&) ref local2 + (this.spaceWidth + this.widestLetter);
-      this.DrawOptionText(this.backspace, Vector2.op_Addition(vector2, new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 2 ? 0.0f : num2))), new Vector2(0.0f, 1f), Vector2.op_Multiply(Vector2.get_One(), this.optionsScale), this.selectingOptions && this.optionsIndex == 2, this.Name.Length <= 0 || !this.Focused);
-      ref __Null local3 = ref vector2.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local3 = ^(float&) ref local3 + (this.backspaceWidth + this.widestLetter);
-      this.DrawOptionText(this.accept, Vector2.op_Addition(vector2, new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 3 ? 0.0f : num2))), new Vector2(0.0f, 1f), Vector2.op_Multiply(Vector2.get_One(), this.optionsScale), this.selectingOptions && this.optionsIndex == 3, this.Name.Length < 1 || !this.Focused);
+      vector2.Y = this.boxtopleft.Y + this.boxHeight - this.lineHeight - this.boxPadding;
+      Draw.Rect(vector2.X, vector2.Y - this.boxPadding * 0.5f, this.boxWidth - this.boxPadding * 2f, 4f, Color.White);
+      this.DrawOptionText(this.cancel, vector2 + new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 0 ? 0.0f : num2)), new Vector2(0.0f, 1f), Vector2.One * this.optionsScale, this.selectingOptions && this.optionsIndex == 0, false);
+      vector2.X = this.boxtopleft.X + this.boxWidth - this.backspaceWidth - this.widestLetter - this.spaceWidth - this.widestLetter - this.beginWidth - this.boxPadding;
+      this.DrawOptionText(this.space, vector2 + new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 1 ? 0.0f : num2)), new Vector2(0.0f, 1f), Vector2.One * this.optionsScale, this.selectingOptions && this.optionsIndex == 1, this.Name.Length == 0 || !this.Focused);
+      vector2.X += this.spaceWidth + this.widestLetter;
+      this.DrawOptionText(this.backspace, vector2 + new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 2 ? 0.0f : num2)), new Vector2(0.0f, 1f), Vector2.One * this.optionsScale, this.selectingOptions && this.optionsIndex == 2, this.Name.Length <= 0 || !this.Focused);
+      vector2.X += this.backspaceWidth + this.widestLetter;
+      this.DrawOptionText(this.accept, vector2 + new Vector2(0.0f, this.lineHeight + (!this.selectingOptions || this.optionsIndex != 3 ? 0.0f : num2)), new Vector2(0.0f, 1f), Vector2.One * this.optionsScale, this.selectingOptions && this.optionsIndex == 3, this.Name.Length < 1 || !this.Focused);
     }
 
     private void DrawOptionText(
@@ -375,22 +369,21 @@ label_18:
       bool selected,
       bool disabled = false)
     {
-      int num = !selected ? 0 : ((double) this.pressedTimer > 0.0 ? 1 : 0);
+      bool flag = selected && (double) this.pressedTimer > 0.0;
       Color color = disabled ? this.disableColor : this.GetTextColor(selected);
-      Color edgeColor = disabled ? Color.Lerp(this.disableColor, Color.get_Black(), 0.7f) : Color.get_Gray();
-      if (num != 0)
-        ActiveFont.Draw(text, Vector2.op_Addition(at, Vector2.get_UnitY()), justify, scale, color);
+      Color edgeColor = disabled ? Color.Lerp(this.disableColor, Color.Black, 0.7f) : Color.Gray;
+      if (flag)
+        ActiveFont.Draw(text, at + Vector2.UnitY, justify, scale, color);
       else
-        ActiveFont.DrawEdgeOutline(text, at, justify, scale, color, 4f, edgeColor, 0.0f, (Color) null);
+        ActiveFont.DrawEdgeOutline(text, at, justify, scale, color, 4f, edgeColor, 0.0f, new Color());
     }
 
     private Color GetTextColor(bool selected)
     {
-      if (!selected)
-        return this.unselectColor;
-      if (!Calc.BetweenInterval(this.timer, 0.1f))
-        return this.selectColorB;
-      return this.selectColorA;
+      if (selected)
+        return Calc.BetweenInterval(this.timer, 0.1f) ? this.selectColorA : this.selectColorB;
+      return this.unselectColor;
     }
   }
 }
+

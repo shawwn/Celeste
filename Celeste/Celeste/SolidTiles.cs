@@ -69,54 +69,58 @@ namespace Celeste
 
     private int SurfaceSoundIndexAt(Vector2 readPosition)
     {
-      int index1 = (int) ((readPosition.X - (double) this.X) / 8.0);
-      int index2 = (int) ((readPosition.Y - (double) this.Y) / 8.0);
-      if (index1 >= 0 && index2 >= 0 && (index1 < this.Grid.CellsX && index2 < this.Grid.CellsY))
+      int index1 = (int) (((double) readPosition.X - (double) this.X) / 8.0);
+      int index2 = (int) (((double) readPosition.Y - (double) this.Y) / 8.0);
+      if (index1 >= 0 && index2 >= 0 && index1 < this.Grid.CellsX && index2 < this.Grid.CellsY)
       {
         char tileType = this.tileTypes[index1, index2];
+        int num;
         switch (tileType)
         {
           case '0':
+            num = 0;
             break;
           case 'k':
             return this.CoreTileSurfaceIndex();
           default:
-            if (SurfaceIndex.TileToIndex.ContainsKey(tileType))
-              return SurfaceIndex.TileToIndex[tileType];
+            num = SurfaceIndex.TileToIndex.ContainsKey(tileType) ? 1 : 0;
             break;
         }
+        if (num != 0)
+          return SurfaceIndex.TileToIndex[tileType];
       }
       return -1;
     }
 
     public override int GetWallSoundIndex(Player player, int side)
     {
-      int num = this.SurfaceSoundIndexAt(Vector2.op_Addition(player.Center, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitX(), (float) side), 8f)));
+      int num = this.SurfaceSoundIndexAt(player.Center + Vector2.UnitX * (float) side * 8f);
       if (num < 0)
-        num = this.SurfaceSoundIndexAt(Vector2.op_Addition(player.Center, new Vector2((float) (side * 8), -6f)));
+        num = this.SurfaceSoundIndexAt(player.Center + new Vector2((float) (side * 8), -6f));
       if (num < 0)
-        num = this.SurfaceSoundIndexAt(Vector2.op_Addition(player.Center, new Vector2((float) (side * 8), 6f)));
+        num = this.SurfaceSoundIndexAt(player.Center + new Vector2((float) (side * 8), 6f));
       return num;
     }
 
     public override int GetStepSoundIndex(Entity entity)
     {
-      int num = this.SurfaceSoundIndexAt(Vector2.op_Addition(entity.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitY(), 4f)));
+      int num = this.SurfaceSoundIndexAt(entity.BottomCenter + Vector2.UnitY * 4f);
       if (num == -1)
-        num = this.SurfaceSoundIndexAt(Vector2.op_Addition(entity.BottomLeft, Vector2.op_Multiply(Vector2.get_UnitY(), 4f)));
+        num = this.SurfaceSoundIndexAt(entity.BottomLeft + Vector2.UnitY * 4f);
       if (num == -1)
-        num = this.SurfaceSoundIndexAt(Vector2.op_Addition(entity.BottomRight, Vector2.op_Multiply(Vector2.get_UnitY(), 4f)));
+        num = this.SurfaceSoundIndexAt(entity.BottomRight + Vector2.UnitY * 4f);
       return num;
     }
 
     public override int GetLandSoundIndex(Entity entity)
     {
-      int num = this.SurfaceSoundIndexAt(Vector2.op_Addition(entity.BottomCenter, Vector2.op_Multiply(Vector2.get_UnitY(), 4f)));
+      int num = this.SurfaceSoundIndexAt(entity.BottomCenter + Vector2.UnitY * 4f);
       if (num == -1)
-        num = this.SurfaceSoundIndexAt(Vector2.op_Addition(entity.BottomLeft, Vector2.op_Multiply(Vector2.get_UnitY(), 4f)));
+        num = this.SurfaceSoundIndexAt(entity.BottomLeft + Vector2.UnitY * 4f);
       if (num == -1)
-        num = this.SurfaceSoundIndexAt(Vector2.op_Addition(entity.BottomRight, Vector2.op_Multiply(Vector2.get_UnitY(), 4f)));
+        num = this.SurfaceSoundIndexAt(entity.BottomRight + Vector2.UnitY * 4f);
       return num;
     }
   }
 }
+

@@ -31,7 +31,7 @@ namespace Celeste
     }
 
     public PicoConsole(EntityData data, Vector2 position)
-      : this(Vector2.op_Addition(data.Position, position))
+      : this(data.Position + position)
     {
     }
 
@@ -41,9 +41,8 @@ namespace Celeste
       if (this.sfx != null)
         return;
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity == null || (double) entity.Y >= (double) this.Y + 16.0)
-        return;
-      this.Add((Component) (this.sfx = new SoundSource("event:/env/local/03_resort/pico8_machine")));
+      if (entity != null && (double) entity.Y < (double) this.Y + 16.0)
+        this.Add((Component) (this.sfx = new SoundSource("event:/env/local/03_resort/pico8_machine")));
     }
 
     private void OnInteract(Player player)
@@ -56,9 +55,8 @@ namespace Celeste
 
     private IEnumerator InteractRoutine(Player player)
     {
-      PicoConsole picoConsole = this;
       player.StateMachine.State = 11;
-      yield return (object) player.DummyWalkToExact((int) picoConsole.X - 6, false, 1f);
+      yield return (object) player.DummyWalkToExact((int) this.X - 6, false, 1f);
       player.Facing = Facings.Right;
       bool wasUnlocked = Settings.Instance.Pico8OnMainMenu;
       Settings.Instance.Pico8OnMainMenu = true;
@@ -71,8 +69,8 @@ namespace Celeste
       else
         yield return (object) 0.5f;
       bool done = false;
-      SpotlightWipe.FocusPoint = Vector2.op_Addition(Vector2.op_Subtraction(player.Position, (picoConsole.Scene as Level).Camera.Position), new Vector2(0.0f, -8f));
-      SpotlightWipe spotlightWipe = new SpotlightWipe(picoConsole.Scene, false, (Action) (() =>
+      SpotlightWipe.FocusPoint = player.Position - (this.Scene as Level).Camera.Position + new Vector2(0.0f, -8f);
+      SpotlightWipe spotlightWipe = new SpotlightWipe(this.Scene, false, (Action) (() =>
       {
         if (!wasUnlocked)
           this.Scene.Add((Entity) new UnlockedPico8Message((Action) (() => done = true)));
@@ -83,7 +81,7 @@ namespace Celeste
       while (!done)
         yield return (object) null;
       yield return (object) 0.25f;
-      picoConsole.talking = false;
+      this.talking = false;
       player.StateMachine.State = 0;
     }
 
@@ -99,3 +97,4 @@ namespace Celeste
     }
   }
 }
+

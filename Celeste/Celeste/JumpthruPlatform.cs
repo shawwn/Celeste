@@ -23,7 +23,7 @@ namespace Celeste
     }
 
     public JumpthruPlatform(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Width, data.Attr("texture", "default"))
+      : this(data.Position + offset, data.Width, data.Attr("texture", "default"))
     {
     }
 
@@ -60,12 +60,12 @@ namespace Celeste
         if (index == 0)
         {
           num2 = 0;
-          num3 = this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2(-1f, 0.0f))) ? 0 : 1;
+          num3 = this.CollideCheck<Solid>(this.Position + new Vector2(-1f, 0.0f)) ? 0 : 1;
         }
         else if (index == this.columns - 1)
         {
           num2 = num1 - 1;
-          num3 = this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, new Vector2(1f, 0.0f))) ? 0 : 1;
+          num3 = this.CollideCheck<Solid>(this.Position + new Vector2(1f, 0.0f)) ? 0 : 1;
         }
         else
         {
@@ -79,3 +79,4 @@ namespace Celeste
     }
   }
 }
+

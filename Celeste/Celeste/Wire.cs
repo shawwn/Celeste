@@ -19,22 +19,22 @@ namespace Celeste
 
     public Wire(Vector2 from, Vector2 to, bool above)
     {
-      this.Curve = new SimpleCurve(from, to, Vector2.get_Zero());
+      this.Curve = new SimpleCurve(from, to, Vector2.Zero);
       this.Depth = above ? -8500 : 2000;
-      Random random = new Random((int) Math.Min((float) from.X, (float) to.X));
+      Random random = new Random((int) Math.Min(from.X, to.X));
       this.sineX = random.NextFloat(4f);
       this.sineY = random.NextFloat(4f);
     }
 
     public Wire(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), Vector2.op_Addition(data.Nodes[0], offset), data.Bool("above", false))
+      : this(data.Position + offset, data.Nodes[0] + offset, data.Bool("above", false))
     {
     }
 
     public override void Render()
     {
       Level level = this.SceneAs<Level>();
-      this.Curve.Control = Vector2.op_Addition(Vector2.op_Addition(Vector2.op_Division(Vector2.op_Addition(this.Curve.Begin, this.Curve.End), 2f), new Vector2(0.0f, 24f)), Vector2.op_Multiply(Vector2.op_Multiply(new Vector2((float) Math.Sin((double) this.sineX + (double) level.WindSineTimer * 2.0), (float) Math.Sin((double) this.sineY + (double) level.WindSineTimer * 2.79999995231628)), 8f), level.VisualWind));
+      this.Curve.Control = (this.Curve.Begin + this.Curve.End) / 2f + new Vector2(0.0f, 24f) + new Vector2((float) Math.Sin((double) this.sineX + (double) level.WindSineTimer * 2.0), (float) Math.Sin((double) this.sineY + (double) level.WindSineTimer * 2.79999995231628)) * 8f * level.VisualWind;
       Vector2 start = this.Curve.Begin;
       for (int index = 1; index <= 16; ++index)
       {
@@ -45,3 +45,4 @@ namespace Celeste
     }
   }
 }
+

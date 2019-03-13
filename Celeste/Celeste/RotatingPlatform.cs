@@ -20,13 +20,12 @@ namespace Celeste
     public RotatingPlatform(Vector2 position, int width, Vector2 center, bool clockwise)
       : base(position, width, false)
     {
-      this.Collider.Position.X = (__Null) (double) (-width / 2);
-      this.Collider.Position.Y = (__Null) (-(double) this.Height / 2.0);
+      this.Collider.Position.X = (float) (-width / 2);
+      this.Collider.Position.Y = (float) (-(double) this.Height / 2.0);
       this.center = center;
       this.clockwise = clockwise;
-      Vector2 vector2 = Vector2.op_Subtraction(position, center);
-      this.length = ((Vector2) ref vector2).Length();
-      this.currentAngle = Vector2.op_Subtraction(position, center).Angle();
+      this.length = (position - center).Length();
+      this.currentAngle = (position - center).Angle();
       this.SurfaceSoundIndex = 5;
       this.Add((Component) new LightOcclude(0.2f));
     }
@@ -39,13 +38,14 @@ namespace Celeste
       else
         this.currentAngle += 1.047198f * Engine.DeltaTime;
       this.currentAngle = Calc.WrapAngle(this.currentAngle);
-      this.MoveTo(Vector2.op_Addition(this.center, Calc.AngleToVector(this.currentAngle, this.length)));
+      this.MoveTo(this.center + Calc.AngleToVector(this.currentAngle, this.length));
     }
 
     public override void Render()
     {
       base.Render();
-      Draw.Rect(this.Collider, Color.get_White());
+      Draw.Rect(this.Collider, Color.White);
     }
   }
 }
+

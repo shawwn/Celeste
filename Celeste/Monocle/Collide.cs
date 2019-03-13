@@ -13,18 +13,18 @@ namespace Monocle
   {
     public static bool Check(Entity a, Entity b)
     {
-      if (a.Collider == null || b.Collider == null || (a == b || !b.Collidable))
+      if (a.Collider == null || b.Collider == null)
         return false;
-      return a.Collider.Collide(b);
+      return a != b && b.Collidable && a.Collider.Collide(b);
     }
 
     public static bool Check(Entity a, Entity b, Vector2 at)
     {
       Vector2 position = a.Position;
       a.Position = at;
-      int num = Collide.Check(a, b) ? 1 : 0;
+      bool flag = Collide.Check(a, b);
       a.Position = position;
-      return num != 0;
+      return flag;
     }
 
     public static bool Check(Entity a, IEnumerable<Entity> b)
@@ -41,9 +41,9 @@ namespace Monocle
     {
       Vector2 position = a.Position;
       a.Position = at;
-      int num = Collide.Check(a, b) ? 1 : 0;
+      bool flag = Collide.Check(a, b);
       a.Position = position;
-      return num != 0;
+      return flag;
     }
 
     public static Entity First(Entity a, IEnumerable<Entity> b)
@@ -109,9 +109,9 @@ namespace Monocle
     {
       Vector2 position = a.Position;
       a.Position = at;
-      int num = Collide.CheckPoint(a, point) ? 1 : 0;
+      bool flag = Collide.CheckPoint(a, point);
       a.Position = position;
-      return num != 0;
+      return flag;
     }
 
     public static bool CheckLine(Entity a, Vector2 from, Vector2 to)
@@ -125,9 +125,9 @@ namespace Monocle
     {
       Vector2 position = a.Position;
       a.Position = at;
-      int num = Collide.CheckLine(a, from, to) ? 1 : 0;
+      bool flag = Collide.CheckLine(a, from, to);
       a.Position = position;
-      return num != 0;
+      return flag;
     }
 
     public static bool CheckRect(Entity a, Rectangle rect)
@@ -141,23 +141,23 @@ namespace Monocle
     {
       Vector2 position = a.Position;
       a.Position = at;
-      int num = Collide.CheckRect(a, rect) ? 1 : 0;
+      bool flag = Collide.CheckRect(a, rect);
       a.Position = position;
-      return num != 0;
+      return flag;
     }
 
     public static bool LineCheck(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2)
     {
-      Vector2 vector2_1 = Vector2.op_Subtraction(a2, a1);
-      Vector2 vector2_2 = Vector2.op_Subtraction(b2, b1);
-      float num1 = (float) (vector2_1.X * vector2_2.Y - vector2_1.Y * vector2_2.X);
+      Vector2 vector2_1 = a2 - a1;
+      Vector2 vector2_2 = b2 - b1;
+      float num1 = (float) ((double) vector2_1.X * (double) vector2_2.Y - (double) vector2_1.Y * (double) vector2_2.X);
       if ((double) num1 == 0.0)
         return false;
-      Vector2 vector2_3 = Vector2.op_Subtraction(b1, a1);
-      float num2 = (float) (vector2_3.X * vector2_2.Y - vector2_3.Y * vector2_2.X) / num1;
+      Vector2 vector2_3 = b1 - a1;
+      float num2 = (float) ((double) vector2_3.X * (double) vector2_2.Y - (double) vector2_3.Y * (double) vector2_2.X) / num1;
       if ((double) num2 < 0.0 || (double) num2 > 1.0)
         return false;
-      float num3 = (float) (vector2_3.X * vector2_1.Y - vector2_3.Y * vector2_1.X) / num1;
+      float num3 = (float) ((double) vector2_3.X * (double) vector2_1.Y - (double) vector2_3.Y * (double) vector2_1.X) / num1;
       return (double) num3 >= 0.0 && (double) num3 <= 1.0;
     }
 
@@ -168,20 +168,20 @@ namespace Monocle
       Vector2 b2,
       out Vector2 intersection)
     {
-      intersection = Vector2.get_Zero();
-      Vector2 vector2_1 = Vector2.op_Subtraction(a2, a1);
-      Vector2 vector2_2 = Vector2.op_Subtraction(b2, b1);
-      float num1 = (float) (vector2_1.X * vector2_2.Y - vector2_1.Y * vector2_2.X);
+      intersection = Vector2.Zero;
+      Vector2 vector2_1 = a2 - a1;
+      Vector2 vector2_2 = b2 - b1;
+      float num1 = (float) ((double) vector2_1.X * (double) vector2_2.Y - (double) vector2_1.Y * (double) vector2_2.X);
       if ((double) num1 == 0.0)
         return false;
-      Vector2 vector2_3 = Vector2.op_Subtraction(b1, a1);
-      float num2 = (float) (vector2_3.X * vector2_2.Y - vector2_3.Y * vector2_2.X) / num1;
+      Vector2 vector2_3 = b1 - a1;
+      float num2 = (float) ((double) vector2_3.X * (double) vector2_2.Y - (double) vector2_3.Y * (double) vector2_2.X) / num1;
       if ((double) num2 < 0.0 || (double) num2 > 1.0)
         return false;
-      float num3 = (float) (vector2_3.X * vector2_1.Y - vector2_3.Y * vector2_1.X) / num1;
+      float num3 = (float) ((double) vector2_3.X * (double) vector2_1.Y - (double) vector2_3.Y * (double) vector2_1.X) / num1;
       if ((double) num3 < 0.0 || (double) num3 > 1.0)
         return false;
-      intersection = Vector2.op_Addition(a1, Vector2.op_Multiply(num2, vector2_1));
+      intersection = a1 + num2 * vector2_1;
       return true;
     }
 
@@ -228,31 +228,31 @@ namespace Monocle
       PointSectors sector = Collide.GetSector(rX, rY, rW, rH, cPosition);
       Vector2 lineFrom;
       Vector2 lineTo;
-      if ((sector & PointSectors.Top) != PointSectors.Center)
+      if ((uint) (sector & PointSectors.Top) > 0U)
       {
-        ((Vector2) ref lineFrom).\u002Ector(rX, rY);
-        ((Vector2) ref lineTo).\u002Ector(rX + rW, rY);
+        lineFrom = new Vector2(rX, rY);
+        lineTo = new Vector2(rX + rW, rY);
         if (Collide.CircleToLine(cPosition, cRadius, lineFrom, lineTo))
           return true;
       }
-      if ((sector & PointSectors.Bottom) != PointSectors.Center)
+      if ((uint) (sector & PointSectors.Bottom) > 0U)
       {
-        ((Vector2) ref lineFrom).\u002Ector(rX, rY + rH);
-        ((Vector2) ref lineTo).\u002Ector(rX + rW, rY + rH);
+        lineFrom = new Vector2(rX, rY + rH);
+        lineTo = new Vector2(rX + rW, rY + rH);
         if (Collide.CircleToLine(cPosition, cRadius, lineFrom, lineTo))
           return true;
       }
-      if ((sector & PointSectors.Left) != PointSectors.Center)
+      if ((uint) (sector & PointSectors.Left) > 0U)
       {
-        ((Vector2) ref lineFrom).\u002Ector(rX, rY);
-        ((Vector2) ref lineTo).\u002Ector(rX, rY + rH);
+        lineFrom = new Vector2(rX, rY);
+        lineTo = new Vector2(rX, rY + rH);
         if (Collide.CircleToLine(cPosition, cRadius, lineFrom, lineTo))
           return true;
       }
-      if ((sector & PointSectors.Right) != PointSectors.Center)
+      if ((uint) (sector & PointSectors.Right) > 0U)
       {
-        ((Vector2) ref lineFrom).\u002Ector(rX + rW, rY);
-        ((Vector2) ref lineTo).\u002Ector(rX + rW, rY + rH);
+        lineFrom = new Vector2(rX + rW, rY);
+        lineTo = new Vector2(rX + rW, rY + rH);
         if (Collide.CircleToLine(cPosition, cRadius, lineFrom, lineTo))
           return true;
       }
@@ -276,48 +276,37 @@ namespace Monocle
       PointSectors sector2 = Collide.GetSector(rX, rY, rW, rH, lineTo);
       if (sector1 == PointSectors.Center || sector2 == PointSectors.Center)
         return true;
-      if ((sector1 & sector2) != PointSectors.Center)
+      if ((uint) (sector1 & sector2) > 0U)
         return false;
       PointSectors pointSectors = sector1 | sector2;
-      Vector2 vector2;
-      if ((pointSectors & PointSectors.Top) != PointSectors.Center)
+      Vector2 a1;
+      Vector2 a2;
+      if ((uint) (pointSectors & PointSectors.Top) > 0U)
       {
-        Vector2 a1 = new Vector2(rX, rY);
-        ((Vector2) ref vector2).\u002Ector(rX + rW, rY);
-        Vector2 a2 = vector2;
-        Vector2 b1 = lineFrom;
-        Vector2 b2 = lineTo;
-        if (Collide.LineCheck(a1, a2, b1, b2))
+        a1 = new Vector2(rX, rY);
+        a2 = new Vector2(rX + rW, rY);
+        if (Collide.LineCheck(a1, a2, lineFrom, lineTo))
           return true;
       }
-      if ((pointSectors & PointSectors.Bottom) != PointSectors.Center)
+      if ((uint) (pointSectors & PointSectors.Bottom) > 0U)
       {
-        Vector2 a1 = new Vector2(rX, rY + rH);
-        ((Vector2) ref vector2).\u002Ector(rX + rW, rY + rH);
-        Vector2 a2 = vector2;
-        Vector2 b1 = lineFrom;
-        Vector2 b2 = lineTo;
-        if (Collide.LineCheck(a1, a2, b1, b2))
+        a1 = new Vector2(rX, rY + rH);
+        a2 = new Vector2(rX + rW, rY + rH);
+        if (Collide.LineCheck(a1, a2, lineFrom, lineTo))
           return true;
       }
-      if ((pointSectors & PointSectors.Left) != PointSectors.Center)
+      if ((uint) (pointSectors & PointSectors.Left) > 0U)
       {
-        Vector2 a1 = new Vector2(rX, rY);
-        ((Vector2) ref vector2).\u002Ector(rX, rY + rH);
-        Vector2 a2 = vector2;
-        Vector2 b1 = lineFrom;
-        Vector2 b2 = lineTo;
-        if (Collide.LineCheck(a1, a2, b1, b2))
+        a1 = new Vector2(rX, rY);
+        a2 = new Vector2(rX, rY + rH);
+        if (Collide.LineCheck(a1, a2, lineFrom, lineTo))
           return true;
       }
-      if ((pointSectors & PointSectors.Right) != PointSectors.Center)
+      if ((uint) (pointSectors & PointSectors.Right) > 0U)
       {
-        Vector2 a1 = new Vector2(rX + rW, rY);
-        ((Vector2) ref vector2).\u002Ector(rX + rW, rY + rH);
-        Vector2 a2 = vector2;
-        Vector2 b1 = lineFrom;
-        Vector2 b2 = lineTo;
-        if (Collide.LineCheck(a1, a2, b1, b2))
+        a1 = new Vector2(rX + rW, rY);
+        a2 = new Vector2(rX + rW, rY + rH);
+        if (Collide.LineCheck(a1, a2, lineFrom, lineTo))
           return true;
       }
       return false;
@@ -330,9 +319,7 @@ namespace Monocle
 
     public static bool RectToPoint(float rX, float rY, float rW, float rH, Vector2 point)
     {
-      if (point.X >= (double) rX && point.Y >= (double) rY && point.X < (double) rX + (double) rW)
-        return point.Y < (double) rY + (double) rH;
-      return false;
+      return (double) point.X >= (double) rX && (double) point.Y >= (double) rY && (double) point.X < (double) rX + (double) rW && (double) point.Y < (double) rY + (double) rH;
     }
 
     public static bool RectToPoint(Rectangle rect, Vector2 point)
@@ -343,13 +330,13 @@ namespace Monocle
     public static PointSectors GetSector(Rectangle rect, Vector2 point)
     {
       PointSectors pointSectors = PointSectors.Center;
-      if (point.X < (double) ((Rectangle) ref rect).get_Left())
+      if ((double) point.X < (double) rect.Left)
         pointSectors |= PointSectors.Left;
-      else if (point.X >= (double) ((Rectangle) ref rect).get_Right())
+      else if ((double) point.X >= (double) rect.Right)
         pointSectors |= PointSectors.Right;
-      if (point.Y < (double) ((Rectangle) ref rect).get_Top())
+      if ((double) point.Y < (double) rect.Top)
         pointSectors |= PointSectors.Top;
-      else if (point.Y >= (double) ((Rectangle) ref rect).get_Bottom())
+      else if ((double) point.Y >= (double) rect.Bottom)
         pointSectors |= PointSectors.Bottom;
       return pointSectors;
     }
@@ -362,15 +349,16 @@ namespace Monocle
       Vector2 point)
     {
       PointSectors pointSectors = PointSectors.Center;
-      if (point.X < (double) rX)
+      if ((double) point.X < (double) rX)
         pointSectors |= PointSectors.Left;
-      else if (point.X >= (double) rX + (double) rW)
+      else if ((double) point.X >= (double) rX + (double) rW)
         pointSectors |= PointSectors.Right;
-      if (point.Y < (double) rY)
+      if ((double) point.Y < (double) rY)
         pointSectors |= PointSectors.Top;
-      else if (point.Y >= (double) rY + (double) rH)
+      else if ((double) point.Y >= (double) rY + (double) rH)
         pointSectors |= PointSectors.Bottom;
       return pointSectors;
     }
   }
 }
+

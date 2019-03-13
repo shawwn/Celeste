@@ -10,6 +10,7 @@ namespace Monocle
 {
   public class ParticleEmitter : Component
   {
+    private float timer = 0.0f;
     public ParticleSystem System;
     public ParticleType Type;
     public Entity Track;
@@ -18,7 +19,6 @@ namespace Monocle
     public Vector2 Range;
     public int Amount;
     public float? Direction;
-    private float timer;
 
     public ParticleEmitter(
       ParticleSystem system,
@@ -78,7 +78,7 @@ namespace Monocle
         for (int index2 = 0; index2 < this.Amount; ++index2)
         {
           Particle particle = new Particle();
-          Vector2 position = Vector2.op_Addition(Vector2.op_Addition(this.Entity.Position, this.Position), Calc.Random.Range(Vector2.op_UnaryNegation(this.Range), this.Range));
+          Vector2 position = this.Entity.Position + this.Position + Calc.Random.Range(-this.Range, this.Range);
           particle = !this.Direction.HasValue ? this.Type.Create(ref particle, position) : this.Type.Create(ref particle, position, this.Direction.Value);
           particle.Track = this.Track;
           float duration1 = duration - this.Interval * (float) index1;
@@ -91,9 +91,9 @@ namespace Monocle
     public void Emit()
     {
       if (this.Direction.HasValue)
-        this.System.Emit(this.Type, this.Amount, Vector2.op_Addition(this.Entity.Position, this.Position), this.Range, this.Direction.Value);
+        this.System.Emit(this.Type, this.Amount, this.Entity.Position + this.Position, this.Range, this.Direction.Value);
       else
-        this.System.Emit(this.Type, this.Amount, Vector2.op_Addition(this.Entity.Position, this.Position), this.Range);
+        this.System.Emit(this.Type, this.Amount, this.Entity.Position + this.Position, this.Range);
     }
 
     public override void Update()
@@ -106,3 +106,4 @@ namespace Monocle
     }
   }
 }
+

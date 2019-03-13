@@ -164,9 +164,9 @@ namespace Celeste
     {
       TileGrid tileGrid = new TileGrid(8, 8, tilesX, tilesY);
       AnimatedTiles animatedTiles = new AnimatedTiles(tilesX, tilesY, GFX.AnimatedTilesBank);
-      Rectangle empty = Rectangle.get_Empty();
+      Rectangle forceFill = Rectangle.Empty;
       if (forceSolid)
-        ((Rectangle) ref empty).\u002Ector(startX, startY, tilesX, tilesY);
+        forceFill = new Rectangle(startX, startY, tilesX, tilesY);
       if (mapData != null)
       {
         for (int x1 = startX; x1 < startX + tilesX; x1 += 50)
@@ -185,7 +185,7 @@ namespace Celeste
                 int y2 = y1;
                 for (int index2 = Math.Min(y1 + 50, startY + tilesY); y2 < index2; ++y2)
                 {
-                  Autotiler.Tiles tiles = this.TileHandler(mapData, x2, y2, empty, forceID, behaviour);
+                  Autotiler.Tiles tiles = this.TileHandler(mapData, x2, y2, forceFill, forceID, behaviour);
                   if (tiles != null)
                   {
                     tileGrid.Tiles[x2 - startX, y2 - startY] = Calc.Random.Choose<MTexture>(tiles.Textures);
@@ -204,7 +204,7 @@ namespace Celeste
         {
           for (int y = startY; y < startY + tilesY; ++y)
           {
-            Autotiler.Tiles tiles = this.TileHandler((VirtualMap<char>) null, x, y, empty, forceID, behaviour);
+            Autotiler.Tiles tiles = this.TileHandler((VirtualMap<char>) null, x, y, forceFill, forceID, behaviour);
             if (tiles != null)
             {
               tileGrid.Tiles[x - startX, y - startY] = Calc.Random.Choose<MTexture>(tiles.Textures);
@@ -269,14 +269,10 @@ namespace Celeste
 
     private bool CheckForSameLevel(int x1, int y1, int x2, int y2)
     {
-      using (List<Rectangle>.Enumerator enumerator = this.LevelBounds.GetEnumerator())
+      foreach (Rectangle levelBound in this.LevelBounds)
       {
-        while (enumerator.MoveNext())
-        {
-          Rectangle current = enumerator.Current;
-          if (((Rectangle) ref current).Contains(x1, y1) && ((Rectangle) ref current).Contains(x2, y2))
-            return true;
-        }
+        if (levelBound.Contains(x1, y1) && levelBound.Contains(x2, y2))
+          return true;
       }
       return false;
     }
@@ -289,23 +285,19 @@ namespace Celeste
       Rectangle forceFill,
       Autotiler.Behaviour behaviour)
     {
-      if (((Rectangle) ref forceFill).Contains(x, y))
+      if (forceFill.Contains(x, y))
         return true;
       if (mapData == null)
         return behaviour.EdgesExtend;
-      if (x < 0 || y < 0 || (x >= mapData.Columns || y >= mapData.Rows))
+      if (x < 0 || y < 0 || x >= mapData.Columns || y >= mapData.Rows)
       {
         if (!behaviour.EdgesExtend)
           return false;
         char ch = mapData[Calc.Clamp(x, 0, mapData.Columns - 1), Calc.Clamp(y, 0, mapData.Rows - 1)];
-        if (!this.IsEmpty(ch))
-          return !set.Ignore(ch);
-        return false;
+        return !this.IsEmpty(ch) && !set.Ignore(ch);
       }
       char ch1 = mapData[x, y];
-      if (!this.IsEmpty(ch1))
-        return !set.Ignore(ch1);
-      return false;
+      return !this.IsEmpty(ch1) && !set.Ignore(ch1);
     }
 
     private char GetTile(
@@ -316,7 +308,7 @@ namespace Celeste
       char forceID,
       Autotiler.Behaviour behaviour)
     {
-      if (((Rectangle) ref forceFill).Contains(x, y))
+      if (forceFill.Contains(x, y))
         return forceID;
       if (mapData == null)
       {
@@ -324,7 +316,7 @@ namespace Celeste
           return '0';
         return forceID;
       }
-      if (x >= 0 && y >= 0 && (x < mapData.Columns && y < mapData.Rows))
+      if (x >= 0 && y >= 0 && x < mapData.Columns && y < mapData.Rows)
         return mapData[x, y];
       if (!behaviour.EdgesExtend)
         return '0';
@@ -335,9 +327,7 @@ namespace Celeste
 
     private bool IsEmpty(char id)
     {
-      if (id != '0')
-        return id == char.MinValue;
-      return true;
+      return id == '0' || id == char.MinValue;
     }
 
     private class TerrainType
@@ -355,11 +345,7 @@ namespace Celeste
 
       public bool Ignore(char c)
       {
-        if ((int) this.ID == (int) c)
-          return false;
-        if (!this.Ignores.Contains(c))
-          return this.Ignores.Contains('*');
-        return true;
+        return (int) this.ID != (int) c && (this.Ignores.Contains(c) || this.Ignores.Contains('*'));
       }
     }
 
@@ -373,7 +359,7 @@ namespace Celeste
     {
       public List<MTexture> Textures = new List<MTexture>();
       public List<string> OverlapSprites = new List<string>();
-      public bool HasOverlays;
+      public bool HasOverlays = false;
     }
 
     public struct Generated
@@ -390,3 +376,4 @@ namespace Celeste
     }
   }
 }
+

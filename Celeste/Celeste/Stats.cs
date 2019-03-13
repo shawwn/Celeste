@@ -33,9 +33,8 @@ namespace Celeste
       if (!Stats.statToString.TryGetValue(stat, out pchName))
         Stats.statToString.Add(stat, pchName = stat.ToString());
       int pData;
-      if (!SteamUserStats.GetStat(pchName, out pData))
-        return;
-      SteamUserStats.SetStat(pchName, pData + increment);
+      if (SteamUserStats.GetStat(pchName, out pData))
+        SteamUserStats.SetStat(pchName, pData + increment);
     }
 
     public static int Local(Stat stat)
@@ -95,3 +94,4 @@ namespace Celeste
     }
   }
 }
+

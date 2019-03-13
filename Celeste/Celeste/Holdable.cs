@@ -40,9 +40,9 @@ namespace Celeste
       Collider collider = this.Entity.Collider;
       if (this.PickupCollider != null)
         this.Entity.Collider = this.PickupCollider;
-      int num = player.CollideCheck(this.Entity) ? 1 : 0;
+      bool flag = player.CollideCheck(this.Entity);
       this.Entity.Collider = collider;
-      return num != 0;
+      return flag;
     }
 
     public override void Added(Entity entity)
@@ -82,24 +82,21 @@ namespace Celeste
     {
       if (this.Entity.CollideCheck<Solid>())
       {
-        if (force.X != 0.0)
+        if ((double) force.X != 0.0)
         {
           bool flag = false;
-          int num1 = Math.Sign((float) force.X);
+          int num1 = Math.Sign(force.X);
           int num2 = 0;
           while (!flag && num2++ < 10)
           {
-            if (!this.Entity.CollideCheck<Solid>(Vector2.op_Addition(this.Entity.Position, Vector2.op_Multiply((float) (num1 * num2), Vector2.get_UnitX()))))
+            if (!this.Entity.CollideCheck<Solid>(this.Entity.Position + (float) (num1 * num2) * Vector2.UnitX))
               flag = true;
           }
           if (flag)
             this.Entity.X += (float) (num1 * num2);
         }
         while (this.Entity.CollideCheck<Solid>())
-        {
-          Entity entity = this.Entity;
-          entity.Position = Vector2.op_Addition(entity.Position, Vector2.get_UnitY());
-        }
+          this.Entity.Position += Vector2.UnitY;
       }
       this.Holder = (Player) null;
       this.gravityTimer = 0.1f;
@@ -151,7 +148,7 @@ namespace Celeste
         return;
       Collider collider = this.Entity.Collider;
       this.Entity.Collider = this.PickupCollider;
-      this.Entity.Collider.Render(camera, Color.get_Pink());
+      this.Entity.Collider.Render(camera, Color.Pink);
       this.Entity.Collider = collider;
     }
 
@@ -194,7 +191,8 @@ namespace Celeste
     {
       if (this.SpeedGetter != null)
         return this.SpeedGetter();
-      return Vector2.get_Zero();
+      return Vector2.Zero;
     }
   }
 }
+

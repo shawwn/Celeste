@@ -18,7 +18,7 @@ namespace Celeste
     private int sign;
 
     public CliffsideWindFlag(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       MTexture atlasSubtexturesAt = GFX.Game.GetAtlasSubtexturesAt("scenery/cliffside/flag", data.Int("index", 0));
       this.segments = new CliffsideWindFlag.Segment[atlasSubtexturesAt.Width];
@@ -38,7 +38,7 @@ namespace Celeste
     {
       get
       {
-        return Calc.ClampedMap(Math.Abs((float) (this.Scene as Level).Wind.X), 0.0f, 800f, 0.0f, 1f);
+        return Calc.ClampedMap(Math.Abs((this.Scene as Level).Wind.X), 0.0f, 800f, 0.0f, 1f);
       }
     }
 
@@ -47,7 +47,7 @@ namespace Celeste
       base.Added(scene);
       this.sign = 1;
       if ((double) this.wind != 0.0)
-        this.sign = Math.Sign((float) (this.Scene as Level).Wind.X);
+        this.sign = Math.Sign((this.Scene as Level).Wind.X);
       for (int i = 0; i < this.segments.Length; ++i)
         this.SetFlagSegmentPosition(i, true);
     }
@@ -56,7 +56,7 @@ namespace Celeste
     {
       base.Update();
       if ((double) this.wind != 0.0)
-        this.sign = Math.Sign((float) (this.Scene as Level).Wind.X);
+        this.sign = Math.Sign((this.Scene as Level).Wind.X);
       this.sine += (float) ((double) Engine.DeltaTime * (4.0 + (double) this.wind * 4.0) * (0.800000011920929 + (double) this.random * 0.200000002980232));
       for (int i = 0; i < this.segments.Length; ++i)
         this.SetFlagSegmentPosition(i, false);
@@ -75,13 +75,13 @@ namespace Celeste
       float target2 = (float) ((double) i / (double) this.segments.Length * (double) Math.Max(0.1f, 1f - this.wind) * 16.0);
       if (!snap)
       {
-        segment.Offset.X = (__Null) (double) Calc.Approach((float) segment.Offset.X, target1, Engine.DeltaTime * 40f);
-        segment.Offset.Y = (__Null) (double) Calc.Approach((float) segment.Offset.Y, target2, Engine.DeltaTime * 40f);
+        segment.Offset.X = Calc.Approach(segment.Offset.X, target1, Engine.DeltaTime * 40f);
+        segment.Offset.Y = Calc.Approach(segment.Offset.Y, target2, Engine.DeltaTime * 40f);
       }
       else
       {
-        segment.Offset.X = (__Null) (double) target1;
-        segment.Offset.Y = (__Null) (double) target2;
+        segment.Offset.X = target1;
+        segment.Offset.Y = target2;
       }
     }
 
@@ -92,7 +92,7 @@ namespace Celeste
       {
         CliffsideWindFlag.Segment segment = this.segments[index];
         float num = (float) ((double) index / (double) this.segments.Length * (double) this.Sin((float) -index * 0.1f + this.sine) * 2.0);
-        segment.Texture.Draw(Vector2.op_Addition(Vector2.op_Addition(this.Position, segment.Offset), Vector2.op_Multiply(Vector2.get_UnitY(), num)));
+        segment.Texture.Draw(this.Position + segment.Offset + Vector2.UnitY * num);
       }
     }
 
@@ -103,3 +103,4 @@ namespace Celeste
     }
   }
 }
+

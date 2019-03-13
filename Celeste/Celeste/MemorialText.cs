@@ -12,14 +12,14 @@ namespace Celeste
 {
   public class MemorialText : Entity
   {
+    private float alpha = 0.0f;
+    private float timer = 0.0f;
+    private float widestCharacter = 0.0f;
     public bool Show;
     public bool Dreamy;
     public Memorial Memorial;
     private float index;
     private string message;
-    private float alpha;
-    private float timer;
-    private float widestCharacter;
     private int firstLineLength;
     private SoundSource textSfx;
     private bool textSfxPlaying;
@@ -35,7 +35,7 @@ namespace Celeste
       this.firstLineLength = this.CountToNewline(0);
       for (int index = 0; index < this.message.Length; ++index)
       {
-        float x = (float) ActiveFont.Measure(this.message[index]).X;
+        float x = ActiveFont.Measure(this.message[index]).X;
         if ((double) x > (double) this.widestCharacter)
           this.widestCharacter = x;
       }
@@ -96,10 +96,9 @@ namespace Celeste
       if ((this.Scene as Level).FrozenOrPaused || (this.Scene as Level).Completed || ((double) this.index <= 0.0 || (double) this.alpha <= 0.0))
         return;
       Camera camera = this.SceneAs<Level>().Camera;
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector((float) (((double) this.Memorial.X - (double) camera.X) * 6.0), (float) (((double) this.Memorial.Y - (double) camera.Y) * 6.0 - 350.0 - (double) ActiveFont.LineHeight * 3.29999995231628));
+      Vector2 vector2 = new Vector2((float) (((double) this.Memorial.X - (double) camera.X) * 6.0), (float) (((double) this.Memorial.Y - (double) camera.Y) * 6.0 - 350.0 - (double) ActiveFont.LineHeight * 3.29999995231628));
       if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
-        vector2.X = (__Null) (1920.0 - vector2.X);
+        vector2.X = 1920f - vector2.X;
       float num1 = Ease.CubeInOut(this.alpha);
       int num2 = (int) Math.Min((float) this.message.Length, this.index);
       int num3 = 0;
@@ -116,19 +115,20 @@ namespace Celeste
         }
         else
         {
-          float num5 = 1f;
-          float num6 = (float) ((double) -newline * (double) this.widestCharacter / 2.0 + ((double) num3 + 0.5) * (double) this.widestCharacter);
-          float num7 = 0.0f;
-          if (this.Dreamy && character != ' ' && (character != '-' && character != '\n'))
+          float x1 = 1f;
+          float x2 = (float) ((double) -newline * (double) this.widestCharacter / 2.0 + ((double) num3 + 0.5) * (double) this.widestCharacter);
+          float num5 = 0.0f;
+          if (this.Dreamy && character != ' ' && character != '-' && character != '\n')
           {
             character = this.message[(index + (int) (Math.Sin((double) this.timer * 2.0 + (double) index / 8.0) * 4.0) + this.message.Length) % this.message.Length];
-            num7 = (float) Math.Sin((double) this.timer * 2.0 + (double) index / 8.0) * 8f;
-            num5 = Math.Sin((double) this.timer * 4.0 + (double) index / 16.0) < 0.0 ? -1f : 1f;
+            num5 = (float) Math.Sin((double) this.timer * 2.0 + (double) index / 8.0) * 8f;
+            x1 = Math.Sin((double) this.timer * 4.0 + (double) index / 16.0) < 0.0 ? -1f : 1f;
           }
-          ActiveFont.Draw(character, Vector2.op_Addition(vector2, new Vector2(num6, num4 + num7)), new Vector2(0.5f, 1f), new Vector2(num5, 1f), Color.op_Multiply(Color.get_White(), num1));
+          ActiveFont.Draw(character, vector2 + new Vector2(x2, num4 + num5), new Vector2(0.5f, 1f), new Vector2(x1, 1f), Color.White * num1);
           ++num3;
         }
       }
     }
   }
 }
+

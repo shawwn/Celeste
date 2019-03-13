@@ -41,7 +41,7 @@ namespace Monocle
 
     internal static void Update()
     {
-      if (Engine.Instance.get_IsActive() && MInput.Active)
+      if (Engine.Instance.IsActive && MInput.Active)
       {
         if (Engine.Commands.Open)
         {
@@ -135,70 +135,58 @@ namespace Monocle
       internal void UpdateNull()
       {
         this.PreviousState = this.CurrentState;
-        this.CurrentState = (KeyboardState) null;
+        this.CurrentState = new KeyboardState();
       }
 
       public bool Check(Keys key)
       {
         if (MInput.Disabled)
           return false;
-        return ((KeyboardState) ref this.CurrentState).IsKeyDown(key);
+        return this.CurrentState.IsKeyDown(key);
       }
 
       public bool Pressed(Keys key)
       {
-        if (MInput.Disabled || !((KeyboardState) ref this.CurrentState).IsKeyDown(key))
+        if (MInput.Disabled)
           return false;
-        return !((KeyboardState) ref this.PreviousState).IsKeyDown(key);
+        return this.CurrentState.IsKeyDown(key) && !this.PreviousState.IsKeyDown(key);
       }
 
       public bool Released(Keys key)
       {
-        if (MInput.Disabled || ((KeyboardState) ref this.CurrentState).IsKeyDown(key))
+        if (MInput.Disabled)
           return false;
-        return ((KeyboardState) ref this.PreviousState).IsKeyDown(key);
+        return !this.CurrentState.IsKeyDown(key) && this.PreviousState.IsKeyDown(key);
       }
 
       public bool Check(Keys keyA, Keys keyB)
       {
-        if (!this.Check(keyA))
-          return this.Check(keyB);
-        return true;
+        return this.Check(keyA) || this.Check(keyB);
       }
 
       public bool Pressed(Keys keyA, Keys keyB)
       {
-        if (!this.Pressed(keyA))
-          return this.Pressed(keyB);
-        return true;
+        return this.Pressed(keyA) || this.Pressed(keyB);
       }
 
       public bool Released(Keys keyA, Keys keyB)
       {
-        if (!this.Released(keyA))
-          return this.Released(keyB);
-        return true;
+        return this.Released(keyA) || this.Released(keyB);
       }
 
       public bool Check(Keys keyA, Keys keyB, Keys keyC)
       {
-        if (!this.Check(keyA) && !this.Check(keyB))
-          return this.Check(keyC);
-        return true;
+        return this.Check(keyA) || this.Check(keyB) || this.Check(keyC);
       }
 
       public bool Pressed(Keys keyA, Keys keyB, Keys keyC)
       {
-        if (!this.Pressed(keyA) && !this.Pressed(keyB))
-          return this.Pressed(keyC);
-        return true;
+        return this.Pressed(keyA) || this.Pressed(keyB) || this.Pressed(keyC);
       }
 
       public bool Released(Keys keyA, Keys keyB, Keys keyC)
       {
-        if (!this.Released(keyA) && !this.Released(keyB))
-          return this.Released(keyC);
-        return true;
+        return this.Released(keyA) || this.Released(keyB) || this.Released(keyC);
       }
 
       public int AxisCheck(Keys negative, Keys positive)
@@ -227,8 +215,8 @@ namespace Monocle
 
       internal MouseData()
       {
-        this.PreviousState = (MouseState) null;
-        this.CurrentState = (MouseState) null;
+        this.PreviousState = new MouseState();
+        this.CurrentState = new MouseState();
       }
 
       internal void Update()
@@ -240,14 +228,14 @@ namespace Monocle
       internal void UpdateNull()
       {
         this.PreviousState = this.CurrentState;
-        this.CurrentState = (MouseState) null;
+        this.CurrentState = new MouseState();
       }
 
       public bool CheckLeftButton
       {
         get
         {
-          return ((MouseState) ref this.CurrentState).get_LeftButton() == 1;
+          return this.CurrentState.LeftButton == ButtonState.Pressed;
         }
       }
 
@@ -255,7 +243,7 @@ namespace Monocle
       {
         get
         {
-          return ((MouseState) ref this.CurrentState).get_RightButton() == 1;
+          return this.CurrentState.RightButton == ButtonState.Pressed;
         }
       }
 
@@ -263,7 +251,7 @@ namespace Monocle
       {
         get
         {
-          return ((MouseState) ref this.CurrentState).get_MiddleButton() == 1;
+          return this.CurrentState.MiddleButton == ButtonState.Pressed;
         }
       }
 
@@ -271,9 +259,7 @@ namespace Monocle
       {
         get
         {
-          if (((MouseState) ref this.CurrentState).get_LeftButton() == 1)
-            return ((MouseState) ref this.PreviousState).get_LeftButton() == 0;
-          return false;
+          return this.CurrentState.LeftButton == ButtonState.Pressed && this.PreviousState.LeftButton == ButtonState.Released;
         }
       }
 
@@ -281,9 +267,7 @@ namespace Monocle
       {
         get
         {
-          if (((MouseState) ref this.CurrentState).get_RightButton() == 1)
-            return ((MouseState) ref this.PreviousState).get_RightButton() == 0;
-          return false;
+          return this.CurrentState.RightButton == ButtonState.Pressed && this.PreviousState.RightButton == ButtonState.Released;
         }
       }
 
@@ -291,9 +275,7 @@ namespace Monocle
       {
         get
         {
-          if (((MouseState) ref this.CurrentState).get_MiddleButton() == 1)
-            return ((MouseState) ref this.PreviousState).get_MiddleButton() == 0;
-          return false;
+          return this.CurrentState.MiddleButton == ButtonState.Pressed && this.PreviousState.MiddleButton == ButtonState.Released;
         }
       }
 
@@ -301,9 +283,7 @@ namespace Monocle
       {
         get
         {
-          if (((MouseState) ref this.CurrentState).get_LeftButton() == null)
-            return ((MouseState) ref this.PreviousState).get_LeftButton() == 1;
-          return false;
+          return this.CurrentState.LeftButton == ButtonState.Released && this.PreviousState.LeftButton == ButtonState.Pressed;
         }
       }
 
@@ -311,9 +291,7 @@ namespace Monocle
       {
         get
         {
-          if (((MouseState) ref this.CurrentState).get_RightButton() == null)
-            return ((MouseState) ref this.PreviousState).get_RightButton() == 1;
-          return false;
+          return this.CurrentState.RightButton == ButtonState.Released && this.PreviousState.RightButton == ButtonState.Pressed;
         }
       }
 
@@ -321,9 +299,7 @@ namespace Monocle
       {
         get
         {
-          if (((MouseState) ref this.CurrentState).get_MiddleButton() == null)
-            return ((MouseState) ref this.PreviousState).get_MiddleButton() == 1;
-          return false;
+          return this.CurrentState.MiddleButton == ButtonState.Released && this.PreviousState.MiddleButton == ButtonState.Pressed;
         }
       }
 
@@ -331,7 +307,7 @@ namespace Monocle
       {
         get
         {
-          return ((MouseState) ref this.CurrentState).get_ScrollWheelValue();
+          return this.CurrentState.ScrollWheelValue;
         }
       }
 
@@ -339,7 +315,7 @@ namespace Monocle
       {
         get
         {
-          return ((MouseState) ref this.CurrentState).get_ScrollWheelValue() - ((MouseState) ref this.PreviousState).get_ScrollWheelValue();
+          return this.CurrentState.ScrollWheelValue - this.PreviousState.ScrollWheelValue;
         }
       }
 
@@ -347,9 +323,7 @@ namespace Monocle
       {
         get
         {
-          if (((MouseState) ref this.CurrentState).get_X() == ((MouseState) ref this.PreviousState).get_X())
-            return ((MouseState) ref this.CurrentState).get_Y() != ((MouseState) ref this.PreviousState).get_Y();
-          return true;
+          return this.CurrentState.X != this.PreviousState.X || this.CurrentState.Y != this.PreviousState.Y;
         }
       }
 
@@ -357,11 +331,11 @@ namespace Monocle
       {
         get
         {
-          return (float) this.Position.X;
+          return this.Position.X;
         }
         set
         {
-          this.Position = new Vector2(value, (float) this.Position.Y);
+          this.Position = new Vector2(value, this.Position.Y);
         }
       }
 
@@ -369,11 +343,11 @@ namespace Monocle
       {
         get
         {
-          return (float) this.Position.Y;
+          return this.Position.Y;
         }
         set
         {
-          this.Position = new Vector2((float) this.Position.X, value);
+          this.Position = new Vector2(this.Position.X, value);
         }
       }
 
@@ -381,7 +355,7 @@ namespace Monocle
       {
         get
         {
-          return Vector2.Transform(new Vector2((float) ((MouseState) ref this.CurrentState).get_X(), (float) ((MouseState) ref this.CurrentState).get_Y()), Matrix.Invert(Engine.ScreenMatrix));
+          return Vector2.Transform(new Vector2((float) this.CurrentState.X, (float) this.CurrentState.Y), Matrix.Invert(Engine.ScreenMatrix));
         }
         set
         {
@@ -409,21 +383,19 @@ namespace Monocle
       {
         this.PreviousState = this.CurrentState;
         this.CurrentState = GamePad.GetState(this.PlayerIndex);
-        this.Attached = ((GamePadState) ref this.CurrentState).get_IsConnected();
+        this.Attached = this.CurrentState.IsConnected;
         if ((double) this.rumbleTime <= 0.0)
           return;
         this.rumbleTime -= Engine.DeltaTime;
-        if ((double) this.rumbleTime > 0.0)
-          return;
-        GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f);
+        if ((double) this.rumbleTime <= 0.0)
+          GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f);
       }
 
       public void UpdateNull()
       {
         this.PreviousState = this.CurrentState;
-        this.CurrentState = (GamePadState) null;
-        GamePadState state = GamePad.GetState(this.PlayerIndex);
-        this.Attached = ((GamePadState) ref state).get_IsConnected();
+        this.CurrentState = new GamePadState();
+        this.Attached = GamePad.GetState(this.PlayerIndex).IsConnected;
         if ((double) this.rumbleTime > 0.0)
           this.rumbleTime -= Engine.DeltaTime;
         GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f);
@@ -448,79 +420,65 @@ namespace Monocle
       {
         if (MInput.Disabled)
           return false;
-        return ((GamePadState) ref this.CurrentState).IsButtonDown(button);
+        return this.CurrentState.IsButtonDown(button);
       }
 
       public bool Pressed(Buttons button)
       {
-        if (MInput.Disabled || !((GamePadState) ref this.CurrentState).IsButtonDown(button))
+        if (MInput.Disabled)
           return false;
-        return ((GamePadState) ref this.PreviousState).IsButtonUp(button);
+        return this.CurrentState.IsButtonDown(button) && this.PreviousState.IsButtonUp(button);
       }
 
       public bool Released(Buttons button)
       {
-        if (MInput.Disabled || !((GamePadState) ref this.CurrentState).IsButtonUp(button))
+        if (MInput.Disabled)
           return false;
-        return ((GamePadState) ref this.PreviousState).IsButtonDown(button);
+        return this.CurrentState.IsButtonUp(button) && this.PreviousState.IsButtonDown(button);
       }
 
       public bool Check(Buttons buttonA, Buttons buttonB)
       {
-        if (!this.Check(buttonA))
-          return this.Check(buttonB);
-        return true;
+        return this.Check(buttonA) || this.Check(buttonB);
       }
 
       public bool Pressed(Buttons buttonA, Buttons buttonB)
       {
-        if (!this.Pressed(buttonA))
-          return this.Pressed(buttonB);
-        return true;
+        return this.Pressed(buttonA) || this.Pressed(buttonB);
       }
 
       public bool Released(Buttons buttonA, Buttons buttonB)
       {
-        if (!this.Released(buttonA))
-          return this.Released(buttonB);
-        return true;
+        return this.Released(buttonA) || this.Released(buttonB);
       }
 
       public bool Check(Buttons buttonA, Buttons buttonB, Buttons buttonC)
       {
-        if (!this.Check(buttonA) && !this.Check(buttonB))
-          return this.Check(buttonC);
-        return true;
+        return this.Check(buttonA) || this.Check(buttonB) || this.Check(buttonC);
       }
 
       public bool Pressed(Buttons buttonA, Buttons buttonB, Buttons buttonC)
       {
-        if (!this.Pressed(buttonA) && !this.Pressed(buttonB))
-          return this.Check(buttonC);
-        return true;
+        return this.Pressed(buttonA) || this.Pressed(buttonB) || this.Check(buttonC);
       }
 
       public bool Released(Buttons buttonA, Buttons buttonB, Buttons buttonC)
       {
-        if (!this.Released(buttonA) && !this.Released(buttonB))
-          return this.Check(buttonC);
-        return true;
+        return this.Released(buttonA) || this.Released(buttonB) || this.Check(buttonC);
       }
 
       public Vector2 GetLeftStick()
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        Vector2 left = ((GamePadThumbSticks) ref thumbSticks).get_Left();
+        Vector2 left = this.CurrentState.ThumbSticks.Left;
         left.Y = -left.Y;
         return left;
       }
 
       public Vector2 GetLeftStick(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        Vector2 vector2 = ((GamePadThumbSticks) ref thumbSticks).get_Left();
-        if ((double) ((Vector2) ref vector2).LengthSquared() < (double) deadzone * (double) deadzone)
-          vector2 = Vector2.get_Zero();
+        Vector2 vector2 = this.CurrentState.ThumbSticks.Left;
+        if ((double) vector2.LengthSquared() < (double) deadzone * (double) deadzone)
+          vector2 = Vector2.Zero;
         else
           vector2.Y = -vector2.Y;
         return vector2;
@@ -528,18 +486,16 @@ namespace Monocle
 
       public Vector2 GetRightStick()
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        Vector2 right = ((GamePadThumbSticks) ref thumbSticks).get_Right();
+        Vector2 right = this.CurrentState.ThumbSticks.Right;
         right.Y = -right.Y;
         return right;
       }
 
       public Vector2 GetRightStick(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        Vector2 vector2 = ((GamePadThumbSticks) ref thumbSticks).get_Right();
-        if ((double) ((Vector2) ref vector2).LengthSquared() < (double) deadzone * (double) deadzone)
-          vector2 = Vector2.get_Zero();
+        Vector2 vector2 = this.CurrentState.ThumbSticks.Right;
+        if ((double) vector2.LengthSquared() < (double) deadzone * (double) deadzone)
+          vector2 = Vector2.Zero;
         else
           vector2.Y = -vector2.Y;
         return vector2;
@@ -547,104 +503,67 @@ namespace Monocle
 
       public bool LeftStickLeftCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Left().X <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.X <= -(double) deadzone;
       }
 
       public bool LeftStickLeftPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().X > -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().X > -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.X <= -(double) deadzone && (double) this.PreviousState.ThumbSticks.Left.X > -(double) deadzone;
       }
 
       public bool LeftStickLeftReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().X <= -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().X <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.X > -(double) deadzone && (double) this.PreviousState.ThumbSticks.Left.X <= -(double) deadzone;
       }
 
       public bool LeftStickRightCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Left().X >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.X >= (double) deadzone;
       }
 
       public bool LeftStickRightPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().X < (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().X < (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.X >= (double) deadzone && (double) this.PreviousState.ThumbSticks.Left.X < (double) deadzone;
       }
 
       public bool LeftStickRightReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().X >= (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().X >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.X < (double) deadzone && (double) this.PreviousState.ThumbSticks.Left.X >= (double) deadzone;
       }
 
       public bool LeftStickDownCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Left().Y <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.Y <= -(double) deadzone;
       }
 
       public bool LeftStickDownPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().Y > -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().Y > -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.Y <= -(double) deadzone && (double) this.PreviousState.ThumbSticks.Left.Y > -(double) deadzone;
       }
 
       public bool LeftStickDownReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().Y <= -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().Y <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.Y > -(double) deadzone && (double) this.PreviousState.ThumbSticks.Left.Y <= -(double) deadzone;
       }
 
       public bool LeftStickUpCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Left().Y >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.Y >= (double) deadzone;
       }
 
       public bool LeftStickUpPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().Y < (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().Y < (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.Y >= (double) deadzone && (double) this.PreviousState.ThumbSticks.Left.Y < (double) deadzone;
       }
 
       public bool LeftStickUpReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Left().Y >= (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Left().Y >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Left.Y < (double) deadzone && (double) this.PreviousState.ThumbSticks.Left.Y >= (double) deadzone;
       }
 
       public float LeftStickHorizontal(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        float x = (float) ((GamePadThumbSticks) ref thumbSticks).get_Left().X;
+        float x = this.CurrentState.ThumbSticks.Left.X;
         if ((double) Math.Abs(x) < (double) deadzone)
           return 0.0f;
         return x;
@@ -652,8 +571,7 @@ namespace Monocle
 
       public float LeftStickVertical(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        float y = (float) ((GamePadThumbSticks) ref thumbSticks).get_Left().Y;
+        float y = this.CurrentState.ThumbSticks.Left.Y;
         if ((double) Math.Abs(y) < (double) deadzone)
           return 0.0f;
         return -y;
@@ -661,104 +579,67 @@ namespace Monocle
 
       public bool RightStickLeftCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Right().X <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.X <= -(double) deadzone;
       }
 
       public bool RightStickLeftPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().X > -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().X > -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.X <= -(double) deadzone && (double) this.PreviousState.ThumbSticks.Right.X > -(double) deadzone;
       }
 
       public bool RightStickLeftReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().X <= -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().X <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.X > -(double) deadzone && (double) this.PreviousState.ThumbSticks.Right.X <= -(double) deadzone;
       }
 
       public bool RightStickRightCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Right().X >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.X >= (double) deadzone;
       }
 
       public bool RightStickRightPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().X < (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().X < (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.X >= (double) deadzone && (double) this.PreviousState.ThumbSticks.Right.X < (double) deadzone;
       }
 
       public bool RightStickRightReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().X >= (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().X >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.X < (double) deadzone && (double) this.PreviousState.ThumbSticks.Right.X >= (double) deadzone;
       }
 
       public bool RightStickUpCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Right().Y <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.Y <= -(double) deadzone;
       }
 
       public bool RightStickUpPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().Y > -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().Y > -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.Y <= -(double) deadzone && (double) this.PreviousState.ThumbSticks.Right.Y > -(double) deadzone;
       }
 
       public bool RightStickUpReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().Y <= -(double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().Y <= -(double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.Y > -(double) deadzone && (double) this.PreviousState.ThumbSticks.Right.Y <= -(double) deadzone;
       }
 
       public bool RightStickDownCheck(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks).get_Right().Y >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.Y >= (double) deadzone;
       }
 
       public bool RightStickDownPressed(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().Y < (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().Y < (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.Y >= (double) deadzone && (double) this.PreviousState.ThumbSticks.Right.Y < (double) deadzone;
       }
 
       public bool RightStickDownReleased(float deadzone)
       {
-        GamePadThumbSticks thumbSticks1 = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        if (((GamePadThumbSticks) ref thumbSticks1).get_Right().Y >= (double) deadzone)
-          return false;
-        GamePadThumbSticks thumbSticks2 = ((GamePadState) ref this.PreviousState).get_ThumbSticks();
-        return ((GamePadThumbSticks) ref thumbSticks2).get_Right().Y >= (double) deadzone;
+        return (double) this.CurrentState.ThumbSticks.Right.Y < (double) deadzone && (double) this.PreviousState.ThumbSticks.Right.Y >= (double) deadzone;
       }
 
       public float RightStickHorizontal(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        float x = (float) ((GamePadThumbSticks) ref thumbSticks).get_Right().X;
+        float x = this.CurrentState.ThumbSticks.Right.X;
         if ((double) Math.Abs(x) < (double) deadzone)
           return 0.0f;
         return x;
@@ -766,8 +647,7 @@ namespace Monocle
 
       public float RightStickVertical(float deadzone)
       {
-        GamePadThumbSticks thumbSticks = ((GamePadState) ref this.CurrentState).get_ThumbSticks();
-        float y = (float) ((GamePadThumbSticks) ref thumbSticks).get_Right().Y;
+        float y = this.CurrentState.ThumbSticks.Right.Y;
         if ((double) Math.Abs(y) < (double) deadzone)
           return 0.0f;
         return -y;
@@ -777,11 +657,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Right() == 1)
-            return 1;
-          GamePadDPad dpad2 = ((GamePadState) ref this.CurrentState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Left() != 1 ? 0 : -1;
+          return this.CurrentState.DPad.Right == ButtonState.Pressed ? 1 : (this.CurrentState.DPad.Left == ButtonState.Pressed ? -1 : 0);
         }
       }
 
@@ -789,11 +665,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Down() == 1)
-            return 1;
-          GamePadDPad dpad2 = ((GamePadState) ref this.CurrentState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Up() != 1 ? 0 : -1;
+          return this.CurrentState.DPad.Down == ButtonState.Pressed ? 1 : (this.CurrentState.DPad.Up == ButtonState.Pressed ? -1 : 0);
         }
       }
 
@@ -809,8 +681,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad = ((GamePadState) ref this.CurrentState).get_DPad();
-          return ((GamePadDPad) ref dpad).get_Left() == 1;
+          return this.CurrentState.DPad.Left == ButtonState.Pressed;
         }
       }
 
@@ -818,11 +689,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Left() != 1)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Left() == 0;
+          return this.CurrentState.DPad.Left == ButtonState.Pressed && this.PreviousState.DPad.Left == ButtonState.Released;
         }
       }
 
@@ -830,11 +697,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Left() != null)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Left() == 1;
+          return this.CurrentState.DPad.Left == ButtonState.Released && this.PreviousState.DPad.Left == ButtonState.Pressed;
         }
       }
 
@@ -842,8 +705,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad = ((GamePadState) ref this.CurrentState).get_DPad();
-          return ((GamePadDPad) ref dpad).get_Right() == 1;
+          return this.CurrentState.DPad.Right == ButtonState.Pressed;
         }
       }
 
@@ -851,11 +713,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Right() != 1)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Right() == 0;
+          return this.CurrentState.DPad.Right == ButtonState.Pressed && this.PreviousState.DPad.Right == ButtonState.Released;
         }
       }
 
@@ -863,11 +721,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Right() != null)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Right() == 1;
+          return this.CurrentState.DPad.Right == ButtonState.Released && this.PreviousState.DPad.Right == ButtonState.Pressed;
         }
       }
 
@@ -875,8 +729,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad = ((GamePadState) ref this.CurrentState).get_DPad();
-          return ((GamePadDPad) ref dpad).get_Up() == 1;
+          return this.CurrentState.DPad.Up == ButtonState.Pressed;
         }
       }
 
@@ -884,11 +737,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Up() != 1)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Up() == 0;
+          return this.CurrentState.DPad.Up == ButtonState.Pressed && this.PreviousState.DPad.Up == ButtonState.Released;
         }
       }
 
@@ -896,11 +745,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Up() != null)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Up() == 1;
+          return this.CurrentState.DPad.Up == ButtonState.Released && this.PreviousState.DPad.Up == ButtonState.Pressed;
         }
       }
 
@@ -908,8 +753,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad = ((GamePadState) ref this.CurrentState).get_DPad();
-          return ((GamePadDPad) ref dpad).get_Down() == 1;
+          return this.CurrentState.DPad.Down == ButtonState.Pressed;
         }
       }
 
@@ -917,11 +761,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Down() != 1)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Down() == 0;
+          return this.CurrentState.DPad.Down == ButtonState.Pressed && this.PreviousState.DPad.Down == ButtonState.Released;
         }
       }
 
@@ -929,11 +769,7 @@ namespace Monocle
       {
         get
         {
-          GamePadDPad dpad1 = ((GamePadState) ref this.CurrentState).get_DPad();
-          if (((GamePadDPad) ref dpad1).get_Down() != null)
-            return false;
-          GamePadDPad dpad2 = ((GamePadState) ref this.PreviousState).get_DPad();
-          return ((GamePadDPad) ref dpad2).get_Down() == 1;
+          return this.CurrentState.DPad.Down == ButtonState.Released && this.PreviousState.DPad.Down == ButtonState.Pressed;
         }
       }
 
@@ -941,61 +777,80 @@ namespace Monocle
       {
         if (MInput.Disabled)
           return false;
-        GamePadTriggers triggers = ((GamePadState) ref this.CurrentState).get_Triggers();
-        return (double) ((GamePadTriggers) ref triggers).get_Left() >= (double) threshold;
+        return (double) this.CurrentState.Triggers.Left >= (double) threshold;
       }
 
       public bool LeftTriggerPressed(float threshold)
       {
         if (MInput.Disabled)
           return false;
-        GamePadTriggers triggers1 = ((GamePadState) ref this.CurrentState).get_Triggers();
-        if ((double) ((GamePadTriggers) ref triggers1).get_Left() < (double) threshold)
-          return false;
-        GamePadTriggers triggers2 = ((GamePadState) ref this.PreviousState).get_Triggers();
-        return (double) ((GamePadTriggers) ref triggers2).get_Left() < (double) threshold;
+        GamePadTriggers triggers = this.CurrentState.Triggers;
+        int num;
+        if ((double) triggers.Left >= (double) threshold)
+        {
+          triggers = this.PreviousState.Triggers;
+          num = (double) triggers.Left < (double) threshold ? 1 : 0;
+        }
+        else
+          num = 0;
+        return num != 0;
       }
 
       public bool LeftTriggerReleased(float threshold)
       {
         if (MInput.Disabled)
           return false;
-        GamePadTriggers triggers1 = ((GamePadState) ref this.CurrentState).get_Triggers();
-        if ((double) ((GamePadTriggers) ref triggers1).get_Left() >= (double) threshold)
-          return false;
-        GamePadTriggers triggers2 = ((GamePadState) ref this.PreviousState).get_Triggers();
-        return (double) ((GamePadTriggers) ref triggers2).get_Left() >= (double) threshold;
+        GamePadTriggers triggers = this.CurrentState.Triggers;
+        int num;
+        if ((double) triggers.Left < (double) threshold)
+        {
+          triggers = this.PreviousState.Triggers;
+          num = (double) triggers.Left >= (double) threshold ? 1 : 0;
+        }
+        else
+          num = 0;
+        return num != 0;
       }
 
       public bool RightTriggerCheck(float threshold)
       {
         if (MInput.Disabled)
           return false;
-        GamePadTriggers triggers = ((GamePadState) ref this.CurrentState).get_Triggers();
-        return (double) ((GamePadTriggers) ref triggers).get_Right() >= (double) threshold;
+        return (double) this.CurrentState.Triggers.Right >= (double) threshold;
       }
 
       public bool RightTriggerPressed(float threshold)
       {
         if (MInput.Disabled)
           return false;
-        GamePadTriggers triggers1 = ((GamePadState) ref this.CurrentState).get_Triggers();
-        if ((double) ((GamePadTriggers) ref triggers1).get_Right() < (double) threshold)
-          return false;
-        GamePadTriggers triggers2 = ((GamePadState) ref this.PreviousState).get_Triggers();
-        return (double) ((GamePadTriggers) ref triggers2).get_Right() < (double) threshold;
+        GamePadTriggers triggers = this.CurrentState.Triggers;
+        int num;
+        if ((double) triggers.Right >= (double) threshold)
+        {
+          triggers = this.PreviousState.Triggers;
+          num = (double) triggers.Right < (double) threshold ? 1 : 0;
+        }
+        else
+          num = 0;
+        return num != 0;
       }
 
       public bool RightTriggerReleased(float threshold)
       {
         if (MInput.Disabled)
           return false;
-        GamePadTriggers triggers1 = ((GamePadState) ref this.CurrentState).get_Triggers();
-        if ((double) ((GamePadTriggers) ref triggers1).get_Right() >= (double) threshold)
-          return false;
-        GamePadTriggers triggers2 = ((GamePadState) ref this.PreviousState).get_Triggers();
-        return (double) ((GamePadTriggers) ref triggers2).get_Right() >= (double) threshold;
+        GamePadTriggers triggers = this.CurrentState.Triggers;
+        int num;
+        if ((double) triggers.Right < (double) threshold)
+        {
+          triggers = this.PreviousState.Triggers;
+          num = (double) triggers.Right >= (double) threshold ? 1 : 0;
+        }
+        else
+          num = 0;
+        return num != 0;
       }
     }
   }
 }
+

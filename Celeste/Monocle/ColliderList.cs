@@ -102,10 +102,7 @@ namespace Monocle
       {
         float num = value - this.Left;
         foreach (Collider collider in this.colliders)
-        {
-          ref __Null local = ref this.Position.X;
-          ^(float&) ref local = ^(float&) ref local + num;
-        }
+          this.Position.X += num;
       }
     }
 
@@ -125,10 +122,7 @@ namespace Monocle
       {
         float num = value - this.Right;
         foreach (Collider collider in this.colliders)
-        {
-          ref __Null local = ref this.Position.X;
-          ^(float&) ref local = ^(float&) ref local + num;
-        }
+          this.Position.X += num;
       }
     }
 
@@ -148,10 +142,7 @@ namespace Monocle
       {
         float num = value - this.Top;
         foreach (Collider collider in this.colliders)
-        {
-          ref __Null local = ref this.Position.Y;
-          ^(float&) ref local = ^(float&) ref local + num;
-        }
+          this.Position.Y += num;
       }
     }
 
@@ -171,10 +162,7 @@ namespace Monocle
       {
         float num = value - this.Bottom;
         foreach (Collider collider in this.colliders)
-        {
-          ref __Null local = ref this.Position.Y;
-          ^(float&) ref local = ^(float&) ref local + num;
-        }
+          this.Position.Y += num;
       }
     }
 
@@ -263,3 +251,4 @@ namespace Monocle
     }
   }
 }
+

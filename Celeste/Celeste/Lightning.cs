@@ -22,22 +22,23 @@ namespace Celeste
     }
 
     public Lightning(EntityData data, Vector2 levelOffset)
-      : this(Vector2.op_Addition(data.Position, levelOffset), data.Width, data.Height)
+      : this(data.Position + levelOffset, data.Width, data.Height)
     {
     }
 
     public override void Render()
     {
       base.Render();
-      Draw.Rect(this.Collider, Color.get_Yellow());
+      Draw.Rect(this.Collider, Color.Yellow);
     }
 
     private void OnPlayer(Player player)
     {
       if (SaveData.Instance.Assists.Invincible)
-        player.ReflectBounce(Vector2.op_Multiply(Vector2.get_UnitX(), (float) Math.Sign(player.X - this.X)));
+        player.ReflectBounce(Vector2.UnitX * (float) Math.Sign(player.X - this.X));
       else
-        player.Die(Vector2.op_Multiply(Vector2.get_UnitX(), (float) Math.Sign(player.X - this.X)), false, true);
+        player.Die(Vector2.UnitX * (float) Math.Sign(player.X - this.X), false, true);
     }
   }
 }
+

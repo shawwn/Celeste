@@ -28,7 +28,7 @@ namespace Celeste
       }
       set
       {
-        GFX.FxDistort.get_Parameters().get_Item("anxietyOrigin").SetValue(Distort.anxietyOrigin = value);
+        GFX.FxDistort.Parameters["anxietyOrigin"].SetValue(Distort.anxietyOrigin = value);
       }
     }
 
@@ -41,7 +41,7 @@ namespace Celeste
       set
       {
         Distort.anxiety = value;
-        GFX.FxDistort.get_Parameters().get_Item("anxiety").SetValue(!Settings.Instance.DisableFlashes ? Distort.anxiety : 0.0f);
+        GFX.FxDistort.Parameters["anxiety"].SetValue(!Settings.Instance.DisableFlashes ? Distort.anxiety : 0.0f);
       }
     }
 
@@ -53,7 +53,7 @@ namespace Celeste
       }
       set
       {
-        GFX.FxDistort.get_Parameters().get_Item("gamerate").SetValue(Distort.gamerate = value);
+        GFX.FxDistort.Parameters["gamerate"].SetValue(Distort.gamerate = value);
       }
     }
 
@@ -65,7 +65,7 @@ namespace Celeste
       }
       set
       {
-        GFX.FxDistort.get_Parameters().get_Item("waterSine").SetValue(Distort.waterSine = Distort.WaterSineDirection * value);
+        GFX.FxDistort.Parameters["waterSine"].SetValue(Distort.waterSine = Distort.WaterSineDirection * value);
       }
     }
 
@@ -77,7 +77,7 @@ namespace Celeste
       }
       set
       {
-        GFX.FxDistort.get_Parameters().get_Item("waterCameraY").SetValue(Distort.waterCameraY = value);
+        GFX.FxDistort.Parameters["waterCameraY"].SetValue(Distort.waterCameraY = value);
       }
     }
 
@@ -89,7 +89,7 @@ namespace Celeste
       }
       set
       {
-        GFX.FxDistort.get_Parameters().get_Item("waterAlpha").SetValue(Distort.waterAlpha = value);
+        GFX.FxDistort.Parameters["waterAlpha"].SetValue(Distort.waterAlpha = value);
       }
     }
 
@@ -98,21 +98,20 @@ namespace Celeste
       Effect fxDistort = GFX.FxDistort;
       if (fxDistort != null && (((double) Distort.anxiety > 0.0 ? 1 : ((double) Distort.gamerate < 1.0 ? 1 : 0)) | (hasDistortion ? 1 : 0)) != 0)
       {
-        if ((double) Distort.anxiety > 0.0 || (double) Distort.gamerate < 1.0)
-          fxDistort.set_CurrentTechnique(fxDistort.get_Techniques().get_Item(nameof (Distort)));
-        else
-          fxDistort.set_CurrentTechnique(fxDistort.get_Techniques().get_Item("Displace"));
-        Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) map);
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, fxDistort);
-        Draw.SpriteBatch.Draw(source, Vector2.get_Zero(), Color.get_White());
+        int num = (double) Distort.anxiety > 0.0 ? 1 : ((double) Distort.gamerate < 1.0 ? 1 : 0);
+        fxDistort.CurrentTechnique = num == 0 ? fxDistort.Techniques["Displace"] : fxDistort.Techniques[nameof (Distort)];
+        Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) map;
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, fxDistort);
+        Draw.SpriteBatch.Draw(source, Vector2.Zero, Color.White);
         Draw.SpriteBatch.End();
       }
       else
       {
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, (Effect) null);
-        Draw.SpriteBatch.Draw(source, Vector2.get_Zero(), Color.get_White());
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, (Effect) null);
+        Draw.SpriteBatch.Draw(source, Vector2.Zero, Color.White);
         Draw.SpriteBatch.End();
       }
     }
   }
 }
+

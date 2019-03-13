@@ -30,7 +30,7 @@ namespace Celeste
     }
 
     public CrumblePlatform(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width)
+      : this(data.Position + offset, (float) data.Width)
     {
     }
 
@@ -42,7 +42,7 @@ namespace Celeste
       if ((double) this.Width <= 8.0)
       {
         Monocle.Image image = new Monocle.Image(mtexture1.GetSubtexture(24, 0, 8, 8, (MTexture) null));
-        image.Color = Color.op_Multiply(Color.get_White(), 0.0f);
+        image.Color = Color.White * 0.0f;
         this.Add((Component) image);
         this.outline.Add(image);
       }
@@ -53,7 +53,7 @@ namespace Celeste
           int num = index != 0 ? (index <= 0 || (double) index >= (double) this.Width - 8.0 ? 2 : 1) : 0;
           Monocle.Image image = new Monocle.Image(mtexture1.GetSubtexture(num * 8, 0, 8, 8, (MTexture) null));
           image.Position = new Vector2((float) index, 0.0f);
-          image.Color = Color.op_Multiply(Color.get_White(), 0.0f);
+          image.Color = Color.White * 0.0f;
           this.Add((Component) image);
           this.outline.Add(image);
         }
@@ -83,44 +83,61 @@ namespace Celeste
       this.Add((Component) (this.shaker = new ShakerList(this.images.Count, false, (Action<Vector2[]>) (v =>
       {
         for (int index = 0; index < this.images.Count; ++index)
-          this.images[index].Position = Vector2.op_Addition(new Vector2((float) (4 + index * 8), 4f), v[index]);
+          this.images[index].Position = new Vector2((float) (4 + index * 8), 4f) + v[index];
       }))));
       this.Add((Component) (this.occluder = new LightOcclude(0.2f)));
     }
 
     private IEnumerator Sequence()
     {
-      CrumblePlatform crumblePlatform = this;
-label_1:
+label_43:
       bool onTop = false;
-      while (crumblePlatform.GetPlayerOnTop() == null)
+      while (true)
       {
-        if (crumblePlatform.GetPlayerClimbing() != null)
+        Player player = this.GetPlayerOnTop();
+        if (player == null)
         {
-          onTop = false;
-          Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-          goto label_7;
+          player = this.GetPlayerClimbing();
+          if (player == null)
+          {
+            yield return (object) null;
+            player = (Player) null;
+          }
+          else
+            goto label_3;
         }
         else
-          yield return (object) null;
+          break;
       }
       onTop = true;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-label_7:
-      Audio.Play("event:/game/general/platform_disintegrate", crumblePlatform.Center);
-      crumblePlatform.shaker.ShakeFor(onTop ? 0.6f : 1f, false);
-      foreach (Monocle.Image image in crumblePlatform.images)
-        crumblePlatform.SceneAs<Level>().Particles.Emit(CrumblePlatform.P_Crumble, 2, Vector2.op_Addition(Vector2.op_Addition(crumblePlatform.Position, image.Position), new Vector2(0.0f, 2f)), Vector2.op_Multiply(Vector2.get_One(), 3f));
+      goto label_6;
+label_3:
+      onTop = false;
+      Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
+label_6:
+      Audio.Play("event:/game/general/platform_disintegrate", this.Center);
+      this.shaker.ShakeFor(onTop ? 0.6f : 1f, false);
+      foreach (Monocle.Image image in this.images)
+      {
+        Monocle.Image img = image;
+        this.SceneAs<Level>().Particles.Emit(CrumblePlatform.P_Crumble, 2, this.Position + img.Position + new Vector2(0.0f, 2f), Vector2.One * 3f);
+        img = (Monocle.Image) null;
+      }
       for (int i = 0; i < (onTop ? 1 : 3); ++i)
       {
         yield return (object) 0.2f;
-        foreach (Monocle.Image image in crumblePlatform.images)
-          crumblePlatform.SceneAs<Level>().Particles.Emit(CrumblePlatform.P_Crumble, 2, Vector2.op_Addition(Vector2.op_Addition(crumblePlatform.Position, image.Position), new Vector2(0.0f, 2f)), Vector2.op_Multiply(Vector2.get_One(), 3f));
+        foreach (Monocle.Image image in this.images)
+        {
+          Monocle.Image img = image;
+          this.SceneAs<Level>().Particles.Emit(CrumblePlatform.P_Crumble, 2, this.Position + img.Position + new Vector2(0.0f, 2f), Vector2.One * 3f);
+          img = (Monocle.Image) null;
+        }
       }
       float timer = 0.4f;
       if (onTop)
       {
-        for (; (double) timer > 0.0 && crumblePlatform.GetPlayerOnTop() != null; timer -= Engine.DeltaTime)
+        for (; (double) timer > 0.0 && this.GetPlayerOnTop() != null; timer -= Engine.DeltaTime)
           yield return (object) null;
       }
       else
@@ -128,33 +145,33 @@ label_7:
         for (; (double) timer > 0.0; timer -= Engine.DeltaTime)
           yield return (object) null;
       }
-      crumblePlatform.outlineFader.Replace(crumblePlatform.OutlineFade(1f));
-      crumblePlatform.occluder.Visible = false;
-      crumblePlatform.Collidable = false;
-      float num = 0.05f;
-      for (int index1 = 0; index1 < 4; ++index1)
+      this.outlineFader.Replace(this.OutlineFade(1f));
+      this.occluder.Visible = false;
+      this.Collidable = false;
+      float delay = 0.05f;
+      for (int j = 0; j < 4; ++j)
       {
-        for (int index2 = 0; index2 < crumblePlatform.images.Count; ++index2)
+        for (int i = 0; i < this.images.Count; ++i)
         {
-          if (index2 % 4 - index1 == 0)
-            crumblePlatform.falls[index2].Replace(crumblePlatform.TileOut(crumblePlatform.images[crumblePlatform.fallOrder[index2]], num * (float) index1));
+          if (i % 4 - j == 0)
+            this.falls[i].Replace(this.TileOut(this.images[this.fallOrder[i]], delay * (float) j));
         }
       }
       yield return (object) 2f;
-      while (crumblePlatform.CollideCheck<Actor>() || crumblePlatform.CollideCheck<Solid>())
+      while (this.CollideCheck<Actor>() || this.CollideCheck<Solid>())
         yield return (object) null;
-      crumblePlatform.outlineFader.Replace(crumblePlatform.OutlineFade(0.0f));
-      crumblePlatform.occluder.Visible = true;
-      crumblePlatform.Collidable = true;
-      for (int index1 = 0; index1 < 4; ++index1)
+      this.outlineFader.Replace(this.OutlineFade(0.0f));
+      this.occluder.Visible = true;
+      this.Collidable = true;
+      for (int j = 0; j < 4; ++j)
       {
-        for (int index2 = 0; index2 < crumblePlatform.images.Count; ++index2)
+        for (int i = 0; i < this.images.Count; ++i)
         {
-          if (index2 % 4 - index1 == 0)
-            crumblePlatform.falls[index2].Replace(crumblePlatform.TileIn(index2, crumblePlatform.images[crumblePlatform.fallOrder[index2]], 0.05f * (float) index1));
+          if (i % 4 - j == 0)
+            this.falls[i].Replace(this.TileIn(i, this.images[this.fallOrder[i]], 0.05f * (float) j));
         }
       }
-      goto label_1;
+      goto label_43;
     }
 
     private IEnumerator OutlineFade(float to)
@@ -162,43 +179,48 @@ label_7:
       float from = 1f - to;
       for (float t = 0.0f; (double) t < 1.0; t += Engine.DeltaTime * 2f)
       {
-        Color color = Color.op_Multiply(Color.get_White(), from + (to - from) * Ease.CubeInOut(t));
-        foreach (GraphicsComponent graphicsComponent in this.outline)
-          graphicsComponent.Color = color;
+        Color color = Color.White * (from + (to - from) * Ease.CubeInOut(t));
+        foreach (Monocle.Image image in this.outline)
+        {
+          Monocle.Image img = image;
+          img.Color = color;
+          img = (Monocle.Image) null;
+        }
         yield return (object) null;
+        color = new Color();
       }
     }
 
     private IEnumerator TileOut(Monocle.Image img, float delay)
     {
-      img.Color = Color.get_Gray();
+      img.Color = Color.Gray;
       yield return (object) delay;
       float distance = (float) (((double) img.X * 7.0 % 3.0 + 1.0) * 12.0);
       Vector2 from = img.Position;
       for (float time = 0.0f; (double) time < 1.0; time += Engine.DeltaTime / 0.4f)
       {
         yield return (object) null;
-        img.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), Ease.CubeIn(time)), distance));
-        img.Color = Color.op_Multiply(Color.get_Gray(), 1f - time);
-        img.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 - (double) time * 0.5));
+        img.Position = from + Vector2.UnitY * Ease.CubeIn(time) * distance;
+        img.Color = Color.Gray * (1f - time);
+        img.Scale = Vector2.One * (float) (1.0 - (double) time * 0.5);
       }
       img.Visible = false;
     }
 
     private IEnumerator TileIn(int index, Monocle.Image img, float delay)
     {
-      CrumblePlatform crumblePlatform = this;
       yield return (object) delay;
-      Audio.Play("event:/game/general/platform_return", crumblePlatform.Center);
+      Audio.Play("event:/game/general/platform_return", this.Center);
       img.Visible = true;
-      img.Color = Color.get_White();
+      img.Color = Color.White;
       img.Position = new Vector2((float) (index * 8 + 4), 4f);
       for (float time = 0.0f; (double) time < 1.0; time += Engine.DeltaTime / 0.25f)
       {
         yield return (object) null;
-        img.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) Ease.BounceOut(1f - time) * 0.200000002980232));
+        img.Scale = Vector2.One * (float) (1.0 + (double) Ease.BounceOut(1f - time) * 0.200000002980232);
       }
-      img.Scale = Vector2.get_One();
+      img.Scale = Vector2.One;
     }
   }
 }
+

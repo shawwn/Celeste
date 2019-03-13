@@ -14,9 +14,9 @@ namespace Celeste
 {
   public class KeyboardConfigUI : TextMenu
   {
+    private float remappingEase = 0.0f;
+    private float inputDelay = 0.0f;
     private bool remapping;
-    private float remappingEase;
-    private float inputDelay;
     private float timeout;
     private KeyboardConfigUI.Mappings remappingKey;
     private bool closing;
@@ -30,45 +30,50 @@ namespace Celeste
         this.closing = true;
       });
       this.MinWidth = 600f;
-      this.Position.Y = (__Null) (double) this.ScrollTargetY;
+      this.Position.Y = this.ScrollTargetY;
       this.Alpha = 0.0f;
     }
 
     public void Reload(int index = -1)
     {
       this.Clear();
-      List<Keys> keysList1 = new List<Keys>();
-      keysList1.Add((Keys) 27);
-      List<Keys> keys1 = keysList1;
+      List<Keys> keys1 = new List<Keys>()
+      {
+        Keys.Escape
+      };
       keys1.AddRange((IEnumerable<Keys>) Settings.Instance.Pause);
       List<Keys> keys2 = new List<Keys>();
       keys2.AddRange((IEnumerable<Keys>) Settings.Instance.Confirm);
-      if (!keys2.Contains((Keys) 13))
-        keys2.Add((Keys) 13);
+      if (!keys2.Contains(Keys.Enter))
+        keys2.Add(Keys.Enter);
       List<Keys> keys3 = new List<Keys>();
       keys3.AddRange((IEnumerable<Keys>) Settings.Instance.Cancel);
-      if (!keys3.Contains((Keys) 8))
-        keys3.Add((Keys) 8);
-      List<Keys> keysList2 = new List<Keys>();
-      keysList2.Add(Settings.Instance.Left);
-      List<Keys> keys4 = keysList2;
-      if (Settings.Instance.Left != 37)
-        keys4.Add((Keys) 37);
-      List<Keys> keysList3 = new List<Keys>();
-      keysList3.Add(Settings.Instance.Right);
-      List<Keys> keys5 = keysList3;
-      if (Settings.Instance.Right != 39)
-        keys5.Add((Keys) 39);
-      List<Keys> keysList4 = new List<Keys>();
-      keysList4.Add(Settings.Instance.Up);
-      List<Keys> keys6 = keysList4;
-      if (Settings.Instance.Up != 38)
-        keys6.Add((Keys) 38);
-      List<Keys> keysList5 = new List<Keys>();
-      keysList5.Add(Settings.Instance.Down);
-      List<Keys> keys7 = keysList5;
-      if (Settings.Instance.Down != 40)
-        keys7.Add((Keys) 40);
+      if (!keys3.Contains(Keys.Back))
+        keys3.Add(Keys.Back);
+      List<Keys> keys4 = new List<Keys>()
+      {
+        Settings.Instance.Left
+      };
+      if (Settings.Instance.Left != Keys.Left)
+        keys4.Add(Keys.Left);
+      List<Keys> keys5 = new List<Keys>()
+      {
+        Settings.Instance.Right
+      };
+      if (Settings.Instance.Right != Keys.Right)
+        keys5.Add(Keys.Right);
+      List<Keys> keys6 = new List<Keys>()
+      {
+        Settings.Instance.Up
+      };
+      if (Settings.Instance.Up != Keys.Up)
+        keys6.Add(Keys.Up);
+      List<Keys> keys7 = new List<Keys>()
+      {
+        Settings.Instance.Down
+      };
+      if (Settings.Instance.Down != Keys.Down)
+        keys7.Add(Keys.Down);
       this.Add((TextMenu.Item) new TextMenu.Header(Dialog.Clean("KEY_CONFIG_TITLE", (Language) null)));
       this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_MOVEMENT", (Language) null)));
       this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Left), keys4).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Left))));
@@ -93,7 +98,7 @@ namespace Celeste
       button.OnPressed = (Action) (() =>
       {
         Settings.Instance.SetDefaultKeyboardControls(true);
-        Celeste.Input.Initialize();
+        Input.Initialize();
         this.Reload(this.Selection);
       });
       this.Add((TextMenu.Item) button);
@@ -114,21 +119,21 @@ namespace Celeste
     {
       this.remapping = false;
       this.inputDelay = 0.25f;
-      if ((key == null || key == 37 && this.remappingKey != KeyboardConfigUI.Mappings.Left || (key == 39 && this.remappingKey != KeyboardConfigUI.Mappings.Right || key == 38 && this.remappingKey != KeyboardConfigUI.Mappings.Up) || (key == 40 && this.remappingKey != KeyboardConfigUI.Mappings.Down || key == 13 && this.remappingKey != KeyboardConfigUI.Mappings.Confirm) ? 0 : (key != 8 ? 1 : (this.remappingKey == KeyboardConfigUI.Mappings.Cancel ? 1 : 0))) == 0)
+      if (key == Keys.None || key == Keys.Left && this.remappingKey != KeyboardConfigUI.Mappings.Left || (key == Keys.Right && this.remappingKey != KeyboardConfigUI.Mappings.Right || key == Keys.Up && this.remappingKey != KeyboardConfigUI.Mappings.Up) || (key == Keys.Down && this.remappingKey != KeyboardConfigUI.Mappings.Down || key == Keys.Enter && this.remappingKey != KeyboardConfigUI.Mappings.Confirm) || key == Keys.Back && this.remappingKey != KeyboardConfigUI.Mappings.Cancel)
         return;
       switch (this.remappingKey)
       {
         case KeyboardConfigUI.Mappings.Left:
-          Settings.Instance.Left = key != 37 ? key : (Keys) 0;
+          Settings.Instance.Left = key != Keys.Left ? key : Keys.None;
           break;
         case KeyboardConfigUI.Mappings.Right:
-          Settings.Instance.Right = key != 39 ? key : (Keys) 0;
+          Settings.Instance.Right = key != Keys.Right ? key : Keys.None;
           break;
         case KeyboardConfigUI.Mappings.Up:
-          Settings.Instance.Up = key != 38 ? key : (Keys) 0;
+          Settings.Instance.Up = key != Keys.Up ? key : Keys.None;
           break;
         case KeyboardConfigUI.Mappings.Down:
-          Settings.Instance.Down = key != 40 ? key : (Keys) 0;
+          Settings.Instance.Down = key != Keys.Down ? key : Keys.None;
           break;
         case KeyboardConfigUI.Mappings.Jump:
           Settings.Instance.Jump.Clear();
@@ -150,11 +155,8 @@ namespace Celeste
           if (!Settings.Instance.Cancel.Contains(key) && !Settings.Instance.Pause.Contains(key))
           {
             Settings.Instance.Confirm.Clear();
-            if (key != 13)
-            {
+            if (key != Keys.Enter)
               Settings.Instance.Confirm.Add(key);
-              break;
-            }
             break;
           }
           break;
@@ -162,11 +164,8 @@ namespace Celeste
           if (!Settings.Instance.Confirm.Contains(key) && !Settings.Instance.Pause.Contains(key))
           {
             Settings.Instance.Cancel.Clear();
-            if (key != 8)
-            {
+            if (key != Keys.Back)
               Settings.Instance.Cancel.Add(key);
-              break;
-            }
             break;
           }
           break;
@@ -187,7 +186,7 @@ namespace Celeste
           Settings.Instance.QuickRestart.Add(key);
           break;
       }
-      Celeste.Input.Initialize();
+      Input.Initialize();
       this.Reload(this.Selection);
     }
 
@@ -208,16 +207,16 @@ namespace Celeste
       this.remappingEase = Calc.Approach(this.remappingEase, this.remapping ? 1f : 0.0f, Engine.DeltaTime * 4f);
       if ((double) this.remappingEase > 0.5 && this.remapping)
       {
-        if (Celeste.Input.ESC.Pressed || (double) this.timeout <= 0.0)
+        if (Input.ESC.Pressed || (double) this.timeout <= 0.0)
         {
           this.remapping = false;
           this.Focused = true;
         }
         else
         {
-          Keys[] pressedKeys = ((KeyboardState) ref MInput.Keyboard.CurrentState).GetPressedKeys();
-          if (pressedKeys != null && pressedKeys.Length != 0 && MInput.Keyboard.Pressed((Keys) (int) pressedKeys[pressedKeys.Length - 1]))
-            this.SetRemap((Keys) (int) pressedKeys[pressedKeys.Length - 1]);
+          Keys[] pressedKeys = MInput.Keyboard.CurrentState.GetPressedKeys();
+          if (pressedKeys != null && pressedKeys.Length != 0 && MInput.Keyboard.Pressed(pressedKeys[pressedKeys.Length - 1]))
+            this.SetRemap(pressedKeys[pressedKeys.Length - 1]);
         }
         this.timeout -= Engine.DeltaTime;
       }
@@ -229,14 +228,14 @@ namespace Celeste
 
     public override void Render()
     {
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.get_Black(), Ease.CubeOut(this.Alpha)));
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * Ease.CubeOut(this.Alpha));
       base.Render();
       if ((double) this.remappingEase <= 0.0)
         return;
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), 0.95f), Ease.CubeInOut(this.remappingEase)));
-      Vector2 vector2 = Vector2.op_Multiply(new Vector2(1920f, 1080f), 0.5f);
-      ActiveFont.Draw(Dialog.Get("KEY_CONFIG_CHANGING", (Language) null), Vector2.op_Addition(vector2, new Vector2(0.0f, -8f)), new Vector2(0.5f, 1f), Vector2.op_Multiply(Vector2.get_One(), 0.7f), Color.op_Multiply(Color.get_LightGray(), Ease.CubeIn(this.remappingEase)));
-      ActiveFont.Draw(this.Label(this.remappingKey), Vector2.op_Addition(vector2, new Vector2(0.0f, 8f)), new Vector2(0.5f, 0.0f), Vector2.op_Multiply(Vector2.get_One(), 2f), Color.op_Multiply(Color.get_White(), Ease.CubeIn(this.remappingEase)));
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * 0.95f * Ease.CubeInOut(this.remappingEase));
+      Vector2 vector2 = new Vector2(1920f, 1080f) * 0.5f;
+      ActiveFont.Draw(Dialog.Get("KEY_CONFIG_CHANGING", (Language) null), vector2 + new Vector2(0.0f, -8f), new Vector2(0.5f, 1f), Vector2.One * 0.7f, Color.LightGray * Ease.CubeIn(this.remappingEase));
+      ActiveFont.Draw(this.Label(this.remappingKey), vector2 + new Vector2(0.0f, 8f), new Vector2(0.5f, 0.0f), Vector2.One * 2f, Color.White * Ease.CubeIn(this.remappingEase));
     }
 
     private enum Mappings
@@ -257,3 +256,4 @@ namespace Celeste
     }
   }
 }
+

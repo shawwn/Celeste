@@ -31,7 +31,7 @@ namespace Celeste
     }
 
     public IntroCrusher(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Width, data.Height, Vector2.op_Addition(data.Nodes[0], offset))
+      : this(data.Position + offset, data.Width, data.Height, data.Nodes[0] + offset)
     {
     }
 
@@ -52,57 +52,59 @@ namespace Celeste
 
     private IEnumerator Sequence()
     {
-      IntroCrusher introCrusher = this;
-      Player entity1;
-      do
+      while (true)
       {
         yield return (object) null;
-        entity1 = introCrusher.Scene.Tracker.GetEntity<Player>();
+        Player p = this.Scene.Tracker.GetEntity<Player>();
+        if (p == null || (double) p.X < (double) this.X + 30.0 || (double) p.X > (double) this.Right + 8.0)
+          p = (Player) null;
+        else
+          break;
       }
-      while (entity1 == null || (double) entity1.X < (double) introCrusher.X + 30.0 || (double) entity1.X > (double) introCrusher.Right + 8.0);
-      introCrusher.shakingSfx.Play("event:/game/00_prologue/fallblock_first_shake", (string) null, 0.0f);
+      this.shakingSfx.Play("event:/game/00_prologue/fallblock_first_shake", (string) null, 0.0f);
       float time = 1.2f;
-      // ISSUE: reference to a compiler-generated method
-      Shaker shaker = new Shaker(time, true, new Action<Vector2>(introCrusher.\u003CSequence\u003Eb__9_1));
-      introCrusher.Add((Component) shaker);
+      Shaker shaker = new Shaker(time, true, (Action<Vector2>) (v => this.shake = v));
+      this.Add((Component) shaker);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      for (; (double) time > 0.0; time -= Engine.DeltaTime)
+      while ((double) time > 0.0)
       {
-        Player entity2 = introCrusher.Scene.Tracker.GetEntity<Player>();
-        if (entity2 != null && ((double) entity2.X >= (double) introCrusher.X + (double) introCrusher.Width - 8.0 || (double) entity2.X < (double) introCrusher.X + 28.0))
+        Player p = this.Scene.Tracker.GetEntity<Player>();
+        if (p != null && ((double) p.X >= (double) this.X + (double) this.Width - 8.0 || (double) p.X < (double) this.X + 28.0))
         {
           shaker.RemoveSelf();
           break;
         }
         yield return (object) null;
+        time -= Engine.DeltaTime;
+        p = (Player) null;
       }
       shaker = (Shaker) null;
-      for (int index = 2; (double) index < (double) introCrusher.Width; index += 4)
+      for (int i = 2; (double) i < (double) this.Width; i += 4)
       {
-        introCrusher.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustA, 2, new Vector2(introCrusher.X + (float) index, introCrusher.Y), Vector2.op_Multiply(Vector2.get_One(), 4f), 1.570796f);
-        introCrusher.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustB, 2, new Vector2(introCrusher.X + (float) index, introCrusher.Y), Vector2.op_Multiply(Vector2.get_One(), 4f));
+        this.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustA, 2, new Vector2(this.X + (float) i, this.Y), Vector2.One * 4f, 1.570796f);
+        this.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustB, 2, new Vector2(this.X + (float) i, this.Y), Vector2.One * 4f);
       }
-      introCrusher.shakingSfx.Param("release", 1f);
-      time = 0.0f;
+      this.shakingSfx.Param("release", 1f);
+      float percent = 0.0f;
       do
       {
         yield return (object) null;
-        time = Calc.Approach(time, 1f, 2f * Engine.DeltaTime);
-        introCrusher.MoveTo(Vector2.Lerp(introCrusher.start, introCrusher.end, Ease.CubeIn(time)));
+        percent = Calc.Approach(percent, 1f, 2f * Engine.DeltaTime);
+        this.MoveTo(Vector2.Lerp(this.start, this.end, Ease.CubeIn(percent)));
       }
-      while ((double) time < 1.0);
-      for (int index = 0; (double) index <= (double) introCrusher.Width; index += 4)
+      while ((double) percent < 1.0);
+      for (int i = 0; (double) i <= (double) this.Width; i += 4)
       {
-        introCrusher.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_FallDustA, 1, new Vector2(introCrusher.X + (float) index, introCrusher.Bottom), Vector2.op_Multiply(Vector2.get_One(), 4f), -1.570796f);
-        float direction = (double) index >= (double) introCrusher.Width / 2.0 ? 0.0f : 3.141593f;
-        introCrusher.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_LandDust, 1, new Vector2(introCrusher.X + (float) index, introCrusher.Bottom), Vector2.op_Multiply(Vector2.get_One(), 4f), direction);
+        this.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_FallDustA, 1, new Vector2(this.X + (float) i, this.Bottom), Vector2.One * 4f, -1.570796f);
+        float dir = (double) i >= (double) this.Width / 2.0 ? 0.0f : 3.141593f;
+        this.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_LandDust, 1, new Vector2(this.X + (float) i, this.Bottom), Vector2.One * 4f, dir);
       }
-      introCrusher.shakingSfx.Stop(true);
-      Audio.Play("event:/game/00_prologue/fallblock_first_impact", introCrusher.Position);
-      introCrusher.SceneAs<Level>().Shake(0.3f);
+      this.shakingSfx.Stop(true);
+      Audio.Play("event:/game/00_prologue/fallblock_first_impact", this.Position);
+      this.SceneAs<Level>().Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      // ISSUE: reference to a compiler-generated method
-      introCrusher.Add((Component) new Shaker(0.25f, true, new Action<Vector2>(introCrusher.\u003CSequence\u003Eb__9_0)));
+      this.Add((Component) new Shaker(0.25f, true, (Action<Vector2>) (v => this.shake = v)));
     }
   }
 }
+

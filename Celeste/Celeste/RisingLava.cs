@@ -24,13 +24,13 @@ namespace Celeste
       Calc.HexToColor("4ca2eb"),
       Calc.HexToColor("0151d0")
     };
+    private float delay = 0.0f;
     private const float Speed = -30f;
     private bool intro;
     private bool iceMode;
     private bool waiting;
     private float lerp;
     private LavaRect bottomRect;
-    private float delay;
     private SoundSource loopSfx;
 
     public RisingLava(bool intro)
@@ -56,10 +56,8 @@ namespace Celeste
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      Rectangle bounds1 = this.SceneAs<Level>().Bounds;
-      this.X = (float) (((Rectangle) ref bounds1).get_Left() - 10);
-      Rectangle bounds2 = this.SceneAs<Level>().Bounds;
-      this.Y = (float) (((Rectangle) ref bounds2).get_Bottom() + 16);
+      this.X = (float) (this.SceneAs<Level>().Bounds.Left - 10);
+      this.Y = (float) (this.SceneAs<Level>().Bounds.Bottom + 16);
       this.iceMode = this.SceneAs<Level>().Session.CoreMode == Session.CoreModes.Cold;
       this.loopSfx.Play("event:/game/09_core/rising_threat", "room_state", this.iceMode ? 1f : 0.0f);
       this.loopSfx.Position = new Vector2(this.Width / 2f, 0.0f);
@@ -97,7 +95,7 @@ namespace Celeste
           return;
         float from = this.Y;
         float to = this.Y + 48f;
-        player.Speed.Y = (__Null) -200.0;
+        player.Speed.Y = -200f;
         player.RefillDash();
         Tween.Set((Entity) this, Tween.TweenMode.Oneshot, 0.4f, Ease.CubeOut, (Action<Tween>) (t => this.Y = MathHelper.Lerp(from, to, t.Eased)), (Action<Tween>) null);
         this.delay = 0.5f;
@@ -105,7 +103,7 @@ namespace Celeste
         Audio.Play("event:/game/general/assist_screenbottom", player.Position);
       }
       else
-        player.Die(Vector2.op_UnaryNegation(Vector2.get_UnitY()), false, true);
+        player.Die(-Vector2.UnitY, false, true);
     }
 
     public override void Update()
@@ -145,3 +143,4 @@ namespace Celeste
     }
   }
 }
+

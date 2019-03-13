@@ -31,7 +31,7 @@ namespace Monocle
       for (int index = 0; index < this.particles.Length; ++index)
       {
         Vector2 position = this.particles[index].Position;
-        if ((position.X <= (double) ((Rectangle) ref rect).get_Left() || position.Y <= (double) ((Rectangle) ref rect).get_Top() || position.X >= (double) ((Rectangle) ref rect).get_Right() ? 0 : (position.Y < (double) ((Rectangle) ref rect).get_Bottom() ? 1 : 0)) == (inside ? 1 : 0))
+        if (((double) position.X > (double) rect.Left && (double) position.Y > (double) rect.Top && (double) position.X < (double) rect.Right && (double) position.Y < (double) rect.Bottom) == inside)
           this.particles[index].Active = false;
       }
     }
@@ -111,7 +111,7 @@ namespace Monocle
     public void Emit(ParticleType type, int amount, Vector2 position, Vector2 positionRange)
     {
       for (int index = 0; index < amount; ++index)
-        this.Emit(type, Calc.Random.Range(Vector2.op_Subtraction(position, positionRange), Vector2.op_Addition(position, positionRange)));
+        this.Emit(type, Calc.Random.Range(position - positionRange, position + positionRange));
     }
 
     public void Emit(
@@ -122,7 +122,7 @@ namespace Monocle
       float direction)
     {
       for (int index = 0; index < amount; ++index)
-        this.Emit(type, Calc.Random.Range(Vector2.op_Subtraction(position, positionRange), Vector2.op_Addition(position, positionRange)), direction);
+        this.Emit(type, Calc.Random.Range(position - positionRange, position + positionRange), direction);
     }
 
     public void Emit(
@@ -133,7 +133,7 @@ namespace Monocle
       Color color)
     {
       for (int index = 0; index < amount; ++index)
-        this.Emit(type, Calc.Random.Range(Vector2.op_Subtraction(position, positionRange), Vector2.op_Addition(position, positionRange)), color);
+        this.Emit(type, Calc.Random.Range(position - positionRange, position + positionRange), color);
     }
 
     public void Emit(
@@ -145,7 +145,7 @@ namespace Monocle
       float direction)
     {
       for (int index = 0; index < amount; ++index)
-        this.Emit(type, Calc.Random.Range(Vector2.op_Subtraction(position, positionRange), Vector2.op_Addition(position, positionRange)), color, direction);
+        this.Emit(type, Calc.Random.Range(position - positionRange, position + positionRange), color, direction);
     }
 
     public void Emit(
@@ -158,9 +158,10 @@ namespace Monocle
     {
       for (int index = 0; index < amount; ++index)
       {
-        type.Create(ref this.particles[this.nextSlot], track, Calc.Random.Range(Vector2.op_Subtraction(position, positionRange), Vector2.op_Addition(position, positionRange)), direction, type.Color);
+        type.Create(ref this.particles[this.nextSlot], track, Calc.Random.Range(position - positionRange, position + positionRange), direction, type.Color);
         this.nextSlot = (this.nextSlot + 1) % this.particles.Length;
       }
     }
   }
 }
+

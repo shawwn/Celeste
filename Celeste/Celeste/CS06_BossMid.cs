@@ -27,46 +27,41 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS06_BossMid cs06BossMid = this;
-      while (cs06BossMid.player == null)
+      while (this.player == null)
       {
-        cs06BossMid.player = cs06BossMid.Scene.Tracker.GetEntity<Player>();
+        this.player = this.Scene.Tracker.GetEntity<Player>();
         yield return (object) null;
       }
-      cs06BossMid.player.StateMachine.State = 11;
-      cs06BossMid.player.StateMachine.Locked = true;
-      while (!cs06BossMid.player.OnGround(1))
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      while (!this.player.OnGround(1))
         yield return (object) null;
-      yield return (object) cs06BossMid.player.DummyWalkToExact((int) cs06BossMid.player.X + 20, false, 1f);
+      yield return (object) this.player.DummyWalkToExact((int) this.player.X + 20, false, 1f);
       yield return (object) level.ZoomTo(new Vector2(80f, 110f), 2f, 0.5f);
       yield return (object) Textbox.Say("ch6_boss_middle");
       yield return (object) 0.1f;
       yield return (object) level.ZoomBack(0.4f);
-      cs06BossMid.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     public override void OnEnd(Level level)
     {
+      Player player;
       if (this.WasSkipped && this.player != null)
       {
-        while (!this.player.OnGround(1))
-        {
-          double y = (double) this.player.Y;
-          Rectangle bounds = level.Bounds;
-          double bottom = (double) ((Rectangle) ref bounds).get_Bottom();
-          if (y < bottom)
-            ++this.player.Y;
-          else
-            break;
-        }
+        for (; !this.player.OnGround(1) && (double) this.player.Y < (double) level.Bounds.Bottom; ++player.Y)
+          player = this.player;
       }
       if (this.player != null)
       {
         this.player.StateMachine.Locked = false;
         this.player.StateMachine.State = 0;
       }
-      level.Entities.FindFirst<FinalBoss>()?.OnPlayer((Player) null);
+      FinalBoss first = level.Entities.FindFirst<FinalBoss>();
+      if (first != null)
+        first.OnPlayer((Player) null);
       level.Session.SetFlag("boss_mid", true);
     }
   }
 }
+

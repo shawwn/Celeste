@@ -39,41 +39,27 @@ namespace Monocle
       foreach (VirtualInputNode node in this.Nodes)
         node.Update();
       this.PreviousValue = this.Value;
-      this.Value = Vector2.get_Zero();
+      this.Value = Vector2.Zero;
       if (MInput.Disabled)
         return;
       foreach (VirtualJoystick.Node node in this.Nodes)
       {
         Vector2 vec = node.Value;
-        if (Vector2.op_Inequality(vec, Vector2.get_Zero()))
+        if (vec != Vector2.Zero)
         {
           if (this.Normalized)
           {
             if (this.SnapSlices.HasValue)
               vec = vec.SnappedNormal(this.SnapSlices.Value);
             else
-              ((Vector2) ref vec).Normalize();
+              vec.Normalize();
           }
           else if (this.SnapSlices.HasValue)
             vec = vec.Snapped(this.SnapSlices.Value);
           if (this.InvertedX)
-          {
-            ref __Null local = ref vec.X;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local * -1f;
-          }
+            vec.X *= -1f;
           if (this.InvertedY)
-          {
-            ref __Null local = ref vec.Y;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local * -1f;
-          }
+            vec.Y *= -1f;
           this.Value = vec;
           break;
         }
@@ -143,15 +129,15 @@ namespace Monocle
       {
         get
         {
-          Vector2 zero = Vector2.get_Zero();
+          Vector2 zero = Vector2.Zero;
           if (MInput.GamePads[this.GamepadIndex].DPadRightCheck)
-            zero.X = (__Null) 1.0;
+            zero.X = 1f;
           else if (MInput.GamePads[this.GamepadIndex].DPadLeftCheck)
-            zero.X = (__Null) -1.0;
+            zero.X = -1f;
           if (MInput.GamePads[this.GamepadIndex].DPadDownCheck)
-            zero.Y = (__Null) 1.0;
+            zero.Y = 1f;
           else if (MInput.GamePads[this.GamepadIndex].DPadUpCheck)
-            zero.Y = (__Null) -1.0;
+            zero.Y = -1f;
           return zero;
         }
       }
@@ -195,36 +181,31 @@ namespace Monocle
               case VirtualInput.OverlapBehaviors.TakeNewer:
                 if (!this.turnedX)
                 {
-                  ref __Null local = ref this.value.X;
-                  // ISSUE: cast to a reference type
-                  // ISSUE: explicit reference operation
-                  // ISSUE: cast to a reference type
-                  // ISSUE: explicit reference operation
-                  ^(float&) ref local = ^(float&) ref local * -1f;
+                  this.value.X *= -1f;
                   this.turnedX = true;
                   break;
                 }
                 break;
               default:
-                this.value.X = (__Null) 0.0;
+                this.value.X = 0.0f;
                 break;
             }
           }
           else
           {
             this.turnedX = false;
-            this.value.X = (__Null) -1.0;
+            this.value.X = -1f;
           }
         }
         else if (MInput.Keyboard.Check(this.Right))
         {
           this.turnedX = false;
-          this.value.X = (__Null) 1.0;
+          this.value.X = 1f;
         }
         else
         {
           this.turnedX = false;
-          this.value.X = (__Null) 0.0;
+          this.value.X = 0.0f;
         }
         if (MInput.Keyboard.Check(this.Up))
         {
@@ -237,34 +218,29 @@ namespace Monocle
               case VirtualInput.OverlapBehaviors.TakeNewer:
                 if (this.turnedY)
                   break;
-                ref __Null local1 = ref this.value.Y;
-                // ISSUE: cast to a reference type
-                // ISSUE: explicit reference operation
-                // ISSUE: cast to a reference type
-                // ISSUE: explicit reference operation
-                ^(float&) ref local1 = ^(float&) ref local1 * -1f;
+                this.value.Y *= -1f;
                 this.turnedY = true;
                 break;
               default:
-                this.value.Y = (__Null) 0.0;
+                this.value.Y = 0.0f;
                 break;
             }
           }
           else
           {
             this.turnedY = false;
-            this.value.Y = (__Null) -1.0;
+            this.value.Y = -1f;
           }
         }
         else if (MInput.Keyboard.Check(this.Down))
         {
           this.turnedY = false;
-          this.value.Y = (__Null) 1.0;
+          this.value.Y = 1f;
         }
         else
         {
           this.turnedY = false;
-          this.value.Y = (__Null) 0.0;
+          this.value.Y = 0.0f;
         }
       }
 
@@ -278,3 +254,4 @@ namespace Monocle
     }
   }
 }
+

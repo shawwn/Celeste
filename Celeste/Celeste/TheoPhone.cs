@@ -16,7 +16,7 @@ namespace Celeste
     public TheoPhone(Vector2 position)
       : base(position)
     {
-      this.Add((Component) (this.light = new VertexLight(Color.get_LawnGreen(), 1f, 8, 16)));
+      this.Add((Component) (this.light = new VertexLight(Color.LawnGreen, 1f, 8, 16)));
       this.Add((Component) new Monocle.Image(GFX.Game["characters/theo/phone"]).JustifyOrigin(0.5f, 1f));
     }
 
@@ -28,3 +28,4 @@ namespace Celeste
     }
   }
 }
+

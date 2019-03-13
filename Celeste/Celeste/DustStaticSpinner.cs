@@ -41,7 +41,7 @@ namespace Celeste
     }
 
     public DustStaticSpinner(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Bool("attachToSolid", false), false)
+      : this(data.Position + offset, data.Bool("attachToSolid", false), false)
     {
     }
 
@@ -56,9 +56,8 @@ namespace Celeste
       if (!this.Scene.OnInterval(0.05f, this.offset) || !this.Sprite.Estableshed)
         return;
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity == null)
-        return;
-      this.Collidable = (double) Math.Abs(entity.X - this.X) < 128.0 && (double) Math.Abs(entity.Y - this.Y) < 128.0;
+      if (entity != null)
+        this.Collidable = (double) Math.Abs(entity.X - this.X) < 128.0 && (double) Math.Abs(entity.Y - this.Y) < 128.0;
     }
 
     private void OnShake(Vector2 pos)
@@ -73,7 +72,7 @@ namespace Celeste
 
     private void OnPlayer(Player player)
     {
-      player.Die(Vector2.op_Subtraction(player.Position, this.Position).SafeNormalize(), false, true);
+      player.Die((player.Position - this.Position).SafeNormalize(), false, true);
       this.Sprite.OnHitPlayer();
     }
 
@@ -83,3 +82,4 @@ namespace Celeste
     }
   }
 }
+

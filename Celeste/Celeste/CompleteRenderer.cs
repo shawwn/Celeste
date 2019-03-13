@@ -96,10 +96,10 @@ namespace Celeste
 
     public override void Update(Scene scene)
     {
-      Vector2 target = Vector2.op_Addition(Input.Aim.Value, Input.MountainAim.Value);
-      if ((double) ((Vector2) ref target).Length() > 1.0)
-        ((Vector2) ref target).Normalize();
-      target = Vector2.op_Multiply(target, 200f);
+      Vector2 target = Input.Aim.Value + Input.MountainAim.Value;
+      if ((double) target.Length() > 1.0)
+        target.Normalize();
+      target *= 200f;
       this.controlScroll = Calc.Approach(this.controlScroll, target, 600f * Engine.DeltaTime);
       foreach (CompleteRenderer.Layer layer in this.Layers)
         layer.Update(scene);
@@ -108,13 +108,13 @@ namespace Celeste
 
     public override void RenderContent(Scene scene)
     {
-      HiresRenderer.BeginRender((BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.LinearWrap);
+      HiresRenderer.BeginRender(BlendState.AlphaBlend, SamplerState.LinearWrap);
       foreach (CompleteRenderer.Layer layer in this.Layers)
-        layer.Render(Vector2.op_Subtraction(Vector2.op_UnaryNegation(this.Scroll), Vector2.op_Multiply(this.controlScroll, this.controlMult)));
+        layer.Render(-this.Scroll - this.controlScroll * this.controlMult);
       if (this.RenderPostUI != null)
         this.RenderPostUI();
       if ((double) this.fadeAlpha > 0.0)
-        Draw.Rect(-10f, -10f, (float) (Engine.Width + 20), (float) (Engine.Height + 20), Color.op_Multiply(Color.get_Black(), this.fadeAlpha));
+        Draw.Rect(-10f, -10f, (float) (Engine.Width + 20), (float) (Engine.Height + 20), Color.Black * this.fadeAlpha);
       HiresRenderer.EndRender();
     }
 
@@ -125,15 +125,15 @@ namespace Celeste
 
       public Layer(XmlElement xml)
       {
-        this.Position = xml.Position(Vector2.get_Zero());
+        this.Position = xml.Position(Vector2.Zero);
         if (xml.HasAttr("scroll"))
         {
-          this.ScrollFactor.X = (__Null) (double) (this.ScrollFactor.Y = (__Null) xml.AttrFloat("scroll"));
+          this.ScrollFactor.X = this.ScrollFactor.Y = xml.AttrFloat("scroll");
         }
         else
         {
-          this.ScrollFactor.X = (__Null) (double) xml.AttrFloat("scrollX", 0.0f);
-          this.ScrollFactor.Y = (__Null) (double) xml.AttrFloat("scrollY", 0.0f);
+          this.ScrollFactor.X = xml.AttrFloat("scrollX", 0.0f);
+          this.ScrollFactor.Y = xml.AttrFloat("scrollY", 0.0f);
         }
       }
 
@@ -146,10 +146,10 @@ namespace Celeste
       public Vector2 GetScrollPosition(Vector2 scroll)
       {
         Vector2 position = this.Position;
-        if (Vector2.op_Inequality(this.ScrollFactor, Vector2.get_Zero()))
+        if (this.ScrollFactor != Vector2.Zero)
         {
-          position.X = (__Null) (double) MathHelper.Lerp((float) this.Position.X, (float) (this.Position.X + scroll.X), (float) this.ScrollFactor.X);
-          position.Y = (__Null) (double) MathHelper.Lerp((float) this.Position.Y, (float) (this.Position.Y + scroll.Y), (float) this.ScrollFactor.Y);
+          position.X = MathHelper.Lerp(this.Position.X, this.Position.X + scroll.X, this.ScrollFactor.X);
+          position.Y = MathHelper.Lerp(this.Position.Y, this.Position.Y + scroll.Y, this.ScrollFactor.Y);
         }
         return position;
       }
@@ -185,7 +185,7 @@ namespace Celeste
       public ImageLayer(Vector2 offset, Atlas atlas, XmlElement xml)
         : base(xml)
       {
-        this.Position = Vector2.op_Addition(this.Position, offset);
+        this.Position = this.Position + offset;
         string str = xml.Attr("img");
         char[] chArray = new char[1]{ ',' };
         foreach (string id in str.Split(chArray))
@@ -203,30 +203,26 @@ namespace Celeste
       public override void Update(Scene scene)
       {
         this.Frame += Engine.DeltaTime * this.FrameRate;
-        this.Offset = Vector2.op_Addition(this.Offset, Vector2.op_Multiply(this.Speed, Engine.DeltaTime));
+        this.Offset += this.Speed * Engine.DeltaTime;
       }
 
       public override void Render(Vector2 scroll)
       {
-        Vector2 vector2 = this.GetScrollPosition(scroll).Floor();
+        Vector2 position = this.GetScrollPosition(scroll).Floor();
         MTexture image = this.Images[(int) ((double) this.Frame % (double) this.Images.Count)];
         if (image == null)
           return;
         bool flag = SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode;
         if (flag)
         {
-          vector2.X = (__Null) (1920.0 - vector2.X - image.DrawOffset.X - (double) image.Texture.Texture.get_Width());
-          ref __Null local = ref vector2.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) image.DrawOffset.Y;
+          position.X = 1920f - position.X - image.DrawOffset.X - (float) image.Texture.Texture.Width;
+          position.Y += image.DrawOffset.Y;
         }
         else
-          vector2 = Vector2.op_Addition(vector2, image.DrawOffset);
-        Draw.SpriteBatch.Draw(image.Texture.Texture, vector2, new Rectangle?(new Rectangle((int) -this.Offset.X + 1, (int) -this.Offset.Y + 1, image.ClipRect.Width - 2, image.ClipRect.Height - 2)), Color.op_Multiply(Color.get_White(), this.Alpha), 0.0f, Vector2.get_Zero(), 1f, flag ? (SpriteEffects) 1 : (SpriteEffects) 0, 0.0f);
+          position += image.DrawOffset;
+        Draw.SpriteBatch.Draw(image.Texture.Texture, position, new Rectangle?(new Rectangle((int) -(double) this.Offset.X + 1, (int) -(double) this.Offset.Y + 1, image.ClipRect.Width - 2, image.ClipRect.Height - 2)), Color.White * this.Alpha, 0.0f, Vector2.Zero, 1f, flag ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.0f);
       }
     }
   }
 }
+

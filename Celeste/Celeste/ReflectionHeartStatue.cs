@@ -33,7 +33,7 @@ namespace Celeste
     private bool enabled;
 
     public ReflectionHeartStatue(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.offset = offset;
       this.nodes = data.Nodes;
@@ -46,12 +46,7 @@ namespace Celeste
       Session session = (this.Scene as Level).Session;
       Monocle.Image image1 = new Monocle.Image(GFX.Game["objects/reflectionHeart/statue"]);
       image1.JustifyOrigin(0.5f, 1f);
-      ref __Null local = ref image1.Origin.Y;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local - 1f;
+      --image1.Origin.Y;
       this.Add((Component) image1);
       List<string[]> strArrayList = new List<string[]>();
       strArrayList.Add(ReflectionHeartStatue.Code);
@@ -60,18 +55,18 @@ namespace Celeste
       strArrayList.Add(this.FlipCode(true, true));
       for (int index = 0; index < 4; ++index)
       {
-        ReflectionHeartStatue.Torch torch = new ReflectionHeartStatue.Torch(session, Vector2.op_Addition(this.offset, this.nodes[index]), index, strArrayList[index]);
+        ReflectionHeartStatue.Torch torch = new ReflectionHeartStatue.Torch(session, this.offset + this.nodes[index], index, strArrayList[index]);
         this.Scene.Add((Entity) torch);
         this.torches.Add(torch);
       }
       int length = ReflectionHeartStatue.Code.Length;
-      Vector2 vector2 = Vector2.op_Subtraction(Vector2.op_Addition(this.nodes[4], this.offset), this.Position);
+      Vector2 vector2 = this.nodes[4] + this.offset - this.Position;
       for (int index = 0; index < length; ++index)
       {
         Monocle.Image image2 = new Monocle.Image(GFX.Game["objects/reflectionHeart/gem"]);
         image2.CenterOrigin();
         image2.Color = ForsakenCitySatellite.Colors[ReflectionHeartStatue.Code[index]];
-        image2.Position = Vector2.op_Addition(vector2, new Vector2((float) (((double) index - (double) (length - 1) / 2.0) * 24.0), 0.0f));
+        image2.Position = vector2 + new Vector2((float) (((double) index - (double) (length - 1) / 2.0) * 24.0), 0.0f);
         this.Add((Component) image2);
         this.Add((Component) new BloomPoint(image2.Position, 0.3f, 12f));
       }
@@ -82,33 +77,33 @@ namespace Celeste
       this.dashListener.OnDash = (Action<Vector2>) (dir =>
       {
         string str = "";
-        if (dir.Y < 0.0)
+        if ((double) dir.Y < 0.0)
           str = "U";
-        else if (dir.Y > 0.0)
+        else if ((double) dir.Y > 0.0)
           str = "D";
-        if (dir.X < 0.0)
+        if ((double) dir.X < 0.0)
           str += "L";
-        else if (dir.X > 0.0)
+        else if ((double) dir.X > 0.0)
           str += "R";
         int num = 0;
-        if (dir.X < 0.0 && dir.Y == 0.0)
+        if ((double) dir.X < 0.0 && (double) dir.Y == 0.0)
           num = 1;
-        else if (dir.X < 0.0 && dir.Y < 0.0)
+        else if ((double) dir.X < 0.0 && (double) dir.Y < 0.0)
           num = 2;
-        else if (dir.X == 0.0 && dir.Y < 0.0)
+        else if ((double) dir.X == 0.0 && (double) dir.Y < 0.0)
           num = 3;
-        else if (dir.X > 0.0 && dir.Y < 0.0)
+        else if ((double) dir.X > 0.0 && (double) dir.Y < 0.0)
           num = 4;
-        else if (dir.X > 0.0 && dir.Y == 0.0)
+        else if ((double) dir.X > 0.0 && (double) dir.Y == 0.0)
           num = 5;
-        else if (dir.X > 0.0 && dir.Y > 0.0)
+        else if ((double) dir.X > 0.0 && (double) dir.Y > 0.0)
           num = 6;
-        else if (dir.X == 0.0 && dir.Y > 0.0)
+        else if ((double) dir.X == 0.0 && (double) dir.Y > 0.0)
           num = 7;
-        else if (dir.X < 0.0 && dir.Y > 0.0)
+        else if ((double) dir.X < 0.0 && (double) dir.Y > 0.0)
           num = 8;
         Player entity = this.Scene.Tracker.GetEntity<Player>();
-        Audio.Play("event:/game/06_reflection/supersecret_dashflavour", entity != null ? entity.Position : Vector2.get_Zero(), "dash_direction", (float) num);
+        Audio.Play("event:/game/06_reflection/supersecret_dashflavour", entity != null ? entity.Position : Vector2.Zero, "dash_direction", (float) num);
         this.currentInputs.Add(str);
         if (this.currentInputs.Count > ReflectionHeartStatue.Code.Length)
           this.currentInputs.RemoveAt(0);
@@ -159,56 +154,59 @@ namespace Celeste
         if (!torch.Activated)
           flag = false;
       }
-      if (!flag)
-        return;
-      this.Activate(skipActivateRoutine);
+      if (flag)
+        this.Activate(skipActivateRoutine);
     }
 
     public void Activate(bool skipActivateRoutine)
     {
       this.enabled = false;
       if (skipActivateRoutine)
-        this.Scene.Add((Entity) new HeartGem(Vector2.op_Addition(this.Position, new Vector2(0.0f, -52f))));
+        this.Scene.Add((Entity) new HeartGem(this.Position + new Vector2(0.0f, -52f)));
       else
         this.Add((Component) new Coroutine(this.ActivateRoutine(), true));
     }
 
     private IEnumerator ActivateRoutine()
     {
-      ReflectionHeartStatue reflectionHeartStatue = this;
       yield return (object) 0.533f;
       Audio.Play("event:/game/06_reflection/supersecret_heartappear");
-      Entity dummy = new Entity(Vector2.op_Addition(reflectionHeartStatue.Position, new Vector2(0.0f, -52f)));
+      Entity dummy = new Entity(this.Position + new Vector2(0.0f, -52f));
       dummy.Depth = 1;
-      reflectionHeartStatue.Scene.Add(dummy);
+      this.Scene.Add(dummy);
       Monocle.Image white = new Monocle.Image(GFX.Game["collectables/heartgem/white00"]);
       white.CenterOrigin();
-      white.Scale = Vector2.get_Zero();
+      white.Scale = Vector2.Zero;
       dummy.Add((Component) white);
       BloomPoint glow = new BloomPoint(0.0f, 16f);
       dummy.Add((Component) glow);
       List<Entity> absorbs = new List<Entity>();
       for (int i = 0; i < 20; ++i)
       {
-        AbsorbOrb absorbOrb = new AbsorbOrb(Vector2.op_Addition(reflectionHeartStatue.Position, new Vector2(0.0f, -20f)), dummy);
-        reflectionHeartStatue.Scene.Add((Entity) absorbOrb);
-        absorbs.Add((Entity) absorbOrb);
+        AbsorbOrb orb = new AbsorbOrb(this.Position + new Vector2(0.0f, -20f), dummy);
+        this.Scene.Add((Entity) orb);
+        absorbs.Add((Entity) orb);
         yield return (object) null;
+        orb = (AbsorbOrb) null;
       }
       yield return (object) 0.8f;
       float duration = 0.6f;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / duration)
       {
-        white.Scale = Vector2.op_Multiply(Vector2.get_One(), p);
+        white.Scale = Vector2.One * p;
         glow.Alpha = p;
-        (reflectionHeartStatue.Scene as Level).Shake(0.3f);
+        (this.Scene as Level).Shake(0.3f);
         yield return (object) null;
       }
       foreach (Entity entity in absorbs)
-        entity.RemoveSelf();
-      (reflectionHeartStatue.Scene as Level).Flash(Color.get_White(), false);
-      reflectionHeartStatue.Scene.Remove(dummy);
-      reflectionHeartStatue.Scene.Add((Entity) new HeartGem(Vector2.op_Addition(reflectionHeartStatue.Position, new Vector2(0.0f, -52f))));
+      {
+        Entity orb = entity;
+        orb.RemoveSelf();
+        orb = (Entity) null;
+      }
+      (this.Scene as Level).Flash(Color.White, false);
+      this.Scene.Remove(dummy);
+      this.Scene.Add((Entity) new HeartGem(this.Position + new Vector2(0.0f, -52f)));
     }
 
     public override void Update()
@@ -285,9 +283,10 @@ namespace Celeste
       {
         this.sprite.Play("lit", false, false);
         this.sprite.SetAnimationFrame(Calc.Random.Next(this.sprite.CurrentAnimationTotalFrames));
-        this.Add((Component) new VertexLight(Color.get_LightSeaGreen(), 1f, 24, 48));
+        this.Add((Component) new VertexLight(Color.LightSeaGreen, 1f, 24, 48));
         this.Add((Component) new BloomPoint(0.6f, 16f));
       }
     }
   }
 }
+

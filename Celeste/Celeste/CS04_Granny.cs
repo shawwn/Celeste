@@ -31,15 +31,14 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS04_Granny cs04Granny = this;
-      cs04Granny.player.StateMachine.State = 11;
-      cs04Granny.player.StateMachine.Locked = true;
-      cs04Granny.player.ForceCameraUpdate = true;
-      yield return (object) cs04Granny.player.DummyWalkTo(cs04Granny.granny.X - 30f, false, 1f, false);
-      cs04Granny.player.Facing = Facings.Right;
-      yield return (object) Textbox.Say("CH4_GRANNY_1", new Func<IEnumerator>(cs04Granny.Laughs), new Func<IEnumerator>(cs04Granny.StopLaughing), new Func<IEnumerator>(cs04Granny.WaitABeat), new Func<IEnumerator>(cs04Granny.ZoomIn), new Func<IEnumerator>(cs04Granny.MaddyTurnsAround), new Func<IEnumerator>(cs04Granny.MaddyApproaches), new Func<IEnumerator>(cs04Granny.MaddyWalksPastGranny));
-      yield return (object) cs04Granny.Level.ZoomBack(0.5f);
-      cs04Granny.EndCutscene(level, true);
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      this.player.ForceCameraUpdate = true;
+      yield return (object) this.player.DummyWalkTo(this.granny.X - 30f, false, 1f, false);
+      this.player.Facing = Facings.Right;
+      yield return (object) Textbox.Say("CH4_GRANNY_1", new Func<IEnumerator>(this.Laughs), new Func<IEnumerator>(this.StopLaughing), new Func<IEnumerator>(this.WaitABeat), new Func<IEnumerator>(this.ZoomIn), new Func<IEnumerator>(this.MaddyTurnsAround), new Func<IEnumerator>(this.MaddyApproaches), new Func<IEnumerator>(this.MaddyWalksPastGranny));
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator Laughs()
@@ -61,24 +60,7 @@ namespace Celeste
 
     private IEnumerator ZoomIn()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      CS04_Granny cs04Granny = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) cs04Granny.Level.ZoomTo(new Vector2(123f, 116f), 2f, 0.5f);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      yield return (object) this.Level.ZoomTo(new Vector2(123f, 116f), 2f, 0.5f);
     }
 
     private IEnumerator MaddyTurnsAround()
@@ -111,3 +93,4 @@ namespace Celeste
     }
   }
 }
+

@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Monocle.Atlas
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 3F0C8D56-DA65-43code\bin\Celeste\Celeste.exe
+
 
 using Microsoft.Xna.Framework;
 using System;
@@ -67,8 +67,7 @@ namespace Monocle
               foreach (XmlElement xml2 in (XmlNode) current)
               {
                 string atlasPath = xml2.Attr("n");
-                Rectangle clipRect;
-                ((Rectangle) ref clipRect).\u002Ector(xml2.AttrInt("x"), xml2.AttrInt("y"), xml2.AttrInt("w"), xml2.AttrInt("h"));
+                Rectangle clipRect = new Rectangle(xml2.AttrInt("x"), xml2.AttrInt("y"), xml2.AttrInt("w"), xml2.AttrInt("h"));
                 atlas.textures[atlasPath] = !xml2.HasAttr("fx") ? new MTexture(parent2, atlasPath, clipRect) : new MTexture(parent2, atlasPath, clipRect, new Vector2((float) -xml2.AttrInt("fx"), (float) -xml2.AttrInt("fy")), xml2.AttrInt("fw"), xml2.AttrInt("fh"));
               }
             }
@@ -127,17 +126,17 @@ namespace Monocle
               for (int index2 = 0; index2 < (int) num2; ++index2)
               {
                 string index3 = stream.ReadNullTerminatedString();
-                int num3 = (int) stream.ReadInt16();
-                int num4 = (int) stream.ReadInt16();
-                int num5 = (int) stream.ReadInt16();
-                int num6 = (int) stream.ReadInt16();
-                short num7 = stream.ReadInt16();
-                short num8 = stream.ReadInt16();
-                short num9 = stream.ReadInt16();
-                short num10 = stream.ReadInt16();
+                stream.ReadInt16();
+                stream.ReadInt16();
+                stream.ReadInt16();
+                stream.ReadInt16();
+                short num3 = stream.ReadInt16();
+                short num4 = stream.ReadInt16();
+                short num5 = stream.ReadInt16();
+                short num6 = stream.ReadInt16();
                 VirtualTexture texture2 = VirtualContent.CreateTexture(Path.Combine(path1, index3 + ".png"));
                 atlas.Sources.Add(texture2);
-                atlas.textures[index3] = new MTexture(texture2, new Vector2((float) -num7, (float) -num8), (int) num9, (int) num10);
+                atlas.textures[index3] = new MTexture(texture2, new Vector2((float) -num3, (float) -num4), (int) num5, (int) num6);
               }
             }
             break;
@@ -189,17 +188,17 @@ namespace Monocle
               for (int index2 = 0; index2 < (int) num2; ++index2)
               {
                 string index3 = binaryReader.ReadString().Replace('\\', '/');
-                int num3 = (int) binaryReader.ReadInt16();
-                int num4 = (int) binaryReader.ReadInt16();
-                int num5 = (int) binaryReader.ReadInt16();
-                int num6 = (int) binaryReader.ReadInt16();
-                short num7 = binaryReader.ReadInt16();
-                short num8 = binaryReader.ReadInt16();
-                short num9 = binaryReader.ReadInt16();
-                short num10 = binaryReader.ReadInt16();
+                binaryReader.ReadInt16();
+                binaryReader.ReadInt16();
+                binaryReader.ReadInt16();
+                binaryReader.ReadInt16();
+                short num3 = binaryReader.ReadInt16();
+                short num4 = binaryReader.ReadInt16();
+                short num5 = binaryReader.ReadInt16();
+                short num6 = binaryReader.ReadInt16();
                 VirtualTexture texture2 = VirtualContent.CreateTexture(Path.Combine(path1, index3 + ".data"));
                 atlas.Sources.Add(texture2);
-                atlas.textures[index3] = new MTexture(texture2, new Vector2((float) -num7, (float) -num8), (int) num9, (int) num10);
+                atlas.textures[index3] = new MTexture(texture2, new Vector2((float) -num3, (float) -num4), (int) num5, (int) num6);
               }
             }
             break;
@@ -360,3 +359,4 @@ namespace Monocle
     }
   }
 }
+

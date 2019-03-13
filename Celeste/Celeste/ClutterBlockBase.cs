@@ -11,8 +11,8 @@ namespace Celeste
 {
   public class ClutterBlockBase : Solid
   {
-    private static readonly Color enabledColor = Color.op_Multiply(Color.get_Black(), 0.7f);
-    private static readonly Color disabledColor = Color.op_Multiply(Color.get_Black(), 0.3f);
+    private static readonly Color enabledColor = Color.Black * 0.7f;
+    private static readonly Color disabledColor = Color.Black * 0.3f;
     public ClutterBlock.Colors BlockColor;
     private Color color;
     private bool enabled;
@@ -66,3 +66,4 @@ namespace Celeste
     }
   }
 }
+

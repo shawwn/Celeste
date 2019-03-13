@@ -60,7 +60,7 @@ namespace Celeste
       this.CameraYPastMax = cameraYPastMax;
       this.dialog = dialog;
       this.startHit = startHit;
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 32, 64)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 32, 64)));
       this.Collider = (Collider) (this.circle = new Monocle.Circle(14f, 0.0f, -6f));
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
       this.nodes = new Vector2[nodes.Length + 1];
@@ -79,7 +79,7 @@ namespace Celeste
     }
 
     public FinalBoss(EntityData e, Vector2 offset)
-      : this(Vector2.op_Addition(e.Position, offset), e.NodesOffset(offset), e.Int(nameof (patternIndex), 0), e.Float("cameraPastY", 120f), e.Bool(nameof (dialog), false), e.Bool(nameof (startHit), false), e.Bool("cameraLockY", true))
+      : this(e.Position + offset, e.NodesOffset(offset), e.Int(nameof (patternIndex), 0), e.Float("cameraPastY", 120f), e.Bool(nameof (dialog), false), e.Bool(nameof (startHit), false), e.Bool("cameraLockY", true))
     {
     }
 
@@ -90,11 +90,11 @@ namespace Celeste
       if (this.patternIndex == 0)
       {
         this.NormalSprite = new PlayerSprite(PlayerSpriteMode.Badeline);
-        this.NormalSprite.Scale.X = (__Null) -1.0;
+        this.NormalSprite.Scale.X = -1f;
         this.NormalSprite.Play("laugh", false, false);
         this.normalHair = new PlayerHair(this.NormalSprite);
         this.normalHair.Color = BadelineOldsite.HairColor;
-        this.normalHair.Border = Color.get_Black();
+        this.normalHair.Border = Color.Black;
         this.normalHair.Facing = Facings.Left;
         this.Add((Component) this.normalHair);
         this.Add((Component) this.NormalSprite);
@@ -109,20 +109,15 @@ namespace Celeste
         if (this.bossBg != null)
           this.bossBg.Alpha = 0.0f;
         this.Sitting = true;
-        ref __Null local = ref this.Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + 16f;
+        this.Position.Y += 16f;
         this.NormalSprite.Play("pretendDead", false, false);
-        this.NormalSprite.Scale.X = (__Null) 1.0;
+        this.NormalSprite.Scale.X = 1f;
       }
       else if (this.patternIndex == 0 && !this.level.Session.GetFlag("boss_mid") && this.level.Session.Level.Equals("boss-14"))
         this.level.Add((Entity) new CS06_BossMid());
       else if (this.startHit)
         Alarm.Set((Entity) this, 0.5f, (Action) (() => this.OnPlayer((Player) null)), Alarm.AlarmMode.Oneshot);
-      this.light.Position = Vector2.op_Addition((this.Sprite != null ? (GraphicsComponent) this.Sprite : (GraphicsComponent) this.NormalSprite).Position, new Vector2(0.0f, -10f));
+      this.light.Position = (this.Sprite != null ? (GraphicsComponent) this.Sprite : (GraphicsComponent) this.NormalSprite).Position + new Vector2(0.0f, -10f);
     }
 
     public override void Awake(Scene scene)
@@ -159,7 +154,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Addition(Vector2.op_Addition(this.Center, this.Sprite.Position), new Vector2(0.0f, -14f));
+        return this.Center + this.Sprite.Position + new Vector2(0.0f, -14f);
       }
     }
 
@@ -167,7 +162,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Addition(Vector2.op_Addition(this.Center, this.Sprite.Position), new Vector2((float) (6.0 * this.Sprite.Scale.X), 2f));
+        return this.Center + this.Sprite.Position + new Vector2(6f * this.Sprite.Scale.X, 2f);
       }
     }
 
@@ -191,20 +186,22 @@ namespace Celeste
             this.scaleWiggler.Start();
           }
         }
-        if (!this.playerHasMoved && entity != null && Vector2.op_Inequality(entity.Speed, Vector2.get_Zero()))
+        if (!this.playerHasMoved && entity != null && entity.Speed != Vector2.Zero)
         {
           this.playerHasMoved = true;
-          if (this.patternIndex != 0)
+          if ((uint) this.patternIndex > 0U)
             this.StartAttacking();
           this.TriggerMovingBlocks(0);
         }
         if (!this.Moving)
-          sprite.Position = Vector2.op_Addition(this.avoidPos, new Vector2(this.floatSine.Value * 3f, this.floatSine.ValueOverTwo * 4f));
+          sprite.Position = this.avoidPos + new Vector2(this.floatSine.Value * 3f, this.floatSine.ValueOverTwo * 4f);
         else
-          sprite.Position = Calc.Approach(sprite.Position, Vector2.get_Zero(), 12f * Engine.DeltaTime);
+          sprite.Position = Calc.Approach(sprite.Position, Vector2.Zero, 12f * Engine.DeltaTime);
         float radius = this.circle.Radius;
         this.circle.Radius = 6f;
-        this.CollideFirst<DashBlock>()?.Break(this.Center, Vector2.op_UnaryNegation(Vector2.get_UnitY()), true);
+        DashBlock dashBlock = this.CollideFirst<DashBlock>();
+        if (dashBlock != null)
+          dashBlock.Break(this.Center, -Vector2.UnitY, true);
         this.circle.Radius = radius;
         if (!this.level.IsInBounds(this.Position, 24f))
         {
@@ -214,25 +211,24 @@ namespace Celeste
         Vector2 target;
         if (!this.Moving && entity != null)
         {
-          Vector2 vector2 = Vector2.op_Subtraction(this.Center, entity.Center);
-          float length = Calc.ClampedMap(((Vector2) ref vector2).Length(), 32f, 88f, 12f, 0.0f);
-          target = (double) length > 0.0 ? Vector2.op_Subtraction(this.Center, entity.Center).SafeNormalize(length) : Vector2.get_Zero();
+          float length = Calc.ClampedMap((this.Center - entity.Center).Length(), 32f, 88f, 12f, 0.0f);
+          target = (double) length > 0.0 ? (this.Center - entity.Center).SafeNormalize(length) : Vector2.Zero;
         }
         else
-          target = Vector2.get_Zero();
+          target = Vector2.Zero;
         this.avoidPos = Calc.Approach(this.avoidPos, target, 40f * Engine.DeltaTime);
       }
-      this.light.Position = Vector2.op_Addition(sprite.Position, new Vector2(0.0f, -10f));
+      this.light.Position = sprite.Position + new Vector2(0.0f, -10f);
     }
 
     public override void Render()
     {
       if (this.Sprite != null)
       {
-        this.Sprite.Scale.X = (__Null) (double) this.facing;
-        this.Sprite.Scale.Y = (__Null) 1.0;
+        this.Sprite.Scale.X = (float) this.facing;
+        this.Sprite.Scale.Y = 1f;
         Sprite sprite = this.Sprite;
-        sprite.Scale = Vector2.op_Multiply(sprite.Scale, (float) (1.0 + (double) this.scaleWiggler.Value * 0.200000002980232));
+        sprite.Scale = sprite.Scale * (float) (1.0 + (double) this.scaleWiggler.Value * 0.200000002980232);
       }
       if (this.NormalSprite != null)
       {
@@ -255,7 +251,7 @@ namespace Celeste
       if (this.laserSfx.EventName == "event:/char/badeline/boss_laser_charge" && this.laserSfx.Playing)
         this.laserSfx.Stop(true);
       this.Collidable = false;
-      this.avoidPos = Vector2.get_Zero();
+      this.avoidPos = Vector2.Zero;
       ++this.nodeIndex;
       if (this.dialog)
       {
@@ -304,22 +300,23 @@ namespace Celeste
 
     private IEnumerator MoveSequence(Player player, bool lastHit)
     {
-      FinalBoss finalBoss = this;
       if (lastHit)
       {
         Audio.SetMusicParam("boss_pitch", 1f);
         Tween tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 0.3f, true);
         tween.OnUpdate = (Action<Tween>) (t => Glitch.Value = 0.6f * t.Eased);
-        finalBoss.Add((Component) tween);
+        this.Add((Component) tween);
+        tween = (Tween) null;
       }
       else
       {
         Tween tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 0.3f, true);
         tween.OnUpdate = (Action<Tween>) (t => Glitch.Value = (float) (0.5 * (1.0 - (double) t.Eased)));
-        finalBoss.Add((Component) tween);
+        this.Add((Component) tween);
+        tween = (Tween) null;
       }
       if (player != null && !player.Dead)
-        player.StartAttract(Vector2.op_Addition(finalBoss.Center, Vector2.op_Multiply(Vector2.get_UnitY(), 4f)));
+        player.StartAttract(this.Center + Vector2.UnitY * 4f);
       float timer = 0.15f;
       while (player != null && !player.Dead && !player.AtAttractTarget)
       {
@@ -328,21 +325,26 @@ namespace Celeste
       }
       if ((double) timer > 0.0)
         yield return (object) timer;
-      foreach (ReflectionTentacles entity in finalBoss.Scene.Tracker.GetEntities<ReflectionTentacles>())
-        entity.Retreat();
+      foreach (ReflectionTentacles entity in this.Scene.Tracker.GetEntities<ReflectionTentacles>())
+      {
+        ReflectionTentacles tentacle = entity;
+        tentacle.Retreat();
+        tentacle = (ReflectionTentacles) null;
+      }
       if (player != null)
       {
-        Celeste.Celeste.Freeze(0.1f);
+        Celeste.Freeze(0.1f);
         Engine.TimeRate = !lastHit ? 0.75f : 0.5f;
         Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       }
-      finalBoss.PushPlayer(player);
-      finalBoss.level.Shake(0.3f);
+      this.PushPlayer(player);
+      this.level.Shake(0.3f);
       yield return (object) 0.05f;
-      for (float direction = 0.0f; (double) direction < 6.28318548202515; direction += 0.1745329f)
+      for (float i = 0.0f; (double) i < 6.28318548202515; i += 0.1745329f)
       {
-        Vector2 position = Vector2.op_Addition(Vector2.op_Addition(finalBoss.Center, finalBoss.Sprite.Position), Calc.AngleToVector(direction + Calc.Random.Range(-1f * (float) Math.PI / 90f, (float) Math.PI / 90f), (float) Calc.Random.Range(16, 20)));
-        finalBoss.level.Particles.Emit(FinalBoss.P_Burst, position, direction);
+        Vector2 at = this.Center + this.Sprite.Position + Calc.AngleToVector(i + Calc.Random.Range(-1f * (float) Math.PI / 90f, (float) Math.PI / 90f), (float) Calc.Random.Range(16, 20));
+        this.level.Particles.Emit(FinalBoss.P_Burst, at, i);
+        at = new Vector2();
       }
       yield return (object) 0.05f;
       Audio.SetMusicParam("boss_pitch", 0.0f);
@@ -358,20 +360,21 @@ namespace Celeste
           return;
         Glitch.Value = (float) (0.600000023841858 * (1.0 - (double) t.Eased));
       });
-      finalBoss.Add((Component) tween1);
+      this.Add((Component) tween1);
+      tween1 = (Tween) null;
       yield return (object) 0.2f;
-      Vector2 from2 = finalBoss.Position;
-      Vector2 to = finalBoss.nodes[finalBoss.nodeIndex];
-      float duration = Vector2.Distance(from2, to) / 600f;
-      float dir = Vector2.op_Subtraction(to, from2).Angle();
-      Tween tween2 = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, duration, true);
+      Vector2 from2 = this.Position;
+      Vector2 to = this.nodes[this.nodeIndex];
+      float time = Vector2.Distance(from2, to) / 600f;
+      float dir = (to - from2).Angle();
+      Tween tween2 = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, time, true);
       tween2.OnUpdate = (Action<Tween>) (t =>
       {
         this.Position = Vector2.Lerp(from2, to, t.Eased);
         if ((double) t.Eased < 0.100000001490116 || (double) t.Eased > 0.899999976158142 || !this.Scene.OnInterval(0.02f))
           return;
         TrailManager.Add((Entity) this, Player.NormalHairColor, 0.5f);
-        this.level.Particles.Emit(Player.P_DashB, 2, this.Center, Vector2.op_Multiply(Vector2.get_One(), 3f), dir);
+        this.level.Particles.Emit(Player.P_DashB, 2, this.Center, Vector2.One * 3f, dir);
       });
       tween2.OnComplete = (Action<Tween>) (t =>
       {
@@ -388,14 +391,15 @@ namespace Celeste
         this.StartAttacking();
         this.floatSine.Reset();
       });
-      finalBoss.Add((Component) tween2);
+      this.Add((Component) tween2);
+      tween2 = (Tween) null;
     }
 
     private void PushPlayer(Player player)
     {
       if (player != null && !player.Dead)
       {
-        int dir = Math.Sign(this.X - (float) this.nodes[this.nodeIndex].X);
+        int dir = Math.Sign(this.X - this.nodes[this.nodeIndex].X);
         if (dir == 0)
           dir = -1;
         player.FinalBossPushLaunch(dir);
@@ -542,22 +546,23 @@ namespace Celeste
       {
         for (int i = 0; i < 5; ++i)
         {
-          Player entity = this.level.Tracker.GetEntity<Player>();
-          if (entity != null)
+          Player player = this.level.Tracker.GetEntity<Player>();
+          if (player != null)
           {
-            Vector2 at = entity.Center;
+            Vector2 at = player.Center;
             for (int j = 0; j < 2; ++j)
             {
               this.ShootAt(at);
               yield return (object) 0.15f;
             }
-            at = (Vector2) null;
+            at = new Vector2();
           }
           if (i < 4)
           {
             this.StartShootCharge();
             yield return (object) 0.5f;
           }
+          player = (Player) null;
         }
         yield return (object) 2f;
         this.StartShootCharge();
@@ -573,22 +578,23 @@ namespace Celeste
       {
         for (int i = 0; i < 5; ++i)
         {
-          Player entity = this.level.Tracker.GetEntity<Player>();
-          if (entity != null)
+          Player player = this.level.Tracker.GetEntity<Player>();
+          if (player != null)
           {
-            Vector2 at = entity.Center;
+            Vector2 at = player.Center;
             for (int j = 0; j < 2; ++j)
             {
               this.ShootAt(at);
               yield return (object) 0.15f;
             }
-            at = (Vector2) null;
+            at = new Vector2();
           }
           if (i < 4)
           {
             this.StartShootCharge();
             yield return (object) 0.5f;
           }
+          player = (Player) null;
         }
         yield return (object) 1.5f;
         yield return (object) this.Beam();
@@ -608,22 +614,23 @@ namespace Celeste
         yield return (object) 0.3f;
         for (int i = 0; i < 3; ++i)
         {
-          Player entity = this.level.Tracker.GetEntity<Player>();
-          if (entity != null)
+          Player player = this.level.Tracker.GetEntity<Player>();
+          if (player != null)
           {
-            Vector2 at = entity.Center;
+            Vector2 at = player.Center;
             for (int j = 0; j < 2; ++j)
             {
               this.ShootAt(at);
               yield return (object) 0.15f;
             }
-            at = (Vector2) null;
+            at = new Vector2();
           }
           if (i < 2)
           {
             this.StartShootCharge();
             yield return (object) 0.5f;
           }
+          player = (Player) null;
         }
         yield return (object) 0.8f;
       }
@@ -747,19 +754,18 @@ namespace Celeste
 
     private IEnumerator Beam()
     {
-      FinalBoss boss = this;
-      boss.laserSfx.Play("event:/char/badeline/boss_laser_charge", (string) null, 0.0f);
-      boss.Sprite.Play("attack2Begin", true, false);
+      this.laserSfx.Play("event:/char/badeline/boss_laser_charge", (string) null, 0.0f);
+      this.Sprite.Play("attack2Begin", true, false);
       yield return (object) 0.1f;
-      Player entity = boss.level.Tracker.GetEntity<Player>();
-      if (entity != null)
-        boss.level.Add((Entity) Engine.Pooler.Create<FinalBossBeam>().Init(boss, entity));
+      Player player = this.level.Tracker.GetEntity<Player>();
+      if (player != null)
+        this.level.Add((Entity) Engine.Pooler.Create<FinalBossBeam>().Init(this, player));
       yield return (object) 0.9f;
-      boss.Sprite.Play("attack2Lock", true, false);
+      this.Sprite.Play("attack2Lock", true, false);
       yield return (object) 0.5f;
-      boss.laserSfx.Stop(true);
-      Audio.Play("event:/char/badeline/boss_laser_fire", boss.Position);
-      boss.Sprite.Play("attack2Recoil", false, false);
+      this.laserSfx.Stop(true);
+      Audio.Play("event:/char/badeline/boss_laser_fire", this.Position);
+      this.Sprite.Play("attack2Recoil", false, false);
     }
 
     public override void Removed(Scene scene)
@@ -770,3 +776,4 @@ namespace Celeste
     }
   }
 }
+

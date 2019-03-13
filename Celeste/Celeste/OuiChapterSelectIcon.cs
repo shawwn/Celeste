@@ -14,10 +14,13 @@ namespace Celeste
 {
   public class OuiChapterSelectIcon : Entity
   {
-    public Vector2 Scale = Vector2.get_One();
+    public Vector2 Scale = Vector2.One;
+    public float Rotation = 0.0f;
     public float sizeEase = 1f;
     private bool hidden = true;
     private int rotateDir = -1;
+    private float spotlightAlpha = 0.0f;
+    private float spotlightRadius = 0.0f;
     public const float IdleSize = 100f;
     public const float HoverSize = 144f;
     public const float HoverSpacing = 80f;
@@ -26,7 +29,6 @@ namespace Celeste
     public const float Spacing = 32f;
     public int Area;
     public bool New;
-    public float Rotation;
     public bool AssistModeUnlockable;
     public bool HideIcon;
     private Wiggler newWiggle;
@@ -35,8 +37,6 @@ namespace Celeste
     private Wiggler wiggler;
     private bool wiggleLeft;
     private Vector2 shake;
-    private float spotlightAlpha;
-    private float spotlightRadius;
     private MTexture front;
     private MTexture back;
 
@@ -44,15 +44,15 @@ namespace Celeste
     {
       get
       {
-        float num1 = (float) (960.0 + (double) (this.Area - SaveData.Instance.LastArea.ID) * 132.0);
+        float x = (float) (960.0 + (double) (this.Area - SaveData.Instance.LastArea.ID) * 132.0);
         if (this.Area < SaveData.Instance.LastArea.ID)
-          num1 -= 80f;
+          x -= 80f;
         else if (this.Area > SaveData.Instance.LastArea.ID)
-          num1 += 80f;
-        float num2 = 130f;
+          x += 80f;
+        float y = 130f;
         if (this.Area == SaveData.Instance.LastArea.ID)
-          num2 = 140f;
-        return new Vector2(num1, num2);
+          y = 140f;
+        return new Vector2(x, y);
       }
     }
 
@@ -60,7 +60,7 @@ namespace Celeste
     {
       get
       {
-        return new Vector2((float) this.IdlePosition.X, -100f);
+        return new Vector2(this.IdlePosition.X, -100f);
       }
     }
 
@@ -74,7 +74,7 @@ namespace Celeste
       this.Add((Component) (this.wiggler = Wiggler.Create(0.35f, 2f, (Action<float>) (f =>
       {
         this.Rotation = (float) ((this.wiggleLeft ? -(double) f : (double) f) * 0.400000005960464);
-        this.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) f * 0.5));
+        this.Scale = Vector2.One * (float) (1.0 + (double) f * 0.5);
       }), false, false)));
       this.Add((Component) (this.newWiggle = Wiggler.Create(0.8f, 2f, (Action<float>) null, false, false)));
       this.newWiggle.StartZero = true;
@@ -113,7 +113,7 @@ namespace Celeste
 
     public void Hide()
     {
-      this.Scale = Vector2.get_One();
+      this.Scale = Vector2.One;
       this.hidden = true;
       this.selected = false;
       Vector2 from = this.Position;
@@ -124,7 +124,7 @@ namespace Celeste
     {
       if (SaveData.Instance != null)
         this.New = SaveData.Instance.Areas[this.Area].Modes[0].TimePlayed <= 0L;
-      this.Scale = Vector2.get_One();
+      this.Scale = Vector2.One;
       this.hidden = false;
       this.selected = false;
       Vector2 from = this.Position;
@@ -138,33 +138,33 @@ namespace Celeste
 
     private IEnumerator AssistModeUnlockRoutine(Action onComplete)
     {
-      float p;
-      for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
+      for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
         this.spotlightRadius = Ease.CubeOut(p) * 128f;
         this.spotlightAlpha = Ease.CubeOut(p) * 0.8f;
         yield return (object) null;
       }
-      this.shake.X = (__Null) 6.0;
+      this.shake.X = 6f;
       for (int i = 0; i < 10; ++i)
       {
         this.shake.X = -this.shake.X;
         yield return (object) 0.01f;
       }
-      this.shake = Vector2.get_Zero();
-      for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
+      this.shake = Vector2.Zero;
+      for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        this.shake = new Vector2(0.0f, -160f * Ease.CubeIn(p));
+        float ease = Ease.CubeIn(p);
+        this.shake = new Vector2(0.0f, -160f * ease);
         this.Scale = new Vector2(1f - p, (float) (1.0 + (double) p * 0.25));
         yield return (object) null;
       }
-      this.shake = Vector2.get_Zero();
-      this.Scale = Vector2.get_One();
+      this.shake = Vector2.Zero;
+      this.Scale = Vector2.One;
       this.AssistModeUnlockable = false;
       ++SaveData.Instance.UnlockedAreas;
       this.wiggler.Start();
       yield return (object) 1f;
-      for (p = 1f; (double) p > 0.0; p -= Engine.DeltaTime * 4f)
+      for (float p = 1f; (double) p > 0.0; p -= Engine.DeltaTime * 4f)
       {
         this.spotlightRadius = (float) (128.0 + (1.0 - (double) Ease.CubeOut(p)) * 128.0);
         this.spotlightAlpha = Ease.CubeOut(p) * 0.8f;
@@ -183,8 +183,7 @@ namespace Celeste
 
     private IEnumerator CoreUnlockRoutine(Action onComplete)
     {
-      float p;
-      for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 2f)
+      for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 2f)
       {
         this.spotlightRadius = (float) (128.0 + (1.0 - (double) Ease.CubeOut(p)) * 128.0);
         this.spotlightAlpha = Ease.CubeOut(p) * 0.8f;
@@ -193,7 +192,7 @@ namespace Celeste
       this.HideIcon = false;
       this.wiggler.Start();
       yield return (object) 2f;
-      for (p = 1f; (double) p > 0.0; p -= Engine.DeltaTime * 2f)
+      for (float p = 1f; (double) p > 0.0; p -= Engine.DeltaTime * 2f)
       {
         this.spotlightRadius = (float) (128.0 + (1.0 - (double) Ease.CubeOut(p)) * 128.0);
         this.spotlightAlpha = Ease.CubeOut(p) * 0.8f;
@@ -222,11 +221,11 @@ namespace Celeste
     private void SetSelectedPercent(Vector2 from, float p)
     {
       OuiChapterPanel ui = (this.Scene as Overworld).GetUI<OuiChapterPanel>();
-      Vector2 end = Vector2.op_Addition(ui.OpenPosition, ui.IconOffset);
-      SimpleCurve simpleCurve = new SimpleCurve(from, end, Vector2.op_Addition(Vector2.op_Division(Vector2.op_Addition(from, end), 2f), new Vector2(0.0f, 30f)));
+      Vector2 end = ui.OpenPosition + ui.IconOffset;
+      SimpleCurve simpleCurve = new SimpleCurve(from, end, (from + end) / 2f + new Vector2(0.0f, 30f));
       float num = (float) (1.0 + ((double) p < 0.5 ? (double) p * 2.0 : (1.0 - (double) p) * 2.0));
-      this.Scale.X = (__Null) (Math.Cos((double) Ease.SineInOut(p) * 6.28318548202515) * (double) num);
-      this.Scale.Y = (__Null) (double) num;
+      this.Scale.X = (float) Math.Cos((double) Ease.SineInOut(p) * 6.28318548202515) * num;
+      this.Scale.Y = num;
       this.Position = simpleCurve.GetPoint(Ease.Invert(Ease.CubeInOut)(p));
       this.Rotation = (float) ((double) Ease.UpDown(Ease.SineInOut(p)) * (Math.PI / 180.0) * 15.0) * (float) this.rotateDir;
       if ((double) p <= 0.0)
@@ -255,7 +254,7 @@ namespace Celeste
         if (this.selected)
         {
           OuiChapterPanel ui = (this.Scene as Overworld).GetUI<OuiChapterPanel>();
-          this.Position = Vector2.op_Addition(ui.Position, ui.IconOffset);
+          this.Position = ui.Position + ui.IconOffset;
         }
         else if (!this.hidden)
           this.Position = Calc.Approach(this.Position, this.IdlePosition, 2400f * Engine.DeltaTime);
@@ -270,7 +269,7 @@ namespace Celeste
       MTexture mtexture = this.front;
       Vector2 scale1 = this.Scale;
       int width = mtexture.Width;
-      if (scale1.X < 0.0)
+      if ((double) scale1.X < 0.0)
         mtexture = this.back;
       if (this.AssistModeUnlockable)
       {
@@ -279,28 +278,29 @@ namespace Celeste
       }
       if (!this.HideIcon)
       {
-        Vector2 scale2 = Vector2.op_Multiply(scale1, (float) (100.0 + 44.0 * (double) Ease.CubeInOut(this.sizeEase)) / (float) width);
+        Vector2 scale2 = scale1 * ((float) (100.0 + 44.0 * (double) Ease.CubeInOut(this.sizeEase)) / (float) width);
         if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
           scale2.X = -scale2.X;
-        mtexture.DrawCentered(Vector2.op_Addition(this.Position, this.shake), Color.get_White(), scale2, this.Rotation);
-        if (this.New && SaveData.Instance != null && (!SaveData.Instance.CheatMode && this.Area == SaveData.Instance.UnlockedAreas) && (!this.selected && this.tween == null && (!this.AssistModeUnlockable && Celeste.Celeste.PlayMode != Celeste.Celeste.PlayModes.Event)))
+        mtexture.DrawCentered(this.Position + this.shake, Color.White, scale2, this.Rotation);
+        if (this.New && SaveData.Instance != null && (!SaveData.Instance.CheatMode && this.Area == SaveData.Instance.UnlockedAreas) && (!this.selected && this.tween == null && !this.AssistModeUnlockable) && Celeste.PlayMode != Celeste.PlayModes.Event)
         {
-          Vector2 position = Vector2.op_Addition(Vector2.op_Addition(this.Position, new Vector2((float) width * 0.25f, (float) -mtexture.Height * 0.25f)), Vector2.op_Multiply(Vector2.get_UnitY(), -Math.Abs(this.newWiggle.Value * 30f)));
+          Vector2 position = this.Position + new Vector2((float) width * 0.25f, (float) -mtexture.Height * 0.25f) + Vector2.UnitY * -Math.Abs(this.newWiggle.Value * 30f);
           GFX.Gui["areas/new"].DrawCentered(position);
         }
       }
       if ((double) this.spotlightAlpha > 0.0)
       {
         HiresRenderer.EndRender();
-        SpotlightWipe.DrawSpotlight(this.Position, this.spotlightRadius, Color.op_Multiply(Color.get_Black(), this.spotlightAlpha));
+        SpotlightWipe.DrawSpotlight(this.Position, this.spotlightRadius, Color.Black * this.spotlightAlpha);
         HiresRenderer.BeginRender((BlendState) null, (SamplerState) null);
       }
       else
       {
         if (!this.AssistModeUnlockable || SaveData.Instance.LastArea.ID != this.Area || this.hidden)
           return;
-        ActiveFont.DrawOutline(Dialog.Clean("ASSIST_SKIP", (Language) null), Vector2.op_Addition(this.Position, new Vector2(0.0f, 100f)), new Vector2(0.5f, 0.0f), Vector2.op_Multiply(Vector2.get_One(), 0.7f), Color.get_White(), 2f, Color.get_Black());
+        ActiveFont.DrawOutline(Dialog.Clean("ASSIST_SKIP", (Language) null), this.Position + new Vector2(0.0f, 100f), new Vector2(0.5f, 0.0f), Vector2.One * 0.7f, Color.White, 2f, Color.Black);
       }
     }
   }
 }
+

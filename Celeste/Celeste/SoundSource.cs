@@ -13,7 +13,7 @@ namespace Celeste
   [Tracked(false)]
   public class SoundSource : Component
   {
-    public Vector2 Position = Vector2.get_Zero();
+    public Vector2 Position = Vector2.Zero;
     public bool DisposeOnTransition = true;
     public string EventName;
     private EventInstance instance;
@@ -88,7 +88,7 @@ namespace Celeste
         {
           Vector2 position = this.Position;
           if (this.Entity != null)
-            position = Vector2.op_Addition(position, this.Entity.Position);
+            position += this.Entity.Position;
           Audio.Position(this.instance, position);
         }
         if (param != null)
@@ -149,18 +149,19 @@ namespace Celeste
       {
         Vector2 position = this.Position;
         if (this.Entity != null)
-          position = Vector2.op_Addition(position, this.Entity.Position);
+          position += this.Entity.Position;
         Audio.Position(this.instance, position);
       }
       if (!this.isOneshot || !((HandleBase) this.instance != (HandleBase) null))
         return;
       PLAYBACK_STATE state;
       int playbackState = (int) this.instance.getPlaybackState(out state);
-      if (state != PLAYBACK_STATE.STOPPED)
-        return;
-      int num = (int) this.instance.release();
-      this.instance = (EventInstance) null;
-      this.Playing = false;
+      if (state == PLAYBACK_STATE.STOPPED)
+      {
+        int num = (int) this.instance.release();
+        this.instance = (EventInstance) null;
+        this.Playing = false;
+      }
     }
 
     public override void EntityRemoved(Scene scene)
@@ -183,10 +184,11 @@ namespace Celeste
 
     public override void DebugRender(Camera camera)
     {
-      Vector2 vector2 = this.Position;
+      Vector2 position = this.Position;
       if (this.Entity != null)
-        vector2 = Vector2.op_Addition(vector2, this.Entity.Position);
-      Draw.HollowRect((float) (vector2.X - 2.0), (float) (vector2.Y - 2.0), 4f, 4f, Color.get_BlueViolet());
+        position += this.Entity.Position;
+      Draw.HollowRect(position.X - 2f, position.Y - 2f, 4f, 4f, Color.BlueViolet);
     }
   }
 }
+

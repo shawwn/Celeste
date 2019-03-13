@@ -18,15 +18,15 @@ namespace Celeste
     public static readonly Color HighlightColorA = Calc.HexToColor("84FF54");
     public static readonly Color HighlightColorB = Calc.HexToColor("FCFF59");
     public bool Focused = true;
+    public TextMenu.InnerContentMode InnerContent = TextMenu.InnerContentMode.OneColumn;
     private List<TextMenu.Item> items = new List<TextMenu.Item>();
     public int Selection = -1;
     public float ItemSpacing = 4f;
+    public float MinWidth = 0.0f;
     public float Alpha = 1f;
-    public Color HighlightColor = Color.get_White();
+    public Color HighlightColor = Color.White;
     public bool AutoScroll = true;
-    public TextMenu.InnerContentMode InnerContent;
     public Vector2 Justify;
-    public float MinWidth;
     public Action OnESC;
     public Action OnCancel;
     public Action OnUpdate;
@@ -37,9 +37,7 @@ namespace Celeste
     {
       get
       {
-        if (this.items.Count <= 0 || this.Selection < 0)
-          return (TextMenu.Item) null;
-        return this.items[this.Selection];
+        return this.items.Count <= 0 || this.Selection < 0 ? (TextMenu.Item) null : this.items[this.Selection];
       }
       set
       {
@@ -66,7 +64,7 @@ namespace Celeste
     public TextMenu()
     {
       this.Tag = (int) Tags.PauseUpdate | (int) Tags.HUD;
-      this.Position = Vector2.op_Division(new Vector2((float) Engine.Width, (float) Engine.Height), 2f);
+      this.Position = new Vector2((float) Engine.Width, (float) Engine.Height) / 2f;
       this.Justify = new Vector2(0.5f, 0.5f);
     }
 
@@ -76,9 +74,9 @@ namespace Celeste
       if (!this.AutoScroll)
         return;
       if ((double) this.Height > (double) this.ScrollableMinSize)
-        this.Position.Y = (__Null) (double) this.ScrollTargetY;
+        this.Position.Y = this.ScrollTargetY;
       else
-        this.Position.Y = (__Null) 540.0;
+        this.Position.Y = 540f;
     }
 
     public TextMenu Add(TextMenu.Item item)
@@ -147,10 +145,11 @@ namespace Celeste
         this.items[selection].OnLeave();
       if (this.Current.OnEnter != null)
         this.Current.OnEnter();
-      if (!wiggle)
-        return;
-      Audio.Play(direction > 0 ? "event:/ui/main/rollover_down" : "event:/ui/main/rollover_up");
-      this.Current.SelectWiggler.Start();
+      if (wiggle)
+      {
+        Audio.Play(direction > 0 ? "event:/ui/main/rollover_down" : "event:/ui/main/rollover_up");
+        this.Current.SelectWiggler.Start();
+      }
     }
 
     public void RecalculateSize()
@@ -259,46 +258,34 @@ namespace Celeste
       if (Settings.Instance.DisableFlashes)
         this.HighlightColor = TextMenu.HighlightColorA;
       else if (Engine.Scene.OnRawInterval(0.1f))
-        this.HighlightColor = !Color.op_Equality(this.HighlightColor, TextMenu.HighlightColorA) ? TextMenu.HighlightColorA : TextMenu.HighlightColorB;
+        this.HighlightColor = !(this.HighlightColor == TextMenu.HighlightColorA) ? TextMenu.HighlightColorA : TextMenu.HighlightColorB;
       if (!this.AutoScroll)
         return;
       if ((double) this.Height > (double) this.ScrollableMinSize)
-      {
-        ref __Null local = ref this.Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + (float) (((double) this.ScrollTargetY - this.Position.Y) * (1.0 - Math.Pow(0.00999999977648258, (double) Engine.DeltaTime)));
-      }
+        this.Position.Y += (float) (((double) this.ScrollTargetY - (double) this.Position.Y) * (1.0 - Math.Pow(0.00999999977648258, (double) Engine.DeltaTime)));
       else
-        this.Position.Y = (__Null) 540.0;
+        this.Position.Y = 540f;
     }
 
     public float ScrollTargetY
     {
       get
       {
-        return Calc.Clamp((float) (Engine.Height / 2) + this.Height * (float) this.Justify.Y - this.GetYOffsetOf(this.Current), (float) (Engine.Height - 150) - this.Height * (float) this.Justify.Y, (float) (150.0 + (double) this.Height * this.Justify.Y));
+        return Calc.Clamp((float) (Engine.Height / 2) + this.Height * this.Justify.Y - this.GetYOffsetOf(this.Current), (float) (Engine.Height - 150) - this.Height * this.Justify.Y, (float) (150.0 + (double) this.Height * (double) this.Justify.Y));
       }
     }
 
     public override void Render()
     {
       this.RecalculateSize();
-      Vector2 vector2 = Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(this.Justify, new Vector2(this.Width, this.Height)));
+      Vector2 vector2 = this.Position - this.Justify * new Vector2(this.Width, this.Height);
       foreach (TextMenu.Item obj in this.items)
       {
         if (obj.Visible)
         {
           float num = obj.Height();
-          obj.Render(Vector2.op_Addition(vector2, new Vector2(0.0f, (float) ((double) num * 0.5 + (double) obj.SelectWiggler.Value * 8.0))), this.Focused && this.Current == obj);
-          ref __Null local = ref vector2.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (num + this.ItemSpacing);
+          obj.Render(vector2 + new Vector2(0.0f, (float) ((double) num * 0.5 + (double) obj.SelectWiggler.Value * 8.0)), this.Focused && this.Current == obj);
+          vector2.Y += num + this.ItemSpacing;
         }
       }
     }
@@ -311,10 +298,10 @@ namespace Celeste
 
     public abstract class Item
     {
+      public bool Selectable = false;
       public bool Visible = true;
+      public bool Disabled = false;
       public bool IncludeWidthInMeasurement = true;
-      public bool Selectable;
-      public bool Disabled;
       public TextMenu Container;
       public Wiggler SelectWiggler;
       public Wiggler ValueWiggler;
@@ -328,9 +315,7 @@ namespace Celeste
       {
         get
         {
-          if (this.Selectable && this.Visible)
-            return !this.Disabled;
-          return false;
+          return this.Selectable && this.Visible && !this.Disabled;
         }
       }
 
@@ -420,7 +405,7 @@ namespace Celeste
 
       public override float LeftWidth()
       {
-        return (float) (ActiveFont.Measure(this.Title).X * 2.0);
+        return ActiveFont.Measure(this.Title).X * 2f;
       }
 
       public override float Height()
@@ -431,8 +416,8 @@ namespace Celeste
       public override void Render(Vector2 position, bool highlighted)
       {
         float alpha = this.Container.Alpha;
-        Color strokeColor = Color.op_Multiply(Color.get_Black(), alpha * alpha * alpha);
-        ActiveFont.DrawEdgeOutline(this.Title, Vector2.op_Addition(position, new Vector2(this.Container.Width * 0.5f, 0.0f)), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 2f), Color.op_Multiply(Color.get_Gray(), alpha), 4f, Color.op_Multiply(Color.get_DarkSlateBlue(), alpha), 2f, strokeColor);
+        Color strokeColor = Color.Black * (alpha * alpha * alpha);
+        ActiveFont.DrawEdgeOutline(this.Title, position + new Vector2(this.Container.Width * 0.5f, 0.0f), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.Gray * alpha, 4f, Color.DarkSlateBlue * alpha, 2f, strokeColor);
       }
     }
 
@@ -449,7 +434,7 @@ namespace Celeste
 
       public override float LeftWidth()
       {
-        return (float) (ActiveFont.Measure(this.Title).X * 0.600000023841858);
+        return ActiveFont.Measure(this.Title).X * 0.6f;
       }
 
       public override float Height()
@@ -462,23 +447,20 @@ namespace Celeste
         if (this.Title.Length <= 0)
           return;
         float alpha = this.Container.Alpha;
-        Color strokeColor = Color.op_Multiply(Color.get_Black(), alpha * alpha * alpha);
-        Vector2 position1 = Vector2.op_Addition(position, this.Container.InnerContent == TextMenu.InnerContentMode.TwoColumn ? new Vector2(0.0f, 32f) : new Vector2(this.Container.Width * 0.5f, 32f));
-        Vector2 justify;
-        ((Vector2) ref justify).\u002Ector(this.Container.InnerContent == TextMenu.InnerContentMode.TwoColumn ? 0.0f : 0.5f, 0.5f);
-        ActiveFont.DrawOutline(this.Title, position1, justify, Vector2.op_Multiply(Vector2.get_One(), 0.6f), Color.op_Multiply(Color.get_Gray(), alpha), 2f, strokeColor);
+        Color strokeColor = Color.Black * (alpha * alpha * alpha);
+        ActiveFont.DrawOutline(this.Title, position + (this.Container.InnerContent == TextMenu.InnerContentMode.TwoColumn ? new Vector2(0.0f, 32f) : new Vector2(this.Container.Width * 0.5f, 32f)), new Vector2(this.Container.InnerContent == TextMenu.InnerContentMode.TwoColumn ? 0.0f : 0.5f, 0.5f), Vector2.One * 0.6f, Color.Gray * alpha, 2f, strokeColor);
       }
     }
 
     public class Option<T> : TextMenu.Item
     {
       public List<Tuple<string, T>> Values = new List<Tuple<string, T>>();
+      private float sine = 0.0f;
+      private int lastDir = 0;
       public string Label;
       public int Index;
       public Action<T> OnValueChange;
       public int PreviousIndex;
-      private float sine;
-      private int lastDir;
 
       public Option(string label)
       {
@@ -514,9 +496,8 @@ namespace Celeste
         --this.Index;
         this.lastDir = -1;
         this.ValueWiggler.Start();
-        if (this.OnValueChange == null)
-          return;
-        this.OnValueChange(this.Values[this.Index].Item2);
+        if (this.OnValueChange != null)
+          this.OnValueChange(this.Values[this.Index].Item2);
       }
 
       public override void RightPressed()
@@ -528,9 +509,8 @@ namespace Celeste
         ++this.Index;
         this.lastDir = 1;
         this.ValueWiggler.Start();
-        if (this.OnValueChange == null)
-          return;
-        this.OnValueChange(this.Values[this.Index].Item2);
+        if (this.OnValueChange != null)
+          this.OnValueChange(this.Values[this.Index].Item2);
       }
 
       public override void ConfirmPressed()
@@ -545,9 +525,8 @@ namespace Celeste
         this.Index = 1 - this.Index;
         this.lastDir = this.Index == 1 ? 1 : -1;
         this.ValueWiggler.Start();
-        if (this.OnValueChange == null)
-          return;
-        this.OnValueChange(this.Values[this.Index].Item2);
+        if (this.OnValueChange != null)
+          this.OnValueChange(this.Values[this.Index].Item2);
       }
 
       public override void Update()
@@ -557,14 +536,14 @@ namespace Celeste
 
       public override float LeftWidth()
       {
-        return (float) (ActiveFont.Measure(this.Label).X + 32.0);
+        return ActiveFont.Measure(this.Label).X + 32f;
       }
 
       public override float RightWidth()
       {
         float val1 = 0.0f;
         foreach (Tuple<string, T> tuple in this.Values)
-          val1 = Math.Max(val1, (float) ActiveFont.Measure(tuple.Item1).X);
+          val1 = Math.Max(val1, ActiveFont.Measure(tuple.Item1).X);
         return val1 + 120f;
       }
 
@@ -576,20 +555,20 @@ namespace Celeste
       public override void Render(Vector2 position, bool highlighted)
       {
         float alpha = this.Container.Alpha;
-        Color strokeColor = Color.op_Multiply(Color.get_Black(), alpha * alpha * alpha);
-        Color color1 = this.Disabled ? Color.get_DarkSlateGray() : Color.op_Multiply(highlighted ? this.Container.HighlightColor : Color.get_White(), alpha);
-        ActiveFont.DrawOutline(this.Label, position, new Vector2(0.0f, 0.5f), Vector2.get_One(), color1, 2f, strokeColor);
+        Color strokeColor = Color.Black * (alpha * alpha * alpha);
+        Color color1 = this.Disabled ? Color.DarkSlateGray : (highlighted ? this.Container.HighlightColor : Color.White) * alpha;
+        ActiveFont.DrawOutline(this.Label, position, new Vector2(0.0f, 0.5f), Vector2.One, color1, 2f, strokeColor);
         if (this.Values.Count <= 0)
           return;
         float num = this.RightWidth();
-        ActiveFont.DrawOutline(this.Values[this.Index].Item1, Vector2.op_Addition(position, new Vector2((float) ((double) this.Container.Width - (double) num * 0.5 + (double) this.lastDir * (double) this.ValueWiggler.Value * 8.0), 0.0f)), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 0.8f), color1, 2f, strokeColor);
-        Vector2 vector2 = Vector2.op_Multiply(Vector2.get_UnitX(), highlighted ? (float) (Math.Sin((double) this.sine * 4.0) * 4.0) : 0.0f);
+        ActiveFont.DrawOutline(this.Values[this.Index].Item1, position + new Vector2((float) ((double) this.Container.Width - (double) num * 0.5 + (double) this.lastDir * (double) this.ValueWiggler.Value * 8.0), 0.0f), new Vector2(0.5f, 0.5f), Vector2.One * 0.8f, color1, 2f, strokeColor);
+        Vector2 vector2 = Vector2.UnitX * (highlighted ? (float) (Math.Sin((double) this.sine * 4.0) * 4.0) : 0.0f);
         bool flag1 = this.Index > 0;
-        Color color2 = flag1 ? color1 : Color.op_Multiply(Color.get_DarkSlateGray(), alpha);
-        ActiveFont.DrawOutline("<", Vector2.op_Subtraction(Vector2.op_Addition(position, new Vector2((float) ((double) this.Container.Width - (double) num + 40.0 + (this.lastDir < 0 ? -(double) this.ValueWiggler.Value * 8.0 : 0.0)), 0.0f)), flag1 ? vector2 : Vector2.get_Zero()), new Vector2(0.5f, 0.5f), Vector2.get_One(), color2, 2f, strokeColor);
+        Color color2 = flag1 ? color1 : Color.DarkSlateGray * alpha;
+        ActiveFont.DrawOutline("<", position + new Vector2((float) ((double) this.Container.Width - (double) num + 40.0 + (this.lastDir < 0 ? -(double) this.ValueWiggler.Value * 8.0 : 0.0)), 0.0f) - (flag1 ? vector2 : Vector2.Zero), new Vector2(0.5f, 0.5f), Vector2.One, color2, 2f, strokeColor);
         bool flag2 = this.Index < this.Values.Count - 1;
-        Color color3 = flag2 ? color1 : Color.op_Multiply(Color.get_DarkSlateGray(), alpha);
-        ActiveFont.DrawOutline(">", Vector2.op_Addition(Vector2.op_Addition(position, new Vector2((float) ((double) this.Container.Width - 40.0 + (this.lastDir > 0 ? (double) this.ValueWiggler.Value * 8.0 : 0.0)), 0.0f)), flag2 ? vector2 : Vector2.get_Zero()), new Vector2(0.5f, 0.5f), Vector2.get_One(), color3, 2f, strokeColor);
+        Color color3 = flag2 ? color1 : Color.DarkSlateGray * alpha;
+        ActiveFont.DrawOutline(">", position + new Vector2((float) ((double) this.Container.Width - 40.0 + (this.lastDir > 0 ? (double) this.ValueWiggler.Value * 8.0 : 0.0)), 0.0f) + (flag2 ? vector2 : Vector2.Zero), new Vector2(0.5f, 0.5f), Vector2.One, color3, 2f, strokeColor);
       }
     }
 
@@ -629,9 +608,7 @@ namespace Celeste
       public Setting(string label, Keys key)
         : this(label, "")
       {
-        List<Keys> keys = new List<Keys>();
-        keys.Add(key);
-        this.Set(keys);
+        this.Set(new List<Keys>() { key });
       }
 
       public Setting(string label, List<Keys> keys)
@@ -643,9 +620,7 @@ namespace Celeste
       public Setting(string label, Buttons btn)
         : this(label, "")
       {
-        List<Buttons> buttons = new List<Buttons>();
-        buttons.Add(btn);
-        this.Set(buttons);
+        this.Set(new List<Buttons>() { btn });
       }
 
       public Setting(string label, List<Buttons> buttons)
@@ -660,7 +635,7 @@ namespace Celeste
         int index1 = 0;
         for (int index2 = Math.Min(4, keys.Count); index1 < index2; ++index1)
         {
-          if (keys[index1] != null)
+          if (keys[index1] != Keys.None)
           {
             MTexture mtexture = Celeste.Input.GuiKey(keys[index1], (string) null);
             if (mtexture != null)
@@ -722,7 +697,7 @@ namespace Celeste
 
       public override float LeftWidth()
       {
-        return (float) ActiveFont.Measure(this.Label).X;
+        return ActiveFont.Measure(this.Label).X;
       }
 
       public override float RightWidth()
@@ -733,7 +708,7 @@ namespace Celeste
           if (obj is MTexture)
             num += (float) (obj as MTexture).Width;
           else if (obj is string)
-            num += (float) (ActiveFont.Measure(obj as string).X * 0.699999988079071 + 16.0);
+            num += (float) ((double) ActiveFont.Measure(obj as string).X * 0.699999988079071 + 16.0);
         }
         return num;
       }
@@ -746,28 +721,23 @@ namespace Celeste
       public override void Render(Vector2 position, bool highlighted)
       {
         float alpha = this.Container.Alpha;
-        Color strokeColor1 = Color.op_Multiply(Color.get_Black(), alpha * alpha * alpha);
-        Color color1 = this.Disabled ? Color.get_DarkSlateGray() : Color.op_Multiply(highlighted ? this.Container.HighlightColor : Color.get_White(), alpha);
-        ActiveFont.DrawOutline(this.Label, position, new Vector2(0.0f, 0.5f), Vector2.get_One(), color1, 2f, strokeColor1);
+        Color strokeColor = Color.Black * (alpha * alpha * alpha);
+        Color color = this.Disabled ? Color.DarkSlateGray : (highlighted ? this.Container.HighlightColor : Color.White) * alpha;
+        ActiveFont.DrawOutline(this.Label, position, new Vector2(0.0f, 0.5f), Vector2.One, color, 2f, strokeColor);
         float num1 = this.RightWidth();
         foreach (object obj in this.Values)
         {
           if (obj is MTexture)
           {
             MTexture mtexture = obj as MTexture;
-            mtexture.DrawJustified(Vector2.op_Addition(position, new Vector2(this.Container.Width - num1, 0.0f)), new Vector2(0.0f, 0.5f), Color.op_Multiply(Color.get_White(), alpha));
+            mtexture.DrawJustified(position + new Vector2(this.Container.Width - num1, 0.0f), new Vector2(0.0f, 0.5f), Color.White * alpha);
             num1 -= (float) mtexture.Width;
           }
           else if (obj is string)
           {
             string text = obj as string;
-            float num2 = (float) (ActiveFont.Measure(obj as string).X * 0.699999988079071 + 16.0);
-            Vector2 position1 = Vector2.op_Addition(position, new Vector2((float) ((double) this.Container.Width - (double) num1 + (double) num2 * 0.5), 0.0f));
-            Vector2 justify = new Vector2(0.5f, 0.5f);
-            Vector2 scale = Vector2.op_Multiply(Vector2.get_One(), 0.7f);
-            Color color2 = Color.op_Multiply(Color.get_LightGray(), alpha);
-            Color strokeColor2 = strokeColor1;
-            ActiveFont.DrawOutline(text, position1, justify, scale, color2, 2f, strokeColor2);
+            float num2 = (float) ((double) ActiveFont.Measure(obj as string).X * 0.699999988079071 + 16.0);
+            ActiveFont.DrawOutline(text, position + new Vector2((float) ((double) this.Container.Width - (double) num1 + (double) num2 * 0.5), 0.0f), new Vector2(0.5f, 0.5f), Vector2.One * 0.7f, Color.LightGray * alpha, 2f, strokeColor);
             num1 -= num2;
           }
         }
@@ -794,7 +764,7 @@ namespace Celeste
 
       public override float LeftWidth()
       {
-        return (float) ActiveFont.Measure(this.Label).X;
+        return ActiveFont.Measure(this.Label).X;
       }
 
       public override float Height()
@@ -805,10 +775,10 @@ namespace Celeste
       public override void Render(Vector2 position, bool highlighted)
       {
         float alpha = this.Container.Alpha;
-        Color color = this.Disabled ? Color.get_DarkSlateGray() : Color.op_Multiply(highlighted ? this.Container.HighlightColor : Color.get_White(), alpha);
-        Color strokeColor = Color.op_Multiply(Color.get_Black(), alpha * alpha * alpha);
+        Color color = this.Disabled ? Color.DarkSlateGray : (highlighted ? this.Container.HighlightColor : Color.White) * alpha;
+        Color strokeColor = Color.Black * (alpha * alpha * alpha);
         bool flag = this.Container.InnerContent == TextMenu.InnerContentMode.TwoColumn && !this.AlwaysCenter;
-        ActiveFont.DrawOutline(this.Label, Vector2.op_Addition(position, flag ? Vector2.get_Zero() : new Vector2(this.Container.Width * 0.5f, 0.0f)), !flag || this.AlwaysCenter ? new Vector2(0.5f, 0.5f) : new Vector2(0.0f, 0.5f), Vector2.get_One(), color, 2f, strokeColor);
+        ActiveFont.DrawOutline(this.Label, position + (flag ? Vector2.Zero : new Vector2(this.Container.Width * 0.5f, 0.0f)), !flag || this.AlwaysCenter ? new Vector2(0.5f, 0.5f) : new Vector2(0.0f, 0.5f), Vector2.One, color, 2f, strokeColor);
       }
     }
 
@@ -834,12 +804,12 @@ namespace Celeste
 
       public override float LeftWidth()
       {
-        return (float) ActiveFont.Measure(this.Label).X;
+        return ActiveFont.Measure(this.Label).X;
       }
 
       public override float RightWidth()
       {
-        return (float) (this.Language.FontSize.Measure(this.Language.Label).X + 96.0 + 32.0);
+        return (float) ((double) this.Language.FontSize.Measure(this.Language.Label).X + 96.0 + 32.0);
       }
 
       public override float Height()
@@ -850,14 +820,15 @@ namespace Celeste
       public override void Render(Vector2 position, bool highlighted)
       {
         float alpha = this.Container.Alpha;
-        Color color = this.Disabled ? Color.get_DarkSlateGray() : Color.op_Multiply(highlighted ? this.Container.HighlightColor : Color.get_White(), alpha);
-        Color strokeColor = Color.op_Multiply(Color.get_Black(), alpha * alpha * alpha);
-        ActiveFont.DrawOutline(this.Label, position, new Vector2(0.0f, 0.5f), Vector2.get_One(), color, 2f, strokeColor);
-        this.Language.FontSize.DrawOutline(this.Language.Label, Vector2.op_Addition(position, new Vector2(this.Container.Width - 32f, 0.0f)), new Vector2(1f, 0.5f), Vector2.get_One(), color, 2f, strokeColor);
+        Color color = this.Disabled ? Color.DarkSlateGray : (highlighted ? this.Container.HighlightColor : Color.White) * alpha;
+        Color strokeColor = Color.Black * (alpha * alpha * alpha);
+        ActiveFont.DrawOutline(this.Label, position, new Vector2(0.0f, 0.5f), Vector2.One, color, 2f, strokeColor);
+        this.Language.FontSize.DrawOutline(this.Language.Label, position + new Vector2(this.Container.Width - 32f, 0.0f), new Vector2(1f, 0.5f), Vector2.One, color, 2f, strokeColor);
         if (this.Language.Icon == null)
           return;
-        this.Language.Icon.DrawJustified(Vector2.op_Addition(position, new Vector2(this.Container.Width - this.RightWidth(), 0.0f)), new Vector2(0.0f, 0.5f), Color.get_White(), 64f / (float) this.Language.Icon.Width);
+        this.Language.Icon.DrawJustified(position + new Vector2(this.Container.Width - this.RightWidth(), 0.0f), new Vector2(0.0f, 0.5f), Color.White, 64f / (float) this.Language.Icon.Width);
       }
     }
   }
 }
+

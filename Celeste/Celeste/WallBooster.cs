@@ -43,7 +43,7 @@ namespace Celeste
     }
 
     public WallBooster(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Height, data.Bool("left", false))
+      : this(data.Position + offset, (float) data.Height, data.Bool("left", false))
     {
     }
 
@@ -92,7 +92,8 @@ namespace Celeste
       Player entity = this.Scene.Tracker.GetEntity<Player>();
       if (entity == null)
         return;
-      this.idleSfx.Position = Vector2.op_Subtraction(Calc.ClosestPointOnLine(this.Position, Vector2.op_Addition(this.Position, new Vector2(0.0f, this.Height)), entity.Center), this.Position);
+      this.idleSfx.Position = Calc.ClosestPointOnLine(this.Position, this.Position + new Vector2(0.0f, this.Height), entity.Center) - this.Position;
     }
   }
 }
+

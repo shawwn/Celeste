@@ -25,7 +25,7 @@ namespace Celeste
       this.returnTo = returnTo;
       this.returnCallback = returnCallback;
       this.Add((Monocle.Renderer) (this.mountain = new MountainRenderer()));
-      this.mountain.SnapCamera(-1, new MountainCamera(Vector3.op_Addition(this.startCamera.Position, Vector3.op_Multiply(Vector3.op_Subtraction(this.startCamera.Target, this.startCamera.Position).SafeNormalize(), 2f)), this.startCamera.Target), false);
+      this.mountain.SnapCamera(-1, new MountainCamera(this.startCamera.Position + (this.startCamera.Target - this.startCamera.Position).SafeNormalize() * 2f, this.startCamera.Target), false);
       this.Add((Monocle.Renderer) new HiresSnow(0.45f)
       {
         ParticleAlpha = 0.0f
@@ -46,7 +46,7 @@ namespace Celeste
       this.maddy.Position = this.startCamera.Target;
       for (int i = 0; i < 30; ++i)
       {
-        this.maddy.Position = Vector3.op_Addition(this.startCamera.Target, new Vector3(Calc.Random.Range(-0.05f, 0.05f), Calc.Random.Range(-0.05f, 0.05f), Calc.Random.Range(-0.05f, 0.05f)));
+        this.maddy.Position = this.startCamera.Target + new Vector3(Calc.Random.Range(-0.05f, 0.05f), Calc.Random.Range(-0.05f, 0.05f), Calc.Random.Range(-0.05f, 0.05f));
         yield return (object) 0.01f;
       }
       yield return (object) 0.1f;
@@ -56,7 +56,8 @@ namespace Celeste
       this.mountain.ForceNearFog = true;
       yield return (object) duration;
       yield return (object) 0.25f;
-      double num3 = (double) this.mountain.EaseCamera(-1, new MountainCamera(Vector3.op_Addition(this.fallCamera.Position, Vector3.op_Multiply(this.mountain.Model.Forward, 3f)), this.fallCamera.Target), new float?(0.5f), true, false);
+      MountainCamera zoom = new MountainCamera(this.fallCamera.Position + this.mountain.Model.Forward * 3f, this.fallCamera.Target);
+      double num3 = (double) this.mountain.EaseCamera(-1, zoom, new float?(0.5f), true, false);
       this.Return();
     }
 
@@ -81,3 +82,4 @@ namespace Celeste
     }
   }
 }
+

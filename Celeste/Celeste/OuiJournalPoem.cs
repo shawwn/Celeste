@@ -15,6 +15,9 @@ namespace Celeste
   public class OuiJournalPoem : OuiJournalPage
   {
     private List<OuiJournalPoem.PoemLine> lines = new List<OuiJournalPoem.PoemLine>();
+    private int index = 0;
+    private float slider = 0.0f;
+    private bool swapping = false;
     private Coroutine swapRoutine = new Coroutine(true);
     private Wiggler wiggler = Wiggler.Create(0.4f, 4f, (Action<float>) null, false, false);
     private const float textScale = 0.5f;
@@ -22,10 +25,7 @@ namespace Celeste
     private const float poemHeight = 44f;
     private const float poemSpacing = 4f;
     private const float poemStanzaSpacing = 16f;
-    private int index;
-    private float slider;
     private bool dragging;
-    private bool swapping;
     private Tween tween;
 
     public OuiJournalPoem(OuiJournal journal)
@@ -55,32 +55,26 @@ namespace Celeste
     {
       base.Redraw(buffer);
       Draw.SpriteBatch.Begin();
-      ActiveFont.Draw(Dialog.Clean("journal_poem", (Language) null), new Vector2(60f, 60f), new Vector2(0.0f, 0.5f), Vector2.get_One(), Color.op_Multiply(Color.get_Black(), 0.6f));
+      ActiveFont.Draw(Dialog.Clean("journal_poem", (Language) null), new Vector2(60f, 60f), new Vector2(0.0f, 0.5f), Vector2.One, Color.Black * 0.6f);
       foreach (OuiJournalPoem.PoemLine line in this.lines)
         line.Render();
       if (this.lines.Count > 0)
-      {
-        MTexture mtexture = GFX.Journal[this.dragging ? "poemSlider" : "poemArrow"];
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(50f, OuiJournalPoem.GetY(this.slider));
-        Vector2 position = vector2;
-        Color white = Color.get_White();
-        double num = 1.0 + 0.25 * (double) this.wiggler.Value;
-        mtexture.DrawCentered(position, white, (float) num);
-      }
+        GFX.Journal[this.dragging ? "poemSlider" : "poemArrow"].DrawCentered(new Vector2(50f, OuiJournalPoem.GetY(this.slider)), Color.White, (float) (1.0 + 0.25 * (double) this.wiggler.Value));
       Draw.SpriteBatch.End();
     }
 
     private IEnumerator Swap(int a, int b)
     {
-      string str = SaveData.Instance.Poem[a];
+      string temp1 = SaveData.Instance.Poem[a];
       SaveData.Instance.Poem[a] = SaveData.Instance.Poem[b];
-      SaveData.Instance.Poem[b] = str;
+      SaveData.Instance.Poem[b] = temp1;
+      temp1 = (string) null;
       OuiJournalPoem.PoemLine poemA = this.lines[a];
       OuiJournalPoem.PoemLine poemB = this.lines[b];
-      OuiJournalPoem.PoemLine line = this.lines[a];
+      OuiJournalPoem.PoemLine temp2 = this.lines[a];
       this.lines[a] = this.lines[b];
-      this.lines[b] = line;
+      this.lines[b] = temp2;
+      temp2 = (OuiJournalPoem.PoemLine) null;
       this.tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 0.125f, true);
       this.tween.OnUpdate = (Action<Tween>) (t =>
       {
@@ -161,13 +155,14 @@ namespace Celeste
       {
         float x = (float) (100.0 + (double) Ease.CubeInOut(this.HoveringEase) * 20.0);
         float y = OuiJournalPoem.GetY(this.Index);
-        Draw.Rect(x, y - 22f, 810f, 44f, Color.op_Multiply(Color.get_White(), 0.25f));
-        Vector2 scale1 = Vector2.op_Multiply(Vector2.get_One(), (float) (0.600000023841858 + (double) this.HoldingEase * 0.400000005960464));
-        GFX.Journal[this.Remix ? "heartgem1" : "heartgem0"].DrawCentered(new Vector2(x + 20f, y), Color.get_White(), scale1);
-        Color color = Color.op_Multiply(Color.get_Black(), (float) (0.699999988079071 + (double) this.HoveringEase * 0.300000011920929));
-        Vector2 scale2 = Vector2.op_Multiply(Vector2.get_One(), (float) (0.5 + (double) this.HoldingEase * 0.100000001490116));
+        Draw.Rect(x, y - 22f, 810f, 44f, Color.White * 0.25f);
+        Vector2 scale1 = Vector2.One * (float) (0.600000023841858 + (double) this.HoldingEase * 0.400000005960464);
+        GFX.Journal[this.Remix ? "heartgem1" : "heartgem0"].DrawCentered(new Vector2(x + 20f, y), Color.White, scale1);
+        Color color = Color.Black * (float) (0.699999988079071 + (double) this.HoveringEase * 0.300000011920929);
+        Vector2 scale2 = Vector2.One * (float) (0.5 + (double) this.HoldingEase * 0.100000001490116);
         ActiveFont.Draw(this.Text, new Vector2(x + 60f, y), new Vector2(0.0f, 0.5f), scale2, color);
       }
     }
   }
 }
+

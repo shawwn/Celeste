@@ -12,8 +12,8 @@ namespace Celeste
 {
   public class Torch : Entity
   {
-    public static readonly Color Color = Color.Lerp(Color.get_White(), Color.get_Cyan(), 0.5f);
-    public static readonly Color StartLitColor = Color.Lerp(Color.get_White(), Color.get_Orange(), 0.5f);
+    public static readonly Color Color = Color.Lerp(Color.White, Color.Cyan, 0.5f);
+    public static readonly Color StartLitColor = Color.Lerp(Color.White, Color.Orange, 0.5f);
     public static ParticleType P_OnLight;
     public const float BloomAlpha = 0.5f;
     public const int StartRadius = 48;
@@ -47,7 +47,7 @@ namespace Celeste
     }
 
     public Torch(EntityData data, Vector2 offset, EntityID id)
-      : this(id, Vector2.op_Addition(data.Position, offset), data.Bool(nameof (startLit), false))
+      : this(id, data.Position + offset, data.Bool(nameof (startLit), false))
     {
     }
 
@@ -75,7 +75,7 @@ namespace Celeste
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.BackOut, 1f, true);
       tween.OnUpdate = (Action<Tween>) (t =>
       {
-        this.light.Color = Color.Lerp(Color.get_White(), Torch.Color, t.Eased);
+        this.light.Color = Color.Lerp(Color.White, Torch.Color, t.Eased);
         this.light.StartRadius = (float) (48.0 + (1.0 - (double) t.Eased) * 32.0);
         this.light.EndRadius = (float) (64.0 + (1.0 - (double) t.Eased) * 32.0);
         this.bloom.Alpha = (float) (0.5 + 0.5 * (1.0 - (double) t.Eased));
@@ -94,3 +94,4 @@ namespace Celeste
     }
   }
 }
+

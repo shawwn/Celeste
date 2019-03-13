@@ -31,20 +31,21 @@ namespace Celeste
 
     public override void Render(Scene scene)
     {
-      Color color = Color.op_Multiply(ScreenWipe.WipeColor, this.WipeIn ? 1f - Ease.CubeIn(this.Percent) : Ease.CubeOut(this.Percent));
-      this.vertexBuffer[0].Color = (__Null) color;
-      this.vertexBuffer[0].Position = (__Null) new Vector3(-10f, -10f, 0.0f);
-      this.vertexBuffer[1].Color = (__Null) color;
-      this.vertexBuffer[1].Position = (__Null) new Vector3((float) this.Right, -10f, 0.0f);
-      this.vertexBuffer[2].Color = (__Null) color;
-      this.vertexBuffer[2].Position = (__Null) new Vector3(-10f, (float) this.Bottom, 0.0f);
-      this.vertexBuffer[3].Color = (__Null) color;
-      this.vertexBuffer[3].Position = (__Null) new Vector3((float) this.Right, -10f, 0.0f);
-      this.vertexBuffer[4].Color = (__Null) color;
-      this.vertexBuffer[4].Position = (__Null) new Vector3((float) this.Right, (float) this.Bottom, 0.0f);
-      this.vertexBuffer[5].Color = (__Null) color;
-      this.vertexBuffer[5].Position = (__Null) new Vector3(-10f, (float) this.Bottom, 0.0f);
+      Color color = ScreenWipe.WipeColor * (this.WipeIn ? 1f - Ease.CubeIn(this.Percent) : Ease.CubeOut(this.Percent));
+      this.vertexBuffer[0].Color = color;
+      this.vertexBuffer[0].Position = new Vector3(-10f, -10f, 0.0f);
+      this.vertexBuffer[1].Color = color;
+      this.vertexBuffer[1].Position = new Vector3((float) this.Right, -10f, 0.0f);
+      this.vertexBuffer[2].Color = color;
+      this.vertexBuffer[2].Position = new Vector3(-10f, (float) this.Bottom, 0.0f);
+      this.vertexBuffer[3].Color = color;
+      this.vertexBuffer[3].Position = new Vector3((float) this.Right, -10f, 0.0f);
+      this.vertexBuffer[4].Color = color;
+      this.vertexBuffer[4].Position = new Vector3((float) this.Right, (float) this.Bottom, 0.0f);
+      this.vertexBuffer[5].Color = color;
+      this.vertexBuffer[5].Position = new Vector3(-10f, (float) this.Bottom, 0.0f);
       ScreenWipe.DrawPrimitives(this.vertexBuffer);
     }
   }
 }
+

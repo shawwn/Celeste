@@ -45,7 +45,7 @@ namespace Celeste
 
     public override void Render()
     {
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.get_Black(), Ease.CubeOut(this.Alpha)));
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * Ease.CubeOut(this.Alpha));
       base.Render();
     }
 
@@ -74,7 +74,7 @@ namespace Celeste
 
       public override float RightWidth()
       {
-        return (float) this.Language.FontSize.Measure(this.Language.Label).X;
+        return this.Language.FontSize.Measure(this.Language.Label).X;
       }
 
       public override float Height()
@@ -84,14 +84,15 @@ namespace Celeste
 
       public override void Render(Vector2 position, bool highlighted)
       {
-        Color color = this.Disabled ? Color.get_DarkSlateGray() : Color.op_Multiply(highlighted ? this.Container.HighlightColor : Color.get_White(), this.Container.Alpha);
-        Color strokeColor = Color.op_Multiply(Color.get_Black(), this.Container.Alpha * this.Container.Alpha * this.Container.Alpha * this.Container.Alpha);
-        position = Vector2.op_Addition(position, Vector2.op_Multiply(Vector2.op_Multiply(1f - Ease.CubeOut(this.Container.Alpha), Vector2.get_UnitY()), 32f));
-        this.Language.FontSize.DrawOutline(this.Language.Label, Vector2.op_Addition(position, new Vector2(96f, 0.0f)), new Vector2(0.0f, 0.5f), Vector2.get_One(), color, 2f, strokeColor);
+        Color color = this.Disabled ? Color.DarkSlateGray : (highlighted ? this.Container.HighlightColor : Color.White) * this.Container.Alpha;
+        Color strokeColor = Color.Black * (this.Container.Alpha * this.Container.Alpha * this.Container.Alpha * this.Container.Alpha);
+        position += (1f - Ease.CubeOut(this.Container.Alpha)) * Vector2.UnitY * 32f;
+        this.Language.FontSize.DrawOutline(this.Language.Label, position + new Vector2(96f, 0.0f), new Vector2(0.0f, 0.5f), Vector2.One, color, 2f, strokeColor);
         if (this.Language.Icon == null)
           return;
-        this.Language.Icon.DrawJustified(position, new Vector2(0.0f, 0.5f), Color.op_Multiply(Color.get_White(), this.Container.Alpha), 64f / (float) this.Language.Icon.Width);
+        this.Language.Icon.DrawJustified(position, new Vector2(0.0f, 0.5f), Color.White * this.Container.Alpha, 64f / (float) this.Language.Icon.Width);
       }
     }
   }
 }
+

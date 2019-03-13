@@ -12,19 +12,19 @@ namespace Celeste
 {
   public class WindSnowFG : Backdrop
   {
-    public Vector2 CameraOffset = Vector2.get_Zero();
+    public Vector2 CameraOffset = Vector2.Zero;
     public float Alpha = 1f;
-    private Vector2 scale = Vector2.get_One();
+    private Vector2 scale = Vector2.One;
+    private float rotation = 0.0f;
     private float loopWidth = 640f;
     private float loopHeight = 360f;
     private float visibleFade = 1f;
     private Vector2[] positions;
     private SineWave[] sines;
-    private float rotation;
 
     public WindSnowFG()
     {
-      this.Color = Color.get_White();
+      this.Color = Color.White;
       this.positions = new Vector2[240];
       for (int index = 0; index < this.positions.Length; ++index)
         this.positions[index] = Calc.Random.Range(new Vector2(0.0f, 0.0f), new Vector2(this.loopWidth, this.loopHeight));
@@ -43,28 +43,24 @@ namespace Celeste
       Level level = scene as Level;
       foreach (Component sine in this.sines)
         sine.Update();
-      bool flag = level.Wind.Y == 0.0;
+      bool flag = (double) level.Wind.Y == 0.0;
       if (flag)
       {
-        this.scale.X = (__Null) (double) Math.Max(1f, Math.Abs((float) level.Wind.X) / 100f);
+        this.scale.X = Math.Max(1f, Math.Abs(level.Wind.X) / 100f);
         this.rotation = Calc.Approach(this.rotation, 0.0f, Engine.DeltaTime * 8f);
       }
       else
       {
-        this.scale.X = (__Null) (double) Math.Max(1f, Math.Abs((float) level.Wind.Y) / 40f);
+        this.scale.X = Math.Max(1f, Math.Abs(level.Wind.Y) / 40f);
         this.rotation = Calc.Approach(this.rotation, -1.570796f, Engine.DeltaTime * 8f);
       }
-      this.scale.Y = (__Null) (1.0 / (double) Math.Max(1f, (float) (this.scale.X * 0.25)));
+      this.scale.Y = 1f / Math.Max(1f, this.scale.X * 0.25f);
       for (int index = 0; index < this.positions.Length; ++index)
       {
         float num = this.sines[index % this.sines.Length].Value;
-        Vector2 zero = Vector2.get_Zero();
-        if (flag)
-          ((Vector2) ref zero).\u002Ector((float) (level.Wind.X + (double) num * 10.0), 20f);
-        else
-          ((Vector2) ref zero).\u002Ector(0.0f, (float) (level.Wind.Y * 3.0 + (double) num * 10.0));
-        ref Vector2 local = ref this.positions[index];
-        local = Vector2.op_Addition(local, Vector2.op_Multiply(zero, Engine.DeltaTime));
+        Vector2 vector2 = Vector2.Zero;
+        vector2 = !flag ? new Vector2(0.0f, (float) ((double) level.Wind.Y * 3.0 + (double) num * 10.0)) : new Vector2(level.Wind.X + num * 10f, 20f);
+        this.positions[index] += vector2 * Engine.DeltaTime;
       }
     }
 
@@ -72,53 +68,19 @@ namespace Celeste
     {
       if ((double) this.Alpha <= 0.0)
         return;
-      Color color = Color.op_Multiply(Color.op_Multiply(this.Color, this.visibleFade), this.Alpha);
-      int num1 = (scene as Level).Wind.Y == 0.0 ? (int) (double) this.positions.Length : (int) ((double) this.positions.Length * 0.600000023841858);
+      Color color = this.Color * this.visibleFade * this.Alpha;
+      int num1 = (double) (scene as Level).Wind.Y == 0.0 ? (int) (double) this.positions.Length : (int) ((double) this.positions.Length * 0.600000023841858);
       int num2 = 0;
       foreach (Vector2 position in this.positions)
       {
-        ref __Null local1 = ref position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 - ((scene as Level).Camera.Y + (float) this.CameraOffset.Y);
-        ref __Null local2 = ref position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 % this.loopHeight;
-        if (position.Y < 0.0)
-        {
-          ref __Null local3 = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local3 = ^(float&) ref local3 + this.loopHeight;
-        }
-        ref __Null local4 = ref position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local4 = ^(float&) ref local4 - ((scene as Level).Camera.X + (float) this.CameraOffset.X);
-        ref __Null local5 = ref position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local5 = ^(float&) ref local5 % this.loopWidth;
-        if (position.X < 0.0)
-        {
-          ref __Null local3 = ref position.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local3 = ^(float&) ref local3 + this.loopWidth;
-        }
+        position.Y -= (scene as Level).Camera.Y + this.CameraOffset.Y;
+        position.Y %= this.loopHeight;
+        if ((double) position.Y < 0.0)
+          position.Y += this.loopHeight;
+        position.X -= (scene as Level).Camera.X + this.CameraOffset.X;
+        position.X %= this.loopWidth;
+        if ((double) position.X < 0.0)
+          position.X += this.loopWidth;
         if (num2 < num1)
           GFX.Game["particles/snow"].DrawCentered(position, color, this.scale, this.rotation);
         ++num2;
@@ -126,3 +88,4 @@ namespace Celeste
     }
   }
 }
+

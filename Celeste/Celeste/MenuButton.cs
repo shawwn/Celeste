@@ -80,10 +80,8 @@ namespace Celeste
           Audio.Play("event:/ui/main/rollover_up");
           this.UpButton.Selected = true;
         }
-        else
+        else if (Input.MenuDown.Pressed && this.DownButton != null)
         {
-          if (!Input.MenuDown.Pressed || this.DownButton == null)
-            return;
           Audio.Play("event:/ui/main/rollover_down");
           this.DownButton.Selected = true;
         }
@@ -112,11 +110,9 @@ namespace Celeste
     {
       get
       {
-        if (!this.selected)
-          return Color.get_White();
-        if (!Settings.Instance.DisableFlashes && !this.Scene.BetweenInterval(0.1f))
-          return TextMenu.HighlightColorB;
-        return TextMenu.HighlightColorA;
+        if (this.selected)
+          return Settings.Instance.DisableFlashes || this.Scene.BetweenInterval(0.1f) ? TextMenu.HighlightColorA : TextMenu.HighlightColorB;
+        return Color.White;
       }
     }
 
@@ -170,3 +166,4 @@ namespace Celeste
     public abstract float ButtonHeight { get; }
   }
 }
+

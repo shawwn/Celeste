@@ -13,9 +13,9 @@ namespace Celeste
 {
   public class NPC01_Theo : NPC
   {
+    private int currentConversation = 0;
     public static ParticleType P_YOLO;
     private const string DoneTalking = "theoDoneTalking";
-    private int currentConversation;
     private Coroutine talkRoutine;
 
     public NPC01_Theo(Vector2 position)
@@ -42,44 +42,43 @@ namespace Celeste
 
     private IEnumerator Talk(Player player)
     {
-      NPC01_Theo npC01Theo = this;
-      if (npC01Theo.currentConversation == 0)
+      if (this.currentConversation == 0)
       {
-        yield return (object) npC01Theo.PlayerApproachRightSide(player, true, new float?());
-        yield return (object) Textbox.Say("CH1_THEO_A", new Func<IEnumerator>(((NPC) npC01Theo).PlayerApproach48px));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?());
+        yield return (object) Textbox.Say("CH1_THEO_A", new Func<IEnumerator>(((NPC) this).PlayerApproach48px));
       }
-      else if (npC01Theo.currentConversation == 1)
+      else if (this.currentConversation == 1)
       {
-        yield return (object) npC01Theo.PlayerApproachRightSide(player, true, new float?());
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?());
         yield return (object) 0.2f;
-        yield return (object) npC01Theo.PlayerApproach(player, true, new float?(48f), new int?());
+        yield return (object) this.PlayerApproach(player, true, new float?(48f), new int?());
         yield return (object) Textbox.Say("CH1_THEO_B");
       }
-      else if (npC01Theo.currentConversation == 2)
+      else if (this.currentConversation == 2)
       {
-        yield return (object) npC01Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH1_THEO_C");
       }
-      else if (npC01Theo.currentConversation == 3)
+      else if (this.currentConversation == 3)
       {
-        yield return (object) npC01Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH1_THEO_D");
       }
-      else if (npC01Theo.currentConversation == 4)
+      else if (this.currentConversation == 4)
       {
-        yield return (object) npC01Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH1_THEO_E");
       }
-      else if (npC01Theo.currentConversation == 5)
+      else if (this.currentConversation == 5)
       {
-        yield return (object) npC01Theo.PlayerApproachRightSide(player, true, new float?(48f));
-        yield return (object) Textbox.Say("CH1_THEO_F", new Func<IEnumerator>(npC01Theo.Yolo));
-        npC01Theo.Sprite.Play("yoloEnd", false, false);
-        npC01Theo.Remove((Component) npC01Theo.Talker);
-        yield return (object) npC01Theo.Level.ZoomBack(0.5f);
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) Textbox.Say("CH1_THEO_F", new Func<IEnumerator>(this.Yolo));
+        this.Sprite.Play("yoloEnd", false, false);
+        this.Remove((Component) this.Talker);
+        yield return (object) this.Level.ZoomBack(0.5f);
       }
-      npC01Theo.Level.EndCutscene();
-      npC01Theo.OnTalkEnd(npC01Theo.Level);
+      this.Level.EndCutscene();
+      this.OnTalkEnd(this.Level);
     }
 
     private void OnTalkEnd(Level level)
@@ -108,15 +107,15 @@ namespace Celeste
 
     private IEnumerator Yolo()
     {
-      NPC01_Theo npC01Theo = this;
-      yield return (object) npC01Theo.Level.ZoomTo(new Vector2(128f, 128f), 2f, 0.5f);
+      yield return (object) this.Level.ZoomTo(new Vector2(128f, 128f), 2f, 0.5f);
       yield return (object) 0.2f;
-      Audio.Play("event:/char/theo/yolo_fist", npC01Theo.Position);
-      npC01Theo.Sprite.Play("yolo", false, false);
+      Audio.Play("event:/char/theo/yolo_fist", this.Position);
+      this.Sprite.Play("yolo", false, false);
       yield return (object) 0.1f;
-      npC01Theo.Level.DirectionalShake(Vector2.op_UnaryNegation(Vector2.get_UnitY()), 0.3f);
-      npC01Theo.Level.ParticlesFG.Emit(NPC01_Theo.P_YOLO, 6, Vector2.op_Addition(npC01Theo.Position, new Vector2(-3f, -24f)), Vector2.op_Multiply(Vector2.get_One(), 4f));
+      this.Level.DirectionalShake(-Vector2.UnitY, 0.3f);
+      this.Level.ParticlesFG.Emit(NPC01_Theo.P_YOLO, 6, this.Position + new Vector2(-3f, -24f), Vector2.One * 4f);
       yield return (object) 0.5f;
     }
   }
 }
+

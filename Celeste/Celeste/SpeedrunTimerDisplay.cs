@@ -12,14 +12,14 @@ namespace Celeste
 {
   public class SpeedrunTimerDisplay : Entity
   {
+    private static float numberWidth = 0.0f;
+    private static float spacerWidth = 0.0f;
+    public float StayOnscreenFor = 0.0f;
+    public float CompleteTimer = 0.0f;
     private MTexture bg = GFX.Gui["strawberryCountBG"];
-    public float StayOnscreenFor;
-    public float CompleteTimer;
+    public float DrawLerp = 0.0f;
     public const int GuiChapterHeight = 58;
     public const int GuiFileHeight = 78;
-    private static float numberWidth;
-    private static float spacerWidth;
-    public float DrawLerp;
     private Wiggler wiggler;
 
     public SpeedrunTimerDisplay()
@@ -36,11 +36,11 @@ namespace Celeste
       PixelFontSize pixelFontSize = Dialog.Languages["english"].Font.Get(Dialog.Languages["english"].FontFaceSize);
       for (int index = 0; index < 10; ++index)
       {
-        float x = (float) pixelFontSize.Measure(index.ToString()).X;
+        float x = pixelFontSize.Measure(index.ToString()).X;
         if ((double) x > (double) SpeedrunTimerDisplay.numberWidth)
           SpeedrunTimerDisplay.numberWidth = x;
       }
-      SpeedrunTimerDisplay.spacerWidth = (float) pixelFontSize.Measure('.').X;
+      SpeedrunTimerDisplay.spacerWidth = pixelFontSize.Measure('.').X;
     }
 
     public override void Update()
@@ -59,10 +59,11 @@ namespace Celeste
         if (Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
         {
           Player entity = this.Scene.Tracker.GetEntity<Player>();
-          bool flag2 = entity != null && (entity.StateMachine.State == 10 || entity.StateMachine.PreviousState == 10 && entity.StateMachine.State == 13);
+          bool flag2 = entity == null;
+          bool flag3 = entity != null && (entity.StateMachine.State == 10 || entity.StateMachine.PreviousState == 10 && entity.StateMachine.State == 13);
           if (scene.Paused || (double) this.StayOnscreenFor > 0.0)
             flag1 = true;
-          else if ((scene.ShowHud || scene.Completed) && ((double) this.CompleteTimer < 3.0 && !flag2))
+          else if ((scene.ShowHud || scene.Completed) && (double) this.CompleteTimer < 3.0 && !flag3)
             flag1 = true;
         }
         else if (Settings.Instance.SpeedrunClock == SpeedrunType.File)
@@ -95,10 +96,10 @@ namespace Celeste
         int totalHours = (int) timeSpan2.TotalHours;
         string timeString2 = totalHours.ToString() + timeSpan2.ToString("\\:mm\\:ss\\.fff");
         int num = totalHours < 10 ? 64 : (totalHours < 100 ? 96 : 128);
-        Draw.Rect(x, this.Y, (float) (num + 2), 38f, Color.get_Black());
+        Draw.Rect(x, this.Y, (float) (num + 2), 38f, Color.Black);
         this.bg.Draw(new Vector2(x + (float) num, this.Y));
         SpeedrunTimerDisplay.DrawTime(new Vector2(x + 32f, this.Y + 44f), timeString2, 1f, true, false, false, 1f);
-        this.bg.Draw(new Vector2(x, this.Y + 38f), Vector2.get_Zero(), Color.get_White(), 0.6f);
+        this.bg.Draw(new Vector2(x, this.Y + 38f), Vector2.Zero, Color.White, 0.6f);
         SpeedrunTimerDisplay.DrawTime(new Vector2(x + 32f, (float) ((double) this.Y + 40.0 + 26.4000015258789)), timeString1, (float) ((1.0 + (double) this.wiggler.Value * 0.150000005960464) * 0.600000023841858), session.StartedFromBeginning, scene.Completed, session.BeatBestTime, 0.6f);
       }
     }
@@ -115,24 +116,24 @@ namespace Celeste
       PixelFont font = Dialog.Languages["english"].Font;
       float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
       float num1 = scale;
-      float x = (float) position.X;
-      float y = (float) position.Y;
-      Color color1 = Color.op_Multiply(Color.get_White(), alpha);
-      Color color2 = Color.op_Multiply(Color.get_LightGray(), alpha);
+      float x = position.X;
+      float y = position.Y;
+      Color color1 = Color.White * alpha;
+      Color color2 = Color.LightGray * alpha;
       if (!valid)
       {
-        color1 = Color.op_Multiply(Calc.HexToColor("918988"), alpha);
-        color2 = Color.op_Multiply(Calc.HexToColor("7a6f6d"), alpha);
+        color1 = Calc.HexToColor("918988") * alpha;
+        color2 = Calc.HexToColor("7a6f6d") * alpha;
       }
       else if (bestTime)
       {
-        color1 = Color.op_Multiply(Calc.HexToColor("fad768"), alpha);
-        color2 = Color.op_Multiply(Calc.HexToColor("cfa727"), alpha);
+        color1 = Calc.HexToColor("fad768") * alpha;
+        color2 = Calc.HexToColor("cfa727") * alpha;
       }
       else if (finished)
       {
-        color1 = Color.op_Multiply(Calc.HexToColor("6ded87"), alpha);
-        color2 = Color.op_Multiply(Calc.HexToColor("43d14c"), alpha);
+        color1 = Calc.HexToColor("6ded87") * alpha;
+        color2 = Calc.HexToColor("43d14c") * alpha;
       }
       for (int index = 0; index < timeString.Length; ++index)
       {
@@ -144,7 +145,7 @@ namespace Celeste
         }
         Color color3 = ch == ':' || ch == '.' || (double) num1 < (double) scale ? color2 : color1;
         float num2 = (float) ((ch == ':' || ch == '.' ? (double) SpeedrunTimerDisplay.spacerWidth : (double) SpeedrunTimerDisplay.numberWidth) + 4.0) * num1;
-        font.DrawOutline(fontFaceSize, ch.ToString(), new Vector2(x + num2 / 2f, y), new Vector2(0.5f, 1f), Vector2.op_Multiply(Vector2.get_One(), num1), color3, 2f, Color.get_Black());
+        font.DrawOutline(fontFaceSize, ch.ToString(), new Vector2(x + num2 / 2f, y), new Vector2(0.5f, 1f), Vector2.One * num1, color3, 2f, Color.Black);
         x += num2;
       }
     }
@@ -165,3 +166,4 @@ namespace Celeste
     }
   }
 }
+

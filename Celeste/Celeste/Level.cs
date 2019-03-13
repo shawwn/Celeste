@@ -20,8 +20,11 @@ namespace Celeste
   {
     private static int AssistSpeedSnapshotValue = -1;
     public float NextTransitionDuration = 0.65f;
-    public Color BackgroundColor = Color.get_Black();
-    private Color flashColor = Color.get_White();
+    public Color BackgroundColor = Color.Black;
+    public float ScreenPadding = 0.0f;
+    private float flash = 0.0f;
+    private Color flashColor = Color.White;
+    private float glitchTimer = 0.0f;
     public float Zoom = 1f;
     public float ZoomTarget = 1f;
     public bool CanRetry = true;
@@ -69,11 +72,8 @@ namespace Celeste
     private int lastDirectionalShake;
     private float shakeTimer;
     private Vector2 cameraPreShake;
-    public float ScreenPadding;
-    private float flash;
     private bool doFlash;
     private bool flashDrawPlayer;
-    private float glitchTimer;
     private float glitchSeed;
     public Vector2 ZoomFocusPoint;
     private string lastColorGrade;
@@ -110,9 +110,9 @@ namespace Celeste
       get
       {
         Rectangle bounds = this.Bounds;
-        double left = (double) ((Rectangle) ref bounds).get_Left();
+        double left = (double) bounds.Left;
         bounds = this.Bounds;
-        double top = (double) ((Rectangle) ref bounds).get_Top();
+        double top = (double) bounds.Top;
         return new Vector2((float) left, (float) top);
       }
     }
@@ -122,10 +122,10 @@ namespace Celeste
       get
       {
         Rectangle bounds = this.Bounds;
-        int num1 = ((Rectangle) ref bounds).get_Left() / 8 - this.TileBounds.X;
+        int x = bounds.Left / 8 - this.TileBounds.X;
         bounds = this.Bounds;
-        int num2 = ((Rectangle) ref bounds).get_Top() / 8 - this.TileBounds.Y;
-        return new Point(num1, num2);
+        int y = bounds.Top / 8 - this.TileBounds.Y;
+        return new Point(x, y);
       }
     }
 
@@ -157,7 +157,7 @@ namespace Celeste
     {
       get
       {
-        return (float) this.Wind.X + this.WindSine;
+        return this.Wind.X + this.WindSine;
       }
     }
 
@@ -165,9 +165,7 @@ namespace Celeste
     {
       get
       {
-        if (!this.Frozen)
-          return this.Paused;
-        return true;
+        return this.Frozen || this.Paused;
       }
     }
 
@@ -176,9 +174,7 @@ namespace Celeste
       get
       {
         Player entity = this.Tracker.GetEntity<Player>();
-        if (entity != null && !entity.Dead && (!this.wasPaused && !this.Paused) && (!this.PauseLock && !this.SkippingCutscene && (!this.Transitioning && this.Wipe == null)))
-          return !UserIO.Saving;
-        return false;
+        return entity != null && !entity.Dead && (!this.wasPaused && !this.Paused) && (!this.PauseLock && !this.SkippingCutscene && (!this.Transitioning && this.Wipe == null)) && !UserIO.Saving;
       }
     }
 
@@ -192,9 +188,7 @@ namespace Celeste
           return false;
         if (this.Paused)
           return true;
-        if (this.Tracker.GetEntity<Textbox>() == null && this.Tracker.GetEntity<MiniTextbox>() == null && !this.Frozen)
-          return !this.InCutscene;
-        return false;
+        return this.Tracker.GetEntity<Textbox>() == null && this.Tracker.GetEntity<MiniTextbox>() == null && !this.Frozen && !this.InCutscene;
       }
     }
 
@@ -252,8 +246,7 @@ namespace Celeste
       Calc.PushRandom(this.Session.LevelData.LoadSeed);
       MapData mapData = this.Session.MapData;
       LevelData levelData = this.Session.LevelData;
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector((float) ((Rectangle) ref levelData.Bounds).get_Left(), (float) ((Rectangle) ref levelData.Bounds).get_Top());
+      Vector2 vector2_1 = new Vector2((float) levelData.Bounds.Left, (float) levelData.Bounds.Top);
       bool flag2 = playerIntro != Player.IntroTypes.Fall || levelData.Name == "0";
       this.DarkRoom = levelData.Dark && !this.Session.GetFlag("ignore_darkness_" + levelData.Name);
       this.Zoom = 1f;
@@ -286,10 +279,12 @@ namespace Celeste
         this.Session.UpdateLevelStartDashes();
       }
       Vector2? nullable = new Vector2?();
-      this.CameraOffset = Vector2.op_Multiply(new Vector2(48f, 32f), levelData.CameraOffset);
-      this.Entities.FindFirst<WindController>()?.RemoveSelf();
+      this.CameraOffset = new Vector2(48f, 32f) * levelData.CameraOffset;
+      WindController first = this.Entities.FindFirst<WindController>();
+      if (first != null)
+        first.RemoveSelf();
       this.Add((Entity) (this.windController = new WindController(levelData.WindPattern)));
-      if (playerIntro != Player.IntroTypes.Transition)
+      if ((uint) playerIntro > 0U)
         this.windController.SetStartPattern();
       if (levelData.Underwater)
         this.Add((Entity) new Water(vector2_1, false, false, (float) levelData.Bounds.Width, (float) levelData.Bounds.Height));
@@ -316,57 +311,57 @@ namespace Celeste
           {
             case "SoundTest3d":
               this.Add((Entity) new _3dSoundTest(entity2, vector2_1));
-              continue;
+              break;
             case "SummitBackgroundManager":
               this.Add((Entity) new SummitBackgroundManager(entity2, vector2_1));
-              continue;
+              break;
             case "badelineBoost":
               this.Add((Entity) new BadelineBoost(entity2, vector2_1));
-              continue;
+              break;
             case "bigSpinner":
               this.Add((Entity) new Bumper(entity2, vector2_1));
-              continue;
+              break;
             case "bigWaterfall":
               this.Add((Entity) new BigWaterfall(entity2, vector2_1));
-              continue;
+              break;
             case "bird":
               this.Add((Entity) new BirdNPC(entity2, vector2_1));
-              continue;
+              break;
             case "birdForsakenCityGem":
               this.Add((Entity) new ForsakenCitySatellite(entity2, vector2_1));
-              continue;
+              break;
             case "blackGem":
-              if (!this.Session.HeartGem || this.Session.Area.Mode != AreaMode.Normal)
+              if (!this.Session.HeartGem || (uint) this.Session.Area.Mode > 0U)
               {
                 this.Add((Entity) new HeartGem(entity2, vector2_1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "blockField":
               this.Add((Entity) new BlockField(entity2, vector2_1));
-              continue;
+              break;
             case "bonfire":
               this.Add((Entity) new Bonfire(entity2, vector2_1));
-              continue;
+              break;
             case "booster":
               this.Add((Entity) new Booster(entity2, vector2_1));
-              continue;
+              break;
             case "bounceBlock":
               this.Add((Entity) new BounceBlock(entity2, vector2_1));
-              continue;
+              break;
             case "bridge":
               this.Add((Entity) new Bridge(entity2, vector2_1));
-              continue;
+              break;
             case "bridgeFixed":
               this.Add((Entity) new BridgeFixed(entity2, vector2_1));
-              continue;
+              break;
             case "cassette":
               if (!this.Session.Cassette)
               {
                 this.Add((Entity) new Cassette(entity2, vector2_1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "cassetteBlock":
               CassetteBlock cassetteBlock = new CassetteBlock(entity2, vector2_1);
               this.Add((Entity) cassetteBlock);
@@ -378,48 +373,45 @@ namespace Celeste
               {
                 flag1 = true;
                 if (this.Tracker.GetEntity<CassetteBlockManager>() == null && this.ShouldCreateCassetteManager)
-                {
                   this.Add((Entity) new CassetteBlockManager());
-                  continue;
-                }
-                continue;
+                break;
               }
-              continue;
+              break;
             case "chaserBarrier":
               this.Add((Entity) new ChaserBarrier(entity2, vector2_1));
-              continue;
+              break;
             case "checkpoint":
               if (flag2)
               {
                 this.Add((Entity) new Checkpoint(entity2, vector2_1));
-                nullable = new Vector2?(Vector2.op_Addition(entity2.Position, vector2_1));
-                continue;
+                nullable = new Vector2?(entity2.Position + vector2_1);
+                break;
               }
-              continue;
+              break;
             case "cliffflag":
               this.Add((Entity) new CliffFlags(entity2, vector2_1));
-              continue;
+              break;
             case "cliffside_flag":
               this.Add((Entity) new CliffsideWindFlag(entity2, vector2_1));
-              continue;
+              break;
             case "clothesline":
               this.Add((Entity) new Clothesline(entity2, vector2_1));
-              continue;
+              break;
             case "cloud":
               this.Add((Entity) new Cloud(entity2, vector2_1));
-              continue;
+              break;
             case "clutterCabinet":
               this.Add((Entity) new ClutterCabinet(entity2, vector2_1));
-              continue;
+              break;
             case "clutterDoor":
               this.Add((Entity) new ClutterDoor(entity2, vector2_1, this.Session));
-              continue;
+              break;
             case "cobweb":
               this.Add((Entity) new Cobweb(entity2, vector2_1));
-              continue;
+              break;
             case "colorSwitch":
               this.Add((Entity) new ClutterSwitch(entity2, vector2_1));
-              continue;
+              break;
             case "conditionBlock":
               Level.ConditionBlockModes conditionBlockModes = entity2.Enum<Level.ConditionBlockModes>("condition", Level.ConditionBlockModes.Key);
               EntityID none1 = EntityID.None;
@@ -444,367 +436,366 @@ namespace Celeste
               if (flag3)
               {
                 this.Add((Entity) new ExitBlock(entity2, vector2_1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "coreMessage":
               this.Add((Entity) new CoreMessage(entity2, vector2_1));
-              continue;
+              break;
             case "coreModeToggle":
               this.Add((Entity) new CoreModeToggle(entity2, vector2_1));
-              continue;
+              break;
             case "coverupWall":
               this.Add((Entity) new CoverupWall(entity2, vector2_1));
-              continue;
+              break;
             case "crumbleBlock":
               this.Add((Entity) new CrumblePlatform(entity2, vector2_1));
-              continue;
+              break;
             case "crushBlock":
               this.Add((Entity) new CrushBlock(entity2, vector2_1));
-              continue;
+              break;
             case "darkChaser":
               this.Add((Entity) new BadelineOldsite(entity2, vector2_1, index1));
               ++index1;
-              continue;
+              break;
             case "dashBlock":
               this.Add((Entity) new DashBlock(entity2, vector2_1, entityId1));
-              continue;
+              break;
             case "dashSwitchH":
             case "dashSwitchV":
               this.Add((Entity) DashSwitch.Create(entity2, vector2_1, entityId1));
-              continue;
+              break;
             case "door":
               this.Add((Entity) new Door(entity2, vector2_1));
-              continue;
+              break;
             case "dreamBlock":
               this.Add((Entity) new DreamBlock(entity2, vector2_1));
-              continue;
+              break;
             case "dreamHeartGem":
               if (!this.Session.HeartGem)
               {
                 this.Add((Entity) new DreamHeartGem(entity2, vector2_1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "dreammirror":
-              this.Add((Entity) new DreamMirror(Vector2.op_Addition(vector2_1, entity2.Position)));
-              continue;
+              this.Add((Entity) new DreamMirror(vector2_1 + entity2.Position));
+              break;
             case "exitBlock":
               this.Add((Entity) new ExitBlock(entity2, vector2_1));
-              continue;
+              break;
             case "fakeBlock":
               this.Add((Entity) new FakeWall(entityId1, entity2, vector2_1, FakeWall.Modes.Block));
-              continue;
+              break;
             case "fakeHeart":
               this.Add((Entity) new FakeHeart(entity2, vector2_1));
-              continue;
+              break;
             case "fakeWall":
               this.Add((Entity) new FakeWall(entityId1, entity2, vector2_1, FakeWall.Modes.Wall));
-              continue;
+              break;
             case "fallingBlock":
               this.Add((Entity) new FallingBlock(entity2, vector2_1));
-              continue;
+              break;
             case "finalBoss":
               this.Add((Entity) new FinalBoss(entity2, vector2_1));
-              continue;
+              break;
             case "finalBossFallingBlock":
               this.Add((Entity) FallingBlock.CreateFinalBossBlock(entity2, vector2_1));
-              continue;
+              break;
             case "finalBossMovingBlock":
               this.Add((Entity) new FinalBossMovingBlock(entity2, vector2_1));
-              continue;
+              break;
             case "fireBall":
               this.Add((Entity) new FireBall(entity2, vector2_1));
-              continue;
+              break;
             case "fireBarrier":
               this.Add((Entity) new FireBarrier(entity2, vector2_1));
-              continue;
+              break;
             case "floatingDebris":
               this.Add((Entity) new FloatingDebris(entity2, vector2_1));
-              continue;
+              break;
             case "flutterbird":
               this.Add((Entity) new FlutterBird(entity2, vector2_1));
-              continue;
+              break;
             case "foregroundDebris":
               this.Add((Entity) new ForegroundDebris(entity2, vector2_1));
-              continue;
+              break;
             case "friendlyGhost":
               this.Add((Entity) new AngryOshiro(entity2, vector2_1));
-              continue;
+              break;
             case "glassBlock":
               this.Add((Entity) new GlassBlock(entity2, vector2_1));
-              continue;
+              break;
             case "goldenBerry":
-              if ((SaveData.Instance.UnlockedModes >= 3 || SaveData.Instance.CheatMode || SaveData.Instance.DebugMode) && ((this.Session.Area.Mode != AreaMode.CSide || SaveData.Instance.Areas[this.Session.Area.ID].Modes[(int) this.Session.Area.Mode].Completed) && (this.Session.FurthestSeenLevel == this.Session.Level || this.Session.Deaths == 0)))
+              if ((SaveData.Instance.UnlockedModes >= 3 || SaveData.Instance.CheatMode || SaveData.Instance.DebugMode) && (this.Session.Area.Mode != AreaMode.CSide || SaveData.Instance.Areas[this.Session.Area.ID].Modes[(int) this.Session.Area.Mode].Completed) && (this.Session.FurthestSeenLevel == this.Session.Level || this.Session.Deaths == 0))
               {
                 this.Add((Entity) new Strawberry(entity2, vector2_1, entityId1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "gondola":
               this.Add((Entity) new Gondola(entity2, vector2_1));
-              continue;
+              break;
             case "greenBlocks":
               ClutterBlockGenerator.Init(this);
-              ClutterBlockGenerator.Add((int) (entity2.Position.X / 8.0), (int) (entity2.Position.Y / 8.0), entity2.Width / 8, entity2.Height / 8, ClutterBlock.Colors.Green);
-              continue;
+              ClutterBlockGenerator.Add((int) ((double) entity2.Position.X / 8.0), (int) ((double) entity2.Position.Y / 8.0), entity2.Width / 8, entity2.Height / 8, ClutterBlock.Colors.Green);
+              break;
             case "hahaha":
               this.Add((Entity) new Hahaha(entity2, vector2_1));
-              continue;
+              break;
             case "hanginglamp":
-              this.Add((Entity) new HangingLamp(entity2, Vector2.op_Addition(vector2_1, entity2.Position)));
-              continue;
+              this.Add((Entity) new HangingLamp(entity2, vector2_1 + entity2.Position));
+              break;
             case "heartGemDoor":
               this.Add((Entity) new HeartGemDoor(entity2, vector2_1));
-              continue;
+              break;
             case "iceBlock":
               this.Add((Entity) new IceBlock(entity2, vector2_1));
-              continue;
+              break;
             case "infiniteStar":
               this.Add((Entity) new FlyFeather(entity2, vector2_1));
-              continue;
+              break;
             case "introCar":
               this.Add((Entity) new IntroCar(entity2, vector2_1));
-              continue;
+              break;
             case "introCrusher":
               this.Add((Entity) new IntroCrusher(entity2, vector2_1));
-              continue;
+              break;
             case "invisibleBarrier":
               this.Add((Entity) new InvisibleBarrier(entity2, vector2_1));
-              continue;
+              break;
             case "jumpThru":
               this.Add((Entity) new JumpthruPlatform(entity2, vector2_1));
-              continue;
+              break;
             case "key":
               this.Add((Entity) new Key(entity2, vector2_1, entityId1));
-              continue;
+              break;
             case "killbox":
               this.Add((Entity) new Killbox(entity2, vector2_1));
-              continue;
+              break;
             case "lamp":
-              this.Add((Entity) new Lamp(Vector2.op_Addition(vector2_1, entity2.Position), entity2.Bool("broken", false)));
-              continue;
+              this.Add((Entity) new Lamp(vector2_1 + entity2.Position, entity2.Bool("broken", false)));
+              break;
             case "light":
               this.Add((Entity) new PropLight(entity2, vector2_1));
-              continue;
+              break;
             case "lightbeam":
               this.Add((Entity) new LightBeam(entity2, vector2_1));
-              continue;
+              break;
             case "lightning":
               if (!this.Session.GetFlag("disable_lightning"))
               {
                 this.Add((Entity) new Lightning(entity2, vector2_1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "lockBlock":
               this.Add((Entity) new LockBlock(entity2, vector2_1, entityId1));
-              continue;
+              break;
             case "memorial":
               this.Add((Entity) new Memorial(entity2, vector2_1));
-              continue;
+              break;
             case "memorialTextController":
               if (this.Session.Dashes == 0 && this.Session.StartedFromBeginning)
               {
                 this.Add((Entity) new Strawberry(entity2, vector2_1, entityId1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "moveBlock":
               this.Add((Entity) new MoveBlock(entity2, vector2_1));
-              continue;
+              break;
             case "movingPlatform":
               this.Add((Entity) new MovingPlatform(entity2, vector2_1));
-              continue;
+              break;
             case "negaBlock":
               this.Add((Entity) new NegaBlock(entity2, vector2_1));
-              continue;
+              break;
             case "npc":
               string lower = entity2.Attr("npc", "").ToLower();
-              Vector2 position = Vector2.op_Addition(entity2.Position, vector2_1);
+              Vector2 position = entity2.Position + vector2_1;
               if (lower == "granny_00_house")
               {
                 this.Add((Entity) new NPC00_Granny(position));
-                continue;
+                break;
               }
               if (lower == "theo_01_campfire")
               {
                 this.Add((Entity) new NPC01_Theo(position));
-                continue;
+                break;
               }
               if (lower == "theo_02_campfire")
               {
                 this.Add((Entity) new NPC02_Theo(position));
-                continue;
+                break;
               }
               if (lower == "theo_03_escaping")
               {
                 if (!this.Session.GetFlag("resort_theo"))
                 {
                   this.Add((Entity) new NPC03_Theo_Escaping(position));
-                  continue;
+                  break;
                 }
-                continue;
+                break;
               }
               if (lower == "theo_03_vents")
               {
                 this.Add((Entity) new NPC03_Theo_Vents(position));
-                continue;
+                break;
               }
               if (lower == "oshiro_03_lobby")
               {
                 this.Add((Entity) new NPC03_Oshiro_Lobby(position));
-                continue;
+                break;
               }
               if (lower == "oshiro_03_hallway")
               {
                 this.Add((Entity) new NPC03_Oshiro_Hallway1(position));
-                continue;
+                break;
               }
               if (lower == "oshiro_03_hallway2")
               {
                 this.Add((Entity) new NPC03_Oshiro_Hallway2(position));
-                continue;
+                break;
               }
               if (lower == "oshiro_03_bigroom")
               {
                 this.Add((Entity) new NPC03_Oshiro_Cluttter(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "oshiro_03_breakdown")
               {
                 this.Add((Entity) new NPC03_Oshiro_Breakdown(position));
-                continue;
+                break;
               }
               if (lower == "oshiro_03_suite")
               {
                 this.Add((Entity) new NPC03_Oshiro_Suite(position));
-                continue;
+                break;
               }
               if (lower == "oshiro_03_rooftop")
               {
                 this.Add((Entity) new NPC03_Oshiro_Rooftop(position));
-                continue;
+                break;
               }
               if (lower == "granny_04_cliffside")
               {
                 this.Add((Entity) new NPC04_Granny(position));
-                continue;
+                break;
               }
               if (lower == "theo_04_cliffside")
               {
                 this.Add((Entity) new NPC04_Theo(position));
-                continue;
+                break;
               }
               if (lower == "theo_05_entrance")
               {
                 this.Add((Entity) new NPC05_Theo_Entrance(position));
-                continue;
+                break;
               }
               if (lower == "theo_05_inmirror")
               {
                 this.Add((Entity) new NPC05_Theo_Mirror(position));
-                continue;
+                break;
               }
               if (lower == "evil_05")
               {
                 this.Add((Entity) new NPC05_Badeline(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "theo_06_plateau")
               {
                 this.Add((Entity) new NPC06_Theo_Plateau(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "granny_06_intro")
               {
                 this.Add((Entity) new NPC06_Granny(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "badeline_06_crying")
               {
                 this.Add((Entity) new NPC06_Badeline_Crying(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "granny_06_ending")
               {
                 this.Add((Entity) new NPC06_Granny_Ending(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "theo_06_ending")
               {
                 this.Add((Entity) new NPC06_Theo_Ending(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "granny_07x")
               {
                 this.Add((Entity) new NPC07X_Granny_Ending(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "theo_08_inside")
               {
                 this.Add((Entity) new NPC08_Theo(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "granny_08_inside")
               {
                 this.Add((Entity) new NPC08_Granny(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "granny_09_outside")
               {
                 this.Add((Entity) new NPC09_Granny_Outside(entity2, vector2_1));
-                continue;
+                break;
               }
               if (lower == "granny_09_inside")
               {
                 this.Add((Entity) new NPC09_Granny_Inside(entity2, vector2_1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "oshirodoor":
               this.Add((Entity) new MrOshiroDoor(entity2, vector2_1));
-              continue;
+              break;
             case "payphone":
-              this.Add((Entity) new Payphone(Vector2.op_Addition(vector2_1, entity2.Position)));
-              continue;
+              this.Add((Entity) new Payphone(vector2_1 + entity2.Position));
+              break;
             case "picoconsole":
               this.Add((Entity) new PicoConsole(entity2, vector2_1));
-              continue;
+              break;
             case "plateau":
               this.Add((Entity) new Plateau(entity2, vector2_1));
-              continue;
+              break;
             case "playerSeeker":
               this.Add((Entity) new PlayerSeeker(entity2, vector2_1));
-              continue;
+              break;
             case "redBlocks":
               ClutterBlockGenerator.Init(this);
-              ClutterBlockGenerator.Add((int) (entity2.Position.X / 8.0), (int) (entity2.Position.Y / 8.0), entity2.Width / 8, entity2.Height / 8, ClutterBlock.Colors.Red);
-              continue;
+              ClutterBlockGenerator.Add((int) ((double) entity2.Position.X / 8.0), (int) ((double) entity2.Position.Y / 8.0), entity2.Width / 8, entity2.Height / 8, ClutterBlock.Colors.Red);
+              break;
             case "refill":
               this.Add((Entity) new Refill(entity2, vector2_1));
-              continue;
+              break;
             case "reflectionHeartStatue":
               this.Add((Entity) new ReflectionHeartStatue(entity2, vector2_1));
-              continue;
+              break;
             case "resortLantern":
               this.Add((Entity) new ResortLantern(entity2, vector2_1));
-              continue;
+              break;
             case "resortRoofEnding":
               this.Add((Entity) new ResortRoofEnding(entity2, vector2_1));
-              continue;
+              break;
             case "resortmirror":
               this.Add((Entity) new ResortMirror(entity2, vector2_1));
-              continue;
+              break;
             case "ridgeGate":
               List<EntityID> entityIdList2 = new List<EntityID>();
               string str1 = entity2.Attr("strawberries", "");
-              char[] chArray1 = new char[1]{ ',' };
-              foreach (string str2 in str1.Split(chArray1))
+              char[] chArray = new char[1]{ ',' };
+              foreach (string str2 in str1.Split(chArray))
               {
                 EntityID none2 = EntityID.None;
-                char[] chArray2 = new char[1]{ ':' };
-                string[] strArray2 = str2.Split(chArray2);
+                string[] strArray2 = str2.Split(':');
                 none2.Level = strArray2[0];
                 none2.ID = Convert.ToInt32(strArray2[1]);
                 entityIdList2.Add(none2);
@@ -821,74 +812,73 @@ namespace Celeste
               if (flag4)
               {
                 this.Add((Entity) new RidgeGate(entity2, vector2_1));
-                continue;
+                break;
               }
-              continue;
+              break;
             case "risingLava":
               this.Add((Entity) new RisingLava(entity2, vector2_1));
-              continue;
+              break;
             case "rotateSpinner":
               if (this.Session.Area.ID == 3 || this.Session.Area.ID == 7 && this.Session.Level.StartsWith("d-"))
               {
                 this.Add((Entity) new DustRotateSpinner(entity2, vector2_1));
-                continue;
+                break;
               }
               this.Add((Entity) new BladeRotateSpinner(entity2, vector2_1));
-              continue;
+              break;
             case "rotatingPlatforms":
-              Vector2 vector2_2 = Vector2.op_Addition(entity2.Position, vector2_1);
-              Vector2 center = Vector2.op_Addition(entity2.Nodes[0], vector2_1);
+              Vector2 vector2_2 = entity2.Position + vector2_1;
+              Vector2 center = entity2.Nodes[0] + vector2_1;
               int width = entity2.Width;
               int num1 = entity2.Int("platforms", 0);
               bool clockwise = entity2.Bool("clockwise", false);
-              Vector2 vector2_3 = Vector2.op_Subtraction(vector2_2, center);
-              float length = ((Vector2) ref vector2_3).Length();
-              float num2 = Vector2.op_Subtraction(vector2_2, center).Angle();
+              float length = (vector2_2 - center).Length();
+              float num2 = (vector2_2 - center).Angle();
               float num3 = 6.283185f / (float) num1;
               for (int index2 = 0; index2 < num1; ++index2)
               {
                 float angleRadians = Calc.WrapAngle(num2 + num3 * (float) index2);
-                this.Add((Entity) new RotatingPlatform(Vector2.op_Addition(center, Calc.AngleToVector(angleRadians, length)), width, center, clockwise));
+                this.Add((Entity) new RotatingPlatform(center + Calc.AngleToVector(angleRadians, length), width, center, clockwise));
               }
-              continue;
+              break;
             case "sandwichLava":
               this.Add((Entity) new SandwichLava(entity2, vector2_1));
-              continue;
+              break;
             case "seeker":
               this.Add((Entity) new Seeker(entity2, vector2_1));
-              continue;
+              break;
             case "seekerBarrier":
               this.Add((Entity) new SeekerBarrier(entity2, vector2_1));
-              continue;
+              break;
             case "seekerStatue":
               this.Add((Entity) new SeekerStatue(entity2, vector2_1));
-              continue;
+              break;
             case "sinkingPlatform":
               this.Add((Entity) new SinkingPlatform(entity2, vector2_1));
-              continue;
+              break;
             case "slider":
               this.Add((Entity) new Slider(entity2, vector2_1));
-              continue;
+              break;
             case "soundSource":
               this.Add((Entity) new SoundSourceEntity(entity2, vector2_1));
-              continue;
+              break;
             case "spikesDown":
               this.Add((Entity) new Spikes(entity2, vector2_1, Spikes.Directions.Down));
-              continue;
+              break;
             case "spikesLeft":
               this.Add((Entity) new Spikes(entity2, vector2_1, Spikes.Directions.Left));
-              continue;
+              break;
             case "spikesRight":
               this.Add((Entity) new Spikes(entity2, vector2_1, Spikes.Directions.Right));
-              continue;
+              break;
             case "spikesUp":
               this.Add((Entity) new Spikes(entity2, vector2_1, Spikes.Directions.Up));
-              continue;
+              break;
             case "spinner":
               if (this.Session.Area.ID == 3 || this.Session.Area.ID == 7 && this.Session.Level.StartsWith("d-"))
               {
                 this.Add((Entity) new DustStaticSpinner(entity2, vector2_1));
-                continue;
+                break;
               }
               CrystalColor color = CrystalColor.Blue;
               if (this.Session.Area.ID == 5)
@@ -896,127 +886,125 @@ namespace Celeste
               else if (this.Session.Area.ID == 6)
                 color = CrystalColor.Purple;
               this.Add((Entity) new CrystalStaticSpinner(entity2, vector2_1, color));
-              continue;
+              break;
             case "spring":
               this.Add((Entity) new Spring(entity2, vector2_1, Spring.Orientations.Floor));
-              continue;
+              break;
             case "starClimbController":
               this.Add((Entity) new StarJumpController());
-              continue;
+              break;
             case "starJumpBlock":
               this.Add((Entity) new StarJumpBlock(entity2, vector2_1));
-              continue;
+              break;
             case "strawberry":
               this.Add((Entity) new Strawberry(entity2, vector2_1, entityId1));
-              continue;
+              break;
             case "summitGemManager":
               this.Add((Entity) new SummitGemManager(entity2, vector2_1));
-              continue;
+              break;
             case "summitcheckpoint":
               this.Add((Entity) new SummitCheckpoint(entity2, vector2_1));
-              continue;
+              break;
             case "summitcloud":
               this.Add((Entity) new SummitCloud(entity2, vector2_1));
-              continue;
+              break;
             case "summitgem":
               this.Add((Entity) new SummitGem(entity2, vector2_1, entityId1));
-              continue;
+              break;
             case "swapBlock":
             case "switchBlock":
               this.Add((Entity) new SwapBlock(entity2, vector2_1));
-              continue;
+              break;
             case "switchGate":
               this.Add((Entity) new SwitchGate(entity2, vector2_1));
-              continue;
+              break;
             case "templeBigEyeball":
               this.Add((Entity) new TempleBigEyeball(entity2, vector2_1));
-              continue;
+              break;
             case "templeCrackedBlock":
               this.Add((Entity) new TempleCrackedBlock(entityId1, entity2, vector2_1));
-              continue;
+              break;
             case "templeEye":
               this.Add((Entity) new TempleEye(entity2, vector2_1));
-              continue;
+              break;
             case "templeGate":
               this.Add((Entity) new TempleGate(entity2, vector2_1, levelData.Name));
-              continue;
+              break;
             case "templeMirror":
               this.Add((Entity) new TempleMirror(entity2, vector2_1));
-              continue;
+              break;
             case "templeMirrorPortal":
               this.Add((Entity) new TempleMirrorPortal(entity2, vector2_1));
-              continue;
+              break;
             case "tentacles":
               this.Add((Entity) new ReflectionTentacles(entity2, vector2_1));
-              continue;
+              break;
             case "theoCrystal":
               this.Add((Entity) new TheoCrystal(entity2, vector2_1));
-              continue;
+              break;
             case "theoCrystalPedestal":
               this.Add((Entity) new TheoCrystalPedestal(entity2, vector2_1));
-              continue;
+              break;
             case "torch":
               this.Add((Entity) new Torch(entity2, vector2_1, entityId1));
-              continue;
+              break;
             case "touchSwitch":
               this.Add((Entity) new TouchSwitch(entity2, vector2_1));
-              continue;
+              break;
             case "towerviewer":
               this.Add((Entity) new Lookout(entity2, vector2_1));
-              continue;
+              break;
             case "trackSpinner":
               if (this.Session.Area.ID == 3 || this.Session.Area.ID == 7 && this.Session.Level.StartsWith("d-"))
               {
                 this.Add((Entity) new DustTrackSpinner(entity2, vector2_1));
-                continue;
+                break;
               }
               this.Add((Entity) new BladeTrackSpinner(entity2, vector2_1));
-              continue;
+              break;
             case "trapdoor":
               this.Add((Entity) new Trapdoor(entity2, vector2_1));
-              continue;
+              break;
             case "triggerSpikesDown":
               this.Add((Entity) new TriggerSpikes(entity2, vector2_1, TriggerSpikes.Directions.Down));
-              continue;
+              break;
             case "triggerSpikesLeft":
               this.Add((Entity) new TriggerSpikes(entity2, vector2_1, TriggerSpikes.Directions.Left));
-              continue;
+              break;
             case "triggerSpikesRight":
               this.Add((Entity) new TriggerSpikes(entity2, vector2_1, TriggerSpikes.Directions.Right));
-              continue;
+              break;
             case "triggerSpikesUp":
               this.Add((Entity) new TriggerSpikes(entity2, vector2_1, TriggerSpikes.Directions.Up));
-              continue;
+              break;
             case "wallBooster":
               this.Add((Entity) new WallBooster(entity2, vector2_1));
-              continue;
+              break;
             case "wallSpringLeft":
               this.Add((Entity) new Spring(entity2, vector2_1, Spring.Orientations.WallLeft));
-              continue;
+              break;
             case "wallSpringRight":
               this.Add((Entity) new Spring(entity2, vector2_1, Spring.Orientations.WallRight));
-              continue;
+              break;
             case "water":
               this.Add((Entity) new Water(entity2, vector2_1));
-              continue;
+              break;
             case "waterfall":
               this.Add((Entity) new WaterFall(entity2, vector2_1));
-              continue;
+              break;
             case "whiteblock":
               this.Add((Entity) new WhiteBlock(entity2, vector2_1));
-              continue;
+              break;
             case "wire":
               this.Add((Entity) new Wire(entity2, vector2_1));
-              continue;
+              break;
             case "yellowBlocks":
               ClutterBlockGenerator.Init(this);
-              ClutterBlockGenerator.Add((int) (entity2.Position.X / 8.0), (int) (entity2.Position.Y / 8.0), entity2.Width / 8, entity2.Height / 8, ClutterBlock.Colors.Yellow);
-              continue;
+              ClutterBlockGenerator.Add((int) ((double) entity2.Position.X / 8.0), (int) ((double) entity2.Position.Y / 8.0), entity2.Width / 8, entity2.Height / 8, ClutterBlock.Colors.Yellow);
+              break;
             case "zipMover":
               this.Add((Entity) new ZipMover(entity2, vector2_1));
-              continue;
-            default:
-              continue;
+              break;
           }
         }
       }
@@ -1031,83 +1019,81 @@ namespace Celeste
           {
             case "altMusicTrigger":
               this.Add((Entity) new AltMusicTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "ambienceParamTrigger":
               this.Add((Entity) new AmbienceParamTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "bloomFadeTrigger":
               this.Add((Entity) new BloomFadeTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "cameraAdvanceTargetTrigger":
               this.Add((Entity) new CameraAdvanceTargetTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "cameraOffsetTrigger":
               this.Add((Entity) new CameraOffsetTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "cameraTargetTrigger":
               this.Add((Entity) new CameraTargetTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "changeRespawnTrigger":
               this.Add((Entity) new ChangeRespawnTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "checkpointBlockerTrigger":
               this.Add((Entity) new CheckpointBlockerTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "creditsTrigger":
               this.Add((Entity) new CreditsTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "eventTrigger":
               this.Add((Entity) new EventTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "goldenBerryCollectTrigger":
               this.Add((Entity) new GoldBerryCollectTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "interactTrigger":
               this.Add((Entity) new InteractTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "lightFadeTrigger":
               this.Add((Entity) new LightFadeTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "lookoutBlocker":
               this.Add((Entity) new LookoutBlocker(trigger, vector2_1));
-              continue;
+              break;
             case "minitextboxTrigger":
               this.Add((Entity) new MiniTextboxTrigger(trigger, vector2_1, id));
-              continue;
+              break;
             case "musicFadeTrigger":
               this.Add((Entity) new MusicFadeTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "musicTrigger":
               this.Add((Entity) new MusicTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "noRefillTrigger":
               this.Add((Entity) new NoRefillTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "oshiroTrigger":
               this.Add((Entity) new OshiroTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "respawnTargetTrigger":
               this.Add((Entity) new RespawnTargetTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "stopBoostTrigger":
               this.Add((Entity) new StopBoostTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "windAttackTrigger":
               this.Add((Entity) new WindAttackTrigger(trigger, vector2_1));
-              continue;
+              break;
             case "windTrigger":
               this.Add((Entity) new WindTrigger(trigger, vector2_1));
-              continue;
-            default:
-              continue;
+              break;
           }
         }
       }
       foreach (DecalData fgDecal in levelData.FgDecals)
-        this.Add((Entity) new Decal(fgDecal.Texture, Vector2.op_Addition(vector2_1, fgDecal.Position), fgDecal.Scale, -10500));
+        this.Add((Entity) new Decal(fgDecal.Texture, vector2_1 + fgDecal.Position, fgDecal.Scale, -10500));
       foreach (DecalData bgDecal in levelData.BgDecals)
-        this.Add((Entity) new Decal(bgDecal.Texture, Vector2.op_Addition(vector2_1, bgDecal.Position), bgDecal.Scale, 9000));
-      if (playerIntro != Player.IntroTypes.Transition)
+        this.Add((Entity) new Decal(bgDecal.Texture, vector2_1 + bgDecal.Position, bgDecal.Scale, 9000));
+      if ((uint) playerIntro > 0U)
       {
         if (this.Session.JustStarted && !this.Session.StartedFromBeginning && nullable.HasValue)
           this.StartPosition = nullable;
@@ -1124,7 +1110,7 @@ namespace Celeste
         this.CameraUpwardMaxY = this.Camera.Y + 180f;
         foreach (EntityID key in this.Session.Keys)
           this.Add((Entity) new Key(player, key));
-        SpotlightWipe.FocusPoint = Vector2.op_Subtraction(this.Session.RespawnPoint.Value, this.Camera.Position);
+        SpotlightWipe.FocusPoint = this.Session.RespawnPoint.Value - this.Camera.Position;
         if (playerIntro != Player.IntroTypes.Respawn && playerIntro != Player.IntroTypes.Fall)
         {
           SpotlightWipe spotlightWipe = new SpotlightWipe((Scene) this, true, (Action) null);
@@ -1139,7 +1125,11 @@ namespace Celeste
       else
         this.Entities.UpdateLists();
       if (this.HasCassetteBlocks && this.ShouldCreateCassetteManager)
-        this.Tracker.GetEntity<CassetteBlockManager>()?.OnLevelStart();
+      {
+        CassetteBlockManager entity2 = this.Tracker.GetEntity<CassetteBlockManager>();
+        if (entity2 != null)
+          entity2.OnLevelStart();
+      }
       if (!string.IsNullOrEmpty(levelData.ObjTiles))
       {
         Tileset tileset = new Tileset(GFX.Game["tilesets/scenery"], 8, 8);
@@ -1149,7 +1139,7 @@ namespace Celeste
           for (int index3 = 0; index3 < numArray.GetLength(1); ++index3)
           {
             if (numArray[index2, index3] != -1)
-              TileInterceptor.TileCheck((Scene) this, tileset[numArray[index2, index3]], Vector2.op_Addition(new Vector2((float) (index2 * 8), (float) (index3 * 8)), this.LevelOffset));
+              TileInterceptor.TileCheck((Scene) this, tileset[numArray[index2, index3]], new Vector2((float) (index2 * 8), (float) (index3 * 8)) + this.LevelOffset);
           }
         }
       }
@@ -1194,7 +1184,7 @@ namespace Celeste
       if (first != null)
         first.SnapWind();
       else
-        this.Wind = Vector2.get_Zero();
+        this.Wind = Vector2.Zero;
     }
 
     private bool ShouldCreateCassetteManager
@@ -1215,80 +1205,76 @@ namespace Celeste
 
     private IEnumerator TransitionRoutine(LevelData next, Vector2 direction)
     {
-      Level level = this;
-      Player player = level.Tracker.GetEntity<Player>();
-      List<Entity> toRemove = level.GetEntitiesExcludingTagMask((int) Tags.Persistent | (int) Tags.Global);
-      List<Component> transitionOut = level.Tracker.GetComponentsCopy<TransitionListener>();
+      Player player = this.Tracker.GetEntity<Player>();
+      List<Entity> toRemove = this.GetEntitiesExcludingTagMask((int) Tags.Persistent | (int) Tags.Global);
+      List<Component> transitionOut = this.Tracker.GetComponentsCopy<TransitionListener>();
       player.CleanUpTriggers();
-      foreach (SoundSource component in level.Tracker.GetComponents<SoundSource>())
+      List<Component> soundSources = this.Tracker.GetComponents<SoundSource>();
+      foreach (SoundSource soundSource in soundSources)
       {
-        if (component.DisposeOnTransition)
-          component.Stop(true);
+        SoundSource sfx = soundSource;
+        if (sfx.DisposeOnTransition)
+          sfx.Stop(true);
+        sfx = (SoundSource) null;
       }
-      level.PreviousBounds = new Rectangle?(level.Bounds);
-      level.Session.Level = next.Name;
-      level.Session.FirstLevel = false;
-      level.Session.DeathsInCurrentLevel = 0;
-      level.LoadLevel(Player.IntroTypes.Transition, false);
-      Audio.SetParameter(Audio.CurrentAmbienceEventInstance, "has_conveyors", level.Tracker.GetEntities<WallBooster>().Count > 0 ? 1f : 0.0f);
-      List<Component> transitionIn = level.Tracker.GetComponentsCopy<TransitionListener>();
+      this.PreviousBounds = new Rectangle?(this.Bounds);
+      this.Session.Level = next.Name;
+      this.Session.FirstLevel = false;
+      this.Session.DeathsInCurrentLevel = 0;
+      this.LoadLevel(Player.IntroTypes.Transition, false);
+      Audio.SetParameter(Audio.CurrentAmbienceEventInstance, "has_conveyors", this.Tracker.GetEntities<WallBooster>().Count > 0 ? 1f : 0.0f);
+      List<Component> transitionIn = this.Tracker.GetComponentsCopy<TransitionListener>();
       transitionIn.RemoveAll((Predicate<Component>) (c => transitionOut.Contains(c)));
       float cameraAt = 0.0f;
-      Vector2 cameraFrom = level.Camera.Position;
-      Vector2 dirPad = Vector2.op_Multiply(direction, 4f);
-      if (Vector2.op_Equality(direction, Vector2.get_UnitY()))
-        dirPad = Vector2.op_Multiply(direction, 12f);
+      Vector2 cameraFrom = this.Camera.Position;
+      Vector2 inside = direction * 4f;
+      if (direction == Vector2.UnitY)
+        inside = direction * 12f;
       Vector2 playerTo = player.Position;
-      while (direction.X != 0.0)
-      {
-        // ISSUE: variable of the null type
-        __Null y = playerTo.Y;
-        Rectangle bounds = level.Bounds;
-        double bottom = (double) ((Rectangle) ref bounds).get_Bottom();
-        if (y >= bottom)
-        {
-          ref __Null local = ref playerTo.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local - 1f;
-        }
-        else
-          break;
-      }
-      while (!level.IsInBounds(playerTo, dirPad))
-        playerTo = Vector2.op_Addition(playerTo, direction);
-      Vector2 cameraTo = level.GetFullCameraTargetAt(player, playerTo);
-      Vector2 position = player.Position;
+      while ((double) direction.X != 0.0 && (double) playerTo.Y >= (double) this.Bounds.Bottom)
+        --playerTo.Y;
+      while (!this.IsInBounds(playerTo, inside))
+        playerTo += direction;
+      inside = new Vector2();
+      Vector2 cameraTo = this.GetFullCameraTargetAt(player, playerTo);
+      Vector2 was = player.Position;
       player.Position = playerTo;
-      foreach (Entity entity in player.CollideAll<WindTrigger>())
+      List<Entity> triggers = player.CollideAll<WindTrigger>();
+      foreach (Entity entity in triggers)
       {
-        if (!toRemove.Contains(entity))
+        Entity trigger = entity;
+        if (!toRemove.Contains(trigger))
         {
-          level.windController.SetPattern((entity as WindTrigger).Pattern);
+          this.windController.SetPattern((trigger as WindTrigger).Pattern);
           break;
         }
+        trigger = (Entity) null;
       }
-      level.windController.SetStartPattern();
-      player.Position = position;
+      this.windController.SetStartPattern();
+      player.Position = was;
+      was = new Vector2();
+      triggers = (List<Entity>) null;
       foreach (TransitionListener transitionListener in transitionOut)
       {
-        if (transitionListener.OnOutBegin != null)
-          transitionListener.OnOutBegin();
+        TransitionListener tl = transitionListener;
+        if (tl.OnOutBegin != null)
+          tl.OnOutBegin();
+        tl = (TransitionListener) null;
       }
       foreach (TransitionListener transitionListener in transitionIn)
       {
-        if (transitionListener.OnInBegin != null)
-          transitionListener.OnInBegin();
+        TransitionListener tl = transitionListener;
+        if (tl.OnInBegin != null)
+          tl.OnInBegin();
+        tl = (TransitionListener) null;
       }
-      float lightingStart = level.Lighting.Alpha;
-      float lightingEnd = level.DarkRoom ? level.Session.DarkRoomAlpha : level.BaseLightingAlpha + level.Session.LightingAlphaAdd;
-      bool lightingWait = (double) lightingStart >= (double) level.Session.DarkRoomAlpha || (double) lightingEnd >= (double) level.Session.DarkRoomAlpha;
+      float lightingStart = this.Lighting.Alpha;
+      float lightingEnd = this.DarkRoom ? this.Session.DarkRoomAlpha : this.BaseLightingAlpha + this.Session.LightingAlphaAdd;
+      bool lightingWait = (double) lightingStart >= (double) this.Session.DarkRoomAlpha || (double) lightingEnd >= (double) this.Session.DarkRoomAlpha;
       if ((double) lightingEnd > (double) lightingStart & lightingWait)
       {
         Audio.Play("event:/game/05_mirror_temple/room_lightlevel_down");
-        for (; (double) level.Lighting.Alpha != (double) lightingEnd; level.Lighting.Alpha = Calc.Approach(level.Lighting.Alpha, lightingEnd, 2f * Engine.DeltaTime))
+        for (; (double) this.Lighting.Alpha != (double) lightingEnd; this.Lighting.Alpha = Calc.Approach(this.Lighting.Alpha, lightingEnd, 2f * Engine.DeltaTime))
           yield return (object) null;
       }
       bool cameraFinished = false;
@@ -1297,19 +1283,23 @@ namespace Celeste
         yield return (object) null;
         if (!cameraFinished)
         {
-          cameraAt = Calc.Approach(cameraAt, 1f, Engine.DeltaTime / level.NextTransitionDuration);
-          level.Camera.Position = (double) cameraAt <= 0.899999976158142 ? Vector2.Lerp(cameraFrom, cameraTo, Ease.CubeOut(cameraAt)) : cameraTo;
+          cameraAt = Calc.Approach(cameraAt, 1f, Engine.DeltaTime / this.NextTransitionDuration);
+          this.Camera.Position = (double) cameraAt <= 0.899999976158142 ? Vector2.Lerp(cameraFrom, cameraTo, Ease.CubeOut(cameraAt)) : cameraTo;
           if (!lightingWait && (double) lightingStart < (double) lightingEnd)
-            level.Lighting.Alpha = lightingStart + (lightingEnd - lightingStart) * cameraAt;
+            this.Lighting.Alpha = lightingStart + (lightingEnd - lightingStart) * cameraAt;
           foreach (TransitionListener transitionListener in transitionOut)
           {
-            if (transitionListener.OnOut != null)
-              transitionListener.OnOut(cameraAt);
+            TransitionListener tl = transitionListener;
+            if (tl.OnOut != null)
+              tl.OnOut(cameraAt);
+            tl = (TransitionListener) null;
           }
           foreach (TransitionListener transitionListener in transitionIn)
           {
-            if (transitionListener.OnIn != null)
-              transitionListener.OnIn(cameraAt);
+            TransitionListener tl = transitionListener;
+            if (tl.OnIn != null)
+              tl.OnIn(cameraAt);
+            tl = (TransitionListener) null;
           }
           if ((double) cameraAt >= 1.0)
             cameraFinished = true;
@@ -1318,32 +1308,37 @@ namespace Celeste
       if ((double) lightingEnd < (double) lightingStart & lightingWait)
       {
         Audio.Play("event:/game/05_mirror_temple/room_lightlevel_up");
-        for (; (double) level.Lighting.Alpha != (double) lightingEnd; level.Lighting.Alpha = Calc.Approach(level.Lighting.Alpha, lightingEnd, 2f * Engine.DeltaTime))
+        for (; (double) this.Lighting.Alpha != (double) lightingEnd; this.Lighting.Alpha = Calc.Approach(this.Lighting.Alpha, lightingEnd, 2f * Engine.DeltaTime))
           yield return (object) null;
       }
-      level.UnloadEntities(toRemove);
-      level.Entities.UpdateLists();
-      Rectangle bounds1 = level.Bounds;
-      ((Rectangle) ref bounds1).Inflate(16, 16);
-      level.Particles.ClearRect(bounds1, false);
-      level.ParticlesBG.ClearRect(bounds1, false);
-      level.ParticlesFG.ClearRect(bounds1, false);
-      RespawnTargetTrigger respawnTargetTrigger = player.CollideFirst<RespawnTargetTrigger>();
-      Vector2 to = respawnTargetTrigger != null ? respawnTargetTrigger.Target : player.Position;
-      level.Session.RespawnPoint = new Vector2?(level.Session.LevelData.Spawns.ClosestTo(to));
+      this.UnloadEntities(toRemove);
+      this.Entities.UpdateLists();
+      Rectangle clearOutside = this.Bounds;
+      clearOutside.Inflate(16, 16);
+      this.Particles.ClearRect(clearOutside, false);
+      this.ParticlesBG.ClearRect(clearOutside, false);
+      this.ParticlesFG.ClearRect(clearOutside, false);
+      RespawnTargetTrigger trigger1 = player.CollideFirst<RespawnTargetTrigger>();
+      Vector2 from = trigger1 != null ? trigger1.Target : player.Position;
+      this.Session.RespawnPoint = new Vector2?(this.Session.LevelData.Spawns.ClosestTo(from));
+      from = new Vector2();
+      trigger1 = (RespawnTargetTrigger) null;
       player.OnTransition();
       foreach (TransitionListener transitionListener in transitionIn)
       {
-        if (transitionListener.OnInEnd != null)
-          transitionListener.OnInEnd();
+        TransitionListener tl = transitionListener;
+        if (tl.OnInEnd != null)
+          tl.OnInEnd();
+        tl = (TransitionListener) null;
       }
-      if (level.Session.LevelData.DelayAltMusic)
-        Audio.SetAltMusic(Sfxs.EventnameByHandle(level.Session.LevelData.AltMusic));
-      cameraFrom = (Vector2) null;
-      playerTo = (Vector2) null;
-      cameraTo = (Vector2) null;
-      level.NextTransitionDuration = 0.65f;
-      level.transition = (Coroutine) null;
+      if (this.Session.LevelData.DelayAltMusic)
+        Audio.SetAltMusic(Sfxs.EventnameByHandle(this.Session.LevelData.AltMusic));
+      cameraFrom = new Vector2();
+      playerTo = new Vector2();
+      cameraTo = new Vector2();
+      clearOutside = new Rectangle();
+      this.NextTransitionDuration = 0.65f;
+      this.transition = (Coroutine) null;
     }
 
     public void UnloadEntities(List<Entity> entities)
@@ -1357,9 +1352,9 @@ namespace Celeste
       get
       {
         Rectangle bounds = this.Bounds;
-        double left = (double) ((Rectangle) ref bounds).get_Left();
+        double left = (double) bounds.Left;
         bounds = this.Bounds;
-        double bottom = (double) ((Rectangle) ref bounds).get_Bottom();
+        double bottom = (double) bounds.Bottom;
         return this.GetSpawnPoint(new Vector2((float) left, (float) bottom));
       }
     }
@@ -1440,9 +1435,9 @@ namespace Celeste
         }
         if (this.wasPaused && !this.Paused)
           this.EndPauseEffects();
-        if (this.CanPause && Celeste.Input.QuickResetPressed())
+        if (this.CanPause && Input.QuickResetPressed())
           this.Pause(0, false, true);
-        else if (this.CanPause && (Celeste.Input.Pause.Pressed || Celeste.Input.ESC.Pressed))
+        else if (this.CanPause && (Input.Pause.Pressed || Input.ESC.Pressed))
           this.Pause(0, false, false);
         if (this.wasPaused && !this.Paused)
           this.wasPaused = false;
@@ -1548,10 +1543,10 @@ namespace Celeste
           if (this.OnRawInterval(0.04f))
           {
             int num2 = (int) Math.Ceiling((double) this.shakeTimer * 10.0);
-            if (Vector2.op_Equality(this.shakeDirection, Vector2.get_Zero()))
+            if (this.shakeDirection == Vector2.Zero)
             {
-              this.shakeVector.X = (__Null) (double) (-num2 + Calc.Random.Next(num2 * 2 + 1));
-              this.shakeVector.Y = (__Null) (double) (-num2 + Calc.Random.Next(num2 * 2 + 1));
+              this.shakeVector.X = (float) (-num2 + Calc.Random.Next(num2 * 2 + 1));
+              this.shakeVector.Y = (float) (-num2 + Calc.Random.Next(num2 * 2 + 1));
             }
             else
             {
@@ -1559,13 +1554,13 @@ namespace Celeste
                 this.lastDirectionalShake = 1;
               else
                 this.lastDirectionalShake *= -1;
-              this.shakeVector = Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_UnaryNegation(this.shakeDirection), (float) this.lastDirectionalShake), (float) num2);
+              this.shakeVector = -this.shakeDirection * (float) this.lastDirectionalShake * (float) num2;
             }
           }
           this.shakeTimer -= Engine.RawDeltaTime;
         }
         else
-          this.shakeVector = Vector2.get_Zero();
+          this.shakeVector = Vector2.Zero;
         if (this.doFlash)
         {
           this.flash = Calc.Approach(this.flash, 1f, Engine.DeltaTime * 10f);
@@ -1584,25 +1579,23 @@ namespace Celeste
           else
             this.colorGradeEase = Calc.Approach(this.colorGradeEase, 1f, Engine.DeltaTime);
         }
-        if (Celeste.Celeste.PlayMode != Celeste.Celeste.PlayModes.Debug)
+        if (Celeste.PlayMode != Celeste.PlayModes.Debug)
           return;
-        if (MInput.Keyboard.Pressed((Keys) 9))
+        if (MInput.Keyboard.Pressed(Keys.Tab))
           Engine.Scene = (Scene) new MapEditor(this.Session.Area, true);
-        if (MInput.Keyboard.Pressed((Keys) 112))
+        if (MInput.Keyboard.Pressed(Keys.F1))
         {
-          Celeste.Celeste.ReloadAssets(true, false, false, new AreaKey?(this.Session.Area));
+          Celeste.ReloadAssets(true, false, false, new AreaKey?(this.Session.Area));
           Engine.Scene = (Scene) new LevelLoader(this.Session, new Vector2?());
         }
-        else if (MInput.Keyboard.Pressed((Keys) 113))
+        else if (MInput.Keyboard.Pressed(Keys.F2))
         {
-          Celeste.Celeste.ReloadAssets(true, true, false, new AreaKey?(this.Session.Area));
+          Celeste.ReloadAssets(true, true, false, new AreaKey?(this.Session.Area));
           Engine.Scene = (Scene) new LevelLoader(this.Session, new Vector2?());
         }
-        else
+        else if (MInput.Keyboard.Pressed(Keys.F3))
         {
-          if (!MInput.Keyboard.Pressed((Keys) 114))
-            return;
-          Celeste.Celeste.ReloadAssets(true, true, true, new AreaKey?(this.Session.Area));
+          Celeste.ReloadAssets(true, true, true, new AreaKey?(this.Session.Area));
           Engine.Scene = (Scene) new LevelLoader(this.Session, new Vector2?());
         }
       }
@@ -1611,8 +1604,7 @@ namespace Celeste
     public override void BeforeRender()
     {
       this.cameraPreShake = this.Camera.Position;
-      Camera camera = this.Camera;
-      camera.Position = Vector2.op_Addition(camera.Position, this.shakeVector);
+      this.Camera.Position += this.shakeVector;
       this.Camera.Position = this.Camera.Position.Floor();
       foreach (BeforeRenderHook component in this.Tracker.GetComponents<BeforeRenderHook>())
       {
@@ -1625,12 +1617,12 @@ namespace Celeste
 
     public override void Render()
     {
-      Engine.Instance.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) GameplayBuffers.Gameplay);
-      Engine.Instance.get_GraphicsDevice().Clear(Color.get_Transparent());
+      Engine.Instance.GraphicsDevice.SetRenderTarget((RenderTarget2D) GameplayBuffers.Gameplay);
+      Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
       this.GameplayRenderer.Render((Scene) this);
       this.Lighting.Render((Scene) this);
-      Engine.Instance.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) GameplayBuffers.Level);
-      Engine.Instance.get_GraphicsDevice().Clear(this.BackgroundColor);
+      Engine.Instance.GraphicsDevice.SetRenderTarget((RenderTarget2D) GameplayBuffers.Level);
+      Engine.Instance.GraphicsDevice.Clear(this.BackgroundColor);
       this.Background.Render((Scene) this);
       Distort.Render((Texture2D) (RenderTarget2D) GameplayBuffers.Gameplay, (Texture2D) (RenderTarget2D) GameplayBuffers.Displacement, this.Displacement.HasDisplacement((Scene) this));
       this.Bloom.Apply(GameplayBuffers.Level, (Scene) this);
@@ -1638,50 +1630,48 @@ namespace Celeste
       Glitch.Apply(GameplayBuffers.Level, this.glitchTimer * 2f, this.glitchSeed, 6.283185f);
       if ((double) this.flash > 0.0)
       {
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, (Effect) null);
-        Draw.Rect(-1f, -1f, 322f, 182f, Color.op_Multiply(this.flashColor, this.flash));
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, (Effect) null);
+        Draw.Rect(-1f, -1f, 322f, 182f, this.flashColor * this.flash);
         Draw.SpriteBatch.End();
         if (this.flashDrawPlayer)
         {
-          Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, (Effect) null, this.Camera.Matrix);
+          Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, (Effect) null, this.Camera.Matrix);
           Player entity = this.Tracker.GetEntity<Player>();
           if (entity != null && entity.Visible)
             entity.Render();
           Draw.SpriteBatch.End();
         }
       }
-      Engine.Instance.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) null);
-      Engine.Instance.get_GraphicsDevice().Clear(Color.get_Black());
-      Engine.Instance.get_GraphicsDevice().set_Viewport(Engine.Viewport);
-      Matrix matrix = Matrix.op_Multiply(Matrix.CreateScale(6f), Engine.ScreenMatrix);
-      Vector2 vector2_1;
-      ((Vector2) ref vector2_1).\u002Ector(320f, 180f);
-      Vector2 vector2_2 = Vector2.op_Division(vector2_1, this.ZoomTarget);
-      Vector2 vector2_3 = (double) this.ZoomTarget != 1.0 ? Vector2.op_Multiply(Vector2.op_Division(Vector2.op_Subtraction(this.ZoomFocusPoint, Vector2.op_Division(vector2_2, 2f)), Vector2.op_Subtraction(vector2_1, vector2_2)), vector2_1) : Vector2.get_Zero();
+      Engine.Instance.GraphicsDevice.SetRenderTarget((RenderTarget2D) null);
+      Engine.Instance.GraphicsDevice.Clear(Color.Black);
+      Engine.Instance.GraphicsDevice.Viewport = Engine.Viewport;
+      Matrix transformationMatrix = Matrix.CreateScale(6f) * Engine.ScreenMatrix;
+      Vector2 vector2_1 = new Vector2(320f, 180f);
+      Vector2 vector2_2 = vector2_1 / this.ZoomTarget;
+      Vector2 origin = (double) this.ZoomTarget != 1.0 ? (this.ZoomFocusPoint - vector2_2 / 2f) / (vector2_1 - vector2_2) * vector2_1 : Vector2.Zero;
       MTexture orDefault1 = GFX.ColorGrades.GetOrDefault(this.lastColorGrade, GFX.ColorGrades["none"]);
       MTexture orDefault2 = GFX.ColorGrades.GetOrDefault(this.Session.ColorGrade, GFX.ColorGrades["none"]);
       if ((double) this.colorGradeEase > 0.0 && orDefault1 != orDefault2)
         ColorGrade.Set(orDefault1, orDefault2, this.colorGradeEase);
       else
         ColorGrade.Set(orDefault2);
-      float num = this.Zoom * (float) ((320.0 - (double) this.ScreenPadding * 2.0) / 320.0);
-      Vector2 vector2_4;
-      ((Vector2) ref vector2_4).\u002Ector(this.ScreenPadding, this.ScreenPadding * (9f / 16f));
+      float scale = this.Zoom * (float) ((320.0 - (double) this.ScreenPadding * 2.0) / 320.0);
+      Vector2 vector2_3 = new Vector2(this.ScreenPadding, this.ScreenPadding * (9f / 16f));
       if (SaveData.Instance.Assists.MirrorMode)
       {
-        vector2_4.X = -vector2_4.X;
-        vector2_3.X = (__Null) (160.0 - (vector2_3.X - 160.0));
+        vector2_3.X = -vector2_3.X;
+        origin.X = (float) (160.0 - ((double) origin.X - 160.0));
       }
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, ColorGrade.Effect, matrix);
-      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.Level, Vector2.op_Addition(vector2_3, vector2_4), new Rectangle?(GameplayBuffers.Level.Bounds), Color.get_White(), 0.0f, vector2_3, num, SaveData.Instance.Assists.MirrorMode ? (SpriteEffects) 1 : (SpriteEffects) 0, 0.0f);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, ColorGrade.Effect, transformationMatrix);
+      Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) GameplayBuffers.Level, origin + vector2_3, new Rectangle?(GameplayBuffers.Level.Bounds), Color.White, 0.0f, origin, scale, SaveData.Instance.Assists.MirrorMode ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.0f);
       Draw.SpriteBatch.End();
       if (this.Pathfinder != null && this.Pathfinder.DebugRenderEnabled)
       {
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.Default, (RasterizerState) RasterizerState.CullNone, (Effect) null, Matrix.op_Multiply(this.Camera.Matrix, matrix));
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, (Effect) null, this.Camera.Matrix * transformationMatrix);
         this.Pathfinder.Render();
         Draw.SpriteBatch.End();
       }
-      if (!this.Paused || !this.PauseMainMenuOpen || !Celeste.Input.MenuJournal.Check)
+      if (!this.Paused || !this.PauseMainMenuOpen || !Input.MenuJournal.Check)
         this.HudRenderer.Render((Scene) this);
       if (this.Wipe != null)
         this.Wipe.Render((Scene) this);
@@ -1753,7 +1743,7 @@ namespace Celeste
               Distort.GameRate = 1f;
               Distort.Anxiety = 0.0f;
               this.InCutscene = this.SkippingCutscene = false;
-              this.RetryPlayerCorpse = player.Die(Vector2.get_Zero(), true, true);
+              this.RetryPlayerCorpse = player.Die(Vector2.Zero, true, true);
               foreach (LevelEndingHook component in this.Tracker.GetComponents<LevelEndingHook>())
               {
                 if (component.OnEnd != null)
@@ -1794,7 +1784,7 @@ namespace Celeste
           this.PauseMainMenuOpen = false;
           this.Options(menu.IndexOf(item1), minimal);
         })));
-        if (!minimal && Celeste.Celeste.PlayMode != Celeste.Celeste.PlayModes.Event)
+        if (!minimal && Celeste.PlayMode != Celeste.PlayModes.Event)
         {
           TextMenu.Item obj;
           menu.Add(obj = new TextMenu.Button(Dialog.Clean("menu_pause_savequit", (Language) null)).Pressed((Action) (() =>
@@ -1839,7 +1829,7 @@ namespace Celeste
             })));
             (item3 as TextMenu.Button).ConfirmSfx = "event:/ui/main/message_confirm";
           }
-          if (Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Event)
+          if (Celeste.PlayMode == Celeste.PlayModes.Event)
             menu.Add(new TextMenu.Button(Dialog.Clean("menu_pause_restartdemo", (Language) null)).Pressed((Action) (() =>
             {
               this.EndPauseEffects();
@@ -1893,7 +1883,8 @@ namespace Celeste
       menu.OnPause = menu.OnESC = (Action) (() =>
       {
         menu.RemoveSelf();
-        hint?.RemoveSelf();
+        if (hint != null)
+          hint.RemoveSelf();
         this.Paused = false;
         Engine.FreezeTimer = 0.15f;
         Audio.Play("event:/ui/game/unpause");
@@ -1902,7 +1893,8 @@ namespace Celeste
       {
         Audio.Play("event:/ui/main/button_back");
         menu.RemoveSelf();
-        hint?.RemoveSelf();
+        if (hint != null)
+          hint.RemoveSelf();
         this.Pause(returnIndex, minimal, false);
       });
       this.Add((Entity) menu);
@@ -2014,7 +2006,7 @@ namespace Celeste
       menu.Add((TextMenu.Item) new TextMenu.OnOff(Dialog.Clean("MENU_VARIANT_MIRROR", (Language) null), SaveData.Instance.Assists.MirrorMode).Change((Action<bool>) (on =>
       {
         SaveData.Instance.Assists.MirrorMode = on;
-        Celeste.Input.MoveX.Inverted = Celeste.Input.Aim.InvertedX = on;
+        Input.MoveX.Inverted = Input.Aim.InvertedX = on;
       })));
       menu.Add((TextMenu.Item) new TextMenu.OnOff(Dialog.Clean("MENU_VARIANT_360DASHING", (Language) null), SaveData.Instance.Assists.ThreeSixtyDashing).Change((Action<bool>) (on => SaveData.Instance.Assists.ThreeSixtyDashing = on)));
       menu.Add((TextMenu.Item) new TextMenu.OnOff(Dialog.Clean("MENU_VARIANT_INVISMOTION", (Language) null), SaveData.Instance.Assists.InvisibleMotion).Change((Action<bool>) (on => SaveData.Instance.Assists.InvisibleMotion = on)));
@@ -2084,7 +2076,7 @@ namespace Celeste
     {
       if (Settings.Instance.DisableScreenShake)
         return;
-      this.shakeDirection = Vector2.get_Zero();
+      this.shakeDirection = Vector2.Zero;
       this.shakeTimer = Math.Max(this.shakeTimer, time);
     }
 
@@ -2140,9 +2132,9 @@ namespace Celeste
       Vector2 fromFocus = this.ZoomFocusPoint;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / duration)
       {
-        float num = Ease.SineInOut(MathHelper.Clamp(p, 0.0f, 1f));
-        this.Zoom = this.ZoomTarget = MathHelper.Lerp(fromZoom, zoom, num);
-        this.ZoomFocusPoint = Vector2.Lerp(fromFocus, screenSpaceFocusPoint, num);
+        float t = Ease.SineInOut(MathHelper.Clamp(p, 0.0f, 1f));
+        this.Zoom = this.ZoomTarget = MathHelper.Lerp(fromZoom, zoom, t);
+        this.ZoomFocusPoint = Vector2.Lerp(fromFocus, screenSpaceFocusPoint, t);
         yield return (object) null;
       }
       this.Zoom = this.ZoomTarget;
@@ -2165,7 +2157,7 @@ namespace Celeste
     {
       this.Zoom = 1f;
       this.ZoomTarget = 1f;
-      this.ZoomFocusPoint = Vector2.op_Division(new Vector2(320f, 180f), 2f);
+      this.ZoomFocusPoint = new Vector2(320f, 180f) / 2f;
     }
 
     public void DoScreenWipe(bool wipeIn, Action onComplete = null, bool hiresSnow = false)
@@ -2207,146 +2199,132 @@ namespace Celeste
 
     public bool InsideCamera(Vector2 position, float expand = 0.0f)
     {
-      if (position.X >= (double) this.Camera.Left - (double) expand && position.X < (double) this.Camera.Right + (double) expand && position.Y >= (double) this.Camera.Top - (double) expand)
-        return position.Y < (double) this.Camera.Bottom + (double) expand;
-      return false;
+      return (double) position.X >= (double) this.Camera.Left - (double) expand && (double) position.X < (double) this.Camera.Right + (double) expand && (double) position.Y >= (double) this.Camera.Top - (double) expand && (double) position.Y < (double) this.Camera.Bottom + (double) expand;
     }
 
     public void EnforceBounds(Player player)
     {
       Rectangle bounds = this.Bounds;
-      Rectangle rectangle;
-      ((Rectangle) ref rectangle).\u002Ector((int) this.Camera.Left, (int) this.Camera.Top, 320, 180);
+      Rectangle rectangle = new Rectangle((int) this.Camera.Left, (int) this.Camera.Top, 320, 180);
       if (this.transition != null)
         return;
-      if (this.CameraLockMode == Level.CameraLockModes.FinalBoss && (double) player.Left < (double) ((Rectangle) ref rectangle).get_Left())
+      if (this.CameraLockMode == Level.CameraLockModes.FinalBoss && (double) player.Left < (double) rectangle.Left)
       {
-        player.Left = (float) ((Rectangle) ref rectangle).get_Left();
+        player.Left = (float) rectangle.Left;
         player.OnBoundsH();
       }
-      else if ((double) player.Left < (double) ((Rectangle) ref bounds).get_Left())
+      else if ((double) player.Left < (double) bounds.Left)
       {
-        if ((double) player.Top >= (double) ((Rectangle) ref bounds).get_Top() && (double) player.Bottom < (double) ((Rectangle) ref bounds).get_Bottom() && this.Session.MapData.CanTransitionTo(this, Vector2.op_Addition(player.Center, Vector2.op_Multiply(Vector2.get_UnitX(), -8f))))
+        if ((double) player.Top >= (double) bounds.Top && (double) player.Bottom < (double) bounds.Bottom && this.Session.MapData.CanTransitionTo(this, player.Center + Vector2.UnitX * -8f))
         {
           player.BeforeSideTransition();
-          this.NextLevel(Vector2.op_Addition(player.Center, Vector2.op_Multiply(Vector2.get_UnitX(), -8f)), Vector2.op_UnaryNegation(Vector2.get_UnitX()));
+          this.NextLevel(player.Center + Vector2.UnitX * -8f, -Vector2.UnitX);
           return;
         }
-        player.Left = (float) ((Rectangle) ref bounds).get_Left();
+        player.Left = (float) bounds.Left;
         player.OnBoundsH();
       }
       TheoCrystal entity = this.Tracker.GetEntity<TheoCrystal>();
-      if (this.CameraLockMode == Level.CameraLockModes.FinalBoss && (double) player.Right > (double) ((Rectangle) ref rectangle).get_Right() && ((Rectangle) ref rectangle).get_Right() < ((Rectangle) ref bounds).get_Right() - 4)
+      if (this.CameraLockMode == Level.CameraLockModes.FinalBoss && (double) player.Right > (double) rectangle.Right && rectangle.Right < bounds.Right - 4)
       {
-        player.Right = (float) ((Rectangle) ref rectangle).get_Right();
+        player.Right = (float) rectangle.Right;
         player.OnBoundsH();
       }
-      else if (entity != null && (player.Holding == null || !player.Holding.IsHeld) && (double) player.Right > (double) (((Rectangle) ref bounds).get_Right() - 1))
-        player.Right = (float) (((Rectangle) ref bounds).get_Right() - 1);
-      else if ((double) player.Right > (double) ((Rectangle) ref bounds).get_Right())
+      else if (entity != null && (player.Holding == null || !player.Holding.IsHeld) && (double) player.Right > (double) (bounds.Right - 1))
+        player.Right = (float) (bounds.Right - 1);
+      else if ((double) player.Right > (double) bounds.Right)
       {
-        if ((double) player.Top >= (double) ((Rectangle) ref bounds).get_Top() && (double) player.Bottom < (double) ((Rectangle) ref bounds).get_Bottom() && this.Session.MapData.CanTransitionTo(this, Vector2.op_Addition(player.Center, Vector2.op_Multiply(Vector2.get_UnitX(), 8f))))
+        if ((double) player.Top >= (double) bounds.Top && (double) player.Bottom < (double) bounds.Bottom && this.Session.MapData.CanTransitionTo(this, player.Center + Vector2.UnitX * 8f))
         {
           player.BeforeSideTransition();
-          this.NextLevel(Vector2.op_Addition(player.Center, Vector2.op_Multiply(Vector2.get_UnitX(), 8f)), Vector2.get_UnitX());
+          this.NextLevel(player.Center + Vector2.UnitX * 8f, Vector2.UnitX);
           return;
         }
-        player.Right = (float) ((Rectangle) ref bounds).get_Right();
+        player.Right = (float) bounds.Right;
         player.OnBoundsH();
       }
-      if (this.CameraLockMode != Level.CameraLockModes.None && (double) player.Top < (double) ((Rectangle) ref rectangle).get_Top())
+      if (this.CameraLockMode != Level.CameraLockModes.None && (double) player.Top < (double) rectangle.Top)
       {
-        player.Top = (float) ((Rectangle) ref rectangle).get_Top();
+        player.Top = (float) rectangle.Top;
         player.OnBoundsV();
       }
-      else if ((double) player.CenterY < (double) ((Rectangle) ref bounds).get_Top())
+      else if ((double) player.CenterY < (double) bounds.Top)
       {
-        if (this.Session.MapData.CanTransitionTo(this, Vector2.op_Subtraction(player.Center, Vector2.op_Multiply(Vector2.get_UnitY(), 12f))))
+        if (this.Session.MapData.CanTransitionTo(this, player.Center - Vector2.UnitY * 12f))
         {
           player.BeforeUpTransition();
-          this.NextLevel(Vector2.op_Subtraction(player.Center, Vector2.op_Multiply(Vector2.get_UnitY(), 12f)), Vector2.op_UnaryNegation(Vector2.get_UnitY()));
+          this.NextLevel(player.Center - Vector2.UnitY * 12f, -Vector2.UnitY);
           return;
         }
-        if ((double) player.Top < (double) (((Rectangle) ref bounds).get_Top() - 24))
+        if ((double) player.Top < (double) (bounds.Top - 24))
         {
-          player.Top = (float) (((Rectangle) ref bounds).get_Top() - 24);
+          player.Top = (float) (bounds.Top - 24);
           player.OnBoundsV();
         }
       }
-      if (this.CameraLockMode != Level.CameraLockModes.None && ((Rectangle) ref rectangle).get_Bottom() < ((Rectangle) ref bounds).get_Bottom() - 4 && (double) player.Top > (double) ((Rectangle) ref rectangle).get_Bottom())
+      if (this.CameraLockMode != Level.CameraLockModes.None && rectangle.Bottom < bounds.Bottom - 4 && (double) player.Top > (double) rectangle.Bottom)
       {
         if (SaveData.Instance.Assists.Invincible)
         {
           player.Play("event:/game/general/assist_screenbottom", (string) null, 0.0f);
-          player.Bounce((float) ((Rectangle) ref rectangle).get_Bottom());
+          player.Bounce((float) rectangle.Bottom);
         }
         else
-          player.Die(Vector2.get_Zero(), false, true);
+          player.Die(Vector2.Zero, false, true);
       }
-      else if ((double) player.Bottom > (double) ((Rectangle) ref bounds).get_Bottom() && this.Session.MapData.CanTransitionTo(this, Vector2.op_Addition(player.Center, Vector2.op_Multiply(Vector2.get_UnitY(), 12f))) && !this.Session.LevelData.DisableDownTransition)
+      else if ((double) player.Bottom > (double) bounds.Bottom && this.Session.MapData.CanTransitionTo(this, player.Center + Vector2.UnitY * 12f) && !this.Session.LevelData.DisableDownTransition)
       {
-        if (player.CollideCheck<Solid>(Vector2.op_Addition(player.Position, Vector2.op_Multiply(Vector2.get_UnitY(), 4f))))
+        if (player.CollideCheck<Solid>(player.Position + Vector2.UnitY * 4f))
           return;
         player.BeforeDownTransition();
-        this.NextLevel(Vector2.op_Addition(player.Center, Vector2.op_Multiply(Vector2.get_UnitY(), 12f)), Vector2.get_UnitY());
+        this.NextLevel(player.Center + Vector2.UnitY * 12f, Vector2.UnitY);
       }
       else
       {
-        if ((double) player.Top <= (double) ((Rectangle) ref bounds).get_Bottom())
+        if ((double) player.Top <= (double) bounds.Bottom)
           return;
         if (SaveData.Instance.Assists.Invincible)
         {
           player.Play("event:/game/general/assist_screenbottom", (string) null, 0.0f);
-          player.Bounce((float) ((Rectangle) ref bounds).get_Bottom());
+          player.Bounce((float) bounds.Bottom);
         }
         else
-          player.Die(Vector2.get_Zero(), false, true);
+          player.Die(Vector2.Zero, false, true);
       }
     }
 
     public bool IsInBounds(Entity entity)
     {
       Rectangle bounds = this.Bounds;
-      if ((double) entity.Right > (double) ((Rectangle) ref bounds).get_Left() && (double) entity.Bottom > (double) ((Rectangle) ref bounds).get_Top() && (double) entity.Left < (double) ((Rectangle) ref bounds).get_Right())
-        return (double) entity.Top < (double) ((Rectangle) ref bounds).get_Bottom();
-      return false;
+      return (double) entity.Right > (double) bounds.Left && (double) entity.Bottom > (double) bounds.Top && (double) entity.Left < (double) bounds.Right && (double) entity.Top < (double) bounds.Bottom;
     }
 
     public bool IsInBounds(Vector2 position)
     {
       Rectangle bounds = this.Bounds;
-      if (position.X >= (double) ((Rectangle) ref bounds).get_Left() && position.Y >= (double) ((Rectangle) ref bounds).get_Top() && position.X < (double) ((Rectangle) ref bounds).get_Right())
-        return position.Y < (double) ((Rectangle) ref bounds).get_Bottom();
-      return false;
+      return (double) position.X >= (double) bounds.Left && (double) position.Y >= (double) bounds.Top && (double) position.X < (double) bounds.Right && (double) position.Y < (double) bounds.Bottom;
     }
 
     public bool IsInBounds(Vector2 position, float pad)
     {
       Rectangle bounds = this.Bounds;
-      if (position.X >= (double) ((Rectangle) ref bounds).get_Left() - (double) pad && position.Y >= (double) ((Rectangle) ref bounds).get_Top() - (double) pad && position.X < (double) ((Rectangle) ref bounds).get_Right() + (double) pad)
-        return position.Y < (double) ((Rectangle) ref bounds).get_Bottom() + (double) pad;
-      return false;
+      return (double) position.X >= (double) bounds.Left - (double) pad && (double) position.Y >= (double) bounds.Top - (double) pad && (double) position.X < (double) bounds.Right + (double) pad && (double) position.Y < (double) bounds.Bottom + (double) pad;
     }
 
     public bool IsInBounds(Vector2 position, Vector2 dirPad)
     {
-      float num1 = Math.Max((float) dirPad.X, 0.0f);
-      float num2 = Math.Max((float) -dirPad.X, 0.0f);
-      float num3 = Math.Max((float) dirPad.Y, 0.0f);
-      float num4 = Math.Max((float) -dirPad.Y, 0.0f);
+      float num1 = Math.Max(dirPad.X, 0.0f);
+      float num2 = Math.Max(-dirPad.X, 0.0f);
+      float num3 = Math.Max(dirPad.Y, 0.0f);
+      float num4 = Math.Max(-dirPad.Y, 0.0f);
       Rectangle bounds = this.Bounds;
-      if (position.X >= (double) ((Rectangle) ref bounds).get_Left() + (double) num1 && position.Y >= (double) ((Rectangle) ref bounds).get_Top() + (double) num3 && position.X < (double) ((Rectangle) ref bounds).get_Right() - (double) num2)
-        return position.Y < (double) ((Rectangle) ref bounds).get_Bottom() - (double) num4;
-      return false;
+      return (double) position.X >= (double) bounds.Left + (double) num1 && (double) position.Y >= (double) bounds.Top + (double) num3 && (double) position.X < (double) bounds.Right - (double) num2 && (double) position.Y < (double) bounds.Bottom - (double) num4;
     }
 
     public bool IsInCamera(Vector2 position, float pad)
     {
-      Rectangle rectangle;
-      ((Rectangle) ref rectangle).\u002Ector((int) this.Camera.X, (int) this.Camera.Y, 320, 180);
-      if (position.X >= (double) ((Rectangle) ref rectangle).get_Left() - (double) pad && position.Y >= (double) ((Rectangle) ref rectangle).get_Top() - (double) pad && position.X < (double) ((Rectangle) ref rectangle).get_Right() + (double) pad)
-        return position.Y < (double) ((Rectangle) ref rectangle).get_Bottom() + (double) pad;
-      return false;
+      Rectangle rectangle = new Rectangle((int) this.Camera.X, (int) this.Camera.Y, 320, 180);
+      return (double) position.X >= (double) rectangle.Left - (double) pad && (double) position.Y >= (double) rectangle.Top - (double) pad && (double) position.X < (double) rectangle.Right + (double) pad && (double) position.Y < (double) rectangle.Bottom + (double) pad;
     }
 
     public void StartCutscene(
@@ -2384,25 +2362,25 @@ namespace Celeste
 
     private IEnumerator SkipCutsceneRoutine()
     {
-      Level level = this;
-      FadeWipe fadeWipe1 = new FadeWipe((Scene) level, false, (Action) null);
-      fadeWipe1.Duration = 0.25f;
-      yield return (object) fadeWipe1.Wait();
-      level.onCutsceneSkip(level);
-      level.strawberriesDisplay.DrawLerp = 0.0f;
-      level.ResetZoom();
-      GameplayStats first = level.Entities.FindFirst<GameplayStats>();
-      if (first != null)
-        first.DrawLerp = 0.0f;
-      if (level.onCutsceneSkipFadeIn)
+      FadeWipe wipeIn = new FadeWipe((Scene) this, false, (Action) null);
+      wipeIn.Duration = 0.25f;
+      yield return (object) wipeIn.Wait();
+      this.onCutsceneSkip(this);
+      this.strawberriesDisplay.DrawLerp = 0.0f;
+      this.ResetZoom();
+      GameplayStats gameplayStates = this.Entities.FindFirst<GameplayStats>();
+      if (gameplayStates != null)
+        gameplayStates.DrawLerp = 0.0f;
+      if (this.onCutsceneSkipFadeIn)
       {
-        FadeWipe fadeWipe2 = new FadeWipe((Scene) level, true, (Action) null);
-        fadeWipe2.Duration = 0.25f;
-        level.RendererList.UpdateLists();
-        yield return (object) fadeWipe2.Wait();
+        FadeWipe wipeOut = new FadeWipe((Scene) this, true, (Action) null);
+        wipeOut.Duration = 0.25f;
+        this.RendererList.UpdateLists();
+        yield return (object) wipeOut.Wait();
+        wipeOut = (FadeWipe) null;
       }
-      level.SkippingCutscene = false;
-      level.EndCutscene();
+      this.SkippingCutscene = false;
+      this.EndCutscene();
     }
 
     public void EndCutscene()
@@ -2454,7 +2432,7 @@ namespace Celeste
           return (ScreenWipe) new FadeWipe((Scene) this, false, onComplete);
         Player entity = this.Tracker.GetEntity<Player>();
         if (entity != null)
-          SpotlightWipe.FocusPoint = Vector2.op_Subtraction(Vector2.op_Subtraction(entity.Position, this.Camera.Position), new Vector2(0.0f, 8f));
+          SpotlightWipe.FocusPoint = entity.Position - this.Camera.Position - new Vector2(0.0f, 8f);
         return (ScreenWipe) new SpotlightWipe((Scene) this, false, onComplete);
       }
       Audio.BusStopAll("bus:/gameplay_sfx", true);
@@ -2479,3 +2457,4 @@ namespace Celeste
     }
   }
 }
+

@@ -14,14 +14,14 @@ namespace Celeste
   [Tracked(false)]
   public class SeekerBarrier : Solid
   {
+    private float flash = 0.0f;
+    private bool flashing = false;
     private List<Vector2> particles = new List<Vector2>();
     private List<SeekerBarrier> adjacent = new List<SeekerBarrier>();
     private float[] speeds = new float[3]{ 12f, 20f, 40f };
     private MTexture temp;
     private float offX;
     private float offY;
-    private float flash;
-    private bool flashing;
 
     public SeekerBarrier(Vector2 position, float width, float height)
       : base(position, width, height, false)
@@ -30,8 +30,8 @@ namespace Celeste
       this.temp = new MTexture();
       for (int index = 0; (double) index < (double) this.Width * (double) this.Height / 16.0; ++index)
         this.particles.Add(new Vector2(Calc.Random.NextFloat(this.Width - 1f), Calc.Random.NextFloat(this.Height - 1f)));
-      this.offX = (float) position.X;
-      this.offY = (float) position.Y;
+      this.offX = position.X;
+      this.offY = position.Y;
       while ((double) this.offX < 0.0)
         this.offX += 128f;
       while ((double) this.offY < 0.0)
@@ -40,7 +40,7 @@ namespace Celeste
     }
 
     public SeekerBarrier(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height)
+      : this(data.Position + offset, (float) data.Width, (float) data.Height)
     {
     }
 
@@ -58,13 +58,8 @@ namespace Celeste
       int index = 0;
       for (int count = this.particles.Count; index < count; ++index)
       {
-        Vector2 vector2 = Vector2.op_Addition(this.particles[index], Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_UnitY(), this.speeds[index % length]), Engine.DeltaTime));
-        ref __Null local = ref vector2.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local % (this.Height - 1f);
+        Vector2 vector2 = this.particles[index] + Vector2.UnitY * this.speeds[index % length] * Engine.DeltaTime;
+        vector2.Y %= this.Height - 1f;
         this.particles[index] = vector2;
       }
       base.Update();
@@ -87,31 +82,26 @@ namespace Celeste
     public void RenderDisplacement()
     {
       MTexture mtexture = GFX.Game["util/displacementBlock"];
-      Color color = Color.op_Multiply(Color.get_White(), 0.3f);
+      Color color = Color.White * 0.3f;
       for (int index1 = 0; (double) index1 < (double) this.Width; index1 += 128)
       {
         for (int index2 = 0; (double) index2 < (double) this.Height; index2 += 128)
         {
           mtexture.GetSubtexture((int) ((double) this.offX % 128.0), (int) ((double) this.offY % 128.0), (int) Math.Min(128f, this.Width - (float) index1), (int) Math.Min(128f, this.Height - (float) index2), this.temp);
-          this.temp.Draw(Vector2.op_Addition(this.Position, new Vector2((float) index1, (float) index2)), Vector2.get_Zero(), color);
+          this.temp.Draw(this.Position + new Vector2((float) index1, (float) index2), Vector2.Zero, color);
         }
       }
     }
 
     public override void Render()
     {
-      Draw.Rect(this.Collider, Color.op_Multiply(Color.get_White(), 0.1f));
+      Draw.Rect(this.Collider, Color.White * 0.1f);
       if ((double) this.flash > 0.0)
-        Draw.Rect(this.Collider, Color.op_Multiply(Color.get_White(), this.flash));
-      Color color = Color.op_Multiply(Color.get_White(), 0.5f);
-      using (List<Vector2>.Enumerator enumerator = this.particles.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-        {
-          Vector2 current = enumerator.Current;
-          Draw.Pixel.Draw(Vector2.op_Addition(this.Position, current), Vector2.get_Zero(), color);
-        }
-      }
+        Draw.Rect(this.Collider, Color.White * this.flash);
+      Color color = Color.White * 0.5f;
+      foreach (Vector2 particle in this.particles)
+        Draw.Pixel.Draw(this.Position + particle, Vector2.Zero, color);
     }
   }
 }
+

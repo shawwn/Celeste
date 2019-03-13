@@ -12,3 +12,4 @@ namespace Celeste.Editor
     Filler,
   }
 }
+

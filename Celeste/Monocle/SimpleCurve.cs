@@ -23,37 +23,34 @@ namespace Monocle
 
     public void DoubleControl()
     {
-      this.Control = Vector2.op_Addition(this.Control, Vector2.op_Subtraction(this.Control, Vector2.op_Addition(this.Begin, Vector2.op_Division(Vector2.op_Subtraction(this.End, this.Begin), 2f))));
+      this.Control += this.Control - (this.Begin + (this.End - this.Begin) / 2f);
     }
 
     public Vector2 GetPoint(float percent)
     {
       float num = 1f - percent;
-      return Vector2.op_Addition(Vector2.op_Addition(Vector2.op_Multiply(num * num, this.Begin), Vector2.op_Multiply(2f * num * percent, this.Control)), Vector2.op_Multiply(percent * percent, this.End));
+      return num * num * this.Begin + 2f * num * percent * this.Control + percent * percent * this.End;
     }
 
     public float GetLengthParametric(int resolution)
     {
-      Vector2 vector2_1 = this.Begin;
-      float num1 = 0.0f;
+      Vector2 vector2 = this.Begin;
+      float num = 0.0f;
       for (int index = 1; index <= resolution; ++index)
       {
         Vector2 point = this.GetPoint((float) index / (float) resolution);
-        double num2 = (double) num1;
-        Vector2 vector2_2 = Vector2.op_Subtraction(point, vector2_1);
-        double num3 = (double) ((Vector2) ref vector2_2).Length();
-        num1 = (float) (num2 + num3);
-        vector2_1 = point;
+        num += (point - vector2).Length();
+        vector2 = point;
       }
-      return num1;
+      return num;
     }
 
     public void Render(Vector2 offset, Color color, int resolution)
     {
-      Vector2 start = Vector2.op_Addition(offset, this.Begin);
+      Vector2 start = offset + this.Begin;
       for (int index = 1; index <= resolution; ++index)
       {
-        Vector2 end = Vector2.op_Addition(offset, this.GetPoint((float) index / (float) resolution));
+        Vector2 end = offset + this.GetPoint((float) index / (float) resolution);
         Draw.Line(start, end, color);
         start = end;
       }
@@ -61,10 +58,10 @@ namespace Monocle
 
     public void Render(Vector2 offset, Color color, int resolution, float thickness)
     {
-      Vector2 start = Vector2.op_Addition(offset, this.Begin);
+      Vector2 start = offset + this.Begin;
       for (int index = 1; index <= resolution; ++index)
       {
-        Vector2 end = Vector2.op_Addition(offset, this.GetPoint((float) index / (float) resolution));
+        Vector2 end = offset + this.GetPoint((float) index / (float) resolution);
         Draw.Line(start, end, color, thickness);
         start = end;
       }
@@ -72,12 +69,13 @@ namespace Monocle
 
     public void Render(Color color, int resolution)
     {
-      this.Render(Vector2.get_Zero(), color, resolution);
+      this.Render(Vector2.Zero, color, resolution);
     }
 
     public void Render(Color color, int resolution, float thickness)
     {
-      this.Render(Vector2.get_Zero(), color, resolution, thickness);
+      this.Render(Vector2.Zero, color, resolution, thickness);
     }
   }
 }
+

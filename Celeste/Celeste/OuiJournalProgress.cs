@@ -18,7 +18,7 @@ namespace Celeste
       : base(journal)
     {
       this.PageTexture = "page";
-      this.table = new OuiJournalPage.Table().AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_progress", (Language) null), new Vector2(0.0f, 0.5f), 1f, Color.op_Multiply(Color.get_Black(), 0.7f), 0.0f, false)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(20f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(100f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("strawberry", 150f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("skullblue", 100f));
+      this.table = new OuiJournalPage.Table().AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_progress", (Language) null), new Vector2(0.0f, 0.5f), 1f, Color.Black * 0.7f, 0.0f, false)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(20f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(100f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("strawberry", 150f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("skullblue", 100f));
       if (SaveData.Instance.UnlockedModes >= 2)
         this.table.AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("skullred", 100f));
       if (SaveData.Instance.UnlockedModes >= 3)
@@ -103,3 +103,4 @@ namespace Celeste
     }
   }
 }
+

@@ -30,20 +30,16 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS03_OshiroHallway2 cs03OshiroHallway2 = this;
       level.Session.Audio.Music.Layer(1, false);
       level.Session.Audio.Music.Layer(2, true);
       level.Session.Audio.Apply();
-      cs03OshiroHallway2.player.StateMachine.State = 11;
-      cs03OshiroHallway2.player.StateMachine.Locked = true;
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
       yield return (object) Textbox.Say("CH3_OSHIRO_HALLWAY_B");
-      NPC oshiro = cs03OshiroHallway2.oshiro;
-      Rectangle bounds = level.Bounds;
-      Vector2 target = new Vector2((float) (((Rectangle) ref bounds).get_Right() + 64), cs03OshiroHallway2.oshiro.Y);
-      oshiro.MoveToAndRemove(target);
-      cs03OshiroHallway2.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_03_08a_exit"));
+      this.oshiro.MoveToAndRemove(new Vector2((float) (level.Bounds.Right + 64), this.oshiro.Y));
+      this.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_03_08a_exit"));
       yield return (object) 1f;
-      cs03OshiroHallway2.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     public override void OnEnd(Level level)
@@ -60,3 +56,4 @@ namespace Celeste
     }
   }
 }
+

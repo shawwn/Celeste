@@ -23,9 +23,14 @@ namespace Celeste
       "Kuraine",
       "Matthewせいじ"
     };
-    public static Color BorderColor = Color.get_Black();
+    public static Color BorderColor = Color.Black;
     public float AutoScrollSpeedMultiplier = 1f;
     private float scrollSpeed = 90f;
+    private float scroll = 0.0f;
+    private float height = 0.0f;
+    private float scrollDelay = 0.0f;
+    private float scrollbarAlpha = 0.0f;
+    public float BottomTimer = 0.0f;
     public bool Enabled = true;
     public bool AllowInput = true;
     public const float CreditSpacing = 64f;
@@ -34,13 +39,8 @@ namespace Celeste
     public const float ScrollResumeDelay = 1f;
     public const float ScrollAcceleration = 1800f;
     private List<Credits.CreditNode> credits;
-    private float scroll;
-    private float height;
-    private float scrollDelay;
-    private float scrollbarAlpha;
     private float alignment;
     private float scale;
-    public float BottomTimer;
     public static PixelFont Font;
     public static float FontSize;
     public static float LineHeight;
@@ -268,18 +268,13 @@ namespace Celeste
 
     public void Render(Vector2 position)
     {
-      Vector2 position1 = Vector2.op_Addition(position, new Vector2(0.0f, 1080f - this.scroll).Floor());
+      Vector2 position1 = position + new Vector2(0.0f, 1080f - this.scroll).Floor();
       foreach (Credits.CreditNode credit in this.credits)
       {
         float num = credit.Height(this.scale);
-        if (position1.Y > -(double) num && position1.Y < 1080.0)
+        if ((double) position1.Y > -(double) num && (double) position1.Y < 1080.0)
           credit.Render(position1, this.alignment, this.scale);
-        ref __Null local = ref position1.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + (num + 64f * this.scale);
+        position1.Y += num + 64f * this.scale;
       }
       if ((double) this.scrollbarAlpha <= 0.0)
         return;
@@ -287,8 +282,8 @@ namespace Celeste
       int num2 = 1080 - num1 * 2;
       float height = (float) num2 * ((float) num2 / this.height);
       float num3 = (float) ((double) this.scroll / (double) this.height * ((double) num2 - (double) height));
-      Draw.Rect(1844f, (float) num1, 12f, (float) num2, Color.op_Multiply(Color.op_Multiply(Color.get_White(), 0.2f), this.scrollbarAlpha));
-      Draw.Rect(1844f, (float) num1 + num3, 12f, height, Color.op_Multiply(Color.op_Multiply(Color.get_White(), 0.5f), this.scrollbarAlpha));
+      Draw.Rect(1844f, (float) num1, 12f, (float) num2, Color.White * 0.2f * this.scrollbarAlpha);
+      Draw.Rect(1844f, (float) num1 + num3, 12f, height, Color.White * 0.5f * this.scrollbarAlpha);
     }
 
     private abstract class CreditNode
@@ -300,8 +295,8 @@ namespace Celeste
 
     private class Role : Credits.CreditNode
     {
-      public static readonly Color NameColor = Color.get_White();
-      public static readonly Color RolesColor = Color.op_Multiply(Color.get_White(), 0.8f);
+      public static readonly Color NameColor = Color.White;
+      public static readonly Color RolesColor = Color.White * 0.8f;
       public const float NameScale = 2f;
       public const float RolesScale = 1f;
       public const float Spacing = 8f;
@@ -317,14 +312,9 @@ namespace Celeste
 
       public override void Render(Vector2 position, float alignment = 0.5f, float scale = 1f)
       {
-        Credits.Font.DrawOutline(Credits.FontSize, this.Name, position.Floor(), new Vector2(alignment, 0.0f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 2f), scale), Credits.Role.NameColor, 2f, Credits.BorderColor);
-        ref __Null local = ref position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + (float) ((double) Credits.LineHeight * 2.0 + 8.0) * scale;
-        Credits.Font.DrawOutline(Credits.FontSize, this.Roles, position.Floor(), new Vector2(alignment, 0.0f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 1f), scale), Credits.Role.RolesColor, 2f, Credits.BorderColor);
+        Credits.Font.DrawOutline(Credits.FontSize, this.Name, position.Floor(), new Vector2(alignment, 0.0f), Vector2.One * 2f * scale, Credits.Role.NameColor, 2f, Credits.BorderColor);
+        position.Y += (float) ((double) Credits.LineHeight * 2.0 + 8.0) * scale;
+        Credits.Font.DrawOutline(Credits.FontSize, this.Roles, position.Floor(), new Vector2(alignment, 0.0f), Vector2.One * 1f * scale, Credits.Role.RolesColor, 2f, Credits.BorderColor);
       }
 
       public override float Height(float scale = 1f)
@@ -335,7 +325,7 @@ namespace Celeste
 
     private class Team : Credits.CreditNode
     {
-      public static readonly Color TeamColor = Color.get_White();
+      public static readonly Color TeamColor = Color.White;
       public const float TeamScale = 1.5f;
       public string Name;
       public string[] Members;
@@ -350,24 +340,14 @@ namespace Celeste
 
       public override void Render(Vector2 position, float alignment = 0.5f, float scale = 1f)
       {
-        Credits.Font.DrawOutline(Credits.FontSize, this.Name, position.Floor(), new Vector2(alignment, 0.0f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 2f), scale), Credits.Role.NameColor, 2f, Credits.BorderColor);
-        ref __Null local1 = ref position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + (float) ((double) Credits.LineHeight * 2.0 + 8.0) * scale;
+        Credits.Font.DrawOutline(Credits.FontSize, this.Name, position.Floor(), new Vector2(alignment, 0.0f), Vector2.One * 2f * scale, Credits.Role.NameColor, 2f, Credits.BorderColor);
+        position.Y += (float) ((double) Credits.LineHeight * 2.0 + 8.0) * scale;
         for (int index = 0; index < this.Members.Length; ++index)
         {
-          Credits.Font.DrawOutline(Credits.FontSize, this.Members[index], position.Floor(), new Vector2(alignment, 0.0f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 1.5f), scale), Credits.Team.TeamColor, 2f, Credits.BorderColor);
-          ref __Null local2 = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local2 = ^(float&) ref local2 + Credits.LineHeight * 1.5f * scale;
+          Credits.Font.DrawOutline(Credits.FontSize, this.Members[index], position.Floor(), new Vector2(alignment, 0.0f), Vector2.One * 1.5f * scale, Credits.Team.TeamColor, 2f, Credits.BorderColor);
+          position.Y += Credits.LineHeight * 1.5f * scale;
         }
-        Credits.Font.DrawOutline(Credits.FontSize, this.Roles, position.Floor(), new Vector2(alignment, 0.0f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 1f), scale), Credits.Role.RolesColor, 2f, Credits.BorderColor);
+        Credits.Font.DrawOutline(Credits.FontSize, this.Roles, position.Floor(), new Vector2(alignment, 0.0f), Vector2.One * 1f * scale, Credits.Role.RolesColor, 2f, Credits.BorderColor);
       }
 
       public override float Height(float scale = 1f)
@@ -378,8 +358,8 @@ namespace Celeste
 
     private class Thanks : Credits.CreditNode
     {
-      public readonly Color TitleColor = Color.get_White();
-      public readonly Color CreditsColor = Color.op_Multiply(Color.get_White(), 0.8f);
+      public readonly Color TitleColor = Color.White;
+      public readonly Color CreditsColor = Color.White * 0.8f;
       private Dictionary<int, Language> languages = new Dictionary<int, Language>();
       public const float TitleScale = 1.5f;
       public const float CreditsScale = 1.25f;
@@ -409,38 +389,23 @@ namespace Celeste
 
       public override void Render(Vector2 position, float alignment = 0.5f, float scale = 1f)
       {
-        ref __Null local1 = ref position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + (float) this.TopPadding * scale;
-        Credits.Font.DrawOutline(Credits.FontSize, this.Title, position.Floor(), new Vector2(alignment, 0.0f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 1.5f), scale), this.TitleColor, 2f, Credits.BorderColor);
-        ref __Null local2 = ref position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 + (float) ((double) Credits.LineHeight * 1.5 + 8.0) * scale;
+        position.Y += (float) this.TopPadding * scale;
+        Font.DrawOutline(FontSize, this.Title, position.Floor(), new Vector2(alignment, 0.0f), Vector2.One * 1.5f * scale, this.TitleColor, 2f, BorderColor);
+        position.Y += (float) ((double) LineHeight * 1.5 + 8.0) * scale;
         for (int key = 0; key < this.Credits.Length; ++key)
         {
-          PixelFont font = Credits.Font;
+          PixelFont font = Font;
           Language language;
           if (this.languages.TryGetValue(key, out language))
             font = language.Font;
-          font.DrawOutline(Credits.FontSize, this.Credits[key], position.Floor(), new Vector2(alignment, 0.0f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 1.25f), scale), this.CreditsColor, 2f, Credits.BorderColor);
-          ref __Null local3 = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local3 = ^(float&) ref local3 + Credits.LineHeight * 1.25f * scale;
+          font.DrawOutline(FontSize, this.Credits[key], position.Floor(), new Vector2(alignment, 0.0f), Vector2.One * 1.25f * scale, this.CreditsColor, 2f, BorderColor);
+          position.Y += LineHeight * 1.25f * scale;
         }
       }
 
       public override float Height(float scale = 1f)
       {
-        return ((float) ((double) Credits.LineHeight * (1.5 + (double) this.Credits.Length * 1.25) + (this.Credits.Length != 0 ? 8.0 : 0.0)) + (float) this.TopPadding) * scale;
+        return ((float) ((double) LineHeight * (1.5 + (double) this.Credits.Length * 1.25) + (this.Credits.Length != 0 ? 8.0 : 0.0)) + (float) this.TopPadding) * scale;
       }
     }
 
@@ -458,24 +423,10 @@ namespace Celeste
       public override void Render(Vector2 position, float alignment = 0.5f, float scale = 1f)
       {
         if (this.Spacing)
-        {
-          ref __Null local = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + 540f;
-        }
+          position.Y += 540f;
         else
-        {
-          ref __Null local = ref position.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) ((double) ActiveFont.LineHeight * 1.5 * (double) scale * 0.5);
-        }
-        ActiveFont.DrawOutline(this.Text, new Vector2(960f, (float) position.Y), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), 1.5f), scale), Color.get_White(), 2f, Credits.BorderColor);
+          position.Y += (float) ((double) ActiveFont.LineHeight * 1.5 * (double) scale * 0.5);
+        ActiveFont.DrawOutline(this.Text, new Vector2(960f, position.Y), new Vector2(0.5f, 0.5f), Vector2.One * 1.5f * scale, Color.White, 2f, Credits.BorderColor);
       }
 
       public override float Height(float scale = 1f)
@@ -516,10 +467,10 @@ namespace Celeste
       public override void Render(Vector2 position, float alignment = 0.5f, float scale = 1f)
       {
         MTexture atla = this.Atlas[this.ImagePath];
-        Vector2 position1 = Vector2.op_Addition(position, Vector2.op_Multiply(new Vector2((float) atla.Width * (0.5f - alignment), (float) atla.Height * 0.5f), scale));
+        Vector2 position1 = position + new Vector2((float) atla.Width * (0.5f - alignment), (float) atla.Height * 0.5f) * scale;
         if (this.ScreenCenter)
-          position1.X = (__Null) 960.0;
-        atla.DrawCentered(position1, Color.get_White(), scale, this.Rotation);
+          position1.X = 960f;
+        atla.DrawCentered(position1, Color.White, scale, this.Rotation);
       }
 
       public override float Height(float scale = 1f)
@@ -544,16 +495,11 @@ namespace Celeste
         foreach (Credits.Image image in this.images)
           num2 += (float) (image.Atlas[image.ImagePath].Width + 32) * scale;
         float num3 = num2 - 32f * scale;
-        Vector2 vector2 = Vector2.op_Subtraction(position, new Vector2(alignment * num3, 0.0f));
+        Vector2 vector2 = position - new Vector2(alignment * num3, 0.0f);
         foreach (Credits.Image image in this.images)
         {
-          image.Render(Vector2.op_Addition(vector2, new Vector2(0.0f, (float) (((double) num1 - (double) image.Height(scale)) / 2.0))), 0.0f, scale);
-          ref __Null local = ref vector2.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) (image.Atlas[image.ImagePath].Width + 32) * scale;
+          image.Render(vector2 + new Vector2(0.0f, (float) (((double) num1 - (double) image.Height(scale)) / 2.0)), 0.0f, scale);
+          vector2.X += (float) (image.Atlas[image.ImagePath].Width + 32) * scale;
         }
       }
 
@@ -589,3 +535,4 @@ namespace Celeste
     }
   }
 }
+

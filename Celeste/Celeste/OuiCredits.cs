@@ -26,33 +26,31 @@ namespace Celeste
 
     public override IEnumerator Enter(Oui from)
     {
-      OuiCredits ouiCredits = this;
       Audio.SetMusic("event:/music/menu/credits", true, true);
-      ouiCredits.Overworld.ShowConfirmUI = false;
-      Credits.BorderColor = Color.get_Black();
-      ouiCredits.credits = new Credits(0.5f, 1f, true, false);
-      ouiCredits.credits.Enabled = false;
-      ouiCredits.Visible = true;
-      ouiCredits.vignetteAlpha = 0.0f;
+      this.Overworld.ShowConfirmUI = false;
+      Credits.BorderColor = Color.Black;
+      this.credits = new Credits(0.5f, 1f, true, false);
+      this.credits.Enabled = false;
+      this.Visible = true;
+      this.vignetteAlpha = 0.0f;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        ouiCredits.Position = Vector2.op_Addition(ouiCredits.offScreen, Vector2.op_Multiply(Vector2.op_Subtraction(ouiCredits.onScreen, ouiCredits.offScreen), Ease.CubeOut(p)));
+        this.Position = this.offScreen + (this.onScreen - this.offScreen) * Ease.CubeOut(p);
         yield return (object) null;
       }
     }
 
     public override IEnumerator Leave(Oui next)
     {
-      OuiCredits ouiCredits = this;
       Audio.Play("event:/ui/main/whoosh_large_out");
-      ouiCredits.Overworld.SetNormalMusic();
-      ouiCredits.Overworld.ShowConfirmUI = true;
+      this.Overworld.SetNormalMusic();
+      this.Overworld.ShowConfirmUI = true;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        ouiCredits.Position = Vector2.op_Addition(ouiCredits.onScreen, Vector2.op_Multiply(Vector2.op_Subtraction(ouiCredits.offScreen, ouiCredits.onScreen), Ease.CubeIn(p)));
+        this.Position = this.onScreen + (this.offScreen - this.onScreen) * Ease.CubeIn(p);
         yield return (object) null;
       }
-      ouiCredits.Visible = false;
+      this.Visible = false;
     }
 
     public override void Update()
@@ -72,8 +70,8 @@ namespace Celeste
     {
       if ((double) this.vignetteAlpha > 0.0)
       {
-        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), this.vignetteAlpha), 0.4f));
-        GFX.Overworld["vignette"].Draw(Vector2.get_Zero(), Vector2.get_Zero(), Color.op_Multiply(Color.get_White(), Ease.CubeInOut(this.vignetteAlpha)), 1f);
+        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * this.vignetteAlpha * 0.4f);
+        GFX.Overworld["vignette"].Draw(Vector2.Zero, Vector2.Zero, Color.White * Ease.CubeInOut(this.vignetteAlpha), 1f);
       }
       if (this.credits == null)
         return;
@@ -81,3 +79,4 @@ namespace Celeste
     }
   }
 }
+

@@ -107,8 +107,8 @@ namespace Monocle
       Vector2 scale,
       Color color)
     {
-      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max((float) scale.X, (float) scale.Y));
-      scale = Vector2.op_Multiply(scale, baseSize / pixelFontSize.Size);
+      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max(scale.X, scale.Y));
+      scale *= baseSize / pixelFontSize.Size;
       pixelFontSize.Draw(character, position, justify, scale, color);
     }
 
@@ -124,17 +124,17 @@ namespace Monocle
       float stroke,
       Color strokeColor)
     {
-      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max((float) scale.X, (float) scale.Y));
-      scale = Vector2.op_Multiply(scale, baseSize / pixelFontSize.Size);
+      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max(scale.X, scale.Y));
+      scale *= baseSize / pixelFontSize.Size;
       pixelFontSize.Draw(text, position, justify, scale, color, edgeDepth, edgeColor, stroke, strokeColor);
     }
 
     public void Draw(float baseSize, string text, Vector2 position, Color color)
     {
-      Vector2 one = Vector2.get_One();
-      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max((float) one.X, (float) one.Y));
-      Vector2.op_Multiply(one, baseSize / pixelFontSize.Size);
-      pixelFontSize.Draw(text, position, Vector2.get_Zero(), Vector2.get_One(), color, 0.0f, Color.get_Transparent(), 0.0f, Color.get_Transparent());
+      Vector2 one = Vector2.One;
+      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max(one.X, one.Y));
+      Vector2 vector2 = one * (baseSize / pixelFontSize.Size);
+      pixelFontSize.Draw(text, position, Vector2.Zero, Vector2.One, color, 0.0f, Color.Transparent, 0.0f, Color.Transparent);
     }
 
     public void Draw(
@@ -145,9 +145,9 @@ namespace Monocle
       Vector2 scale,
       Color color)
     {
-      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max((float) scale.X, (float) scale.Y));
-      scale = Vector2.op_Multiply(scale, baseSize / pixelFontSize.Size);
-      pixelFontSize.Draw(text, position, justify, scale, color, 0.0f, Color.get_Transparent(), 0.0f, Color.get_Transparent());
+      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max(scale.X, scale.Y));
+      scale *= baseSize / pixelFontSize.Size;
+      pixelFontSize.Draw(text, position, justify, scale, color, 0.0f, Color.Transparent, 0.0f, Color.Transparent);
     }
 
     public void DrawOutline(
@@ -160,9 +160,9 @@ namespace Monocle
       float stroke,
       Color strokeColor)
     {
-      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max((float) scale.X, (float) scale.Y));
-      scale = Vector2.op_Multiply(scale, baseSize / pixelFontSize.Size);
-      pixelFontSize.Draw(text, position, justify, scale, color, 0.0f, Color.get_Transparent(), stroke, strokeColor);
+      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max(scale.X, scale.Y));
+      scale *= baseSize / pixelFontSize.Size;
+      pixelFontSize.Draw(text, position, justify, scale, color, 0.0f, Color.Transparent, stroke, strokeColor);
     }
 
     public void DrawEdgeOutline(
@@ -175,10 +175,10 @@ namespace Monocle
       float edgeDepth,
       Color edgeColor,
       float stroke = 0.0f,
-      Color strokeColor = null)
+      Color strokeColor = default (Color))
     {
-      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max((float) scale.X, (float) scale.Y));
-      scale = Vector2.op_Multiply(scale, baseSize / pixelFontSize.Size);
+      PixelFontSize pixelFontSize = this.Get(baseSize * Math.Max(scale.X, scale.Y));
+      scale *= baseSize / pixelFontSize.Size;
       pixelFontSize.Draw(text, position, justify, scale, color, edgeDepth, edgeColor, stroke, strokeColor);
     }
 
@@ -190,3 +190,4 @@ namespace Monocle
     }
   }
 }
+

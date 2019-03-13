@@ -11,10 +11,10 @@ namespace Celeste
 {
   public class FormationBackdrop : Entity
   {
+    public bool Display = false;
     public float Alpha = 1f;
-    public bool Display;
+    private float fade = 0.0f;
     private bool wasDisplayed;
-    private float fade;
 
     public FormationBackdrop()
     {
@@ -47,7 +47,8 @@ namespace Celeste
       Level scene = this.Scene as Level;
       if ((double) this.fade <= 0.0)
         return;
-      Draw.Rect(scene.Camera.Left - 1f, scene.Camera.Top - 1f, 322f, 182f, Color.op_Multiply(Color.op_Multiply(Color.op_Multiply(Color.get_Black(), this.fade), this.Alpha), 0.85f));
+      Draw.Rect(scene.Camera.Left - 1f, scene.Camera.Top - 1f, 322f, 182f, Color.Black * this.fade * this.Alpha * 0.85f);
     }
   }
 }
+

@@ -35,57 +35,39 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS06_Granny cs06Granny = this;
-      cs06Granny.player.StateMachine.State = 11;
-      cs06Granny.player.StateMachine.Locked = true;
-      cs06Granny.player.ForceCameraUpdate = true;
-      if (cs06Granny.index == 0)
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      this.player.ForceCameraUpdate = true;
+      if (this.index == 0)
       {
-        yield return (object) cs06Granny.player.DummyWalkTo(cs06Granny.granny.X - 40f, false, 1f, false);
-        cs06Granny.startX = cs06Granny.player.X;
-        cs06Granny.player.Facing = Facings.Right;
-        cs06Granny.firstLaugh = true;
-        yield return (object) Textbox.Say("ch6_oldlady", new Func<IEnumerator>(cs06Granny.ZoomIn), new Func<IEnumerator>(cs06Granny.Laughs), new Func<IEnumerator>(cs06Granny.StopLaughing), new Func<IEnumerator>(cs06Granny.MaddyWalksRight), new Func<IEnumerator>(cs06Granny.MaddyWalksLeft), new Func<IEnumerator>(cs06Granny.WaitABit), new Func<IEnumerator>(cs06Granny.MaddyTurnsRight));
+        yield return (object) this.player.DummyWalkTo(this.granny.X - 40f, false, 1f, false);
+        this.startX = this.player.X;
+        this.player.Facing = Facings.Right;
+        this.firstLaugh = true;
+        yield return (object) Textbox.Say("ch6_oldlady", new Func<IEnumerator>(this.ZoomIn), new Func<IEnumerator>(this.Laughs), new Func<IEnumerator>(this.StopLaughing), new Func<IEnumerator>(this.MaddyWalksRight), new Func<IEnumerator>(this.MaddyWalksLeft), new Func<IEnumerator>(this.WaitABit), new Func<IEnumerator>(this.MaddyTurnsRight));
       }
-      else if (cs06Granny.index == 1)
+      else if (this.index == 1)
       {
-        yield return (object) cs06Granny.ZoomIn();
-        yield return (object) cs06Granny.player.DummyWalkTo(cs06Granny.granny.X - 20f, false, 1f, false);
-        cs06Granny.player.Facing = Facings.Right;
+        yield return (object) this.ZoomIn();
+        yield return (object) this.player.DummyWalkTo(this.granny.X - 20f, false, 1f, false);
+        this.player.Facing = Facings.Right;
         yield return (object) Textbox.Say("ch6_oldlady_b");
       }
-      else if (cs06Granny.index == 2)
+      else if (this.index == 2)
       {
-        yield return (object) cs06Granny.ZoomIn();
-        yield return (object) cs06Granny.player.DummyWalkTo(cs06Granny.granny.X - 20f, false, 1f, false);
-        cs06Granny.player.Facing = Facings.Right;
+        yield return (object) this.ZoomIn();
+        yield return (object) this.player.DummyWalkTo(this.granny.X - 20f, false, 1f, false);
+        this.player.Facing = Facings.Right;
         yield return (object) Textbox.Say("ch6_oldlady_c");
       }
-      yield return (object) cs06Granny.Level.ZoomBack(0.5f);
-      cs06Granny.EndCutscene(level, true);
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator ZoomIn()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      CS06_Granny cs06Granny = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      Vector2 screenSpaceFocusPoint = Vector2.op_Addition(Vector2.op_Subtraction(Vector2.Lerp(cs06Granny.granny.Position, cs06Granny.player.Position, 0.5f), cs06Granny.Level.Camera.Position), new Vector2(0.0f, -20f));
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) cs06Granny.Level.ZoomTo(screenSpaceFocusPoint, 2f, 0.5f);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      Vector2 center = Vector2.Lerp(this.granny.Position, this.player.Position, 0.5f) - this.Level.Camera.Position + new Vector2(0.0f, -20f);
+      yield return (object) this.Level.ZoomTo(center, 2f, 0.5f);
     }
 
     private IEnumerator Laughs()
@@ -143,3 +125,4 @@ namespace Celeste
     }
   }
 }
+

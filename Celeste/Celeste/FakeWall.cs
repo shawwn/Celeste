@@ -41,7 +41,7 @@ namespace Celeste
     }
 
     public FakeWall(EntityID eid, EntityData data, Vector2 offset, FakeWall.Modes mode)
-      : this(eid, Vector2.op_Addition(data.Position, offset), data.Char("tiletype", '3'), (float) data.Width, (float) data.Height, mode)
+      : this(eid, data.Position + offset, data.Char("tiletype", '3'), (float) data.Width, (float) data.Height, mode)
     {
       this.playRevealWhenTransitionedInto = data.Bool("playTransitionReveal", false);
     }
@@ -56,8 +56,8 @@ namespace Celeste
         Level level = this.SceneAs<Level>();
         Rectangle tileBounds = level.Session.MapData.TileBounds;
         VirtualMap<char> solidsData = level.SolidsData;
-        int x = (int) this.X / 8 - ((Rectangle) ref tileBounds).get_Left();
-        int y = (int) this.Y / 8 - ((Rectangle) ref tileBounds).get_Top();
+        int x = (int) this.X / 8 - tileBounds.Left;
+        int y = (int) this.Y / 8 - tileBounds.Top;
         this.tiles = GFX.FGAutotiler.GenerateOverlay(this.fillTile, x, y, tilesX, tilesY, solidsData).TileGrid;
       }
       else if (this.mode == FakeWall.Modes.Block)
@@ -139,11 +139,12 @@ namespace Celeste
       else
       {
         Player player = this.CollideFirst<Player>();
-        if (player == null || player.StateMachine.State == 9)
-          return;
-        this.SceneAs<Level>().Session.DoNotLoad.Add(this.eid);
-        this.fade = true;
-        Audio.Play("event:/game/general/secret_revealed", this.Center);
+        if (player != null && player.StateMachine.State != 9)
+        {
+          this.SceneAs<Level>().Session.DoNotLoad.Add(this.eid);
+          this.fade = true;
+          Audio.Play("event:/game/general/secret_revealed", this.Center);
+        }
       }
     }
 
@@ -153,62 +154,75 @@ namespace Celeste
       {
         Level scene = this.Scene as Level;
         Rectangle bounds;
-        if (scene.ShakeVector.X < 0.0)
+        int num1;
+        if ((double) scene.ShakeVector.X < 0.0 && (double) scene.Camera.X <= (double) scene.Bounds.Left)
         {
-          double x1 = (double) scene.Camera.X;
+          double x = (double) this.X;
           bounds = scene.Bounds;
-          double left1 = (double) ((Rectangle) ref bounds).get_Left();
-          if (x1 <= left1)
+          double left = (double) bounds.Left;
+          num1 = x <= left ? 1 : 0;
+        }
+        else
+          num1 = 0;
+        if (num1 != 0)
+          this.tiles.RenderAt(this.Position + new Vector2(-3f, 0.0f));
+        int num2;
+        if ((double) scene.ShakeVector.X > 0.0)
+        {
+          double num3 = (double) scene.Camera.X + 320.0;
+          bounds = scene.Bounds;
+          double right1 = (double) bounds.Right;
+          if (num3 >= right1)
           {
-            double x2 = (double) this.X;
+            double num4 = (double) this.X + (double) this.Width;
             bounds = scene.Bounds;
-            double left2 = (double) ((Rectangle) ref bounds).get_Left();
-            if (x2 <= left2)
-              this.tiles.RenderAt(Vector2.op_Addition(this.Position, new Vector2(-3f, 0.0f)));
+            double right2 = (double) bounds.Right;
+            num2 = num4 >= right2 ? 1 : 0;
+            goto label_10;
           }
         }
-        if (scene.ShakeVector.X > 0.0)
-        {
-          double num1 = (double) scene.Camera.X + 320.0;
-          bounds = scene.Bounds;
-          double right1 = (double) ((Rectangle) ref bounds).get_Right();
-          if (num1 >= right1)
-          {
-            double num2 = (double) this.X + (double) this.Width;
-            bounds = scene.Bounds;
-            double right2 = (double) ((Rectangle) ref bounds).get_Right();
-            if (num2 >= right2)
-              this.tiles.RenderAt(Vector2.op_Addition(this.Position, new Vector2(3f, 0.0f)));
-          }
-        }
-        if (scene.ShakeVector.Y < 0.0)
+        num2 = 0;
+label_10:
+        if (num2 != 0)
+          this.tiles.RenderAt(this.Position + new Vector2(3f, 0.0f));
+        int num5;
+        if ((double) scene.ShakeVector.Y < 0.0)
         {
           double y1 = (double) scene.Camera.Y;
           bounds = scene.Bounds;
-          double top1 = (double) ((Rectangle) ref bounds).get_Top();
+          double top1 = (double) bounds.Top;
           if (y1 <= top1)
           {
             double y2 = (double) this.Y;
             bounds = scene.Bounds;
-            double top2 = (double) ((Rectangle) ref bounds).get_Top();
-            if (y2 <= top2)
-              this.tiles.RenderAt(Vector2.op_Addition(this.Position, new Vector2(0.0f, -3f)));
+            double top2 = (double) bounds.Top;
+            num5 = y2 <= top2 ? 1 : 0;
+            goto label_16;
           }
         }
-        if (scene.ShakeVector.Y > 0.0)
+        num5 = 0;
+label_16:
+        if (num5 != 0)
+          this.tiles.RenderAt(this.Position + new Vector2(0.0f, -3f));
+        int num6;
+        if ((double) scene.ShakeVector.Y > 0.0)
         {
-          double num1 = (double) scene.Camera.Y + 180.0;
+          double num3 = (double) scene.Camera.Y + 180.0;
           bounds = scene.Bounds;
-          double bottom1 = (double) ((Rectangle) ref bounds).get_Bottom();
-          if (num1 >= bottom1)
+          double bottom1 = (double) bounds.Bottom;
+          if (num3 >= bottom1)
           {
-            double num2 = (double) this.Y + (double) this.Height;
+            double num4 = (double) this.Y + (double) this.Height;
             bounds = scene.Bounds;
-            double bottom2 = (double) ((Rectangle) ref bounds).get_Bottom();
-            if (num2 >= bottom2)
-              this.tiles.RenderAt(Vector2.op_Addition(this.Position, new Vector2(0.0f, 3f)));
+            double bottom2 = (double) bounds.Bottom;
+            num6 = num4 >= bottom2 ? 1 : 0;
+            goto label_22;
           }
         }
+        num6 = 0;
+label_22:
+        if (num6 != 0)
+          this.tiles.RenderAt(this.Position + new Vector2(0.0f, 3f));
       }
       base.Render();
     }
@@ -220,3 +234,4 @@ namespace Celeste
     }
   }
 }
+

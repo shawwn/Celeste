@@ -160,9 +160,8 @@ namespace Celeste.Pico8
       obj.delay = 15;
       Classic.init_object<Classic.smoke>(new Classic.smoke(), obj.x, obj.y, new int?());
       Classic.spring spring = obj.collide<Classic.spring>(0, -1);
-      if (spring == null)
-        return;
-      Classic.break_spring(spring);
+      if (spring != null)
+        Classic.break_spring(spring);
     }
 
     private static T init_object<T>(T obj, float x, float y, int? tile = null) where T : Classic.ClassicObject
@@ -226,7 +225,7 @@ namespace Celeste.Pico8
       if (Classic.room.X == 7)
         Classic.load_room(0, Classic.room.Y + 1);
       else
-        Classic.load_room(Classic.room.X + 1, (int) Classic.room.Y);
+        Classic.load_room(Classic.room.X + 1, Classic.room.Y);
     }
 
     public static void load_room(int x, int y)
@@ -235,8 +234,8 @@ namespace Celeste.Pico8
       Classic.has_key = false;
       for (int index = 0; index < Classic.objects.Count; ++index)
         Classic.objects[index] = (Classic.ClassicObject) null;
-      Classic.room.X = (__Null) x;
-      Classic.room.Y = (__Null) y;
+      Classic.room.X = x;
+      Classic.room.Y = y;
       for (int index1 = 0; index1 <= 15; ++index1)
       {
         for (int index2 = 0; index2 <= 15; ++index2)
@@ -288,10 +287,7 @@ namespace Celeste.Pico8
                 }
               }
               if (classicObject != null)
-              {
                 Classic.init_object<Classic.ClassicObject>(classicObject, (float) (index1 * 8), (float) (index2 * 8), new int?(num));
-                break;
-              }
               break;
           }
         }
@@ -337,7 +333,7 @@ namespace Celeste.Pico8
           if (Classic.delay_restart <= 0)
           {
             Classic.will_restart = true;
-            Classic.load_room((int) Classic.room.X, (int) Classic.room.Y);
+            Classic.load_room(Classic.room.X, Classic.room.Y);
           }
         }
         int count = Classic.objects.Count;
@@ -346,7 +342,7 @@ namespace Celeste.Pico8
           Classic.ClassicObject classicObject = Classic.objects[index];
           if (classicObject != null)
           {
-            classicObject.move((float) classicObject.spd.X, (float) classicObject.spd.Y);
+            classicObject.move(classicObject.spd.X, classicObject.spd.Y);
             classicObject.update();
           }
         }
@@ -361,12 +357,12 @@ namespace Celeste.Pico8
           Classic.start_game = true;
           Classic.E.sfx(38);
         }
-        if (!Classic.start_game)
-          return;
-        --Classic.start_game_flash;
-        if (Classic.start_game_flash > -30)
-          return;
-        Classic.begin_game();
+        if (Classic.start_game)
+        {
+          --Classic.start_game_flash;
+          if (Classic.start_game_flash <= -30)
+            Classic.begin_game();
+        }
       }
     }
 
@@ -443,8 +439,8 @@ namespace Celeste.Pico8
       for (int index = Classic.dead_particles.Count - 1; index >= 0; --index)
       {
         Classic.DeadParticle deadParticle = Classic.dead_particles[index];
-        deadParticle.x += (float) deadParticle.spd.X;
-        deadParticle.y += (float) deadParticle.spd.Y;
+        deadParticle.x += deadParticle.spd.X;
+        deadParticle.y += deadParticle.spd.Y;
         --deadParticle.t;
         if (deadParticle.t <= 0)
           Classic.dead_particles.RemoveAt(index);
@@ -467,11 +463,12 @@ namespace Celeste.Pico8
           break;
         }
       }
-      if (classicObject1 == null)
-        return;
-      float x2 = Classic.E.min(24f, 40f - Classic.E.abs((float) ((double) classicObject1.x + 4.0 - 64.0)));
-      Classic.E.rectfill(0.0f, 0.0f, x2, 128f, 0.0f);
-      Classic.E.rectfill(128f - x2, 0.0f, 128f, 128f, 0.0f);
+      if (classicObject1 != null)
+      {
+        float x2 = Classic.E.min(24f, 40f - Classic.E.abs((float) ((double) classicObject1.x + 4.0 - 64.0)));
+        Classic.E.rectfill(0.0f, 0.0f, x2, 128f, 0.0f);
+        Classic.E.rectfill(128f - x2, 0.0f, 128f, 128f, 0.0f);
+      }
     }
 
     private static void draw_object(Classic.ClassicObject obj)
@@ -495,16 +492,12 @@ namespace Celeste.Pico8
 
     private static float appr(float val, float target, float amount)
     {
-      if ((double) val <= (double) target)
-        return Classic.E.min(val + amount, target);
-      return Classic.E.max(val - amount, target);
+      return (double) val > (double) target ? Classic.E.max(val - amount, target) : Classic.E.min(val + amount, target);
     }
 
     private static int sign(float v)
     {
-      if ((double) v > 0.0)
-        return 1;
-      return (double) v >= 0.0 ? 0 : -1;
+      return (double) v > 0.0 ? 1 : ((double) v < 0.0 ? -1 : 0);
     }
 
     private static bool maybe()
@@ -547,7 +540,7 @@ namespace Celeste.Pico8
         for (int y1 = (int) Classic.E.max(0.0f, (float) Classic.E.flr(y / 8f)); (double) y1 <= (double) Classic.E.min(15f, (float) (((double) y + (double) h - 1.0) / 8.0)); ++y1)
         {
           int num = Classic.tile_at(x1, y1);
-          if (num == 17 && (((double) y + (double) h - 1.0) % 8.0 >= 6.0 || (double) y + (double) h == (double) (y1 * 8 + 8)) && (double) yspd >= 0.0 || (num == 27 && (double) y % 8.0 <= 2.0 && (double) yspd <= 0.0 || num == 43 && (double) x % 8.0 <= 2.0 && (double) xspd <= 0.0) || num == 59 && (((double) x + (double) w - 1.0) % 8.0 >= 6.0 || (double) x + (double) w == (double) (x1 * 8 + 8)) && (double) xspd >= 0.0)
+          if (num == 17 && (((double) y + (double) h - 1.0) % 8.0 >= 6.0 || (double) y + (double) h == (double) (y1 * 8 + 8)) && (double) yspd >= 0.0 || num == 27 && (double) y % 8.0 <= 2.0 && (double) yspd <= 0.0 || (num == 43 && (double) x % 8.0 <= 2.0 && (double) xspd <= 0.0 || num == 59 && (((double) x + (double) w - 1.0) % 8.0 >= 6.0 || (double) x + (double) w == (double) (x1 * 8 + 8)) && (double) xspd >= 0.0))
             return true;
         }
       }
@@ -582,16 +575,16 @@ namespace Celeste.Pico8
 
     public class player : Classic.ClassicObject
     {
+      public bool p_jump = false;
+      public bool p_dash = false;
+      public int grace = 0;
+      public int jbuffer = 0;
       public int djump = Classic.max_djump;
+      public int dash_time = 0;
+      public int dash_effect_time = 0;
       public Vector2 dash_target = new Vector2(0.0f, 0.0f);
       public Vector2 dash_accel = new Vector2(0.0f, 0.0f);
-      public bool p_jump;
-      public bool p_dash;
-      public int grace;
-      public int jbuffer;
-      public int dash_time;
-      public int dash_effect_time;
-      public float spr_off;
+      public float spr_off = 0.0f;
       public bool was_on_ground;
       public Classic.player_hair hair;
 
@@ -606,7 +599,7 @@ namespace Celeste.Pico8
         if (Classic.pause_player)
           return;
         int ox = Classic.E.btn(Classic.k_right) ? 1 : (Classic.E.btn(Classic.k_left) ? -1 : 0);
-        if (Classic.spikes_at(this.x + (float) this.hitbox.X, this.y + (float) this.hitbox.Y, (int) this.hitbox.Width, (int) this.hitbox.Height, (float) this.spd.X, (float) this.spd.Y))
+        if (Classic.spikes_at(this.x + (float) this.hitbox.X, this.y + (float) this.hitbox.Y, this.hitbox.Width, this.hitbox.Height, this.spd.X, this.spd.Y))
           Classic.kill_player(this);
         if ((double) this.y > 128.0)
           Classic.kill_player(this);
@@ -614,13 +607,13 @@ namespace Celeste.Pico8
         bool flag2 = this.is_ice(0, 1);
         if (flag1 && !this.was_on_ground)
           Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y + 4f, new int?());
-        int num1 = !Classic.E.btn(Classic.k_jump) ? 0 : (!this.p_jump ? 1 : 0);
+        bool flag3 = Classic.E.btn(Classic.k_jump) && !this.p_jump;
         this.p_jump = Classic.E.btn(Classic.k_jump);
-        if (num1 != 0)
+        if (flag3)
           this.jbuffer = 4;
         else if (this.jbuffer > 0)
           --this.jbuffer;
-        bool flag3 = Classic.E.btn(Classic.k_dash) && !this.p_dash;
+        bool flag4 = Classic.E.btn(Classic.k_dash) && !this.p_dash;
         this.p_dash = Classic.E.btn(Classic.k_dash);
         if (flag1)
         {
@@ -638,12 +631,12 @@ namespace Celeste.Pico8
         {
           Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y, new int?());
           --this.dash_time;
-          this.spd.X = (__Null) (double) Classic.appr((float) this.spd.X, (float) this.dash_target.X, (float) this.dash_accel.X);
-          this.spd.Y = (__Null) (double) Classic.appr((float) this.spd.Y, (float) this.dash_target.Y, (float) this.dash_accel.Y);
+          this.spd.X = Classic.appr(this.spd.X, this.dash_target.X, this.dash_accel.X);
+          this.spd.Y = Classic.appr(this.spd.Y, this.dash_target.Y, this.dash_accel.Y);
         }
         else
         {
-          int num2 = 1;
+          int num1 = 1;
           float amount1 = 0.6f;
           float amount2 = 0.15f;
           if (!flag1)
@@ -654,15 +647,15 @@ namespace Celeste.Pico8
             if (ox == (this.flipX ? -1 : 1))
               amount1 = 0.05f;
           }
-          if ((double) Classic.E.abs((float) this.spd.X) > (double) num2)
-            this.spd.X = (__Null) (double) Classic.appr((float) this.spd.X, (float) (Classic.E.sign((float) this.spd.X) * num2), amount2);
+          if ((double) Classic.E.abs(this.spd.X) > (double) num1)
+            this.spd.X = Classic.appr(this.spd.X, (float) (Classic.E.sign(this.spd.X) * num1), amount2);
           else
-            this.spd.X = (__Null) (double) Classic.appr((float) this.spd.X, (float) (ox * num2), amount1);
-          if (this.spd.X != 0.0)
-            this.flipX = this.spd.X < 0.0;
+            this.spd.X = Classic.appr(this.spd.X, (float) (ox * num1), amount1);
+          if ((double) this.spd.X != 0.0)
+            this.flipX = (double) this.spd.X < 0.0;
           float target = 2f;
           float amount3 = 0.21f;
-          if ((double) Classic.E.abs((float) this.spd.Y) <= 0.150000005960464)
+          if ((double) Classic.E.abs(this.spd.Y) <= 0.150000005960464)
             amount3 *= 0.5f;
           if (ox != 0 && this.is_solid(ox, 0) && !this.is_ice(ox, 0))
           {
@@ -671,7 +664,7 @@ namespace Celeste.Pico8
               Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x + (float) (ox * 6), this.y, new int?());
           }
           if (!flag1)
-            this.spd.Y = (__Null) (double) Classic.appr((float) this.spd.Y, target, amount3);
+            this.spd.Y = Classic.appr(this.spd.Y, target, amount3);
           if (this.jbuffer > 0)
           {
             if (this.grace > 0)
@@ -679,85 +672,64 @@ namespace Celeste.Pico8
               Classic.psfx(1);
               this.jbuffer = 0;
               this.grace = 0;
-              this.spd.Y = (__Null) -2.0;
+              this.spd.Y = -2f;
               Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y + 4f, new int?());
             }
             else
             {
-              int num3 = this.is_solid(-3, 0) ? -1 : (this.is_solid(3, 0) ? 1 : 0);
-              if (num3 != 0)
+              int num2 = this.is_solid(-3, 0) ? -1 : (this.is_solid(3, 0) ? 1 : 0);
+              if ((uint) num2 > 0U)
               {
                 Classic.psfx(2);
                 this.jbuffer = 0;
-                this.spd.Y = (__Null) -2.0;
-                this.spd.X = (__Null) (double) (-num3 * (num2 + 1));
-                if (this.is_ice(num3 * 3, 0))
-                  Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x + (float) (num3 * 6), this.y, new int?());
+                this.spd.Y = -2f;
+                this.spd.X = (float) (-num2 * (num1 + 1));
+                if (this.is_ice(num2 * 3, 0))
+                  Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x + (float) (num2 * 6), this.y, new int?());
               }
             }
           }
-          int num4 = 5;
-          float num5 = (float) num4 * 0.7071068f;
-          if (this.djump > 0 & flag3)
+          int num3 = 5;
+          float num4 = (float) num3 * 0.7071068f;
+          if (this.djump > 0 & flag4)
           {
             Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y, new int?());
             --this.djump;
             this.dash_time = 4;
             Classic.has_dashed = true;
             this.dash_effect_time = 10;
-            int num3 = Classic.E.dashDirectionX(this.flipX ? -1 : 1);
-            int num6 = Classic.E.dashDirectionY(this.flipX ? -1 : 1);
-            if (num3 != 0 && num6 != 0)
+            int num2 = Classic.E.dashDirectionX(this.flipX ? -1 : 1);
+            int num5 = Classic.E.dashDirectionY(this.flipX ? -1 : 1);
+            if (num2 != 0 && (uint) num5 > 0U)
             {
-              this.spd.X = (__Null) ((double) num3 * (double) num5);
-              this.spd.Y = (__Null) ((double) num6 * (double) num5);
+              this.spd.X = (float) num2 * num4;
+              this.spd.Y = (float) num5 * num4;
             }
-            else if (num3 != 0)
+            else if ((uint) num2 > 0U)
             {
-              this.spd.X = (__Null) (double) (num3 * num4);
-              this.spd.Y = (__Null) 0.0;
+              this.spd.X = (float) (num2 * num3);
+              this.spd.Y = 0.0f;
             }
             else
             {
-              this.spd.X = (__Null) 0.0;
-              this.spd.Y = (__Null) (double) (num6 * num4);
+              this.spd.X = 0.0f;
+              this.spd.Y = (float) (num5 * num3);
             }
             Classic.psfx(3);
             Classic.freeze = 2;
             Classic.shake = 6;
-            this.dash_target.X = (__Null) (double) (2 * Classic.E.sign((float) this.spd.X));
-            this.dash_target.Y = (__Null) (double) (2 * Classic.E.sign((float) this.spd.Y));
-            this.dash_accel.X = (__Null) 1.5;
-            this.dash_accel.Y = (__Null) 1.5;
-            if (this.spd.Y < 0.0)
-            {
-              ref __Null local = ref this.dash_target.Y;
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              ^(float&) ref local = ^(float&) ref local * 0.75f;
-            }
-            if (this.spd.Y != 0.0)
-            {
-              ref __Null local = ref this.dash_accel.X;
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              ^(float&) ref local = ^(float&) ref local * 0.7071068f;
-            }
-            if (this.spd.X != 0.0)
-            {
-              ref __Null local = ref this.dash_accel.Y;
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              ^(float&) ref local = ^(float&) ref local * 0.7071068f;
-            }
+            this.dash_target.X = (float) (2 * Classic.E.sign(this.spd.X));
+            this.dash_target.Y = (float) (2 * Classic.E.sign(this.spd.Y));
+            this.dash_accel.X = 1.5f;
+            this.dash_accel.Y = 1.5f;
+            if ((double) this.spd.Y < 0.0)
+              this.dash_target.Y *= 0.75f;
+            if ((double) this.spd.Y != 0.0)
+              this.dash_accel.X *= 0.7071068f;
+            if ((double) this.spd.X != 0.0)
+              this.dash_accel.Y *= 0.7071068f;
           }
-          else if (flag3 && this.djump <= 0)
+          else if (flag4 && this.djump <= 0)
           {
             Classic.psfx(9);
             Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y, new int?());
@@ -775,7 +747,7 @@ namespace Celeste.Pico8
           this.spr = 6f;
         else if (Classic.E.btn(Classic.k_up))
           this.spr = 7f;
-        else if (this.spd.X == 0.0 || !Classic.E.btn(Classic.k_left) && !Classic.E.btn(Classic.k_right))
+        else if ((double) this.spd.X == 0.0 || !Classic.E.btn(Classic.k_left) && !Classic.E.btn(Classic.k_right))
           this.spr = 1f;
         else
           this.spr = (float) (1.0 + (double) this.spr_off % 4.0);
@@ -789,7 +761,7 @@ namespace Celeste.Pico8
         if ((double) this.x < -1.0 || (double) this.x > 121.0)
         {
           this.x = Classic.clamp(this.x, -1f, 121f);
-          this.spd.X = (__Null) 0.0;
+          this.spd.X = 0.0f;
         }
         this.hair.draw_hair((Classic.ClassicObject) this, this.flipX ? -1 : 1, this.djump);
         Classic.draw_player((Classic.ClassicObject) this, this.djump);
@@ -827,14 +799,13 @@ namespace Celeste.Pico8
             break;
         }
         int num2 = num1;
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(obj.x + 4f - (float) (facing * 2), obj.y + (Classic.E.btn(Classic.k_down) ? 4f : 3f));
+        Vector2 vector2 = new Vector2(obj.x + 4f - (float) (facing * 2), obj.y + (Classic.E.btn(Classic.k_down) ? 4f : 3f));
         foreach (Classic.player_hair.node node in this.hair)
         {
-          node.x += (float) ((vector2.X - (double) node.x) / 1.5);
-          node.y += (float) ((vector2.Y + 0.5 - (double) node.y) / 1.5);
+          node.x += (float) (((double) vector2.X - (double) node.x) / 1.5);
+          node.y += (float) (((double) vector2.Y + 0.5 - (double) node.y) / 1.5);
           Classic.E.circfill(node.x, node.y, node.size, (float) num2);
-          ((Vector2) ref vector2).\u002Ector(node.x, node.y);
+          vector2 = new Vector2(node.x, node.y);
         }
       }
 
@@ -858,7 +829,7 @@ namespace Celeste.Pico8
         this.spr = 3f;
         this.target = new Vector2(this.x, this.y);
         this.y = 128f;
-        this.spd.Y = (__Null) -4.0;
+        this.spd.Y = -4f;
         this.state = 0;
         this.delay = 0;
         this.solids = false;
@@ -870,27 +841,22 @@ namespace Celeste.Pico8
       {
         if (this.state == 0)
         {
-          if ((double) this.y >= this.target.Y + 16.0)
+          if ((double) this.y >= (double) this.target.Y + 16.0)
             return;
           this.state = 1;
           this.delay = 3;
         }
         else if (this.state == 1)
         {
-          ref __Null local = ref this.spd.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + 0.5f;
-          if (this.spd.Y > 0.0 && this.delay > 0)
+          this.spd.Y += 0.5f;
+          if ((double) this.spd.Y > 0.0 && this.delay > 0)
           {
-            this.spd.Y = (__Null) 0.0;
+            this.spd.Y = 0.0f;
             --this.delay;
           }
-          if (this.spd.Y <= 0.0 || (double) this.y <= this.target.Y)
+          if ((double) this.spd.Y <= 0.0 || (double) this.y <= (double) this.target.Y)
             return;
-          this.y = (float) this.target.Y;
+          this.y = this.target.Y;
           this.spd = new Vector2(0.0f, 0.0f);
           this.state = 2;
           this.delay = 5;
@@ -904,10 +870,11 @@ namespace Celeste.Pico8
             return;
           --this.delay;
           this.spr = 6f;
-          if (this.delay >= 0)
-            return;
-          Classic.destroy_object((Classic.ClassicObject) this);
-          Classic.init_object<Classic.player>(new Classic.player(), this.x, this.y, new int?()).hair = this.hair;
+          if (this.delay < 0)
+          {
+            Classic.destroy_object((Classic.ClassicObject) this);
+            Classic.init_object<Classic.player>(new Classic.player(), this.x, this.y, new int?()).hair = this.hair;
+          }
         }
       }
 
@@ -920,9 +887,9 @@ namespace Celeste.Pico8
 
     public class spring : Classic.ClassicObject
     {
-      public int hide_in;
-      private int hide_for;
-      private int delay;
+      public int hide_in = 0;
+      private int hide_for = 0;
+      private int delay = 0;
 
       public override void update()
       {
@@ -938,17 +905,12 @@ namespace Celeste.Pico8
         else if ((double) this.spr == 18.0)
         {
           Classic.player player = this.collide<Classic.player>(0, 0);
-          if (player != null && player.spd.Y >= 0.0)
+          if (player != null && (double) player.spd.Y >= 0.0)
           {
             this.spr = 19f;
             player.y = this.y - 4f;
-            ref __Null local = ref player.spd.X;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local * 0.2f;
-            player.spd.Y = (__Null) -3.0;
+            player.spd.X *= 0.2f;
+            player.spd.Y = -3f;
             player.djump = Classic.max_djump;
             this.delay = 10;
             Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y, new int?());
@@ -967,10 +929,11 @@ namespace Celeste.Pico8
         if (this.hide_in <= 0)
           return;
         --this.hide_in;
-        if (this.hide_in > 0)
-          return;
-        this.hide_for = 60;
-        this.spr = 0.0f;
+        if (this.hide_in <= 0)
+        {
+          this.hide_for = 60;
+          this.spr = 0.0f;
+        }
       }
     }
 
@@ -1024,9 +987,9 @@ namespace Celeste.Pico8
 
     public class fall_floor : Classic.ClassicObject
     {
+      public int state = 0;
       public bool solid = true;
-      public int state;
-      public int delay;
+      public int delay = 0;
 
       public override void update()
       {
@@ -1050,12 +1013,13 @@ namespace Celeste.Pico8
           if (this.state != 2)
             return;
           --this.delay;
-          if (this.delay > 0 || this.check<Classic.player>(0, 0))
-            return;
-          Classic.psfx(7);
-          this.state = 0;
-          this.collideable = true;
-          Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y, new int?());
+          if (this.delay <= 0 && !this.check<Classic.player>(0, 0))
+          {
+            Classic.psfx(7);
+            this.state = 0;
+            this.collideable = true;
+            Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y, new int?());
+          }
         }
       }
 
@@ -1075,8 +1039,8 @@ namespace Celeste.Pico8
       public override void init()
       {
         this.spr = 29f;
-        this.spd.Y = (__Null) -0.100000001490116;
-        this.spd.X = (__Null) (0.300000011920929 + (double) Classic.E.rnd(0.2f));
+        this.spd.Y = -0.1f;
+        this.spd.X = 0.3f + Classic.E.rnd(0.2f);
         this.x += Classic.E.rnd(2f) - 1f;
         this.y += Classic.E.rnd(2f) - 1f;
         this.flipX = Classic.maybe();
@@ -1125,10 +1089,10 @@ namespace Celeste.Pico8
 
     public class fly_fruit : Classic.ClassicObject
     {
+      private bool fly = false;
       private float step = 0.5f;
       private float sfx_delay = 8f;
       private float start;
-      private bool fly;
 
       public override void init()
       {
@@ -1149,7 +1113,7 @@ namespace Celeste.Pico8
               Classic.E.sfx(14);
             }
           }
-          this.spd.Y = (__Null) (double) Classic.appr((float) this.spd.Y, -3.5f, 0.25f);
+          this.spd.Y = Classic.appr(this.spd.Y, -3.5f, 0.25f);
           if ((double) this.y < -16.0)
             Classic.destroy_object((Classic.ClassicObject) this);
         }
@@ -1158,7 +1122,7 @@ namespace Celeste.Pico8
           if (Classic.has_dashed)
             this.fly = true;
           this.step += 0.05f;
-          this.spd.Y = (__Null) ((double) Classic.E.sin(this.step) * 0.5);
+          this.spd.Y = Classic.E.sin(this.step) * 0.5f;
         }
         Classic.player player = this.collide<Classic.player>(0, 0);
         if (player == null)
@@ -1195,7 +1159,7 @@ namespace Celeste.Pico8
 
       public override void init()
       {
-        this.spd.Y = (__Null) -0.25;
+        this.spd.Y = -0.25f;
         this.duration = 30;
         this.x -= 2f;
         this.y -= 4f;
@@ -1226,8 +1190,8 @@ namespace Celeste.Pico8
         Classic.player player = this.collide<Classic.player>(0, 0);
         if (player != null && player.dash_effect_time > 0)
         {
-          player.spd.X = (__Null) ((double) -Classic.sign((float) player.spd.X) * 1.5);
-          player.spd.Y = (__Null) -1.5;
+          player.spd.X = (float) -Classic.sign(player.spd.X) * 1.5f;
+          player.spd.Y = -1.5f;
           player.dash_time = -1;
           Classic.sfx_timer = 20;
           Classic.E.sfx(16);
@@ -1286,12 +1250,13 @@ namespace Celeste.Pico8
           return;
         --this.timer;
         this.x = this.start - 1f + Classic.E.rnd(3f);
-        if ((double) this.timer > 0.0)
-          return;
-        Classic.sfx_timer = 20;
-        Classic.E.sfx(16);
-        Classic.init_object<Classic.fruit>(new Classic.fruit(), this.x, this.y - 4f, new int?());
-        Classic.destroy_object((Classic.ClassicObject) this);
+        if ((double) this.timer <= 0.0)
+        {
+          Classic.sfx_timer = 20;
+          Classic.E.sfx(16);
+          Classic.init_object<Classic.fruit>(new Classic.fruit(), this.x, this.y - 4f, new int?());
+          Classic.destroy_object((Classic.ClassicObject) this);
+        }
       }
     }
 
@@ -1304,19 +1269,23 @@ namespace Celeste.Pico8
       {
         this.x -= 4f;
         this.solids = false;
-        this.hitbox.Width = (__Null) 16;
+        this.hitbox.Width = 16;
         this.last = this.x;
       }
 
       public override void update()
       {
-        this.spd.X = (__Null) ((double) this.dir * 0.649999976158142);
+        this.spd.X = this.dir * 0.65f;
         if ((double) this.x < -16.0)
           this.x = 128f;
         if ((double) this.x > 128.0)
           this.x = -16f;
         if (!this.check<Classic.player>(0, 0))
-          this.collide<Classic.player>(0, -1)?.move_x((int) ((double) this.x - (double) this.last), 1);
+        {
+          Classic.player player = this.collide<Classic.player>(0, -1);
+          if (player != null)
+            player.move_x((int) ((double) this.x - (double) this.last), 1);
+        }
         this.last = this.x;
       }
 
@@ -1329,8 +1298,8 @@ namespace Celeste.Pico8
 
     public class message : Classic.ClassicObject
     {
-      private float last;
-      private float index;
+      private float last = 0.0f;
+      private float index = 0.0f;
 
       public override void draw()
       {
@@ -1346,30 +1315,19 @@ namespace Celeste.Pico8
               Classic.E.sfx(35);
             }
           }
-          Vector2 vector2;
-          ((Vector2) ref vector2).\u002Ector(8f, 96f);
+          Vector2 vector2 = new Vector2(8f, 96f);
           for (int index = 0; (double) index < (double) this.index; ++index)
           {
             if (str[index] != '#')
             {
-              Classic.E.rectfill((float) (vector2.X - 2.0), (float) (vector2.Y - 2.0), (float) (vector2.X + 7.0), (float) (vector2.Y + 6.0), 7f);
-              Classic.E.print(str[index].ToString() ?? "", (float) vector2.X, (float) vector2.Y, 0.0f);
-              ref __Null local = ref vector2.X;
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              ^(float&) ref local = ^(float&) ref local + 5f;
+              Classic.E.rectfill(vector2.X - 2f, vector2.Y - 2f, vector2.X + 7f, vector2.Y + 6f, 7f);
+              Classic.E.print(str[index].ToString() ?? "", vector2.X, vector2.Y, 0.0f);
+              vector2.X += 5f;
             }
             else
             {
-              vector2.X = (__Null) 8.0;
-              ref __Null local = ref vector2.Y;
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              // ISSUE: cast to a reference type
-              // ISSUE: explicit reference operation
-              ^(float&) ref local = ^(float&) ref local + 7f;
+              vector2.X = 8f;
+              vector2.Y += 7f;
             }
           }
         }
@@ -1383,13 +1341,13 @@ namespace Celeste.Pico8
 
     public class big_chest : Classic.ClassicObject
     {
-      private int state;
+      private int state = 0;
       private float timer;
       private List<Classic.big_chest.particle> particles;
 
       public override void init()
       {
-        this.hitbox.Width = (__Null) 16;
+        this.hitbox.Width = 16;
       }
 
       public override void draw()
@@ -1402,8 +1360,8 @@ namespace Celeste.Pico8
             Classic.E.music(-1, 500, 7);
             Classic.E.sfx(37);
             Classic.pause_player = true;
-            player.spd.X = (__Null) 0.0;
-            player.spd.Y = (__Null) 0.0;
+            player.spd.X = 0.0f;
+            player.spd.Y = 0.0f;
             this.state = 1;
             Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x, this.y, new int?());
             Classic.init_object<Classic.smoke>(new Classic.smoke(), this.x + 8f, this.y, new int?());
@@ -1458,15 +1416,15 @@ namespace Celeste.Pico8
     {
       public override void init()
       {
-        this.spd.Y = (__Null) -4.0;
+        this.spd.Y = -4f;
         this.solids = false;
       }
 
       public override void draw()
       {
-        this.spd.Y = (__Null) (double) Classic.appr((float) this.spd.Y, 0.0f, 0.5f);
+        this.spd.Y = Classic.appr(this.spd.Y, 0.0f, 0.5f);
         Classic.player player = this.collide<Classic.player>(0, 0);
-        if (this.spd.Y == 0.0 && player != null)
+        if ((double) this.spd.Y == 0.0 && player != null)
         {
           Classic.music_timer = 45;
           Classic.E.sfx(51);
@@ -1485,8 +1443,8 @@ namespace Celeste.Pico8
 
     public class flag : Classic.ClassicObject
     {
-      private float score;
-      private bool show;
+      private float score = 0.0f;
+      private bool show = false;
 
       public override void init()
       {
@@ -1582,9 +1540,9 @@ namespace Celeste.Pico8
 
       public bool is_solid(int ox, int oy)
       {
-        if (oy > 0 && !this.check<Classic.platform>(ox, 0) && this.check<Classic.platform>(ox, oy) || (Classic.solid_at(this.x + (float) this.hitbox.X + (float) ox, this.y + (float) this.hitbox.Y + (float) oy, (float) this.hitbox.Width, (float) this.hitbox.Height) || this.check<Classic.fall_floor>(ox, oy)))
+        if (oy > 0 && !this.check<Classic.platform>(ox, 0) && this.check<Classic.platform>(ox, oy))
           return true;
-        return this.check<Classic.fake_wall>(ox, oy);
+        return Classic.solid_at(this.x + (float) this.hitbox.X + (float) ox, this.y + (float) this.hitbox.Y + (float) oy, (float) this.hitbox.Width, (float) this.hitbox.Height) || this.check<Classic.fall_floor>(ox, oy) || this.check<Classic.fake_wall>(ox, oy);
       }
 
       public bool is_ice(int ox, int oy)
@@ -1597,7 +1555,7 @@ namespace Celeste.Pico8
         Type type = typeof (T);
         foreach (Classic.ClassicObject classicObject in Classic.objects)
         {
-          if (classicObject != null && classicObject.GetType() == type && (classicObject != this && classicObject.collideable) && ((double) classicObject.x + (double) (float) classicObject.hitbox.X + (double) (float) classicObject.hitbox.Width > (double) this.x + (double) (float) this.hitbox.X + (double) ox && (double) classicObject.y + (double) (float) classicObject.hitbox.Y + (double) (float) classicObject.hitbox.Height > (double) this.y + (double) (float) this.hitbox.Y + (double) oy && ((double) classicObject.x + (double) (float) classicObject.hitbox.X < (double) this.x + (double) (float) this.hitbox.X + (double) (float) this.hitbox.Width + (double) ox && (double) classicObject.y + (double) (float) classicObject.hitbox.Y < (double) this.y + (double) (float) this.hitbox.Y + (double) (float) this.hitbox.Height + (double) oy)))
+          if (classicObject != null && classicObject.GetType() == type && (classicObject != this && classicObject.collideable) && ((double) classicObject.x + (double) classicObject.hitbox.X + (double) classicObject.hitbox.Width > (double) this.x + (double) this.hitbox.X + (double) ox && (double) classicObject.y + (double) classicObject.hitbox.Y + (double) classicObject.hitbox.Height > (double) this.y + (double) this.hitbox.Y + (double) oy && (double) classicObject.x + (double) classicObject.hitbox.X < (double) this.x + (double) this.hitbox.X + (double) this.hitbox.Width + (double) ox) && (double) classicObject.y + (double) classicObject.hitbox.Y < (double) this.y + (double) this.hitbox.Y + (double) this.hitbox.Height + (double) oy)
             return classicObject as T;
         }
         return default (T);
@@ -1610,33 +1568,13 @@ namespace Celeste.Pico8
 
       public void move(float ox, float oy)
       {
-        ref __Null local1 = ref this.rem.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + ox;
-        int amount1 = Classic.E.flr((float) (this.rem.X + 0.5));
-        ref __Null local2 = ref this.rem.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 - (float) amount1;
+        this.rem.X += ox;
+        int amount1 = Classic.E.flr(this.rem.X + 0.5f);
+        this.rem.X -= (float) amount1;
         this.move_x(amount1, 0);
-        ref __Null local3 = ref this.rem.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local3 = ^(float&) ref local3 + oy;
-        int amount2 = Classic.E.flr((float) (this.rem.Y + 0.5));
-        ref __Null local4 = ref this.rem.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local4 = ^(float&) ref local4 - (float) amount2;
+        this.rem.Y += oy;
+        int amount2 = Classic.E.flr(this.rem.Y + 0.5f);
+        this.rem.Y -= (float) amount2;
         this.move_y(amount2);
       }
 
@@ -1653,8 +1591,8 @@ namespace Celeste.Pico8
             }
             else
             {
-              this.spd.X = (__Null) 0.0;
-              this.rem.X = (__Null) 0.0;
+              this.spd.X = 0.0f;
+              this.rem.X = 0.0f;
               break;
             }
           }
@@ -1676,8 +1614,8 @@ namespace Celeste.Pico8
             }
             else
             {
-              this.spd.Y = (__Null) 0.0;
-              this.rem.Y = (__Null) 0.0;
+              this.spd.Y = 0.0f;
+              this.rem.Y = 0.0f;
               break;
             }
           }
@@ -1688,3 +1626,4 @@ namespace Celeste.Pico8
     }
   }
 }
+

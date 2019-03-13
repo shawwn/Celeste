@@ -50,7 +50,7 @@ namespace Monocle
 
     private void CalculateOrigin()
     {
-      this.Origin = Vector2.op_Multiply(this.font.MeasureString(this.Text), this.justify).Floor();
+      this.Origin = (this.font.MeasureString(this.Text) * this.justify).Floor();
     }
 
     public override void Update()
@@ -125,7 +125,7 @@ namespace Monocle
     {
       get
       {
-        return (float) this.font.MeasureString(this.Text).X;
+        return this.font.MeasureString(this.Text).X;
       }
     }
 
@@ -133,7 +133,7 @@ namespace Monocle
     {
       get
       {
-        return (float) this.font.MeasureString(this.Text).Y;
+        return this.font.MeasureString(this.Text).Y;
       }
     }
 
@@ -149,3 +149,4 @@ namespace Monocle
     }
   }
 }
+

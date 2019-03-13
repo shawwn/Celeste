@@ -34,53 +34,54 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS02_Mirror cs02Mirror = this;
-      cs02Mirror.Add((Component) (cs02Mirror.sfx = new SoundSource()));
-      cs02Mirror.sfx.Position = cs02Mirror.mirror.Center;
-      cs02Mirror.sfx.Play("event:/music/lvl2/dreamblock_sting_pt1", (string) null, 0.0f);
-      cs02Mirror.direction = Math.Sign(cs02Mirror.player.X - cs02Mirror.mirror.X);
-      cs02Mirror.player.StateMachine.State = 11;
-      cs02Mirror.playerEndX = (float) (8 * cs02Mirror.direction);
+      this.Add((Component) (this.sfx = new SoundSource()));
+      this.sfx.Position = this.mirror.Center;
+      this.sfx.Play("event:/music/lvl2/dreamblock_sting_pt1", (string) null, 0.0f);
+      this.direction = Math.Sign(this.player.X - this.mirror.X);
+      this.player.StateMachine.State = 11;
+      this.playerEndX = (float) (8 * this.direction);
       yield return (object) 1f;
-      cs02Mirror.player.Facing = (Facings) -cs02Mirror.direction;
+      this.player.Facing = (Facings) -this.direction;
       yield return (object) 0.4f;
-      yield return (object) cs02Mirror.player.DummyRunTo(cs02Mirror.mirror.X + cs02Mirror.playerEndX, false);
+      yield return (object) this.player.DummyRunTo(this.mirror.X + this.playerEndX, false);
       yield return (object) 0.5f;
-      yield return (object) level.ZoomTo(Vector2.op_Subtraction(Vector2.op_Subtraction(cs02Mirror.mirror.Position, level.Camera.Position), Vector2.op_Multiply(Vector2.get_UnitY(), 24f)), 2f, 1f);
+      yield return (object) level.ZoomTo(this.mirror.Position - level.Camera.Position - Vector2.UnitY * 24f, 2f, 1f);
       yield return (object) 0.5f;
-      yield return (object) cs02Mirror.mirror.BreakRoutine(cs02Mirror.direction);
-      cs02Mirror.player.DummyAutoAnimate = false;
-      cs02Mirror.player.Sprite.Play("lookUp", false, false);
+      yield return (object) this.mirror.BreakRoutine(this.direction);
+      this.player.DummyAutoAnimate = false;
+      this.player.Sprite.Play("lookUp", false, false);
       Vector2 from = level.Camera.Position;
-      Vector2 to = Vector2.op_Addition(level.Camera.Position, new Vector2(0.0f, -80f));
+      Vector2 to = level.Camera.Position + new Vector2(0.0f, -80f);
       for (float ease = 0.0f; (double) ease < 1.0; ease += Engine.DeltaTime * 1.2f)
       {
-        level.Camera.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), Ease.CubeInOut(ease)));
+        level.Camera.Position = from + (to - from) * Ease.CubeInOut(ease);
         yield return (object) null;
       }
-      cs02Mirror.Add((Component) new Coroutine(cs02Mirror.ZoomBack(), true));
-      List<Entity>.Enumerator enumerator = cs02Mirror.Scene.Tracker.GetEntities<DreamBlock>().GetEnumerator();
+      this.Add((Component) new Coroutine(this.ZoomBack(), true));
+      List<Entity>.Enumerator enumerator = this.Scene.Tracker.GetEntities<DreamBlock>().GetEnumerator();
       try
       {
         if (enumerator.MoveNext())
-          yield return (object) ((DreamBlock) enumerator.Current).Activate();
+        {
+          DreamBlock block = (DreamBlock) enumerator.Current;
+          yield return (object) block.Activate();
+        }
       }
       finally
       {
         enumerator.Dispose();
       }
       enumerator = new List<Entity>.Enumerator();
-      from = (Vector2) null;
-      to = (Vector2) null;
+      from = new Vector2();
+      to = new Vector2();
       yield return (object) 0.5f;
-      cs02Mirror.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator ZoomBack()
     {
-      CS02_Mirror cs02Mirror = this;
       yield return (object) 1.2f;
-      yield return (object) cs02Mirror.Level.ZoomBack(3f);
+      yield return (object) this.Level.ZoomBack(3f);
     }
 
     public override void OnEnd(Level level)
@@ -91,9 +92,9 @@ namespace Celeste
       {
         entity1.StateMachine.State = 0;
         entity1.DummyAutoAnimate = true;
-        entity1.Speed = Vector2.get_Zero();
+        entity1.Speed = Vector2.Zero;
         entity1.X = this.mirror.X + this.playerEndX;
-        entity1.Facing = this.direction == 0 ? Facings.Right : (Facings) -this.direction;
+        entity1.Facing = (uint) this.direction <= 0U ? Facings.Right : (Facings) -this.direction;
       }
       foreach (DreamBlock entity2 in this.Scene.Tracker.GetEntities<DreamBlock>())
         entity2.ActivateNoRoutine();
@@ -104,3 +105,4 @@ namespace Celeste
     }
   }
 }
+

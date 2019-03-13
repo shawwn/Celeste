@@ -40,23 +40,23 @@ namespace Celeste
       this.wiggler = Wiggler.Create(2.5f, 1.2f, (Action<float>) (v => this.lantern.Rotation = (float) ((double) v * (double) this.mult * (Math.PI / 180.0) * 30.0)), false, false);
       this.wiggler.StartZero = true;
       this.Add((Component) this.wiggler);
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 0.95f, 32, 64)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 0.95f, 32, 64)));
       this.Add((Component) (this.bloom = new BloomPoint(0.8f, 8f)));
       this.Add((Component) (this.sfx = new SoundSource()));
     }
 
     public ResortLantern(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
     public override void Awake(Scene scene)
     {
       base.Awake(scene);
-      if (!this.CollideCheck<Solid>(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), 8f))))
+      if (!this.CollideCheck<Solid>(this.Position + Vector2.UnitX * 8f))
         return;
-      this.holder.Scale.X = (__Null) -1.0;
-      this.lantern.Scale.X = (__Null) -1.0;
+      this.holder.Scale.X = -1f;
+      this.lantern.Scale.X = -1f;
       this.lantern.X += 2f;
     }
 
@@ -73,7 +73,7 @@ namespace Celeste
     {
       if ((double) this.collideTimer <= 0.0)
       {
-        if (!Vector2.op_Inequality(player.Speed, Vector2.get_Zero()))
+        if (!(player.Speed != Vector2.Zero))
           return;
         this.sfx.Play("event:/game/03_resort/lantern_bump", (string) null, 0.0f);
         this.collideTimer = 0.5f;
@@ -85,3 +85,4 @@ namespace Celeste
     }
   }
 }
+

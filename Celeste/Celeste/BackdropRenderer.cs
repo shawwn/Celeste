@@ -13,10 +13,10 @@ namespace Celeste
 {
   public class BackdropRenderer : Monocle.Renderer
   {
-    public Matrix Matrix = Matrix.get_Identity();
+    public Matrix Matrix = Matrix.Identity;
     public List<Backdrop> Backdrops = new List<Backdrop>();
-    public Color FadeColor = Color.get_Black();
-    public float Fade;
+    public float Fade = 0.0f;
+    public Color FadeColor = Color.Black;
     private bool usingSpritebatch;
 
     public override void BeforeRender(Scene scene)
@@ -50,7 +50,7 @@ namespace Celeste
     private void StartSpritebatch(BlendState blendState)
     {
       if (!this.usingSpritebatch)
-        Draw.SpriteBatch.Begin((SpriteSortMode) 0, blendState, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone, (Effect) null, this.Matrix);
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, blendState, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, (Effect) null, this.Matrix);
       this.usingSpritebatch = true;
     }
 
@@ -63,7 +63,7 @@ namespace Celeste
 
     public override void Render(Scene scene)
     {
-      BlendState blendState = (BlendState) BlendState.AlphaBlend;
+      BlendState blendState = BlendState.AlphaBlend;
       foreach (Backdrop backdrop in this.Backdrops)
       {
         if (backdrop.Visible)
@@ -81,7 +81,7 @@ namespace Celeste
         }
       }
       if ((double) this.Fade > 0.0)
-        Draw.Rect(-10f, -10f, 340f, 200f, Color.op_Multiply(this.FadeColor, this.Fade));
+        Draw.Rect(-10f, -10f, 340f, 200f, this.FadeColor * this.Fade);
       this.EndSpritebatch();
     }
 
@@ -95,3 +95,4 @@ namespace Celeste
     }
   }
 }
+

@@ -17,6 +17,7 @@ namespace Celeste
     private MTexture glassbg = GFX.Game["objects/mirror/glassbg"];
     private MTexture glassfg = GFX.Game["objects/mirror/glassfg"];
     private float shineAlpha = 0.5f;
+    private float shineOffset = 0.0f;
     private float reflectionAlpha = 0.7f;
     private bool autoUpdateReflection = true;
     private bool updateShine = true;
@@ -25,7 +26,6 @@ namespace Celeste
     private Sprite breakingGlass;
     private Hitbox hitbox;
     private VirtualRenderTarget mirror;
-    private float shineOffset;
     private Entity reflection;
     private PlayerSprite reflectionSprite;
     private PlayerHair reflectionHair;
@@ -47,7 +47,7 @@ namespace Celeste
       {
         MTexture shard = atlasSubtexture;
         MirrorSurface surface = new MirrorSurface((Action) null);
-        surface.OnRender = (Action) (() => shard.DrawJustified(this.Position, new Vector2(0.5f, 1f), Color.op_Multiply(surface.ReflectionColor, this.smashEnded ? 1f : 0.0f)));
+        surface.OnRender = (Action) (() => shard.DrawJustified(this.Position, new Vector2(0.5f, 1f), surface.ReflectionColor * (this.smashEnded ? 1f : 0.0f)));
         surface.ReflectionOffset = new Vector2((float) (9 + Calc.Random.Range(-4, 4)), (float) (4 + Calc.Random.Range(-2, 2)));
         this.Add((Component) surface);
       }
@@ -68,7 +68,7 @@ namespace Celeste
         this.reflectionSprite = new PlayerSprite(PlayerSpriteMode.Badeline);
         this.reflectionHair = new PlayerHair(this.reflectionSprite);
         this.reflectionHair.Color = BadelineOldsite.HairColor;
-        this.reflectionHair.Border = Color.get_Black();
+        this.reflectionHair.Border = Color.Black;
         this.reflection.Add((Component) this.reflectionHair);
         this.reflection.Add((Component) this.reflectionSprite);
         this.reflectionHair.Start();
@@ -77,9 +77,8 @@ namespace Celeste
           if (this.smashed || !this.CollideCheck<Player>())
             return;
           int currentAnimationFrame = this.reflectionSprite.CurrentAnimationFrame;
-          if ((!(anim == "walk") || currentAnimationFrame != 0 && currentAnimationFrame != 6) && (!(anim == "runSlow") || currentAnimationFrame != 0 && currentAnimationFrame != 6) && (!(anim == "runFast") || currentAnimationFrame != 0 && currentAnimationFrame != 6))
-            return;
-          Audio.Play("event:/char/badeline/footstep", this.Center);
+          if (anim == "walk" && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim == "runSlow" && (currentAnimationFrame == 0 || currentAnimationFrame == 6) || anim == "runFast" && (currentAnimationFrame == 0 || currentAnimationFrame == 6))
+            Audio.Play("event:/char/badeline/footstep", this.Center);
         });
         this.Add((Component) (this.smashCoroutine = new Coroutine(this.InteractRoutine(), true)));
       }
@@ -99,7 +98,7 @@ namespace Celeste
       if (this.reflection == null)
         return;
       this.reflection.Update();
-      this.reflectionHair.Facing = (Facings) Math.Sign((float) this.reflectionSprite.Scale.X);
+      this.reflectionHair.Facing = (Facings) Math.Sign(this.reflectionSprite.Scale.X);
       this.reflectionHair.AfterUpdate();
     }
 
@@ -109,122 +108,116 @@ namespace Celeste
         return;
       Level scene = this.Scene as Level;
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity == null)
-        return;
-      if (this.autoUpdateReflection && this.reflection != null)
+      if (entity != null)
       {
-        this.reflection.Position = Vector2.op_Addition(new Vector2(this.X - entity.X, entity.Y - this.Y), this.breakingGlass.Origin);
-        this.reflectionSprite.Scale.X = (__Null) ((double) -(int) entity.Facing * (double) Math.Abs((float) entity.Sprite.Scale.X));
-        this.reflectionSprite.Scale.Y = entity.Sprite.Scale.Y;
-        if (this.reflectionSprite.CurrentAnimationID != entity.Sprite.CurrentAnimationID && entity.Sprite.CurrentAnimationID != null && this.reflectionSprite.Has(entity.Sprite.CurrentAnimationID))
-          this.reflectionSprite.Play(entity.Sprite.CurrentAnimationID, false, false);
+        if (this.autoUpdateReflection && this.reflection != null)
+        {
+          this.reflection.Position = new Vector2(this.X - entity.X, entity.Y - this.Y) + this.breakingGlass.Origin;
+          this.reflectionSprite.Scale.X = (float) -(int) entity.Facing * Math.Abs(entity.Sprite.Scale.X);
+          this.reflectionSprite.Scale.Y = entity.Sprite.Scale.Y;
+          if (this.reflectionSprite.CurrentAnimationID != entity.Sprite.CurrentAnimationID && entity.Sprite.CurrentAnimationID != null && this.reflectionSprite.Has(entity.Sprite.CurrentAnimationID))
+            this.reflectionSprite.Play(entity.Sprite.CurrentAnimationID, false, false);
+        }
+        if (this.mirror == null)
+          this.mirror = VirtualContent.CreateRenderTarget("dream-mirror", this.glassbg.Width, this.glassbg.Height, false, true, 0);
+        Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.mirror);
+        Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+        if (this.updateShine)
+          this.shineOffset = (float) (this.glassfg.Height - (int) ((double) scene.Camera.Y * 0.800000011920929 % (double) this.glassfg.Height));
+        this.glassbg.Draw(Vector2.Zero);
+        if (this.reflection != null)
+          this.reflection.Render();
+        this.glassfg.Draw(new Vector2(0.0f, this.shineOffset), Vector2.Zero, Color.White * this.shineAlpha);
+        this.glassfg.Draw(new Vector2(0.0f, this.shineOffset - (float) this.glassfg.Height), Vector2.Zero, Color.White * this.shineAlpha);
+        Draw.SpriteBatch.End();
       }
-      if (this.mirror == null)
-        this.mirror = VirtualContent.CreateRenderTarget("dream-mirror", this.glassbg.Width, this.glassbg.Height, false, true, 0);
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.mirror);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone);
-      if (this.updateShine)
-        this.shineOffset = (float) (this.glassfg.Height - (int) ((double) scene.Camera.Y * 0.800000011920929 % (double) this.glassfg.Height));
-      this.glassbg.Draw(Vector2.get_Zero());
-      if (this.reflection != null)
-        this.reflection.Render();
-      this.glassfg.Draw(new Vector2(0.0f, this.shineOffset), Vector2.get_Zero(), Color.op_Multiply(Color.get_White(), this.shineAlpha));
-      this.glassfg.Draw(new Vector2(0.0f, this.shineOffset - (float) this.glassfg.Height), Vector2.get_Zero(), Color.op_Multiply(Color.get_White(), this.shineAlpha));
-      Draw.SpriteBatch.End();
     }
 
     private IEnumerator InteractRoutine()
     {
-      DreamMirror mirror = this;
       Player player = (Player) null;
       while (player == null)
       {
-        player = mirror.Scene.Tracker.GetEntity<Player>();
+        player = this.Scene.Tracker.GetEntity<Player>();
         yield return (object) null;
       }
-      while (!mirror.hitbox.Collide((Entity) player))
+      while (!this.hitbox.Collide((Entity) player))
         yield return (object) null;
-      mirror.hitbox.Width += 32f;
-      ref __Null local = ref mirror.hitbox.Position.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      ^(float&) ref local = ^(float&) ref local - 16f;
+      this.hitbox.Width += 32f;
+      this.hitbox.Position.X -= 16f;
       Audio.SetMusic((string) null, true, true);
-      while (mirror.hitbox.Collide((Entity) player))
+      while (this.hitbox.Collide((Entity) player))
         yield return (object) null;
-      mirror.Scene.Add((Entity) new CS02_Mirror(player, mirror));
+      this.Scene.Add((Entity) new CS02_Mirror(player, this));
     }
 
     public IEnumerator BreakRoutine(int direction)
     {
-      DreamMirror dreamMirror = this;
-      dreamMirror.autoUpdateReflection = false;
-      dreamMirror.reflectionSprite.Play("runFast", false, false);
+      this.autoUpdateReflection = false;
+      this.reflectionSprite.Play("runFast", false, false);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Short);
-      while ((double) Math.Abs(dreamMirror.reflection.X - dreamMirror.breakingGlass.Width / 2f) > 3.0)
+      while ((double) Math.Abs(this.reflection.X - this.breakingGlass.Width / 2f) > 3.0)
       {
-        dreamMirror.reflection.X += (float) (direction * 32) * Engine.DeltaTime;
+        this.reflection.X += (float) (direction * 32) * Engine.DeltaTime;
         yield return (object) null;
       }
-      dreamMirror.reflectionSprite.Play("idle", false, false);
+      this.reflectionSprite.Play("idle", false, false);
       yield return (object) 0.65f;
-      dreamMirror.Add((Component) (dreamMirror.sfx = new SoundSource()));
-      dreamMirror.sfx.Play("event:/game/02_old_site/sequence_mirror", (string) null, 0.0f);
+      this.Add((Component) (this.sfx = new SoundSource()));
+      this.sfx.Play("event:/game/02_old_site/sequence_mirror", (string) null, 0.0f);
       yield return (object) 0.15f;
-      dreamMirror.Add((Component) (dreamMirror.sfxSting = new SoundSource("event:/music/lvl2/dreamblock_sting_pt2")));
+      this.Add((Component) (this.sfxSting = new SoundSource("event:/music/lvl2/dreamblock_sting_pt2")));
       Input.Rumble(RumbleStrength.Light, RumbleLength.FullSecond);
-      dreamMirror.updateShine = false;
-      while ((double) dreamMirror.shineOffset != 33.0 || (double) dreamMirror.shineAlpha < 1.0)
+      this.updateShine = false;
+      while ((double) this.shineOffset != 33.0 || (double) this.shineAlpha < 1.0)
       {
-        dreamMirror.shineOffset = Calc.Approach(dreamMirror.shineOffset, 33f, Engine.DeltaTime * 120f);
-        dreamMirror.shineAlpha = Calc.Approach(dreamMirror.shineAlpha, 1f, Engine.DeltaTime * 4f);
+        this.shineOffset = Calc.Approach(this.shineOffset, 33f, Engine.DeltaTime * 120f);
+        this.shineAlpha = Calc.Approach(this.shineAlpha, 1f, Engine.DeltaTime * 4f);
         yield return (object) null;
       }
-      dreamMirror.smashed = true;
-      dreamMirror.breakingGlass.Play("break", false, false);
+      this.smashed = true;
+      this.breakingGlass.Play("break", false, false);
       yield return (object) 0.6f;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      (dreamMirror.Scene as Level).Shake(0.3f);
-      for (float num1 = (float) (-(double) dreamMirror.breakingGlass.Width / 2.0); (double) num1 < (double) dreamMirror.breakingGlass.Width / 2.0; num1 += 8f)
+      (this.Scene as Level).Shake(0.3f);
+      for (float x = (float) (-(double) this.breakingGlass.Width / 2.0); (double) x < (double) this.breakingGlass.Width / 2.0; x += 8f)
       {
-        for (float num2 = -dreamMirror.breakingGlass.Height; (double) num2 < 0.0; num2 += 8f)
+        for (float y = -this.breakingGlass.Height; (double) y < 0.0; y += 8f)
         {
           if (Calc.Random.Chance(0.5f))
-            (dreamMirror.Scene as Level).Particles.Emit(DreamMirror.P_Shatter, 2, Vector2.op_Addition(dreamMirror.Position, new Vector2(num1 + 4f, num2 + 4f)), new Vector2(8f, 8f), new Vector2(num1, num2).Angle());
+            (this.Scene as Level).Particles.Emit(DreamMirror.P_Shatter, 2, this.Position + new Vector2(x + 4f, y + 4f), new Vector2(8f, 8f), new Vector2(x, y).Angle());
         }
       }
-      dreamMirror.smashEnded = true;
-      dreamMirror.badeline = new BadelineDummy(Vector2.op_Subtraction(Vector2.op_Addition(dreamMirror.reflection.Position, dreamMirror.Position), dreamMirror.breakingGlass.Origin));
-      dreamMirror.badeline.Floatness = 0.0f;
-      for (int index = 0; index < dreamMirror.badeline.Hair.Nodes.Count; ++index)
-        dreamMirror.badeline.Hair.Nodes[index] = dreamMirror.reflectionHair.Nodes[index];
-      dreamMirror.Scene.Add((Entity) dreamMirror.badeline);
-      dreamMirror.badeline.Sprite.Play("idle", false, false);
-      dreamMirror.badeline.Sprite.Scale = dreamMirror.reflectionSprite.Scale;
-      dreamMirror.reflection = (Entity) null;
+      this.smashEnded = true;
+      this.badeline = new BadelineDummy(this.reflection.Position + this.Position - this.breakingGlass.Origin);
+      this.badeline.Floatness = 0.0f;
+      for (int i = 0; i < this.badeline.Hair.Nodes.Count; ++i)
+        this.badeline.Hair.Nodes[i] = this.reflectionHair.Nodes[i];
+      this.Scene.Add((Entity) this.badeline);
+      this.badeline.Sprite.Play("idle", false, false);
+      this.badeline.Sprite.Scale = this.reflectionSprite.Scale;
+      this.reflection = (Entity) null;
       yield return (object) 1.2f;
       float speed = (float) -direction * 32f;
-      dreamMirror.badeline.Sprite.Scale.X = (__Null) (double) -direction;
-      dreamMirror.badeline.Sprite.Play("runFast", false, false);
-      while ((double) Math.Abs(dreamMirror.badeline.X - dreamMirror.X) < 60.0)
+      this.badeline.Sprite.Scale.X = (float) -direction;
+      this.badeline.Sprite.Play("runFast", false, false);
+      while ((double) Math.Abs(this.badeline.X - this.X) < 60.0)
       {
         speed += (float) ((double) Engine.DeltaTime * (double) -direction * 128.0);
-        dreamMirror.badeline.X += speed * Engine.DeltaTime;
+        this.badeline.X += speed * Engine.DeltaTime;
         yield return (object) null;
       }
-      dreamMirror.badeline.Sprite.Play("jumpFast", false, false);
-      while ((double) Math.Abs(dreamMirror.badeline.X - dreamMirror.X) < 128.0)
+      this.badeline.Sprite.Play("jumpFast", false, false);
+      while ((double) Math.Abs(this.badeline.X - this.X) < 128.0)
       {
         speed += (float) ((double) Engine.DeltaTime * (double) -direction * 128.0);
-        dreamMirror.badeline.X += speed * Engine.DeltaTime;
-        dreamMirror.badeline.Y -= (float) ((double) Math.Abs(speed) * (double) Engine.DeltaTime * 0.800000011920929);
+        this.badeline.X += speed * Engine.DeltaTime;
+        this.badeline.Y -= (float) ((double) Math.Abs(speed) * (double) Engine.DeltaTime * 0.800000011920929);
         yield return (object) null;
       }
-      dreamMirror.badeline.RemoveSelf();
-      dreamMirror.badeline = (BadelineDummy) null;
+      this.badeline.RemoveSelf();
+      this.badeline = (BadelineDummy) null;
       yield return (object) 1.5f;
     }
 
@@ -248,7 +241,7 @@ namespace Celeste
       if (this.smashed)
         this.breakingGlass.Render();
       else
-        Draw.SpriteBatch.Draw((Texture2D) this.mirror.Target, Vector2.op_Subtraction(this.Position, this.breakingGlass.Origin), Color.op_Multiply(Color.get_White(), this.reflectionAlpha));
+        Draw.SpriteBatch.Draw((Texture2D) this.mirror.Target, this.Position - this.breakingGlass.Origin, Color.White * this.reflectionAlpha);
       this.frame.Render();
     }
 
@@ -272,3 +265,4 @@ namespace Celeste
     }
   }
 }
+

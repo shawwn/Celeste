@@ -21,7 +21,7 @@ namespace Celeste
     private bool leaving;
 
     public NPC09_Granny_Outside(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Add((Component) (this.Sprite = GFX.SpriteBank.Create("granny")));
       this.Sprite.Play("idle", false, false);
@@ -37,7 +37,7 @@ namespace Celeste
       base.Added(scene);
       if ((scene as Level).Session.GetFlag("granny_outside"))
         this.RemoveSelf();
-      scene.Add((Entity) (this.Hahaha = new Hahaha(Vector2.op_Addition(this.Position, new Vector2(8f, -4f)), "", false, new Vector2?())));
+      scene.Add((Entity) (this.Hahaha = new Hahaha(this.Position + new Vector2(8f, -4f), "", false, new Vector2?())));
       this.Hahaha.Enabled = false;
     }
 
@@ -59,83 +59,34 @@ namespace Celeste
 
     private IEnumerator TalkRoutine(Player player)
     {
-      NPC09_Granny_Outside c09GrannyOutside = this;
       player.StateMachine.State = 11;
       while (!player.OnGround(1))
         yield return (object) null;
-      c09GrannyOutside.Sprite.Scale.X = (__Null) -1.0;
-      yield return (object) player.DummyWalkToExact((int) c09GrannyOutside.X - 16, false, 1f);
+      this.Sprite.Scale.X = -1f;
+      yield return (object) player.DummyWalkToExact((int) this.X - 16, false, 1f);
       yield return (object) 0.5f;
-      yield return (object) c09GrannyOutside.Level.ZoomTo(new Vector2(200f, 110f), 2f, 0.5f);
-      yield return (object) Textbox.Say("APP_OLDLADY_A", new Func<IEnumerator>(c09GrannyOutside.MoveRight), new Func<IEnumerator>(c09GrannyOutside.ExitRight));
-      yield return (object) c09GrannyOutside.Level.ZoomBack(0.5f);
-      c09GrannyOutside.Sprite.Scale.X = (__Null) 1.0;
-      if (!c09GrannyOutside.leaving)
-        yield return (object) c09GrannyOutside.ExitRight();
-      while (true)
-      {
-        double x = (double) c09GrannyOutside.X;
-        Rectangle bounds = c09GrannyOutside.Level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Right() + 8);
-        if (x < num)
-          yield return (object) null;
-        else
-          break;
-      }
-      c09GrannyOutside.Level.EndCutscene();
-      c09GrannyOutside.EndTalking(c09GrannyOutside.Level);
+      yield return (object) this.Level.ZoomTo(new Vector2(200f, 110f), 2f, 0.5f);
+      yield return (object) Textbox.Say("APP_OLDLADY_A", new Func<IEnumerator>(this.MoveRight), new Func<IEnumerator>(this.ExitRight));
+      yield return (object) this.Level.ZoomBack(0.5f);
+      this.Sprite.Scale.X = 1f;
+      if (!this.leaving)
+        yield return (object) this.ExitRight();
+      while ((double) this.X < (double) (this.Level.Bounds.Right + 8))
+        yield return (object) null;
+      this.Level.EndCutscene();
+      this.EndTalking(this.Level);
     }
 
     private IEnumerator MoveRight()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      NPC09_Granny_Outside c09GrannyOutside = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) c09GrannyOutside.MoveTo(new Vector2(c09GrannyOutside.X + 8f, c09GrannyOutside.Y), false, new int?(), false);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      yield return (object) this.MoveTo(new Vector2(this.X + 8f, this.Y), false, new int?(), false);
     }
 
     private IEnumerator ExitRight()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      NPC09_Granny_Outside c09GrannyOutside1 = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      c09GrannyOutside1.leaving = true;
-      NPC09_Granny_Outside c09GrannyOutside2 = c09GrannyOutside1;
-      NPC09_Granny_Outside c09GrannyOutside3 = c09GrannyOutside1;
-      Rectangle bounds = c09GrannyOutside1.Level.Bounds;
-      Vector2 target = new Vector2((float) (((Rectangle) ref bounds).get_Right() + 16), c09GrannyOutside1.Y);
-      int? turnAtEndTo = new int?();
-      Coroutine coroutine = new Coroutine(c09GrannyOutside3.MoveTo(target, false, turnAtEndTo, false), true);
-      c09GrannyOutside2.Add((Component) coroutine);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) null;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.leaving = true;
+      this.Add((Component) new Coroutine(this.MoveTo(new Vector2((float) (this.Level.Bounds.Right + 16), this.Y), false, new int?(), false), true));
+      yield return (object) null;
     }
 
     private void EndTalking(Level level)
@@ -147,3 +98,4 @@ namespace Celeste
     }
   }
 }
+

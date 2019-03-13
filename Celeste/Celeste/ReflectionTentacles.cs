@@ -15,11 +15,12 @@ namespace Celeste
   [Tracked(false)]
   public class ReflectionTentacles : Entity
   {
+    public int Index = 0;
     public List<Vector2> Nodes = new List<Vector2>();
-    private Color color = Color.get_Purple();
+    private int slideUntilIndex = 0;
+    private Color color = Color.Purple;
     private float soundDelay = 0.25f;
     private List<MTexture[]> arms = new List<MTexture[]>();
-    public int Index;
     private Vector2 outwards;
     private Vector2 lastOutwards;
     private float ease;
@@ -28,7 +29,6 @@ namespace Celeste
     private float fearDistance;
     private float offset;
     private bool createdFromLevel;
-    private int slideUntilIndex;
     private int layer;
     private const int NodesPerTentacle = 10;
     private ReflectionTentacles.Tentacle[] tentacles;
@@ -42,11 +42,11 @@ namespace Celeste
     }
 
     public ReflectionTentacles(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Nodes.Add(this.Position);
       foreach (Vector2 node in data.Nodes)
-        this.Nodes.Add(Vector2.op_Addition(offset, node));
+        this.Nodes.Add(offset + node);
       string str = data.Attr("fear_distance", "");
       if (str == "close")
         this.fearDistance = 16f;
@@ -76,18 +76,10 @@ namespace Celeste
       base.Awake(scene);
       Player entity = this.Scene.Tracker.GetEntity<Player>();
       bool flag = false;
-      while (entity != null && this.Index < this.Nodes.Count - 1)
+      while (entity != null && this.Index < this.Nodes.Count - 1 && (double) (this.Nodes[this.Index] - (this.p = Calc.ClosestPointOnLine(this.Nodes[this.Index], this.Nodes[this.Index] + this.outwards * 10000f, entity.Center))).Length() < (double) this.fearDistance)
       {
-        Vector2 vector2;
-        this.p = vector2 = Calc.ClosestPointOnLine(this.Nodes[this.Index], Vector2.op_Addition(this.Nodes[this.Index], Vector2.op_Multiply(this.outwards, 10000f)), entity.Center);
-        vector2 = Vector2.op_Subtraction(this.Nodes[this.Index], vector2);
-        if ((double) ((Vector2) ref vector2).Length() < (double) this.fearDistance)
-        {
-          flag = true;
-          this.Retreat();
-        }
-        else
-          break;
+        flag = true;
+        this.Retreat();
       }
       if (!flag)
         return;
@@ -102,14 +94,11 @@ namespace Celeste
       List<Vector2> startNodes)
     {
       this.Nodes = new List<Vector2>();
-      using (List<Vector2>.Enumerator enumerator = startNodes.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-          this.Nodes.Add(Vector2.op_Addition(enumerator.Current, new Vector2((float) Calc.Random.Range(-8, 8), (float) Calc.Random.Range(-8, 8))));
-      }
+      foreach (Vector2 startNode in startNodes)
+        this.Nodes.Add(startNode + new Vector2((float) Calc.Random.Range(-8, 8), (float) Calc.Random.Range(-8, 8)));
       this.Tag = (int) Tags.TransitionUpdate;
       this.Position = this.Nodes[0];
-      this.outwards = Vector2.op_Subtraction(this.Nodes[0], this.Nodes[1]).SafeNormalize();
+      this.outwards = (this.Nodes[0] - this.Nodes[1]).SafeNormalize();
       this.fearDistance = fearDistance;
       this.slideUntilIndex = slideUntilIndex;
       this.layer = layer;
@@ -164,7 +153,7 @@ namespace Celeste
       }
       this.vertices = new VertexPositionColorTexture[this.tentacleCount * 12 * 6];
       for (int index2 = 0; index2 < this.vertices.Length; ++index2)
-        this.vertices[index2].Color = (__Null) this.color;
+        this.vertices[index2].Color = this.color;
     }
 
     private Vector2 TargetTentaclePosition(
@@ -172,18 +161,16 @@ namespace Celeste
       Vector2 position,
       float along)
     {
-      Vector2 vector2_1;
-      Vector2 vector2_2 = vector2_1 = Vector2.op_Subtraction(position, Vector2.op_Multiply(this.outwards, this.offset));
+      Vector2 vector2_1 = position - this.outwards * this.offset;
+      Vector2 vector2_2 = vector2_1;
       if (this.player != null)
       {
         Vector2 vector2_3 = this.outwards.Perpendicular();
-        vector2_2 = Calc.ClosestPointOnLine(Vector2.op_Subtraction(vector2_2, Vector2.op_Multiply(vector2_3, 200f)), Vector2.op_Addition(vector2_2, Vector2.op_Multiply(vector2_3, 200f)), this.player.Position);
+        vector2_2 = Calc.ClosestPointOnLine(vector2_2 - vector2_3 * 200f, vector2_2 + vector2_3 * 200f, this.player.Position);
       }
-      Vector2 vector2_4 = Vector2.op_Multiply(this.outwards.Perpendicular(), (float) ((double) along - 220.0 + (double) tentacle.Width * 0.5));
-      Vector2 vector2_5 = Vector2.op_Addition(vector2_1, vector2_4);
-      Vector2 vector2_6 = Vector2.op_Subtraction(vector2_2, vector2_5);
-      float num = ((Vector2) ref vector2_6).Length();
-      return Vector2.op_Addition(vector2_5, Vector2.op_Multiply(Vector2.op_Multiply(this.outwards, num), 0.6f));
+      Vector2 vector2_4 = vector2_1 + this.outwards.Perpendicular() * (float) ((double) along - 220.0 + (double) tentacle.Width * 0.5);
+      float num = (vector2_2 - vector2_4).Length();
+      return vector2_4 + this.outwards * num * 0.6f;
     }
 
     public void Retreat()
@@ -194,10 +181,7 @@ namespace Celeste
       this.ease = 0.0f;
       ++this.Index;
       if (this.layer == 0 && (double) this.soundDelay <= 0.0)
-      {
-        Vector2 vector2 = Vector2.op_Subtraction(this.Nodes[this.Index - 1], this.Nodes[this.Index]);
-        Audio.Play((double) ((Vector2) ref vector2).Length() > 180.0 ? "event:/game/06_reflection/scaryhair_whoosh" : "event:/game/06_reflection/scaryhair_move");
-      }
+        Audio.Play((double) (this.Nodes[this.Index - 1] - this.Nodes[this.Index]).Length() > 180.0 ? "event:/game/06_reflection/scaryhair_whoosh" : "event:/game/06_reflection/scaryhair_move");
       for (int index = 0; index < this.tentacleCount; ++index)
       {
         this.tentacles[index].LerpPercent = 0.0f;
@@ -213,31 +197,26 @@ namespace Celeste
         this.player = this.Scene.Tracker.GetEntity<Player>();
         if (this.player != null)
         {
-          Vector2 vector2_1 = this.p = Calc.ClosestPointOnLine(Vector2.op_Subtraction(this.Nodes[this.Index], Vector2.op_Multiply(this.outwards, 10000f)), Vector2.op_Addition(this.Nodes[this.Index], Vector2.op_Multiply(this.outwards, 10000f)), this.player.Center);
-          Vector2 vector2_2 = Vector2.op_Subtraction(vector2_1, this.Nodes[this.Index]);
-          if ((double) ((Vector2) ref vector2_2).Length() < 32.0)
+          Vector2 vector2 = this.p = Calc.ClosestPointOnLine(this.Nodes[this.Index] - this.outwards * 10000f, this.Nodes[this.Index] + this.outwards * 10000f, this.player.Center);
+          if ((double) (vector2 - this.Nodes[this.Index]).Length() < 32.0)
           {
             this.Retreat();
-            this.outwards = Vector2.op_Subtraction(this.Nodes[this.Index - 1], this.Nodes[this.Index]).SafeNormalize();
+            this.outwards = (this.Nodes[this.Index - 1] - this.Nodes[this.Index]).SafeNormalize();
           }
           else
-            this.MoveTentacles(Vector2.op_Subtraction(vector2_1, Vector2.op_Multiply(this.outwards, 190f)));
+            this.MoveTentacles(vector2 - this.outwards * 190f);
         }
       }
       else
       {
         FinalBoss entity = this.Scene.Tracker.GetEntity<FinalBoss>();
         this.player = this.Scene.Tracker.GetEntity<Player>();
-        if (entity == null && this.player != null && this.Index < this.Nodes.Count - 1)
-        {
-          Vector2 vector2 = Vector2.op_Subtraction(this.Nodes[this.Index], this.p = Calc.ClosestPointOnLine(this.Nodes[this.Index], Vector2.op_Addition(this.Nodes[this.Index], Vector2.op_Multiply(this.outwards, 10000f)), this.player.Center));
-          if ((double) ((Vector2) ref vector2).Length() < (double) this.fearDistance)
-            this.Retreat();
-        }
+        if (entity == null && this.player != null && this.Index < this.Nodes.Count - 1 && (double) (this.Nodes[this.Index] - (this.p = Calc.ClosestPointOnLine(this.Nodes[this.Index], this.Nodes[this.Index] + this.outwards * 10000f, this.player.Center))).Length() < (double) this.fearDistance)
+          this.Retreat();
         if (this.Index > 0)
         {
           this.ease = Calc.Approach(this.ease, 1f, (this.Index == this.Nodes.Count - 1 ? 2f : 1f) * Engine.DeltaTime);
-          this.outwards = Calc.AngleToVector(Calc.AngleLerp(this.lastOutwards.Angle(), Vector2.op_Subtraction(this.Nodes[this.Index - 1], this.Nodes[this.Index]).Angle(), Ease.QuadOut(this.ease)), 1f);
+          this.outwards = Calc.AngleToVector(Calc.AngleLerp(this.lastOutwards.Angle(), (this.Nodes[this.Index - 1] - this.Nodes[this.Index]).Angle(), Ease.QuadOut(this.ease)), 1f);
           float along = 0.0f;
           for (int index = 0; index < this.tentacleCount; ++index)
           {
@@ -248,10 +227,7 @@ namespace Celeste
               this.tentacles[index].Position = Vector2.Lerp(this.tentacles[index].LerpPositionFrom, vector2, Ease.CubeInOut(this.tentacles[index].LerpPercent));
             }
             else
-            {
-              ref Vector2 local = ref this.tentacles[index].Position;
-              local = Vector2.op_Addition(local, Vector2.op_Multiply(Vector2.op_Subtraction(vector2, this.tentacles[index].Position), 1f - (float) Math.Pow(0.100000001490116 * (double) this.tentacles[index].Approach, (double) Engine.DeltaTime)));
-            }
+              this.tentacles[index].Position += (vector2 - this.tentacles[index].Position) * (1f - (float) Math.Pow(0.100000001490116 * (double) this.tentacles[index].Approach, (double) Engine.DeltaTime));
             along += this.tentacles[index].Width;
           }
         }
@@ -260,9 +236,9 @@ namespace Celeste
       }
       if (this.Index == this.Nodes.Count - 1)
       {
-        Color color = Color.op_Multiply(this.color, 1f - this.ease);
+        Color color = this.color * (1f - this.ease);
         for (int index = 0; index < this.vertices.Length; ++index)
-          this.vertices[index].Color = (__Null) color;
+          this.vertices[index].Color = color;
       }
       this.UpdateVertices();
     }
@@ -273,8 +249,7 @@ namespace Celeste
       for (int index = 0; index < this.tentacleCount; ++index)
       {
         Vector2 vector2 = this.TargetTentaclePosition(this.tentacles[index], pos, along);
-        ref Vector2 local = ref this.tentacles[index].Position;
-        local = Vector2.op_Addition(local, Vector2.op_Multiply(Vector2.op_Subtraction(vector2, this.tentacles[index].Position), 1f - (float) Math.Pow(0.100000001490116 * (double) this.tentacles[index].Approach, (double) Engine.DeltaTime)));
+        this.tentacles[index].Position += (vector2 - this.tentacles[index].Position) * (1f - (float) Math.Pow(0.100000001490116 * (double) this.tentacles[index].Approach, (double) Engine.DeltaTime));
         along += this.tentacles[index].Width;
       }
     }
@@ -292,14 +267,14 @@ namespace Celeste
 
     private void UpdateVertices()
     {
-      Vector2 vector2_1 = Vector2.op_UnaryNegation(this.outwards.Perpendicular());
+      Vector2 vector2_1 = -this.outwards.Perpendicular();
       int n = 0;
       for (int index1 = 0; index1 < this.tentacleCount; ++index1)
       {
         Vector2 position = this.tentacles[index1].Position;
-        Vector2 vector2_2 = Vector2.op_Multiply(vector2_1, (float) ((double) this.tentacles[index1].Width * 0.5 + 2.0));
+        Vector2 vector2_2 = vector2_1 * (float) ((double) this.tentacles[index1].Width * 0.5 + 2.0);
         MTexture[] arm = this.arms[this.tentacles[index1].TexIndex];
-        this.Quad(ref n, Vector2.op_Addition(position, vector2_2), Vector2.op_Subtraction(Vector2.op_Addition(position, Vector2.op_Multiply(vector2_2, 1.5f)), Vector2.op_Multiply(this.outwards, 240f)), Vector2.op_Subtraction(Vector2.op_Subtraction(position, Vector2.op_Multiply(vector2_2, 1.5f)), Vector2.op_Multiply(this.outwards, 240f)), Vector2.op_Subtraction(position, vector2_2), this.fillers[this.tentacles[index1].FillerTexIndex]);
+        this.Quad(ref n, position + vector2_2, position + vector2_2 * 1.5f - this.outwards * 240f, position - vector2_2 * 1.5f - this.outwards * 240f, position - vector2_2, this.fillers[this.tentacles[index1].FillerTexIndex]);
         Vector2 vector2_3 = position;
         Vector2 vector2_4 = vector2_2;
         float num1 = this.tentacles[index1].Length / 10f + Calc.YoYo(this.tentacles[index1].LerpPercent) * 6f;
@@ -309,10 +284,10 @@ namespace Celeste
           float num3 = (float) ((double) this.Scene.TimeActive * (double) this.tentacles[index1].WaveOffset * Math.Pow(1.10000002384186, (double) index2) * 2.0);
           float num4 = (float) ((double) this.tentacles[index1].WaveOffset * 3.0 + (double) index2 * 0.0500000007450581);
           float num5 = (float) (2.0 + 4.0 * (double) num2);
-          Vector2 vector2_5 = Vector2.op_Multiply(Vector2.op_Multiply(vector2_1, (float) Math.Sin((double) num3 + (double) num4)), num5);
-          Vector2 vector2_6 = Vector2.op_Addition(Vector2.op_Addition(vector2_3, Vector2.op_Multiply(this.outwards, num1)), vector2_5);
-          Vector2 vector2_7 = Vector2.op_Multiply(vector2_2, 1f - num2);
-          this.Quad(ref n, Vector2.op_Subtraction(vector2_6, vector2_7), Vector2.op_Subtraction(vector2_3, vector2_4), Vector2.op_Addition(vector2_3, vector2_4), Vector2.op_Addition(vector2_6, vector2_7), arm[index2 - 1]);
+          Vector2 vector2_5 = vector2_1 * (float) Math.Sin((double) num3 + (double) num4) * num5;
+          Vector2 vector2_6 = vector2_3 + this.outwards * num1 + vector2_5;
+          Vector2 vector2_7 = vector2_2 * (1f - num2);
+          this.Quad(ref n, vector2_6 - vector2_7, vector2_3 - vector2_4, vector2_3 + vector2_4, vector2_6 + vector2_7, arm[index2 - 1]);
           vector2_3 = vector2_6;
           vector2_4 = vector2_7;
         }
@@ -330,48 +305,24 @@ namespace Celeste
     {
       if (subtexture == null)
         subtexture = GFX.Game["util/pixel"];
-      float num1 = 1f / (float) subtexture.Texture.Texture.get_Width();
-      float num2 = 1f / (float) subtexture.Texture.Texture.get_Height();
-      Vector2 vector2_1;
-      ref Vector2 local1 = ref vector2_1;
-      Rectangle clipRect1 = subtexture.ClipRect;
-      double num3 = (double) ((Rectangle) ref clipRect1).get_Left() * (double) num1;
-      Rectangle clipRect2 = subtexture.ClipRect;
-      double num4 = (double) ((Rectangle) ref clipRect2).get_Top() * (double) num2;
-      ((Vector2) ref local1).\u002Ector((float) num3, (float) num4);
-      Vector2 vector2_2;
-      ref Vector2 local2 = ref vector2_2;
-      clipRect2 = subtexture.ClipRect;
-      double num5 = (double) ((Rectangle) ref clipRect2).get_Right() * (double) num1;
-      Rectangle clipRect3 = subtexture.ClipRect;
-      double num6 = (double) ((Rectangle) ref clipRect3).get_Top() * (double) num2;
-      ((Vector2) ref local2).\u002Ector((float) num5, (float) num6);
-      Vector2 vector2_3;
-      ref Vector2 local3 = ref vector2_3;
-      clipRect3 = subtexture.ClipRect;
-      double num7 = (double) ((Rectangle) ref clipRect3).get_Left() * (double) num1;
-      Rectangle clipRect4 = subtexture.ClipRect;
-      double num8 = (double) ((Rectangle) ref clipRect4).get_Bottom() * (double) num2;
-      ((Vector2) ref local3).\u002Ector((float) num7, (float) num8);
-      Vector2 vector2_4;
-      ref Vector2 local4 = ref vector2_4;
-      clipRect4 = subtexture.ClipRect;
-      double num9 = (double) ((Rectangle) ref clipRect4).get_Right() * (double) num1;
-      Rectangle clipRect5 = subtexture.ClipRect;
-      double num10 = (double) ((Rectangle) ref clipRect5).get_Bottom() * (double) num2;
-      ((Vector2) ref local4).\u002Ector((float) num9, (float) num10);
-      this.vertices[n].Position = (__Null) new Vector3(a, 0.0f);
-      this.vertices[n++].TextureCoordinate = (__Null) vector2_1;
-      this.vertices[n].Position = (__Null) new Vector3(b, 0.0f);
-      this.vertices[n++].TextureCoordinate = (__Null) vector2_2;
-      this.vertices[n].Position = (__Null) new Vector3(d, 0.0f);
-      this.vertices[n++].TextureCoordinate = (__Null) vector2_3;
-      this.vertices[n].Position = (__Null) new Vector3(d, 0.0f);
-      this.vertices[n++].TextureCoordinate = (__Null) vector2_3;
-      this.vertices[n].Position = (__Null) new Vector3(b, 0.0f);
-      this.vertices[n++].TextureCoordinate = (__Null) vector2_2;
-      this.vertices[n].Position = (__Null) new Vector3(c, 0.0f);
-      this.vertices[n++].TextureCoordinate = (__Null) vector2_4;
+      float num1 = 1f / (float) subtexture.Texture.Texture.Width;
+      float num2 = 1f / (float) subtexture.Texture.Texture.Height;
+      Vector2 vector2_1 = new Vector2((float) subtexture.ClipRect.Left * num1, (float) subtexture.ClipRect.Top * num2);
+      Vector2 vector2_2 = new Vector2((float) subtexture.ClipRect.Right * num1, (float) subtexture.ClipRect.Top * num2);
+      Vector2 vector2_3 = new Vector2((float) subtexture.ClipRect.Left * num1, (float) subtexture.ClipRect.Bottom * num2);
+      Vector2 vector2_4 = new Vector2((float) subtexture.ClipRect.Right * num1, (float) subtexture.ClipRect.Bottom * num2);
+      this.vertices[n].Position = new Vector3(a, 0.0f);
+      this.vertices[n++].TextureCoordinate = vector2_1;
+      this.vertices[n].Position = new Vector3(b, 0.0f);
+      this.vertices[n++].TextureCoordinate = vector2_2;
+      this.vertices[n].Position = new Vector3(d, 0.0f);
+      this.vertices[n++].TextureCoordinate = vector2_3;
+      this.vertices[n].Position = new Vector3(d, 0.0f);
+      this.vertices[n++].TextureCoordinate = vector2_3;
+      this.vertices[n].Position = new Vector3(b, 0.0f);
+      this.vertices[n++].TextureCoordinate = vector2_2;
+      this.vertices[n].Position = new Vector3(c, 0.0f);
+      this.vertices[n++].TextureCoordinate = vector2_4;
     }
 
     public override void Render()
@@ -379,7 +330,7 @@ namespace Celeste
       if (this.vertexCount <= 0)
         return;
       GameplayRenderer.End();
-      Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(0, (Texture) this.arms[0][0].Texture.Texture);
+      Engine.Graphics.GraphicsDevice.Textures[0] = (Texture) this.arms[0][0].Texture.Texture;
       GFX.DrawVertices<VertexPositionColorTexture>((this.Scene as Level).Camera.Matrix, this.vertices, this.vertexCount, GFX.FxTexture, (BlendState) null);
       GameplayRenderer.Begin();
     }
@@ -399,3 +350,4 @@ namespace Celeste
     }
   }
 }
+

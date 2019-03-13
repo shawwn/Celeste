@@ -24,7 +24,7 @@ namespace Celeste
       {
         IgnoreEntityVisible = true
       });
-      this.Sprite.Scale.X = (__Null) 1.0;
+      this.Sprite.Scale.X = 1f;
       this.Maxspeed = 48f;
     }
 
@@ -47,3 +47,4 @@ namespace Celeste
     }
   }
 }
+

@@ -21,7 +21,7 @@ namespace Celeste
       : base(scene, wipeIn, onComplete)
     {
       for (int index = 0; index < this.vertexBuffer.Length; ++index)
-        this.vertexBuffer[index].Color = (__Null) ScreenWipe.WipeColor;
+        this.vertexBuffer[index].Color = ScreenWipe.WipeColor;
     }
 
     public override void Render(Scene scene)
@@ -32,40 +32,33 @@ namespace Celeste
       for (int index1 = 0; index1 < 6; ++index1)
       {
         int index2 = index1 * 6;
-        float num4 = num2;
-        float num5 = (float) ((double) index1 * (double) num1 - 10.0);
-        float num6 = 0.0f;
-        float num7 = (float) index1 / 6f;
-        float num8 = (float) ((this.WipeIn ? 1.0 - (double) num7 : (double) num7) * 0.300000011920929);
-        if ((double) this.Percent > (double) num8)
-          num6 = Math.Min(1f, (float) (((double) this.Percent - (double) num8) / 0.699999988079071));
+        float x = num2;
+        float y = (float) ((double) index1 * (double) num1 - 10.0);
+        float num4 = 0.0f;
+        float num5 = (float) index1 / 6f;
+        float num6 = (float) ((this.WipeIn ? 1.0 - (double) num5 : (double) num5) * 0.300000011920929);
+        if ((double) this.Percent > (double) num6)
+          num4 = Math.Min(1f, (float) (((double) this.Percent - (double) num6) / 0.699999988079071));
         if (this.WipeIn)
-          num6 = 1f - num6;
-        float num9 = num3 * num6;
-        this.vertexBuffer[index2].Position = (__Null) new Vector3(num4, num5, 0.0f);
-        this.vertexBuffer[index2 + 1].Position = (__Null) new Vector3(num4 + num9, num5, 0.0f);
-        this.vertexBuffer[index2 + 2].Position = (__Null) new Vector3(num4, num5 + num1, 0.0f);
-        this.vertexBuffer[index2 + 3].Position = (__Null) new Vector3(num4 + num9, num5, 0.0f);
-        this.vertexBuffer[index2 + 4].Position = (__Null) new Vector3((float) ((double) num4 + (double) num9 + 64.0), num5 + num1, 0.0f);
-        this.vertexBuffer[index2 + 5].Position = (__Null) new Vector3(num4, num5 + num1, 0.0f);
+          num4 = 1f - num4;
+        float num7 = num3 * num4;
+        this.vertexBuffer[index2].Position = new Vector3(x, y, 0.0f);
+        this.vertexBuffer[index2 + 1].Position = new Vector3(x + num7, y, 0.0f);
+        this.vertexBuffer[index2 + 2].Position = new Vector3(x, y + num1, 0.0f);
+        this.vertexBuffer[index2 + 3].Position = new Vector3(x + num7, y, 0.0f);
+        this.vertexBuffer[index2 + 4].Position = new Vector3((float) ((double) x + (double) num7 + 64.0), y + num1, 0.0f);
+        this.vertexBuffer[index2 + 5].Position = new Vector3(x, y + num1, 0.0f);
       }
       if (this.WipeIn)
       {
         for (int index = 0; index < this.vertexBuffer.Length; ++index)
         {
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          (^(Vector3&) ref this.vertexBuffer[index].Position).X = (__Null) (1920.0 - (^(Vector3&) ref this.vertexBuffer[index].Position).X);
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          (^(Vector3&) ref this.vertexBuffer[index].Position).Y = (__Null) (1080.0 - (^(Vector3&) ref this.vertexBuffer[index].Position).Y);
+          this.vertexBuffer[index].Position.X = 1920f - this.vertexBuffer[index].Position.X;
+          this.vertexBuffer[index].Position.Y = 1080f - this.vertexBuffer[index].Position.Y;
         }
       }
       ScreenWipe.DrawPrimitives(this.vertexBuffer);
     }
   }
 }
+

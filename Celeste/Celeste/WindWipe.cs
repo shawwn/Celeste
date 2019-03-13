@@ -26,7 +26,7 @@ namespace Celeste
       this.rows = 1080 / this.t + 1;
       this.vertexBuffer = new VertexPositionColor[this.columns * this.rows * 6];
       for (int index = 0; index < this.vertexBuffer.Length; ++index)
-        this.vertexBuffer[index].Color = (__Null) ScreenWipe.WipeColor;
+        this.vertexBuffer[index].Color = ScreenWipe.WipeColor;
     }
 
     public override void Render(Scene scene)
@@ -41,16 +41,16 @@ namespace Celeste
           float val1_1 = (float) ((double) ((index3 + num2 % 2) % 2 * (this.rows + index3 / 2) + (index3 + num2 % 2 + 1) % 2 * (index3 / 2) + num2 * this.rows) / (double) num1 * 0.5);
           float val1_2 = val1_1 + 300f / num1;
           float num3 = (float) (((double) Math.Max(val1_1, Math.Min(val1_2, this.WipeIn ? 1f - this.Percent : this.Percent)) - (double) val1_1) / ((double) val1_2 - (double) val1_1));
-          float num4 = ((float) index2 - 0.5f) * (float) this.t;
-          float num5 = (float) (((double) index3 - 0.5) * (double) this.t - (double) this.t * 0.5 * (double) num3);
-          float num6 = num4 + (float) this.t;
-          float num7 = num5 + (float) this.t * num3;
-          this.vertexBuffer[index1].Position = (__Null) new Vector3(num4, num5, 0.0f);
-          this.vertexBuffer[index1 + 1].Position = (__Null) new Vector3(num6, num5, 0.0f);
-          this.vertexBuffer[index1 + 2].Position = (__Null) new Vector3(num4, num7, 0.0f);
-          this.vertexBuffer[index1 + 3].Position = (__Null) new Vector3(num6, num5, 0.0f);
-          this.vertexBuffer[index1 + 4].Position = (__Null) new Vector3(num6, num7, 0.0f);
-          this.vertexBuffer[index1 + 5].Position = (__Null) new Vector3(num4, num7, 0.0f);
+          float x1 = ((float) index2 - 0.5f) * (float) this.t;
+          float y1 = (float) (((double) index3 - 0.5) * (double) this.t - (double) this.t * 0.5 * (double) num3);
+          float x2 = x1 + (float) this.t;
+          float y2 = y1 + (float) this.t * num3;
+          this.vertexBuffer[index1].Position = new Vector3(x1, y1, 0.0f);
+          this.vertexBuffer[index1 + 1].Position = new Vector3(x2, y1, 0.0f);
+          this.vertexBuffer[index1 + 2].Position = new Vector3(x1, y2, 0.0f);
+          this.vertexBuffer[index1 + 3].Position = new Vector3(x2, y1, 0.0f);
+          this.vertexBuffer[index1 + 4].Position = new Vector3(x2, y2, 0.0f);
+          this.vertexBuffer[index1 + 5].Position = new Vector3(x1, y2, 0.0f);
           index1 += 6;
         }
       }
@@ -58,3 +58,4 @@ namespace Celeste
     }
   }
 }
+

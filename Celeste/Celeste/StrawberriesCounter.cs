@@ -13,17 +13,17 @@ namespace Celeste
   public class StrawberriesCounter : Component
   {
     public static readonly Color FlashColor = Calc.HexToColor("FF5E76");
+    public bool Golden = false;
     public bool CanWiggle = true;
     public float Scale = 1f;
     public float Stroke = 2f;
-    public Color Color = Color.get_White();
-    public Color OutOfColor = Color.get_LightGray();
+    public float Rotation = 0.0f;
+    public Color Color = Color.White;
+    public Color OutOfColor = Color.LightGray;
     private int outOf = -1;
     private const int IconWidth = 60;
-    public bool Golden;
     public Vector2 Position;
     public bool CenteredX;
-    public float Rotation;
     public bool OverworldSfx;
     private int amount;
     private Wiggler wiggler;
@@ -59,14 +59,15 @@ namespace Celeste
           return;
         this.amount = value;
         this.UpdateStrings();
-        if (!this.CanWiggle)
-          return;
-        if (this.OverworldSfx)
-          Audio.Play(this.Golden ? "event:/ui/postgame/goldberry_count" : "event:/ui/postgame/strawberry_count");
-        else
-          Audio.Play("event:/ui/game/increment_strawberry");
-        this.wiggler.Start();
-        this.flashTimer = 0.5f;
+        if (this.CanWiggle)
+        {
+          if (this.OverworldSfx)
+            Audio.Play(this.Golden ? "event:/ui/postgame/goldberry_count" : "event:/ui/postgame/strawberry_count");
+          else
+            Audio.Play("event:/ui/game/increment_strawberry");
+          this.wiggler.Start();
+          this.flashTimer = 0.5f;
+        }
       }
     }
 
@@ -133,34 +134,34 @@ namespace Celeste
 
     public override void Render()
     {
-      Vector2 vector2_1 = this.RenderPosition;
+      Vector2 renderPosition = this.RenderPosition;
       Vector2 vector = Calc.AngleToVector(this.Rotation, 1f);
-      Vector2 vector2_2;
-      ((Vector2) ref vector2_2).\u002Ector((float) -vector.Y, (float) vector.X);
+      Vector2 vector2 = new Vector2(-vector.Y, vector.X);
       string text = this.showOutOf ? this.sOutOf : "";
-      float x1 = (float) ActiveFont.Measure(this.sAmount).X;
-      float x2 = (float) ActiveFont.Measure(text).X;
+      float x1 = ActiveFont.Measure(this.sAmount).X;
+      float x2 = ActiveFont.Measure(text).X;
       float num = (float) (62.0 + (double) this.x.Width + 2.0) + x1 + x2;
       Color color = this.Color;
       if ((double) this.flashTimer > 0.0 && this.Scene != null && this.Scene.BetweenRawInterval(0.05f))
         color = StrawberriesCounter.FlashColor;
       if (this.CenteredX)
-        vector2_1 = Vector2.op_Subtraction(vector2_1, Vector2.op_Multiply(Vector2.op_Multiply(vector, num / 2f), this.Scale));
+        renderPosition -= vector * (num / 2f) * this.Scale;
       string index = this.Golden ? "collectables/goldberry" : "collectables/strawberry";
-      GFX.Gui[index].DrawCentered(Vector2.op_Addition(vector2_1, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Multiply(vector, 60f), 0.5f), this.Scale)), Color.get_White(), this.Scale);
-      this.x.DrawCentered(Vector2.op_Addition(Vector2.op_Addition(vector2_1, Vector2.op_Multiply(Vector2.op_Multiply(vector, (float) (62.0 + (double) this.x.Width * 0.5)), this.Scale)), Vector2.op_Multiply(Vector2.op_Multiply(vector2_2, 2f), this.Scale)), color, this.Scale);
-      ActiveFont.DrawOutline(this.sAmount, Vector2.op_Addition(Vector2.op_Addition(vector2_1, Vector2.op_Multiply(Vector2.op_Multiply(vector, (float) ((double) num - (double) x2 - (double) x1 * 0.5)), this.Scale)), Vector2.op_Multiply(Vector2.op_Multiply(vector2_2, this.wiggler.Value * 18f), this.Scale)), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), this.Scale), color, this.Stroke, Color.get_Black());
+      GFX.Gui[index].DrawCentered(renderPosition + vector * 60f * 0.5f * this.Scale, Color.White, this.Scale);
+      this.x.DrawCentered(renderPosition + vector * (float) (62.0 + (double) this.x.Width * 0.5) * this.Scale + vector2 * 2f * this.Scale, color, this.Scale);
+      ActiveFont.DrawOutline(this.sAmount, renderPosition + vector * (float) ((double) num - (double) x2 - (double) x1 * 0.5) * this.Scale + vector2 * (this.wiggler.Value * 18f) * this.Scale, new Vector2(0.5f, 0.5f), Vector2.One * this.Scale, color, this.Stroke, Color.Black);
       if (!(text != ""))
         return;
-      ActiveFont.DrawOutline(text, Vector2.op_Addition(vector2_1, Vector2.op_Multiply(Vector2.op_Multiply(vector, num - x2 / 2f), this.Scale)), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), this.Scale), this.OutOfColor, this.Stroke, Color.get_Black());
+      ActiveFont.DrawOutline(text, renderPosition + vector * (num - x2 / 2f) * this.Scale, new Vector2(0.5f, 0.5f), Vector2.One * this.Scale, this.OutOfColor, this.Stroke, Color.Black);
     }
 
     public Vector2 RenderPosition
     {
       get
       {
-        return Vector2.op_Addition(this.Entity != null ? this.Entity.Position : Vector2.get_Zero(), this.Position).Round();
+        return ((this.Entity != null ? this.Entity.Position : Vector2.Zero) + this.Position).Round();
       }
     }
   }
 }
+

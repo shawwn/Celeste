@@ -13,13 +13,13 @@ namespace Celeste
   [Tracked(false)]
   public class Bonfire : Entity
   {
+    private float brightness = 0.0f;
+    private float multiplier = 0.0f;
     private Bonfire.Mode mode;
     private Sprite sprite;
     private VertexLight light;
     private BloomPoint bloom;
     private Wiggler wiggle;
-    private float brightness;
-    private float multiplier;
     public bool Activated;
     private SoundSource loopSfx;
 
@@ -29,7 +29,7 @@ namespace Celeste
       this.Depth = -5;
       this.Add((Component) (this.loopSfx = new SoundSource()));
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create("campfire")));
-      this.Add((Component) (this.light = new VertexLight(new Vector2(0.0f, -6f), Color.get_PaleVioletRed(), 1f, 32, 64)));
+      this.Add((Component) (this.light = new VertexLight(new Vector2(0.0f, -6f), Color.PaleVioletRed, 1f, 32, 64)));
       this.Add((Component) (this.bloom = new BloomPoint(new Vector2(0.0f, -6f), 1f, 32f)));
       this.Add((Component) (this.wiggle = Wiggler.Create(0.2f, 4f, (Action<float>) (f => this.light.Alpha = this.bloom.Alpha = Math.Min(1f, this.brightness + f * 0.25f) * this.multiplier), false, false)));
       this.Position = position;
@@ -37,7 +37,7 @@ namespace Celeste
     }
 
     public Bonfire(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Enum<Bonfire.Mode>(nameof (mode), Bonfire.Mode.Unlit))
+      : this(data.Position + offset, data.Enum<Bonfire.Mode>(nameof (mode), Bonfire.Mode.Unlit))
     {
     }
 
@@ -96,3 +96,4 @@ namespace Celeste
     }
   }
 }
+

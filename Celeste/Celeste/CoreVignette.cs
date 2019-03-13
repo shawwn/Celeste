@@ -14,11 +14,11 @@ namespace Celeste
 {
   public class CoreVignette : Scene
   {
+    private int textStart = 0;
+    private float textAlpha = 0.0f;
     private Session session;
     private Coroutine textCoroutine;
     private FancyText.Text text;
-    private int textStart;
-    private float textAlpha;
     private HiresSnow snow;
     private HudRenderer hud;
     private TextMenu menu;
@@ -53,7 +53,8 @@ namespace Celeste
       while (this.textStart < this.text.Count)
       {
         this.textAlpha = 1f;
-        float fadeTimePerCharacter = 1f / (float) this.text.GetCharactersOnPage(this.textStart);
+        int characters = this.text.GetCharactersOnPage(this.textStart);
+        float fadeTimePerCharacter = 1f / (float) characters;
         for (int i = this.textStart; i < this.text.Count && !(this.text[i] is FancyText.NewPage); ++i)
         {
           FancyText.Char c = this.text[i] as FancyText.Char;
@@ -136,7 +137,7 @@ namespace Celeste
       this.menu.RemoveSelf();
       this.menu = (TextMenu) null;
       this.exiting = true;
-      bool toAreaQuit = SaveData.Instance.Areas[0].Modes[0].Completed && Celeste.Celeste.PlayMode != Celeste.Celeste.PlayModes.Event;
+      bool toAreaQuit = SaveData.Instance.Areas[0].Modes[0].Completed && Celeste.PlayMode != Celeste.PlayModes.Event;
       new FadeWipe((Scene) this, false, (Action) (() =>
       {
         if (toAreaQuit)
@@ -153,12 +154,13 @@ namespace Celeste
       base.Render();
       if ((double) this.fade <= 0.0 && (double) this.textAlpha <= 0.0)
         return;
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.LinearClamp, (DepthStencilState) null, (RasterizerState) RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, (DepthStencilState) null, RasterizerState.CullNone, (Effect) null, Engine.ScreenMatrix);
       if ((double) this.fade > 0.0)
-        Draw.Rect(-1f, -1f, 1922f, 1082f, Color.op_Multiply(Color.get_Black(), this.fade));
+        Draw.Rect(-1f, -1f, 1922f, 1082f, Color.Black * this.fade);
       if (this.textStart < this.text.Nodes.Count && (double) this.textAlpha > 0.0)
-        this.text.Draw(Vector2.op_Multiply(new Vector2(1920f, 1080f), 0.5f), new Vector2(0.5f, 0.5f), Vector2.get_One(), this.textAlpha * (1f - this.pauseFade), this.textStart, int.MaxValue);
+        this.text.Draw(new Vector2(1920f, 1080f) * 0.5f, new Vector2(0.5f, 0.5f), Vector2.One, this.textAlpha * (1f - this.pauseFade), this.textStart, int.MaxValue);
       Draw.SpriteBatch.End();
     }
   }
 }
+

@@ -21,7 +21,7 @@ namespace Celeste
     public CameraTargetTrigger(EntityData data, Vector2 offset)
       : base(data, offset)
     {
-      this.Target = Vector2.op_Subtraction(Vector2.op_Addition(data.Nodes[0], offset), Vector2.op_Multiply(new Vector2(320f, 180f), 0.5f));
+      this.Target = data.Nodes[0] + offset - new Vector2(320f, 180f) * 0.5f;
       this.LerpStrength = data.Float("lerpStrength", 0.0f);
       this.PositionMode = data.Enum<Trigger.PositionModes>("positionMode", Trigger.PositionModes.NoEffect);
       this.XOnly = data.Bool("xOnly", false);
@@ -31,7 +31,7 @@ namespace Celeste
     public override void OnStay(Player player)
     {
       player.CameraAnchor = this.Target;
-      player.CameraAnchorLerp = Vector2.op_Multiply(Vector2.get_One(), MathHelper.Clamp(this.LerpStrength * this.GetPositionLerp(player, this.PositionMode), 0.0f, 1f));
+      player.CameraAnchorLerp = Vector2.One * MathHelper.Clamp(this.LerpStrength * this.GetPositionLerp(player, this.PositionMode), 0.0f, 1f);
       player.CameraAnchorIgnoreX = this.YOnly;
       player.CameraAnchorIgnoreY = this.XOnly;
     }
@@ -61,7 +61,8 @@ namespace Celeste
       }
       if (flag)
         return;
-      player.CameraAnchorLerp = Vector2.get_Zero();
+      player.CameraAnchorLerp = Vector2.Zero;
     }
   }
 }
+

@@ -73,17 +73,17 @@ namespace Celeste
       FMOD.Studio._3D_ATTRIBUTES attributes = new FMOD.Studio._3D_ATTRIBUTES()
       {
         forward = {
-          x = (float) forward.X,
-          z = (float) forward.Y
+          x = forward.X,
+          z = forward.Y
         }
       };
-      attributes.forward.z = (float) forward.Z;
-      attributes.up.x = (float) up.X;
-      attributes.up.y = (float) up.Y;
-      attributes.up.z = (float) up.Z;
-      attributes.position.x = (float) position.X;
-      attributes.position.y = (float) position.Y;
-      attributes.position.z = (float) position.Z;
+      attributes.forward.z = forward.Z;
+      attributes.up.x = up.X;
+      attributes.up.y = up.Y;
+      attributes.up.z = up.Z;
+      attributes.position.x = position.X;
+      attributes.position.y = position.Y;
+      attributes.position.z = position.Z;
       int num = (int) Audio.system.setListenerAttributes(0, attributes);
     }
 
@@ -94,7 +94,7 @@ namespace Celeste
 
     internal static void CheckFmod(RESULT result)
     {
-      if (result != RESULT.OK)
+      if ((uint) result > 0U)
         throw new Exception("FMOD Failed: " + (object) result);
     }
 
@@ -240,14 +240,14 @@ namespace Celeste
     {
       if (!((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null))
         return;
-      Vector2 vector2 = Vector2.get_Zero();
+      Vector2 vector2 = Vector2.Zero;
       if (Audio.currentCamera != null)
-        vector2 = Vector2.op_Addition(Audio.currentCamera.Position, Vector2.op_Division(new Vector2(320f, 180f), 2f));
-      float num1 = (float) (position.X - vector2.X);
+        vector2 = Audio.currentCamera.Position + new Vector2(320f, 180f) / 2f;
+      float num1 = position.X - vector2.X;
       if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
         num1 = -num1;
       Audio.attributes3d.position.x = num1;
-      Audio.attributes3d.position.y = (float) (position.Y - vector2.Y);
+      Audio.attributes3d.position.y = position.Y - vector2.Y;
       Audio.attributes3d.position.z = 0.0f;
       int num2 = (int) instance.set3DAttributes(Audio.attributes3d);
     }
@@ -292,7 +292,7 @@ namespace Celeste
           case RESULT.OK:
             int num = (int) _event.loadSampleData();
             Audio.cachedEventDescriptions.Add(path, _event);
-            break;
+            goto case RESULT.ERR_EVENT_NOTFOUND;
           case RESULT.ERR_EVENT_NOTFOUND:
             break;
           default:
@@ -371,10 +371,10 @@ namespace Celeste
     public static float VCAVolume(string path, float? volume = null)
     {
       VCA vca1;
-      int vca2 = (int) Audio.system.getVCA(path, out vca1);
+      RESULT vca2 = Audio.system.getVCA(path, out vca1);
       float volume1 = 1f;
       float finalvolume = 1f;
-      if (vca2 == 0)
+      if (vca2 == RESULT.OK)
       {
         if (volume.HasValue)
         {
@@ -413,9 +413,7 @@ namespace Celeste
         return false;
       PLAYBACK_STATE state;
       int playbackState = (int) snapshot.getPlaybackState(out state);
-      if (state != PLAYBACK_STATE.PLAYING && state != PLAYBACK_STATE.STARTING)
-        return state == PLAYBACK_STATE.SUSTAINING;
-      return true;
+      return state == PLAYBACK_STATE.PLAYING || state == PLAYBACK_STATE.STARTING || state == PLAYBACK_STATE.SUSTAINING;
     }
 
     public static void EndSnapshot(EventInstance snapshot)
@@ -639,3 +637,4 @@ namespace Celeste
     }
   }
 }
+

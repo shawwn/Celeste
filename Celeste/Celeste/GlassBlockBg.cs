@@ -39,19 +39,19 @@ namespace Celeste
       List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures("particles/stars/");
       for (int index = 0; index < this.stars.Length; ++index)
       {
-        this.stars[index].Position.X = (__Null) (double) Calc.Random.Next(320);
-        this.stars[index].Position.Y = (__Null) (double) Calc.Random.Next(180);
+        this.stars[index].Position.X = (float) Calc.Random.Next(320);
+        this.stars[index].Position.Y = (float) Calc.Random.Next(180);
         this.stars[index].Texture = Calc.Random.Choose<MTexture>(atlasSubtextures);
         this.stars[index].Color = Calc.Random.Choose<Color>(GlassBlockBg.starColors);
-        this.stars[index].Scroll = Vector2.op_Multiply(Vector2.get_One(), Calc.Random.NextFloat(0.05f));
+        this.stars[index].Scroll = Vector2.One * Calc.Random.NextFloat(0.05f);
       }
       for (int index = 0; index < this.rays.Length; ++index)
       {
-        this.rays[index].Position.X = (__Null) (double) Calc.Random.Next(320);
-        this.rays[index].Position.Y = (__Null) (double) Calc.Random.Next(180);
+        this.rays[index].Position.X = (float) Calc.Random.Next(320);
+        this.rays[index].Position.Y = (float) Calc.Random.Next(180);
         this.rays[index].Width = Calc.Random.Range(4f, 16f);
         this.rays[index].Length = (float) Calc.Random.Choose<int>(48, 96, 128);
-        this.rays[index].Color = Color.op_Multiply(Color.get_White(), Calc.Random.Range(0.2f, 0.4f));
+        this.rays[index].Color = Color.White * Calc.Random.Range(0.2f, 0.4f);
       }
     }
 
@@ -64,68 +64,67 @@ namespace Celeste
       int num2 = 180;
       if (this.starsTarget == null)
         this.starsTarget = VirtualContent.CreateRenderTarget("glass-block-surfaces", 320, 180, false, true, 0);
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.starsTarget);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.PointClamp, (DepthStencilState) DepthStencilState.None, (RasterizerState) RasterizerState.CullNone, (Effect) null, Matrix.get_Identity());
-      Vector2 origin;
-      ((Vector2) ref origin).\u002Ector(8f, 8f);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.starsTarget);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, (Effect) null, Matrix.Identity);
+      Vector2 origin = new Vector2(8f, 8f);
       for (int index = 0; index < this.stars.Length; ++index)
       {
         MTexture texture = this.stars[index].Texture;
         Color color = this.stars[index].Color;
         Vector2 scroll = this.stars[index].Scroll;
-        Vector2 position = (Vector2) null;
-        position.X = (__Null) (double) this.Mod((float) (this.stars[index].Position.X - (double) camera.X * (1.0 - scroll.X)), (float) num1);
-        position.Y = (__Null) (double) this.Mod((float) (this.stars[index].Position.Y - (double) camera.Y * (1.0 - scroll.Y)), (float) num2);
+        Vector2 position = new Vector2();
+        position.X = this.Mod(this.stars[index].Position.X - camera.X * (1f - scroll.X), (float) num1);
+        position.Y = this.Mod(this.stars[index].Position.Y - camera.Y * (1f - scroll.Y), (float) num2);
         texture.Draw(position, origin, color);
-        if (position.X < origin.X)
-          texture.Draw(Vector2.op_Addition(position, new Vector2((float) num1, 0.0f)), origin, color);
-        else if (position.X > (double) num1 - origin.X)
-          texture.Draw(Vector2.op_Subtraction(position, new Vector2((float) num1, 0.0f)), origin, color);
-        if (position.Y < origin.Y)
-          texture.Draw(Vector2.op_Addition(position, new Vector2(0.0f, (float) num2)), origin, color);
-        else if (position.Y > (double) num2 - origin.Y)
-          texture.Draw(Vector2.op_Subtraction(position, new Vector2(0.0f, (float) num2)), origin, color);
+        if ((double) position.X < (double) origin.X)
+          texture.Draw(position + new Vector2((float) num1, 0.0f), origin, color);
+        else if ((double) position.X > (double) num1 - (double) origin.X)
+          texture.Draw(position - new Vector2((float) num1, 0.0f), origin, color);
+        if ((double) position.Y < (double) origin.Y)
+          texture.Draw(position + new Vector2(0.0f, (float) num2), origin, color);
+        else if ((double) position.Y > (double) num2 - (double) origin.Y)
+          texture.Draw(position - new Vector2(0.0f, (float) num2), origin, color);
       }
       Draw.SpriteBatch.End();
       int vertex = 0;
       for (int index = 0; index < this.rays.Length; ++index)
       {
-        Vector2 position = (Vector2) null;
-        position.X = (__Null) (double) this.Mod((float) (this.rays[index].Position.X - (double) camera.X * 0.899999976158142), (float) num1);
-        position.Y = (__Null) (double) this.Mod((float) (this.rays[index].Position.Y - (double) camera.Y * 0.899999976158142), (float) num2);
+        Vector2 position = new Vector2();
+        position.X = this.Mod(this.rays[index].Position.X - camera.X * 0.9f, (float) num1);
+        position.Y = this.Mod(this.rays[index].Position.Y - camera.Y * 0.9f, (float) num2);
         this.DrawRay(position, ref vertex, ref this.rays[index]);
-        if (position.X < 64.0)
-          this.DrawRay(Vector2.op_Addition(position, new Vector2((float) num1, 0.0f)), ref vertex, ref this.rays[index]);
-        else if (position.X > (double) (num1 - 64))
-          this.DrawRay(Vector2.op_Subtraction(position, new Vector2((float) num1, 0.0f)), ref vertex, ref this.rays[index]);
-        if (position.Y < 64.0)
-          this.DrawRay(Vector2.op_Addition(position, new Vector2(0.0f, (float) num2)), ref vertex, ref this.rays[index]);
-        else if (position.Y > (double) (num2 - 64))
-          this.DrawRay(Vector2.op_Subtraction(position, new Vector2(0.0f, (float) num2)), ref vertex, ref this.rays[index]);
+        if ((double) position.X < 64.0)
+          this.DrawRay(position + new Vector2((float) num1, 0.0f), ref vertex, ref this.rays[index]);
+        else if ((double) position.X > (double) (num1 - 64))
+          this.DrawRay(position - new Vector2((float) num1, 0.0f), ref vertex, ref this.rays[index]);
+        if ((double) position.Y < 64.0)
+          this.DrawRay(position + new Vector2(0.0f, (float) num2), ref vertex, ref this.rays[index]);
+        else if ((double) position.Y > (double) (num2 - 64))
+          this.DrawRay(position - new Vector2(0.0f, (float) num2), ref vertex, ref this.rays[index]);
       }
       if (this.beamsTarget == null)
         this.beamsTarget = VirtualContent.CreateRenderTarget("glass-block-beams", 320, 180, false, true, 0);
-      Engine.Graphics.get_GraphicsDevice().SetRenderTarget((RenderTarget2D) this.beamsTarget);
-      Engine.Graphics.get_GraphicsDevice().Clear(Color.get_Transparent());
-      GFX.DrawVertices<VertexPositionColor>(Matrix.get_Identity(), this.verts, vertex, (Effect) null, (BlendState) null);
+      Engine.Graphics.GraphicsDevice.SetRenderTarget((RenderTarget2D) this.beamsTarget);
+      Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+      GFX.DrawVertices<VertexPositionColor>(Matrix.Identity, this.verts, vertex, (Effect) null, (BlendState) null);
     }
 
     private void DrawRay(Vector2 position, ref int vertex, ref GlassBlockBg.Ray ray)
     {
-      Vector2 vector2_1 = new Vector2((float) -this.rayNormal.Y, (float) this.rayNormal.X);
-      Vector2 vector2_2 = Vector2.op_Multiply(Vector2.op_Multiply(this.rayNormal, ray.Width), 0.5f);
-      Vector2 vector2_3 = Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Multiply(vector2_1, ray.Length), 0.25f), 0.5f);
-      Vector2 vector2_4 = Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Multiply(vector2_1, ray.Length), 0.5f), 0.5f);
-      Vector2 v0 = Vector2.op_Subtraction(Vector2.op_Subtraction(Vector2.op_Addition(position, vector2_2), vector2_3), vector2_4);
-      Vector2 v3 = Vector2.op_Subtraction(Vector2.op_Subtraction(Vector2.op_Subtraction(position, vector2_2), vector2_3), vector2_4);
-      Vector2 vector2_5 = Vector2.op_Subtraction(Vector2.op_Addition(position, vector2_2), vector2_3);
-      Vector2 vector2_6 = Vector2.op_Subtraction(Vector2.op_Subtraction(position, vector2_2), vector2_3);
-      Vector2 vector2_7 = Vector2.op_Addition(Vector2.op_Addition(position, vector2_2), vector2_3);
-      Vector2 vector2_8 = Vector2.op_Addition(Vector2.op_Subtraction(position, vector2_2), vector2_3);
-      Vector2 v1 = Vector2.op_Addition(Vector2.op_Addition(Vector2.op_Addition(position, vector2_2), vector2_3), vector2_4);
-      Vector2 v2 = Vector2.op_Addition(Vector2.op_Addition(Vector2.op_Subtraction(position, vector2_2), vector2_3), vector2_4);
-      Color transparent = Color.get_Transparent();
+      Vector2 vector2_1 = new Vector2(-this.rayNormal.Y, this.rayNormal.X);
+      Vector2 vector2_2 = this.rayNormal * ray.Width * 0.5f;
+      Vector2 vector2_3 = vector2_1 * ray.Length * 0.25f * 0.5f;
+      Vector2 vector2_4 = vector2_1 * ray.Length * 0.5f * 0.5f;
+      Vector2 v0 = position + vector2_2 - vector2_3 - vector2_4;
+      Vector2 v3 = position - vector2_2 - vector2_3 - vector2_4;
+      Vector2 vector2_5 = position + vector2_2 - vector2_3;
+      Vector2 vector2_6 = position - vector2_2 - vector2_3;
+      Vector2 vector2_7 = position + vector2_2 + vector2_3;
+      Vector2 vector2_8 = position - vector2_2 + vector2_3;
+      Vector2 v1 = position + vector2_2 + vector2_3 + vector2_4;
+      Vector2 v2 = position - vector2_2 + vector2_3 + vector2_4;
+      Color transparent = Color.Transparent;
       Color color = ray.Color;
       this.Quad(ref vertex, v0, vector2_5, vector2_6, v3, transparent, color, color, transparent);
       this.Quad(ref vertex, vector2_5, vector2_7, vector2_8, vector2_6, color, color, color, color);
@@ -143,48 +142,24 @@ namespace Celeste
       Color c2,
       Color c3)
     {
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).X = v0.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).Y = v0.Y;
-      this.verts[vertex++].Color = (__Null) c0;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).X = v1.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).Y = v1.Y;
-      this.verts[vertex++].Color = (__Null) c1;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).X = v2.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).Y = v2.Y;
-      this.verts[vertex++].Color = (__Null) c2;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).X = v0.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).Y = v0.Y;
-      this.verts[vertex++].Color = (__Null) c0;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).X = v2.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).Y = v2.Y;
-      this.verts[vertex++].Color = (__Null) c2;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).X = v3.X;
-      // ISSUE: cast to a reference type
-      // ISSUE: explicit reference operation
-      (^(Vector3&) ref this.verts[vertex].Position).Y = v3.Y;
-      this.verts[vertex++].Color = (__Null) c3;
+      this.verts[vertex].Position.X = v0.X;
+      this.verts[vertex].Position.Y = v0.Y;
+      this.verts[vertex++].Color = c0;
+      this.verts[vertex].Position.X = v1.X;
+      this.verts[vertex].Position.Y = v1.Y;
+      this.verts[vertex++].Color = c1;
+      this.verts[vertex].Position.X = v2.X;
+      this.verts[vertex].Position.Y = v2.Y;
+      this.verts[vertex++].Color = c2;
+      this.verts[vertex].Position.X = v0.X;
+      this.verts[vertex].Position.Y = v0.Y;
+      this.verts[vertex++].Color = c0;
+      this.verts[vertex].Position.X = v2.X;
+      this.verts[vertex].Position.Y = v2.Y;
+      this.verts[vertex++].Color = c2;
+      this.verts[vertex].Position.X = v3.X;
+      this.verts[vertex].Position.Y = v3.Y;
+      this.verts[vertex++].Color = c3;
     }
 
     public override void Render()
@@ -199,18 +174,16 @@ namespace Celeste
       {
         foreach (Entity entity in entities)
         {
-          Rectangle rectangle;
-          ((Rectangle) ref rectangle).\u002Ector((int) ((double) entity.X - position.X), (int) ((double) entity.Y - position.Y), (int) entity.Width, (int) entity.Height);
-          Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.starsTarget, entity.Position, new Rectangle?(rectangle), Color.get_White());
+          Rectangle rectangle = new Rectangle((int) ((double) entity.X - (double) position.X), (int) ((double) entity.Y - (double) position.Y), (int) entity.Width, (int) entity.Height);
+          Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.starsTarget, entity.Position, new Rectangle?(rectangle), Color.White);
         }
       }
       if (this.beamsTarget == null || this.beamsTarget.IsDisposed)
         return;
       foreach (Entity entity in entities)
       {
-        Rectangle rectangle;
-        ((Rectangle) ref rectangle).\u002Ector((int) ((double) entity.X - position.X), (int) ((double) entity.Y - position.Y), (int) entity.Width, (int) entity.Height);
-        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.beamsTarget, entity.Position, new Rectangle?(rectangle), Color.get_White());
+        Rectangle rectangle = new Rectangle((int) ((double) entity.X - (double) position.X), (int) ((double) entity.Y - (double) position.Y), (int) entity.Width, (int) entity.Height);
+        Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.beamsTarget, entity.Position, new Rectangle?(rectangle), Color.White);
       }
     }
 
@@ -258,3 +231,4 @@ namespace Celeste
     }
   }
 }
+

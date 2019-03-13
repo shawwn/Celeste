@@ -93,18 +93,17 @@ namespace Celeste
 
     public static void Add(int x, int y, int w, int h, ClutterBlock.Colors color)
     {
-      ClutterBlockGenerator.level.Add((Entity) new ClutterBlockBase(Vector2.op_Addition(new Vector2((float) ClutterBlockGenerator.level.Bounds.X, (float) ClutterBlockGenerator.level.Bounds.Y), Vector2.op_Multiply(new Vector2((float) x, (float) y), 8f)), w * 8, h * 8, ClutterBlockGenerator.enabled[(int) color], color));
+      ClutterBlockGenerator.level.Add((Entity) new ClutterBlockBase(new Vector2((float) ClutterBlockGenerator.level.Bounds.X, (float) ClutterBlockGenerator.level.Bounds.Y) + new Vector2((float) x, (float) y) * 8f, w * 8, h * 8, ClutterBlockGenerator.enabled[(int) color], color));
       if (!ClutterBlockGenerator.enabled[(int) color])
         return;
-      int num1 = Math.Max(0, x);
-      for (int index1 = Math.Min(ClutterBlockGenerator.columns, x + w); num1 < index1; ++num1)
+      int x1 = Math.Max(0, x);
+      for (int index1 = Math.Min(ClutterBlockGenerator.columns, x + w); x1 < index1; ++x1)
       {
-        int num2 = Math.Max(0, y);
-        for (int index2 = Math.Min(ClutterBlockGenerator.rows, y + h); num2 < index2; ++num2)
+        int y1 = Math.Max(0, y);
+        for (int index2 = Math.Min(ClutterBlockGenerator.rows, y + h); y1 < index2; ++y1)
         {
-          Point point;
-          ((Point) ref point).\u002Ector(num1, num2);
-          ClutterBlockGenerator.tiles[(int) point.X, (int) point.Y].Color = (int) color;
+          Point point = new Point(x1, y1);
+          ClutterBlockGenerator.tiles[point.X, point.Y].Color = (int) color;
           ClutterBlockGenerator.active.Add(point);
         }
       }
@@ -117,48 +116,44 @@ namespace Celeste
       ClutterBlockGenerator.active.Shuffle<Point>();
       List<ClutterBlock> clutterBlockList = new List<ClutterBlock>();
       Rectangle bounds = ClutterBlockGenerator.level.Bounds;
-      using (List<Point>.Enumerator enumerator = ClutterBlockGenerator.active.GetEnumerator())
+      foreach (Point point in ClutterBlockGenerator.active)
       {
-        while (enumerator.MoveNext())
+        if (ClutterBlockGenerator.tiles[point.X, point.Y].Block == null)
         {
-          Point current = enumerator.Current;
-          if (ClutterBlockGenerator.tiles[(int) current.X, (int) current.Y].Block == null)
+          int index1 = 0;
+          int color;
+          ClutterBlockGenerator.TextureSet textureSet;
+          while (true)
           {
-            int index1 = 0;
-            int color;
-            ClutterBlockGenerator.TextureSet textureSet;
-            while (true)
+            color = ClutterBlockGenerator.tiles[point.X, point.Y].Color;
+            textureSet = ClutterBlockGenerator.textures[color][index1];
+            bool flag = true;
+            if (point.X + textureSet.Columns <= ClutterBlockGenerator.columns && point.Y + textureSet.Rows <= ClutterBlockGenerator.rows)
             {
-              color = ClutterBlockGenerator.tiles[(int) current.X, (int) current.Y].Color;
-              textureSet = ClutterBlockGenerator.textures[color][index1];
-              bool flag = true;
-              if (current.X + textureSet.Columns <= ClutterBlockGenerator.columns && current.Y + textureSet.Rows <= ClutterBlockGenerator.rows)
+              int x = point.X;
+              for (int index2 = point.X + textureSet.Columns; flag && x < index2; ++x)
               {
-                int x = (int) current.X;
-                for (int index2 = current.X + textureSet.Columns; flag && x < index2; ++x)
+                int y = point.Y;
+                for (int index3 = point.Y + textureSet.Rows; flag && y < index3; ++y)
                 {
-                  int y = (int) current.Y;
-                  for (int index3 = current.Y + textureSet.Rows; flag && y < index3; ++y)
-                  {
-                    ClutterBlockGenerator.Tile tile = ClutterBlockGenerator.tiles[x, y];
-                    if (tile.Block != null || tile.Color != color)
-                      flag = false;
-                  }
+                  ClutterBlockGenerator.Tile tile = ClutterBlockGenerator.tiles[x, y];
+                  if (tile.Block != null || tile.Color != color)
+                    flag = false;
                 }
-                if (flag)
-                  break;
               }
-              ++index1;
+              if (flag)
+                break;
             }
-            ClutterBlock clutterBlock = new ClutterBlock(Vector2.op_Addition(new Vector2((float) bounds.X, (float) bounds.Y), Vector2.op_Multiply(new Vector2((float) current.X, (float) current.Y), 8f)), Calc.Random.Choose<MTexture>(textureSet.textures), (ClutterBlock.Colors) color);
-            for (int x = (int) current.X; x < current.X + textureSet.Columns; ++x)
-            {
-              for (int y = (int) current.Y; y < current.Y + textureSet.Rows; ++y)
-                ClutterBlockGenerator.tiles[x, y].Block = clutterBlock;
-            }
-            clutterBlockList.Add(clutterBlock);
-            ClutterBlockGenerator.level.Add((Entity) clutterBlock);
+            ++index1;
           }
+          ClutterBlock clutterBlock = new ClutterBlock(new Vector2((float) bounds.X, (float) bounds.Y) + new Vector2((float) point.X, (float) point.Y) * 8f, Calc.Random.Choose<MTexture>(textureSet.textures), (ClutterBlock.Colors) color);
+          for (int x = point.X; x < point.X + textureSet.Columns; ++x)
+          {
+            for (int y = point.Y; y < point.Y + textureSet.Rows; ++y)
+              ClutterBlockGenerator.tiles[x, y].Block = clutterBlock;
+          }
+          clutterBlockList.Add(clutterBlock);
+          ClutterBlockGenerator.level.Add((Entity) clutterBlock);
         }
       }
       for (int index1 = 0; index1 < ClutterBlockGenerator.columns; ++index1)
@@ -222,9 +217,7 @@ namespace Celeste
       {
         get
         {
-          if (!this.Wall)
-            return this.Color == -1;
-          return false;
+          return !this.Wall && this.Color == -1;
         }
       }
     }
@@ -237,3 +230,4 @@ namespace Celeste
     }
   }
 }
+

@@ -16,10 +16,11 @@ namespace Celeste
 {
   public class FancyText
   {
-    public static Color DefaultColor = Color.get_LightGray();
+    public static Color DefaultColor = Color.LightGray;
     private FancyText.Text group = new FancyText.Text();
     private float currentScale = 1f;
     private float currentDelay = 0.01f;
+    private int currentCharIndex = 0;
     public const float CharacterDelay = 0.01f;
     public const float PeriodDelay = 0.3f;
     public const float CommaDelay = 0.15f;
@@ -40,7 +41,6 @@ namespace Celeste
     private bool currentWave;
     private bool currentImpact;
     private bool currentMessedUp;
-    private int currentCharIndex;
 
     public static FancyText.Text Parse(
       string text,
@@ -122,7 +122,7 @@ namespace Celeste
             else
             {
               colorStack.Push(this.currentColor);
-              this.currentColor = !(hex == "red") ? (!(hex == "green") ? (!(hex == "blue") ? Calc.HexToColor(hex) : Color.get_Blue()) : Color.get_Green()) : Color.get_Red();
+              this.currentColor = !(hex == "red") ? (!(hex == "green") ? (!(hex == "blue") ? Calc.HexToColor(hex) : Color.Blue) : Color.Green) : Color.Red;
             }
           }
           else if (s == "break")
@@ -314,7 +314,7 @@ namespace Celeste
 
     private void AddWord(string word)
     {
-      if ((double) this.currentPosition + (double) ((float) this.size.Measure(word).X * this.currentScale) > (double) this.maxLineWidth)
+      if ((double) this.currentPosition + (double) (this.size.Measure(word).X * this.currentScale) > (double) this.maxLineWidth)
         this.AddNewLine();
       for (int index = 0; index < word.Length; ++index)
       {
@@ -399,31 +399,16 @@ namespace Celeste
         float alpha)
       {
         float num = (this.Impact ? 2f - this.Fade : 1f) * this.Scale;
-        Vector2 zero = Vector2.get_Zero();
-        Vector2 vector2_1 = Vector2.op_Multiply(scale, num);
-        PixelFontSize pixelFontSize = font.Get(baseSize * Math.Max((float) vector2_1.X, (float) vector2_1.Y));
+        Vector2 zero = Vector2.Zero;
+        Vector2 vector2_1 = scale * num;
+        PixelFontSize pixelFontSize = font.Get(baseSize * Math.Max(vector2_1.X, vector2_1.Y));
         PixelFontCharacter pixelFontCharacter = pixelFontSize.Get(this.Character);
-        Vector2 scale1 = Vector2.op_Multiply(vector2_1, baseSize / pixelFontSize.Size);
-        ref __Null local1 = ref position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + this.Position * (float) scale.X;
-        Vector2 vector2_2 = Vector2.op_Addition(Vector2.op_Addition(zero, this.Shake ? Vector2.op_Multiply(new Vector2((float) (Calc.Random.Next(3) - 1), (float) (Calc.Random.Next(3) - 1)), 2f) : Vector2.get_Zero()), this.Wave ? new Vector2(0.0f, (float) Math.Sin((double) this.Index * 0.25 + (double) Engine.Scene.RawTimeActive * 8.0) * 4f) : Vector2.get_Zero());
-        ref __Null local2 = ref vector2_2.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 + (float) pixelFontCharacter.XOffset;
-        ref __Null local3 = ref vector2_2.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local3 = ^(float&) ref local3 + ((float) pixelFontCharacter.YOffset + (float) (-8.0 * (1.0 - (double) this.Fade) + (double) this.YOffset * (double) this.Fade));
-        pixelFontCharacter.Texture.Draw(Vector2.op_Addition(position, Vector2.op_Multiply(vector2_2, scale1)), Vector2.get_Zero(), Color.op_Multiply(Color.op_Multiply(this.Color, this.Fade), alpha), scale1, this.Rotation);
+        Vector2 scale1 = vector2_1 * (baseSize / pixelFontSize.Size);
+        position.X += this.Position * scale.X;
+        Vector2 vector2_2 = zero + (this.Shake ? new Vector2((float) (Calc.Random.Next(3) - 1), (float) (Calc.Random.Next(3) - 1)) * 2f : Vector2.Zero) + (this.Wave ? new Vector2(0.0f, (float) Math.Sin((double) this.Index * 0.25 + (double) Engine.Scene.RawTimeActive * 8.0) * 4f) : Vector2.Zero);
+        vector2_2.X += (float) pixelFontCharacter.XOffset;
+        vector2_2.Y += (float) pixelFontCharacter.YOffset + (float) (-8.0 * (1.0 - (double) this.Fade) + (double) this.YOffset * (double) this.Fade);
+        pixelFontCharacter.Texture.Draw(position + vector2_2 * scale1, Vector2.Zero, this.Color * this.Fade * alpha, scale1, this.Rotation);
       }
     }
 
@@ -592,7 +577,7 @@ namespace Celeste
             break;
         }
         float num3 = num2 + val1_2;
-        position = Vector2.op_Subtraction(position, Vector2.op_Multiply(Vector2.op_Multiply(justify, new Vector2((float) val1_1, num3 * (float) pixelFontSize.LineHeight)), scale));
+        position -= justify * new Vector2((float) val1_1, num3 * (float) pixelFontSize.LineHeight) * scale;
         float val1_3 = 0.0f;
         for (int index = start; index < num1 && !(this.Nodes[index] is FancyText.NewPage); ++index)
         {
@@ -600,12 +585,7 @@ namespace Celeste
           {
             if ((double) val1_3 == 0.0)
               val1_3 = 1f;
-            ref __Null local = ref position.Y;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local + (float) ((double) pixelFontSize.LineHeight * (double) val1_3 * scale.Y);
+            position.Y += (float) pixelFontSize.LineHeight * val1_3 * scale.Y;
             val1_3 = 0.0f;
           }
           if (this.Nodes[index] is FancyText.Char)
@@ -651,19 +631,14 @@ namespace Celeste
           {
             if ((double) val1_2 == 0.0)
               val1_2 = 1f;
-            ref __Null local = ref position.Y;
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            // ISSUE: cast to a reference type
-            // ISSUE: explicit reference operation
-            ^(float&) ref local = ^(float&) ref local + (float) ((double) val1_2 * (double) pixelFontSize.LineHeight * scale.Y);
+            position.Y += val1_2 * (float) pixelFontSize.LineHeight * scale.Y;
             val1_2 = 0.0f;
           }
           if (this.Nodes[index] is FancyText.Char)
           {
             FancyText.Char node = this.Nodes[index] as FancyText.Char;
-            Vector2 vector2 = Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_UnaryNegation(justify), new Vector2(node.LineWidth, num3 * (float) pixelFontSize.LineHeight)), scale);
-            node.Draw(this.Font, this.BaseSize, Vector2.op_Addition(position, vector2), scale, alpha);
+            Vector2 vector2 = -justify * new Vector2(node.LineWidth, num3 * (float) pixelFontSize.LineHeight) * scale;
+            node.Draw(this.Font, this.BaseSize, position + vector2, scale, alpha);
             val1_2 = Math.Max(val1_2, node.Scale);
           }
         }
@@ -671,3 +646,4 @@ namespace Celeste
     }
   }
 }
+

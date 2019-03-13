@@ -36,7 +36,9 @@ namespace Celeste
     private static void CmdBounce()
     {
       Player entity = Engine.Scene.Tracker.GetEntity<Player>();
-      entity?.Bounce(entity.Bottom);
+      if (entity == null)
+        return;
+      entity.Bounce(entity.Bottom);
     }
 
     [Command("sound_instances", "gets active sound count")]
@@ -113,7 +115,7 @@ namespace Celeste
               stringList.Add(level.Name);
           }
         }
-        Engine.Commands.Log((object) string.Join(", ", (IEnumerable<string>) stringList), Color.get_Red());
+        Engine.Commands.Log((object) string.Join(", ", (IEnumerable<string>) stringList), Color.Red);
         Engine.Commands.Log((object) (num2.ToString() + " / " + (object) num1));
       }
     }
@@ -145,13 +147,11 @@ namespace Celeste
     [Command("logsession", "log session to output")]
     private static void CmdLogSession()
     {
-      Session session1 = (Engine.Scene as Level).Session;
+      Session session = (Engine.Scene as Level).Session;
       XmlSerializer xmlSerializer = new XmlSerializer(typeof (Session));
-      StringWriter stringWriter1 = new StringWriter();
-      StringWriter stringWriter2 = stringWriter1;
-      Session session2 = session1;
-      xmlSerializer.Serialize((TextWriter) stringWriter2, (object) session2);
-      Console.WriteLine(stringWriter1.ToString());
+      StringWriter stringWriter = new StringWriter();
+      xmlSerializer.Serialize((TextWriter) stringWriter, (object) session);
+      Console.WriteLine(stringWriter.ToString());
     }
 
     [Command("postcard", "views a postcard")]
@@ -168,7 +168,7 @@ namespace Celeste
       foreach (KeyValuePair<string, Language> language in Dialog.Languages)
         flag &= Commands.CmdCheckLangauge(language.Key);
       Engine.Commands.Log((object) "---------------------");
-      Engine.Commands.Log((object) ("REUSLT: " + flag.ToString()), flag ? Color.get_LawnGreen() : Color.get_Red());
+      Engine.Commands.Log((object) ("REUSLT: " + flag.ToString()), flag ? Color.LawnGreen : Color.Red);
     }
 
     [Command("check_language", "compares all langauges to english")]
@@ -177,7 +177,7 @@ namespace Celeste
       bool flag1 = true;
       bool flag2 = Dialog.CheckLanguageFontCharacters(id);
       bool flag3 = Dialog.CompareLanguages("english", id);
-      Engine.Commands.Log((object) (id + " [FONT: " + flag2.ToString() + ", MATCH: " + flag3.ToString() + "]"), flag2 & flag3 ? Color.get_White() : Color.get_Red());
+      Engine.Commands.Log((object) (id + " [FONT: " + flag2.ToString() + ", MATCH: " + flag3.ToString() + "]"), flag2 & flag3 ? Color.White : Color.Red);
       return flag1 & flag2 & flag3;
     }
 
@@ -204,7 +204,7 @@ namespace Celeste
               int index3 = strawberry.Int("order", 0);
               string str = index2.ToString() + ":" + (object) index3;
               if (stringSet.Contains(str))
-                Engine.Commands.Log((object) ("Conflicting Berry: Area[" + (object) area.ID + "] Mode[" + (object) index1 + "] Checkpoint[" + (object) index2 + "] Order[" + (object) index3 + "]"), Color.get_Red());
+                Engine.Commands.Log((object) ("Conflicting Berry: Area[" + (object) area.ID + "] Mode[" + (object) index1 + "] Checkpoint[" + (object) index2 + "] Order[" + (object) index3 + "]"), Color.Red);
               else
                 stringSet.Add(str);
               entityDataArray[index2, index3] = strawberry;
@@ -214,7 +214,7 @@ namespace Celeste
               for (int index3 = 1; index3 < entityDataArray.GetLength(1); ++index3)
               {
                 if (entityDataArray[index2, index3] != null && entityDataArray[index2, index3 - 1] == null)
-                  Engine.Commands.Log((object) ("Missing Berry Order #" + (object) (index3 - 1) + ": Area[" + (object) area.ID + "] Mode[" + (object) index1 + "] Checkpoint[" + (object) index2 + "]"), Color.get_Red());
+                  Engine.Commands.Log((object) ("Missing Berry Order #" + (object) (index3 - 1) + ": Area[" + (object) area.ID + "] Mode[" + (object) index1 + "] Checkpoint[" + (object) index2 + "]"), Color.Red);
               }
             }
           }
@@ -243,10 +243,10 @@ namespace Celeste
       if (!(Engine.Scene is Level))
         return;
       AudioState audio = (Engine.Scene as Level).Session.Audio;
-      Engine.Commands.Log((object) ("MUSIC: " + audio.Music.Event), Color.get_Green());
+      Engine.Commands.Log((object) ("MUSIC: " + audio.Music.Event), Color.Green);
       foreach (MEP parameter in audio.Music.Parameters)
         Engine.Commands.Log((object) ("    " + parameter.Key + " = " + (object) parameter.Value));
-      Engine.Commands.Log((object) ("AMBIENCE: " + audio.Ambience.Event), Color.get_Green());
+      Engine.Commands.Log((object) ("AMBIENCE: " + audio.Ambience.Event), Color.Green);
       foreach (MEP parameter in audio.Ambience.Parameters)
         Engine.Commands.Log((object) ("    " + parameter.Key + " = " + (object) parameter.Value));
     }
@@ -303,9 +303,9 @@ namespace Celeste
       SaveData.InitializeDebugMode(true);
       Session session = new Session(new AreaKey(6, AreaMode.Normal), (string) null, (AreaStats) null);
       session.Level = "04";
-      LevelLoader levelLoader = new LevelLoader(session, new Vector2?(session.GetSpawnPoint(new Vector2((float) ((Rectangle) ref session.LevelData.Bounds).get_Center().X, (float) ((Rectangle) ref session.LevelData.Bounds).get_Top()))));
+      LevelLoader levelLoader = new LevelLoader(session, new Vector2?(session.GetSpawnPoint(new Vector2((float) session.LevelData.Bounds.Center.X, (float) session.LevelData.Bounds.Top))));
       levelLoader.PlayerIntroTypeOverride = new Player.IntroTypes?(Player.IntroTypes.Fall);
-      levelLoader.Level.Add((Entity) new BackgroundFadeIn(Color.get_Black(), 2f, 30f));
+      levelLoader.Level.Add((Entity) new BackgroundFadeIn(Color.Black, 2f, 30f));
       Engine.Scene = (Scene) levelLoader;
     }
 
@@ -458,10 +458,8 @@ namespace Celeste
       Session session = new Session(area1, (string) null, (AreaStats) null);
       AreaStats area2 = SaveData.Instance.Areas[index];
       AreaModeStats mode1 = area2.Modes[mode];
-      TimeSpan timeSpan = TimeSpan.FromTicks(mode1.BestTime);
-      double totalSeconds1 = timeSpan.TotalSeconds;
-      timeSpan = TimeSpan.FromTicks(mode1.BestFullClearTime);
-      double totalSeconds2 = timeSpan.TotalSeconds;
+      double totalSeconds1 = TimeSpan.FromTicks(mode1.BestTime).TotalSeconds;
+      double totalSeconds2 = TimeSpan.FromTicks(mode1.BestFullClearTime).TotalSeconds;
       SaveData.Instance.RegisterCompletion(session);
       SaveData.Instance.CurrentSession = session;
       SaveData.Instance.CurrentSession.OldStats = new AreaStats(index);
@@ -475,6 +473,7 @@ namespace Celeste
       mode1.Deaths = Math.Max(deaths, mode1.Deaths);
       if (heartGem)
         mode1.HeartGem = true;
+      TimeSpan timeSpan;
       if (totalSeconds1 <= 0.0)
       {
         AreaModeStats areaModeStats = mode1;
@@ -608,10 +607,10 @@ namespace Celeste
     [Command("berries", "check how many strawberries are in the given chapter, or the entire game")]
     private static void CmdStrawberries(int chapterID = -1)
     {
-      Color lime = Color.get_Lime();
-      Color red = Color.get_Red();
-      Color yellow = Color.get_Yellow();
-      Color gray = Color.get_Gray();
+      Color lime = Color.Lime;
+      Color red = Color.Red;
+      Color yellow = Color.Yellow;
+      Color gray = Color.Gray;
       if (chapterID == -1)
       {
         int num = 0;
@@ -708,3 +707,4 @@ namespace Celeste
     }
   }
 }
+

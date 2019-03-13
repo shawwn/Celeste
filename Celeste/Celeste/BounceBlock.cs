@@ -50,19 +50,19 @@ namespace Celeste
       this.startPos = this.Position;
       this.hotImages = this.BuildSprite(GFX.Game["objects/bumpblocknew/fire00"]);
       this.hotCenterSprite = GFX.SpriteBank.Create("bumpBlockCenterFire");
-      this.hotCenterSprite.Position = Vector2.op_Division(new Vector2(this.Width, this.Height), 2f);
+      this.hotCenterSprite.Position = new Vector2(this.Width, this.Height) / 2f;
       this.hotCenterSprite.Visible = false;
       this.Add((Component) this.hotCenterSprite);
       this.coldImages = this.BuildSprite(GFX.Game["objects/bumpblocknew/ice00"]);
       this.coldCenterSprite = GFX.SpriteBank.Create("bumpBlockCenterIce");
-      this.coldCenterSprite.Position = Vector2.op_Division(new Vector2(this.Width, this.Height), 2f);
+      this.coldCenterSprite.Position = new Vector2(this.Width, this.Height) / 2f;
       this.coldCenterSprite.Visible = false;
       this.Add((Component) this.coldCenterSprite);
       this.Add((Component) new CoreModeListener(new Action<Session.CoreModes>(this.OnChangeMode)));
     }
 
     public BounceBlock(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height)
+      : this(data.Position + offset, (float) data.Width, (float) data.Height)
     {
     }
 
@@ -119,14 +119,14 @@ namespace Celeste
     public override void Render()
     {
       Vector2 position = this.Position;
-      this.Position = Vector2.op_Addition(this.Position, this.Shake);
+      this.Position = this.Position + this.Shake;
       if (this.state != BounceBlock.States.Broken && this.reformed)
         base.Render();
       if ((double) this.reappearFlash > 0.0)
       {
         float num1 = Ease.CubeOut(this.reappearFlash);
         float num2 = num1 * 2f;
-        Draw.Rect(this.X - num2, this.Y - num2, this.Width + num2 * 2f, this.Height + num2 * 2f, Color.op_Multiply(Color.get_White(), num1));
+        Draw.Rect(this.X - num2, this.Y - num2, this.Width + num2 * 2f, this.Height + num2 * 2f, Color.White * num1);
       }
       this.Position = position;
     }
@@ -140,13 +140,8 @@ namespace Celeste
         this.CheckModeChange();
         this.moveSpeed = Calc.Approach(this.moveSpeed, 100f, 400f * Engine.DeltaTime);
         Vector2 position = Calc.Approach(this.ExactPosition, this.startPos, this.moveSpeed * Engine.DeltaTime);
-        Vector2 liftSpeed = Vector2.op_Subtraction(position, this.ExactPosition).SafeNormalize(this.moveSpeed);
-        ref __Null local = ref liftSpeed.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 0.75f;
+        Vector2 liftSpeed = (position - this.ExactPosition).SafeNormalize(this.moveSpeed);
+        liftSpeed.X *= 0.75f;
         this.MoveTo(position, liftSpeed);
         this.windUpProgress = Calc.Approach(this.windUpProgress, 0.0f, 1f * Engine.DeltaTime);
         Player player = this.WindUpPlayerCheck();
@@ -154,7 +149,7 @@ namespace Celeste
           return;
         this.moveSpeed = 80f;
         this.windUpStartTimer = 0.0f;
-        this.bounceDir = !this.iceMode ? Vector2.op_Subtraction(player.Center, this.Center).SafeNormalize() : Vector2.op_UnaryNegation(Vector2.get_UnitY());
+        this.bounceDir = !this.iceMode ? (player.Center - this.Center).SafeNormalize() : -Vector2.UnitY;
         this.state = BounceBlock.States.WindingUp;
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
         if (this.iceMode)
@@ -169,7 +164,7 @@ namespace Celeste
       {
         Player player = this.WindUpPlayerCheck();
         if (player != null)
-          this.bounceDir = !this.iceMode ? Vector2.op_Subtraction(player.Center, this.Center).SafeNormalize() : Vector2.op_UnaryNegation(Vector2.get_UnitY());
+          this.bounceDir = !this.iceMode ? (player.Center - this.Center).SafeNormalize() : -Vector2.UnitY;
         if ((double) this.windUpStartTimer > 0.0)
         {
           this.windUpStartTimer -= Engine.DeltaTime;
@@ -179,47 +174,38 @@ namespace Celeste
         {
           this.moveSpeed = Calc.Approach(this.moveSpeed, this.iceMode ? 35f : 40f, 600f * Engine.DeltaTime);
           float num = this.iceMode ? 0.333f : 1f;
-          Vector2 target = Vector2.op_Subtraction(this.startPos, Vector2.op_Multiply(this.bounceDir, this.iceMode ? 16f : 10f));
+          Vector2 target = this.startPos - this.bounceDir * (this.iceMode ? 16f : 10f);
           Vector2 position = Calc.Approach(this.ExactPosition, target, this.moveSpeed * num * Engine.DeltaTime);
-          Vector2 liftSpeed = Vector2.op_Subtraction(position, this.ExactPosition).SafeNormalize(this.moveSpeed * num);
-          ref __Null local = ref liftSpeed.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local * 0.75f;
+          Vector2 liftSpeed = (position - this.ExactPosition).SafeNormalize(this.moveSpeed * num);
+          liftSpeed.X *= 0.75f;
           this.MoveTo(position, liftSpeed);
           this.windUpProgress = Calc.ClampedMap(Vector2.Distance(this.ExactPosition, target), 16f, 2f, 0.0f, 1f);
           if (this.iceMode && (double) Vector2.DistanceSquared(this.ExactPosition, target) <= 12.0)
             this.StartShaking(0.1f);
           else if (!this.iceMode && (double) this.windUpProgress >= 0.5)
             this.StartShaking(0.1f);
-          if ((double) Vector2.DistanceSquared(this.ExactPosition, target) > 2.0)
-            return;
-          if (this.iceMode)
-            this.Break();
-          else
-            this.state = BounceBlock.States.Bouncing;
-          this.moveSpeed = 0.0f;
+          if ((double) Vector2.DistanceSquared(this.ExactPosition, target) <= 2.0)
+          {
+            if (this.iceMode)
+              this.Break();
+            else
+              this.state = BounceBlock.States.Bouncing;
+            this.moveSpeed = 0.0f;
+          }
         }
       }
       else if (this.state == BounceBlock.States.Bouncing)
       {
         this.moveSpeed = Calc.Approach(this.moveSpeed, 140f, 800f * Engine.DeltaTime);
-        Vector2 target = Vector2.op_Addition(this.startPos, Vector2.op_Multiply(this.bounceDir, 24f));
+        Vector2 target = this.startPos + this.bounceDir * 24f;
         Vector2 position = Calc.Approach(this.ExactPosition, target, this.moveSpeed * Engine.DeltaTime);
-        this.bounceLift = Vector2.op_Subtraction(position, this.ExactPosition).SafeNormalize(Math.Min(this.moveSpeed * 3f, 200f));
-        ref __Null local = ref this.bounceLift.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local * 0.75f;
+        this.bounceLift = (position - this.ExactPosition).SafeNormalize(Math.Min(this.moveSpeed * 3f, 200f));
+        this.bounceLift.X *= 0.75f;
         this.MoveTo(position, this.bounceLift);
         this.windUpProgress = 1f;
-        if ((Vector2.op_Equality(this.ExactPosition, target) ? 1 : (this.iceMode ? 0 : (this.WindUpPlayerCheck() == null ? 1 : 0))) == 0)
+        if (!(this.ExactPosition == target) && (this.iceMode || this.WindUpPlayerCheck() != null))
           return;
-        this.debrisDirection = Vector2.op_Subtraction(target, this.startPos).SafeNormalize();
+        this.debrisDirection = (target - this.startPos).SafeNormalize();
         this.state = BounceBlock.States.BounceEnd;
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
         this.moveSpeed = 0.0f;
@@ -256,9 +242,8 @@ namespace Celeste
             {
               for (int index2 = 0; (double) index2 < (double) this.Height; index2 += 8)
               {
-                Vector2 to;
-                ((Vector2) ref to).\u002Ector((float) ((double) this.X + (double) index1 + 4.0), (float) ((double) this.Y + (double) index2 + 4.0));
-                this.Scene.Add((Entity) Engine.Pooler.Create<BounceBlock.RespawnDebris>().Init(Vector2.op_Addition(to, Vector2.op_Multiply(Vector2.op_Subtraction(to, this.Center).SafeNormalize(), 12f)), to, this.iceMode, duration));
+                Vector2 to = new Vector2((float) ((double) this.X + (double) index1 + 4.0), (float) ((double) this.Y + (double) index2 + 4.0));
+                this.Scene.Add((Entity) Engine.Pooler.Create<BounceBlock.RespawnDebris>().Init(to + (to - this.Center).SafeNormalize() * 12f, to, this.iceMode, duration));
               }
             }
             Alarm.Set((Entity) this, duration, (Action) (() =>
@@ -269,7 +254,7 @@ namespace Celeste
               this.ReformParticles();
             }), Alarm.AlarmMode.Oneshot);
             this.Depth = -9000;
-            this.MoveStaticMovers(Vector2.op_Subtraction(this.Position, position));
+            this.MoveStaticMovers(this.Position - position);
             this.Collidable = true;
             this.state = BounceBlock.States.Waiting;
           }
@@ -296,15 +281,15 @@ namespace Celeste
 
     private Player WindUpPlayerCheck()
     {
-      Player player = this.CollideFirst<Player>(Vector2.op_Subtraction(this.Position, Vector2.get_UnitY()));
-      if (player != null && player.Speed.Y < 0.0)
+      Player player = this.CollideFirst<Player>(this.Position - Vector2.UnitY);
+      if (player != null && (double) player.Speed.Y < 0.0)
         player = (Player) null;
       if (player == null)
       {
-        player = this.CollideFirst<Player>(Vector2.op_Addition(this.Position, Vector2.get_UnitX()));
+        player = this.CollideFirst<Player>(this.Position + Vector2.UnitX);
         if (player == null || player.StateMachine.State != 1 || player.Facing != Facings.Left)
         {
-          player = this.CollideFirst<Player>(Vector2.op_Subtraction(this.Position, Vector2.get_UnitX()));
+          player = this.CollideFirst<Player>(this.Position - Vector2.UnitX);
           if (player == null || player.StateMachine.State != 1 || player.Facing != Facings.Right)
             player = (Player) null;
         }
@@ -331,8 +316,7 @@ namespace Celeste
       this.Collidable = false;
       this.DisableStaticMovers();
       this.respawnTimer = 1.6f;
-      Vector2 direction1;
-      ((Vector2) ref direction1).\u002Ector(0.0f, 1f);
+      Vector2 direction1 = new Vector2(0.0f, 1f);
       if (!this.iceMode)
         direction1 = this.debrisDirection;
       Vector2 center = this.Center;
@@ -341,7 +325,7 @@ namespace Celeste
         for (int index2 = 0; (double) index2 < (double) this.Height; index2 += 8)
         {
           if (this.iceMode)
-            direction1 = Vector2.op_Subtraction(new Vector2((float) ((double) this.X + (double) index1 + 4.0), (float) ((double) this.Y + (double) index2 + 4.0)), center).SafeNormalize();
+            direction1 = (new Vector2((float) ((double) this.X + (double) index1 + 4.0), (float) ((double) this.Y + (double) index2 + 4.0)) - center).SafeNormalize();
           this.Scene.Add((Entity) Engine.Pooler.Create<BounceBlock.BreakDebris>().Init(new Vector2((float) ((double) this.X + (double) index1 + 4.0), (float) ((double) this.Y + (double) index2 + 4.0)), direction1, this.iceMode));
         }
       }
@@ -351,8 +335,8 @@ namespace Celeste
       {
         for (int index2 = 0; (double) index2 < (double) this.Height; index2 += 4)
         {
-          Vector2 position = Vector2.op_Addition(Vector2.op_Addition(this.Position, new Vector2((float) (2 + index1), (float) (2 + index2))), Calc.Random.Range(Vector2.op_UnaryNegation(Vector2.get_One()), Vector2.get_One()));
-          float direction2 = this.iceMode ? Vector2.op_Subtraction(position, center).Angle() : num;
+          Vector2 position = this.Position + new Vector2((float) (2 + index1), (float) (2 + index2)) + Calc.Random.Range(-Vector2.One, Vector2.One);
+          float direction2 = this.iceMode ? (position - center).Angle() : num;
           level.Particles.Emit(this.iceMode ? BounceBlock.P_IceBreak : BounceBlock.P_FireBreak, position, direction2);
         }
       }
@@ -408,13 +392,13 @@ namespace Celeste
         {
           this.percent += Engine.DeltaTime / this.duration;
           this.Position = Vector2.Lerp(this.from, this.to, Ease.CubeIn(this.percent));
-          this.sprite.Color = Color.op_Multiply(Color.get_White(), this.percent);
+          this.sprite.Color = Color.White * this.percent;
         }
       }
 
       public override void Render()
       {
-        this.sprite.DrawOutline(Color.get_Black(), 1);
+        this.sprite.DrawOutline(Color.Black, 1);
         base.Render();
       }
     }
@@ -440,7 +424,7 @@ namespace Celeste
           this.sprite.Texture = texture;
         this.Position = position;
         direction = Calc.AngleToVector(direction.Angle() + Calc.Random.Range(-0.1f, 0.1f), 1f);
-        this.speed = Vector2.op_Multiply(direction, ice ? (float) Calc.Random.Range(20, 40) : (float) Calc.Random.Range(120, 200));
+        this.speed = direction * (ice ? (float) Calc.Random.Range(20, 40) : (float) Calc.Random.Range(120, 200));
         this.percent = 0.0f;
         this.duration = (float) Calc.Random.Range(2, 3);
         return this;
@@ -455,24 +439,20 @@ namespace Celeste
         }
         else
         {
-          this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(this.speed, Engine.DeltaTime));
-          this.speed.X = (__Null) (double) Calc.Approach((float) this.speed.X, 0.0f, 180f * Engine.DeltaTime);
-          ref __Null local = ref this.speed.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + 200f * Engine.DeltaTime;
+          this.Position = this.Position + this.speed * Engine.DeltaTime;
+          this.speed.X = Calc.Approach(this.speed.X, 0.0f, 180f * Engine.DeltaTime);
+          this.speed.Y += 200f * Engine.DeltaTime;
           this.percent += Engine.DeltaTime / this.duration;
-          this.sprite.Color = Color.op_Multiply(Color.get_White(), 1f - this.percent);
+          this.sprite.Color = Color.White * (1f - this.percent);
         }
       }
 
       public override void Render()
       {
-        this.sprite.DrawOutline(Color.get_Black(), 1);
+        this.sprite.DrawOutline(Color.Black, 1);
         base.Render();
       }
     }
   }
 }
+

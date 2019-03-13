@@ -13,6 +13,8 @@ namespace Celeste
 {
   public class CS03_OshiroRooftop : CutsceneEntity
   {
+    private float anxiety = 0.0f;
+    private float anxietyFlicker = 0.0f;
     private Sprite bossSprite = GFX.SpriteBank.Create("oshiro_boss");
     public const string Flag = "oshiro_resort_roof";
     private const float playerEndPosition = 170f;
@@ -20,8 +22,6 @@ namespace Celeste
     private NPC oshiro;
     private BadelineDummy evil;
     private Vector2 bossSpawnPosition;
-    private float anxiety;
-    private float anxietyFlicker;
     private float bossSpriteOffset;
     private bool oshiroRumble;
 
@@ -33,93 +33,76 @@ namespace Celeste
 
     public override void OnBegin(Level level)
     {
-      double x = (double) this.oshiro.X;
-      Rectangle bounds = level.Bounds;
-      double num = (double) (((Rectangle) ref bounds).get_Bottom() - 40);
-      this.bossSpawnPosition = new Vector2((float) x, (float) num);
+      this.bossSpawnPosition = new Vector2(this.oshiro.X, (float) (level.Bounds.Bottom - 40));
       this.Add((Component) new Coroutine(this.Cutscene(level), true));
     }
 
     private IEnumerator Cutscene(Level level)
     {
-      CS03_OshiroRooftop cs03OshiroRooftop1 = this;
-      while (cs03OshiroRooftop1.player == null)
+      while (this.player == null)
       {
-        cs03OshiroRooftop1.player = cs03OshiroRooftop1.Scene.Tracker.GetEntity<Player>();
-        if (cs03OshiroRooftop1.player == null)
+        this.player = this.Scene.Tracker.GetEntity<Player>();
+        if (this.player == null)
           yield return (object) null;
         else
           break;
       }
-      cs03OshiroRooftop1.player.StateMachine.State = 11;
-      cs03OshiroRooftop1.player.StateMachine.Locked = true;
-      while (!cs03OshiroRooftop1.player.OnGround(1) || cs03OshiroRooftop1.player.Speed.Y < 0.0)
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      while (!this.player.OnGround(1) || (double) this.player.Speed.Y < 0.0)
         yield return (object) null;
       yield return (object) 0.6f;
-      CS03_OshiroRooftop cs03OshiroRooftop2 = cs03OshiroRooftop1;
-      double num1 = (double) cs03OshiroRooftop1.oshiro.X - 40.0;
-      Rectangle bounds = level.Bounds;
-      double num2 = (double) (((Rectangle) ref bounds).get_Bottom() - 60);
-      BadelineDummy badelineDummy = new BadelineDummy(new Vector2((float) num1, (float) num2));
-      cs03OshiroRooftop2.evil = badelineDummy;
-      cs03OshiroRooftop1.evil.Sprite.Scale.X = (__Null) 1.0;
-      cs03OshiroRooftop1.evil.Appear(level, false);
-      level.Add((Entity) cs03OshiroRooftop1.evil);
+      this.evil = new BadelineDummy(new Vector2(this.oshiro.X - 40f, (float) (level.Bounds.Bottom - 60)));
+      this.evil.Sprite.Scale.X = 1f;
+      this.evil.Appear(level, false);
+      level.Add((Entity) this.evil);
       yield return (object) 0.1f;
-      cs03OshiroRooftop1.player.Facing = Facings.Left;
-      yield return (object) Textbox.Say("CH3_OSHIRO_START_CHASE", new Func<IEnumerator>(cs03OshiroRooftop1.MaddyWalkAway), new Func<IEnumerator>(cs03OshiroRooftop1.MaddyTurnAround), new Func<IEnumerator>(cs03OshiroRooftop1.EnterOshiro), new Func<IEnumerator>(cs03OshiroRooftop1.OshiroGetsAngry));
-      yield return (object) cs03OshiroRooftop1.OshiroTransform();
-      cs03OshiroRooftop1.Add((Component) new Coroutine(cs03OshiroRooftop1.AnxietyAndCameraOut(), true));
+      this.player.Facing = Facings.Left;
+      yield return (object) Textbox.Say("CH3_OSHIRO_START_CHASE", new Func<IEnumerator>(this.MaddyWalkAway), new Func<IEnumerator>(this.MaddyTurnAround), new Func<IEnumerator>(this.EnterOshiro), new Func<IEnumerator>(this.OshiroGetsAngry));
+      yield return (object) this.OshiroTransform();
+      this.Add((Component) new Coroutine(this.AnxietyAndCameraOut(), true));
       yield return (object) level.ZoomBack(0.5f);
       yield return (object) 0.25f;
-      cs03OshiroRooftop1.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator MaddyWalkAway()
     {
-      CS03_OshiroRooftop cs03OshiroRooftop1 = this;
-      Level scene = cs03OshiroRooftop1.Scene as Level;
-      CS03_OshiroRooftop cs03OshiroRooftop2 = cs03OshiroRooftop1;
-      Player player = cs03OshiroRooftop1.player;
-      Rectangle bounds = scene.Bounds;
-      double num = (double) ((Rectangle) ref bounds).get_Left() + 170.0;
-      Coroutine coroutine = new Coroutine(player.DummyWalkTo((float) num, false, 1f, false), true);
-      cs03OshiroRooftop2.Add((Component) coroutine);
+      Level level = this.Scene as Level;
+      this.Add((Component) new Coroutine(this.player.DummyWalkTo((float) level.Bounds.Left + 170f, false, 1f, false), true));
       yield return (object) 0.2f;
-      Audio.Play("event:/game/03_resort/suite_bad_moveroof", cs03OshiroRooftop1.evil.Position);
-      cs03OshiroRooftop1.Add((Component) new Coroutine(cs03OshiroRooftop1.evil.FloatTo(Vector2.op_Addition(cs03OshiroRooftop1.evil.Position, new Vector2(80f, 30f)), new int?(), true, false), true));
+      Audio.Play("event:/game/03_resort/suite_bad_moveroof", this.evil.Position);
+      this.Add((Component) new Coroutine(this.evil.FloatTo(this.evil.Position + new Vector2(80f, 30f), new int?(), true, false), true));
       yield return (object) null;
     }
 
     private IEnumerator MaddyTurnAround()
     {
-      CS03_OshiroRooftop cs03OshiroRooftop = this;
       yield return (object) 0.25f;
-      cs03OshiroRooftop.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.1f;
-      Level level = cs03OshiroRooftop.SceneAs<Level>();
-      yield return (object) level.ZoomTo(new Vector2(150f, (float) (cs03OshiroRooftop.bossSpawnPosition.Y - (double) (float) level.Bounds.Y - 8.0)), 2f, 0.5f);
+      Level level = this.SceneAs<Level>();
+      yield return (object) level.ZoomTo(new Vector2(150f, (float) ((double) this.bossSpawnPosition.Y - (double) level.Bounds.Y - 8.0)), 2f, 0.5f);
     }
 
     private IEnumerator EnterOshiro()
     {
-      CS03_OshiroRooftop cs03OshiroRooftop = this;
       yield return (object) 0.3f;
-      cs03OshiroRooftop.bossSpriteOffset = (float) (cs03OshiroRooftop.bossSprite.Justify.Value.Y - cs03OshiroRooftop.oshiro.Sprite.Justify.Value.Y) * cs03OshiroRooftop.bossSprite.Height;
-      cs03OshiroRooftop.oshiro.Visible = true;
-      cs03OshiroRooftop.oshiro.Sprite.Scale.X = (__Null) 1.0;
-      cs03OshiroRooftop.Add((Component) new Coroutine(cs03OshiroRooftop.oshiro.MoveTo(Vector2.op_Subtraction(cs03OshiroRooftop.bossSpawnPosition, new Vector2(0.0f, cs03OshiroRooftop.bossSpriteOffset)), false, new int?(), false), true));
-      cs03OshiroRooftop.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_07_roof00_enter"));
-      float from = (float) cs03OshiroRooftop.Level.ZoomFocusPoint.X;
+      this.bossSpriteOffset = (this.bossSprite.Justify.Value.Y - this.oshiro.Sprite.Justify.Value.Y) * this.bossSprite.Height;
+      this.oshiro.Visible = true;
+      this.oshiro.Sprite.Scale.X = 1f;
+      this.Add((Component) new Coroutine(this.oshiro.MoveTo(this.bossSpawnPosition - new Vector2(0.0f, this.bossSpriteOffset), false, new int?(), false), true));
+      this.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_07_roof00_enter"));
+      float from = this.Level.ZoomFocusPoint.X;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / 0.7f)
       {
-        cs03OshiroRooftop.Level.ZoomFocusPoint.X = (__Null) ((double) from + (126.0 - (double) from) * (double) Ease.CubeInOut(p));
+        this.Level.ZoomFocusPoint.X = from + (126f - from) * Ease.CubeInOut(p);
         yield return (object) null;
       }
       yield return (object) 0.3f;
-      cs03OshiroRooftop.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.1f;
-      cs03OshiroRooftop.evil.Sprite.Scale.X = (__Null) -1.0;
+      this.evil.Sprite.Scale.X = -1f;
     }
 
     private IEnumerator OshiroGetsAngry()
@@ -142,16 +125,15 @@ namespace Celeste
 
     private IEnumerator OshiroTransform()
     {
-      CS03_OshiroRooftop cs03OshiroRooftop = this;
       yield return (object) 0.2f;
-      Audio.Play("event:/char/oshiro/boss_transform_burst", cs03OshiroRooftop.oshiro.Position);
-      cs03OshiroRooftop.oshiro.Sprite.Play("transformFinish", false, false);
+      Audio.Play("event:/char/oshiro/boss_transform_burst", this.oshiro.Position);
+      this.oshiro.Sprite.Play("transformFinish", false, false);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Long);
-      cs03OshiroRooftop.SceneAs<Level>().Shake(0.5f);
-      cs03OshiroRooftop.SetChaseMusic();
-      while ((double) cs03OshiroRooftop.anxiety < 0.5)
+      this.SceneAs<Level>().Shake(0.5f);
+      this.SetChaseMusic();
+      while ((double) this.anxiety < 0.5)
       {
-        cs03OshiroRooftop.anxiety = Calc.Approach(cs03OshiroRooftop.anxiety, 0.5f, Engine.DeltaTime * 0.5f);
+        this.anxiety = Calc.Approach(this.anxiety, 0.5f, Engine.DeltaTime * 0.5f);
         yield return (object) null;
       }
       yield return (object) 0.25f;
@@ -159,14 +141,13 @@ namespace Celeste
 
     private IEnumerator AnxietyAndCameraOut()
     {
-      CS03_OshiroRooftop cs03OshiroRooftop = this;
-      Level level = cs03OshiroRooftop.Scene as Level;
+      Level level = this.Scene as Level;
       Vector2 from = level.Camera.Position;
-      Vector2 to = cs03OshiroRooftop.player.CameraTarget;
+      Vector2 to = this.player.CameraTarget;
       for (float t = 0.0f; (double) t < 1.0; t += Engine.DeltaTime * 2f)
       {
-        cs03OshiroRooftop.anxiety = Calc.Approach(cs03OshiroRooftop.anxiety, 0.0f, Engine.DeltaTime * 4f);
-        level.Camera.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), Ease.CubeInOut(t)));
+        this.anxiety = Calc.Approach(this.anxiety, 0.0f, Engine.DeltaTime * 4f);
+        level.Camera.Position = from + (to - from) * Ease.CubeInOut(t);
         yield return (object) null;
       }
     }
@@ -188,11 +169,8 @@ namespace Celeste
       {
         this.player.StateMachine.Locked = false;
         this.player.StateMachine.State = 0;
-        Player player = this.player;
-        Rectangle bounds = level.Bounds;
-        double num = (double) ((Rectangle) ref bounds).get_Left() + 170.0;
-        player.X = (float) num;
-        this.player.Speed.Y = (__Null) 0.0;
+        this.player.X = (float) level.Bounds.Left + 170f;
+        this.player.Speed.Y = 0.0f;
         while (this.player.CollideCheck<Solid>())
           --this.player.Y;
         level.Camera.Position = this.player.CameraTarget;
@@ -201,13 +179,7 @@ namespace Celeste
         this.SetChaseMusic();
       this.oshiro.RemoveSelf();
       this.Scene.Add((Entity) new AngryOshiro(this.bossSpawnPosition, true));
-      Session session = level.Session;
-      Rectangle bounds1 = level.Bounds;
-      double num1 = (double) ((Rectangle) ref bounds1).get_Left() + 170.0;
-      Rectangle bounds2 = level.Bounds;
-      double num2 = (double) (((Rectangle) ref bounds2).get_Top() + 160);
-      Vector2? nullable = new Vector2?(new Vector2((float) num1, (float) num2));
-      session.RespawnPoint = nullable;
+      level.Session.RespawnPoint = new Vector2?(new Vector2((float) level.Bounds.Left + 170f, (float) (level.Bounds.Top + 160)));
       level.Session.SetFlag("oshiro_resort_roof", true);
     }
 
@@ -223,3 +195,4 @@ namespace Celeste
     }
   }
 }
+

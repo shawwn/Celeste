@@ -16,7 +16,7 @@ namespace Celeste
     private Vector2? node;
 
     public RidgeGate(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height, data.FirstNodeNullable(new Vector2?(offset)))
+      : this(data.Position + offset, (float) data.Width, (float) data.Height, data.FirstNodeNullable(new Vector2?(offset)))
     {
     }
 
@@ -40,15 +40,15 @@ namespace Celeste
 
     private IEnumerator EnterSequence(Vector2 moveTo)
     {
-      RidgeGate ridgeGate = this;
-      ridgeGate.Visible = ridgeGate.Collidable = true;
+      this.Visible = this.Collidable = true;
       yield return (object) 0.25f;
-      Audio.Play("event:/game/04_cliffside/stone_blockade", ridgeGate.Position);
+      Audio.Play("event:/game/04_cliffside/stone_blockade", this.Position);
       yield return (object) 0.25f;
-      Vector2 start = ridgeGate.Position;
+      Vector2 start = this.Position;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeOut, 1f, true);
       tween.OnUpdate = (Action<Tween>) (t => this.MoveTo(Vector2.Lerp(start, moveTo, t.Eased)));
-      ridgeGate.Add((Component) tween);
+      this.Add((Component) tween);
     }
   }
 }
+

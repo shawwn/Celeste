@@ -50,11 +50,11 @@ namespace Celeste
       this.Add((Component) (this.shaker = new Shaker(false, (Action<Vector2>) null)));
       this.Depth = -9000;
       this.theoGate = spriteName.Equals("theo", StringComparison.InvariantCultureIgnoreCase);
-      this.holdingCheckFrom = Vector2.op_Addition(this.Position, new Vector2(this.Width / 2f, (float) (height / 2)));
+      this.holdingCheckFrom = this.Position + new Vector2(this.Width / 2f, (float) (height / 2));
     }
 
     public TempleGate(EntityData data, Vector2 offset, string levelID)
-      : this(Vector2.op_Addition(data.Position, offset), data.Height, data.Enum<TempleGate.Types>("type", TempleGate.Types.NearestSwitch), data.Attr(nameof (sprite), "default"), levelID)
+      : this(data.Position + offset, data.Height, data.Enum<TempleGate.Types>("type", TempleGate.Types.NearestSwitch), data.Attr(nameof (sprite), "default"), levelID)
     {
     }
 
@@ -64,7 +64,7 @@ namespace Celeste
       if (this.Type == TempleGate.Types.CloseBehindPlayer)
       {
         Player entity = this.Scene.Tracker.GetEntity<Player>();
-        if (entity != null && (double) entity.Left < (double) this.Right && ((double) entity.Bottom >= (double) this.Top && (double) entity.Top <= (double) this.Bottom))
+        if (entity != null && (double) entity.Left < (double) this.Right && (double) entity.Bottom >= (double) this.Top && (double) entity.Top <= (double) this.Bottom)
         {
           this.StartOpen();
           this.Add((Component) new Coroutine(this.CloseBehindPlayer(), true));
@@ -94,9 +94,7 @@ namespace Celeste
     public bool CloseBehindPlayerCheck()
     {
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      if (entity != null)
-        return (double) entity.X < (double) this.X;
-      return false;
+      return entity != null && (double) entity.X < (double) this.X;
     }
 
     public void SwitchOpen()
@@ -142,55 +140,56 @@ namespace Celeste
 
     private IEnumerator CloseBehindPlayer()
     {
-      TempleGate templeGate = this;
       while (true)
       {
-        Player entity = templeGate.Scene.Tracker.GetEntity<Player>();
-        if (templeGate.lockState || entity == null || (double) entity.Left <= (double) templeGate.Right + 4.0)
+        Player player = this.Scene.Tracker.GetEntity<Player>();
+        if (this.lockState || player == null || (double) player.Left <= (double) this.Right + 4.0)
+        {
           yield return (object) null;
+          player = (Player) null;
+        }
         else
           break;
       }
-      templeGate.Close();
+      this.Close();
     }
 
     private IEnumerator CloseBehindPlayerAndTheo()
     {
-      TempleGate templeGate = this;
       while (true)
       {
-        Player entity1 = templeGate.Scene.Tracker.GetEntity<Player>();
-        if (entity1 != null && (double) entity1.Left > (double) templeGate.Right + 4.0)
+        Player player = this.Scene.Tracker.GetEntity<Player>();
+        if (player != null && (double) player.Left > (double) this.Right + 4.0)
         {
-          TheoCrystal entity2 = templeGate.Scene.Tracker.GetEntity<TheoCrystal>();
-          if (!templeGate.lockState && entity2 != null && (double) entity2.Left > (double) templeGate.Right + 4.0)
+          TheoCrystal theo = this.Scene.Tracker.GetEntity<TheoCrystal>();
+          if (this.lockState || theo == null || (double) theo.Left <= (double) this.Right + 4.0)
+            theo = (TheoCrystal) null;
+          else
             break;
         }
         yield return (object) null;
+        player = (Player) null;
       }
-      templeGate.Close();
+      this.Close();
     }
 
     private IEnumerator CheckTouchSwitches()
     {
-      TempleGate templeGate = this;
-      while (!Switch.Check(templeGate.Scene))
+      while (!Switch.Check(this.Scene))
         yield return (object) null;
-      templeGate.sprite.Play("open", false, false);
+      this.sprite.Play("open", false, false);
       yield return (object) 0.5f;
-      templeGate.shaker.ShakeFor(0.2f, false);
+      this.shaker.ShakeFor(0.2f, false);
       yield return (object) 0.2f;
-      while (templeGate.lockState)
+      while (this.lockState)
         yield return (object) null;
-      templeGate.Open();
+      this.Open();
     }
 
     public bool TheoIsNearby()
     {
       TheoCrystal entity = this.Scene.Tracker.GetEntity<TheoCrystal>();
-      if (entity != null && (double) entity.X <= (double) this.X + 10.0)
-        return (double) Vector2.DistanceSquared(this.holdingCheckFrom, entity.Center) < (this.open ? 6400.0 : 4096.0);
-      return true;
+      return entity == null || (double) entity.X > (double) this.X + 10.0 || (double) Vector2.DistanceSquared(this.holdingCheckFrom, entity.Center) < (this.open ? 6400.0 : 4096.0);
     }
 
     private void SetHeight(int height)
@@ -226,7 +225,9 @@ namespace Celeste
           if (this.open && !this.TheoIsNearby())
           {
             this.Close();
-            this.CollideFirst<Player>(Vector2.op_Addition(this.Position, new Vector2(8f, 0.0f)))?.Die(Vector2.get_Zero(), false, true);
+            Player player = this.CollideFirst<Player>(this.Position + new Vector2(8f, 0.0f));
+            if (player != null)
+              player.Die(Vector2.Zero, false, true);
           }
           else if (!this.open && this.TheoIsNearby())
             this.Open();
@@ -244,10 +245,9 @@ namespace Celeste
 
     public override void Render()
     {
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector((float) Math.Sign((float) this.shaker.Value.X), 0.0f);
-      Draw.Rect(this.X - 2f, this.Y - 8f, 14f, 10f, Color.get_Black());
-      this.sprite.DrawSubrect(Vector2.op_Addition(Vector2.get_Zero(), vector2), new Rectangle(0, (int) ((double) this.sprite.Height - (double) this.drawHeight), (int) this.sprite.Width, (int) this.drawHeight));
+      Vector2 vector2 = new Vector2((float) Math.Sign(this.shaker.Value.X), 0.0f);
+      Draw.Rect(this.X - 2f, this.Y - 8f, 14f, 10f, Color.Black);
+      this.sprite.DrawSubrect(Vector2.Zero + vector2, new Rectangle(0, (int) ((double) this.sprite.Height - (double) this.drawHeight), (int) this.sprite.Width, (int) this.drawHeight));
     }
 
     public enum Types
@@ -261,3 +261,4 @@ namespace Celeste
     }
   }
 }
+

@@ -23,7 +23,7 @@ namespace Celeste
       : base(position)
     {
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create("strawberry")));
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 16, 24)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 16, 24)));
       this.Add((Component) (this.bloom = new BloomPoint(1f, 12f)));
       this.Depth = -1000000;
       this.Tag = (int) Tags.Persistent | (int) Tags.TransitionUpdate;
@@ -59,14 +59,15 @@ namespace Celeste
       ParticleType type = this.ghostberry ? Strawberry.P_GhostGlow : Strawberry.P_Glow;
       if (this.Scene.OnInterval(0.05f))
       {
-        if (Color.op_Equality(this.sprite.Color, type.Color2))
+        if (this.sprite.Color == type.Color2)
           this.sprite.Color = type.Color;
         else
           this.sprite.Color = type.Color2;
       }
       if (!this.Scene.OnInterval(0.06f) || this.sprite.CurrentAnimationFrame <= 11)
         return;
-      scene.ParticlesFG.Emit(type, 1, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitY(), -2f)), new Vector2(8f, 4f));
+      scene.ParticlesFG.Emit(type, 1, this.Position + Vector2.UnitY * -2f, new Vector2(8f, 4f));
     }
   }
 }
+

@@ -52,20 +52,13 @@ namespace Celeste
 
     public override void Update()
     {
-      Vector2 vector2_1 = Vector2.op_Addition(this.Entity.Position, this.Position);
-      if (this.Scene.OnInterval(0.02f))
+      Vector2 vector2 = this.Entity.Position + this.Position;
+      if (this.Scene.OnInterval(0.02f) && (this.PastPoints.Count == 0 || (double) (vector2 - this.PastPoints[0]).Length() >= 3.0))
       {
-        if (this.PastPoints.Count != 0)
-        {
-          Vector2 vector2_2 = Vector2.op_Subtraction(vector2_1, this.PastPoints[0]);
-          if ((double) ((Vector2) ref vector2_2).Length() < 3.0)
-            goto label_5;
-        }
-        this.PastPoints.Insert(0, vector2_1);
+        this.PastPoints.Insert(0, vector2);
         if (this.PastPoints.Count > 350)
           this.PastPoints.RemoveAt(this.PastPoints.Count - 1);
       }
-label_5:
       int index = 5;
       foreach (Follower follower in this.Followers)
       {
@@ -73,7 +66,7 @@ label_5:
           break;
         Vector2 pastPoint = this.PastPoints[index];
         if ((double) follower.DelayTimer <= 0.0 && follower.MoveTowardsLeader)
-          follower.Entity.Position = Vector2.op_Addition(follower.Entity.Position, Vector2.op_Multiply(Vector2.op_Subtraction(pastPoint, follower.Entity.Position), 1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime)));
+          follower.Entity.Position = follower.Entity.Position + (pastPoint - follower.Entity.Position) * (1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime));
         index += 5;
       }
     }
@@ -110,7 +103,7 @@ label_5:
         if (follower.Entity is Strawberry)
         {
           Leader.storedBerries.Add(follower.Entity as Strawberry);
-          Leader.storedOffsets.Add(Vector2.op_Subtraction(follower.Entity.Position, leader.Entity.Position));
+          Leader.storedOffsets.Add(follower.Entity.Position - leader.Entity.Position);
         }
       }
       foreach (Strawberry storedBerry in Leader.storedBerries)
@@ -127,9 +120,10 @@ label_5:
       {
         Strawberry storedBerry = Leader.storedBerries[index];
         leader.GainFollower(storedBerry.Follower);
-        storedBerry.Position = Vector2.op_Addition(leader.Entity.Position, Leader.storedOffsets[index]);
+        storedBerry.Position = leader.Entity.Position + Leader.storedOffsets[index];
         storedBerry.RemoveTag((int) Tags.Global);
       }
     }
   }
 }
+

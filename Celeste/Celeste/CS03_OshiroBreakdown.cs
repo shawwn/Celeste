@@ -38,49 +38,39 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS03_OshiroBreakdown cs03OshiroBreakdown1 = this;
-      cs03OshiroBreakdown1.player.StateMachine.State = 11;
-      cs03OshiroBreakdown1.player.StateMachine.Locked = true;
-      cs03OshiroBreakdown1.Add((Component) new Coroutine(cs03OshiroBreakdown1.player.DummyWalkTo(cs03OshiroBreakdown1.player.X - 64f, false, 1f, false), true));
-      List<DustStaticSpinner> all = level.Entities.FindAll<DustStaticSpinner>();
-      all.Shuffle<DustStaticSpinner>();
-      foreach (DustStaticSpinner dustStaticSpinner in all)
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      this.Add((Component) new Coroutine(this.player.DummyWalkTo(this.player.X - 64f, false, 1f, false), true));
+      List<DustStaticSpinner> dusts = level.Entities.FindAll<DustStaticSpinner>();
+      dusts.Shuffle<DustStaticSpinner>();
+      foreach (DustStaticSpinner dustStaticSpinner in dusts)
       {
-        Vector2 vector2 = Vector2.op_Subtraction(dustStaticSpinner.Position, cs03OshiroBreakdown1.oshiro.Position);
-        if ((double) ((Vector2) ref vector2).Length() < 128.0)
+        DustStaticSpinner dust = dustStaticSpinner;
+        if ((double) (dust.Position - this.oshiro.Position).Length() < 128.0)
         {
-          cs03OshiroBreakdown1.creatures.Add(dustStaticSpinner);
-          cs03OshiroBreakdown1.creatureHomes.Add(dustStaticSpinner.Position);
-          dustStaticSpinner.Visible = false;
+          this.creatures.Add(dust);
+          this.creatureHomes.Add(dust.Position);
+          dust.Visible = false;
         }
+        dust = (DustStaticSpinner) null;
       }
-      CS03_OshiroBreakdown cs03OshiroBreakdown2 = cs03OshiroBreakdown1;
-      Rectangle bounds1 = level.Bounds;
-      double left = (double) ((Rectangle) ref bounds1).get_Left();
-      yield return (object) cs03OshiroBreakdown2.PanCamera((float) left);
+      yield return (object) this.PanCamera((float) level.Bounds.Left);
       yield return (object) 0.2f;
-      yield return (object) cs03OshiroBreakdown1.Level.ZoomTo(new Vector2(100f, 120f), 2f, 0.5f);
-      yield return (object) Textbox.Say("CH3_OSHIRO_BREAKDOWN", new Func<IEnumerator>(cs03OshiroBreakdown1.WalkLeft), new Func<IEnumerator>(cs03OshiroBreakdown1.WalkRight), new Func<IEnumerator>(cs03OshiroBreakdown1.CreateDustA), new Func<IEnumerator>(cs03OshiroBreakdown1.CreateDustB));
-      CS03_OshiroBreakdown cs03OshiroBreakdown3 = cs03OshiroBreakdown1;
-      NPC oshiro = cs03OshiroBreakdown1.oshiro;
-      Rectangle bounds2 = level.Bounds;
-      Vector2 target = new Vector2((float) (((Rectangle) ref bounds2).get_Left() - 64), cs03OshiroBreakdown1.oshiro.Y);
-      int? turnAtEndTo = new int?();
-      Coroutine coroutine = new Coroutine(oshiro.MoveTo(target, false, turnAtEndTo, false), true);
-      cs03OshiroBreakdown3.Add((Component) coroutine);
-      cs03OshiroBreakdown1.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_06_04d_exit"));
+      yield return (object) this.Level.ZoomTo(new Vector2(100f, 120f), 2f, 0.5f);
+      yield return (object) Textbox.Say("CH3_OSHIRO_BREAKDOWN", new Func<IEnumerator>(this.WalkLeft), new Func<IEnumerator>(this.WalkRight), new Func<IEnumerator>(this.CreateDustA), new Func<IEnumerator>(this.CreateDustB));
+      this.Add((Component) new Coroutine(this.oshiro.MoveTo(new Vector2((float) (level.Bounds.Left - 64), this.oshiro.Y), false, new int?(), false), true));
+      this.oshiro.Add((Component) new SoundSource("event:/char/oshiro/move_06_04d_exit"));
       yield return (object) 0.25f;
-      yield return (object) cs03OshiroBreakdown1.PanCamera((float) cs03OshiroBreakdown1.player.CameraTarget.X);
-      cs03OshiroBreakdown1.EndCutscene(level, true);
+      yield return (object) this.PanCamera(this.player.CameraTarget.X);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator PanCamera(float to)
     {
-      CS03_OshiroBreakdown cs03OshiroBreakdown = this;
-      float from = cs03OshiroBreakdown.Level.Camera.X;
+      float from = this.Level.Camera.X;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
       {
-        cs03OshiroBreakdown.Level.Camera.X = from + (to - from) * Ease.CubeInOut(p);
+        this.Level.Camera.X = from + (to - from) * Ease.CubeInOut(p);
         yield return (object) null;
       }
     }
@@ -88,33 +78,32 @@ namespace Celeste
     private IEnumerator WalkLeft()
     {
       (this.oshiro.Sprite as OshiroSprite).AllowSpriteChanges = false;
-      yield return (object) this.oshiro.MoveTo(Vector2.op_Addition(this.origin, new Vector2(-24f, 0.0f)), false, new int?(), false);
+      yield return (object) this.oshiro.MoveTo(this.origin + new Vector2(-24f, 0.0f), false, new int?(), false);
       (this.oshiro.Sprite as OshiroSprite).AllowSpriteChanges = true;
     }
 
     private IEnumerator WalkRight()
     {
       (this.oshiro.Sprite as OshiroSprite).AllowSpriteChanges = false;
-      yield return (object) this.oshiro.MoveTo(Vector2.op_Addition(this.origin, new Vector2(0.0f, 0.0f)), false, new int?(), false);
+      yield return (object) this.oshiro.MoveTo(this.origin + new Vector2(0.0f, 0.0f), false, new int?(), false);
       (this.oshiro.Sprite as OshiroSprite).AllowSpriteChanges = true;
     }
 
     private IEnumerator CreateDustA()
     {
-      CS03_OshiroBreakdown cs03OshiroBreakdown = this;
-      cs03OshiroBreakdown.Add((Component) new SoundSource(cs03OshiroBreakdown.oshiro.Position, "event:/game/03_resort/sequence_oshirofluff_pt1"));
-      (cs03OshiroBreakdown.oshiro.Sprite as OshiroSprite).AllowSpriteChanges = false;
-      cs03OshiroBreakdown.oshiro.Sprite.Play("fall", false, false);
-      Audio.Play("event:/char/oshiro/chat_collapse", cs03OshiroBreakdown.oshiro.Position);
+      this.Add((Component) new SoundSource(this.oshiro.Position, "event:/game/03_resort/sequence_oshirofluff_pt1"));
+      (this.oshiro.Sprite as OshiroSprite).AllowSpriteChanges = false;
+      this.oshiro.Sprite.Play("fall", false, false);
+      Audio.Play("event:/char/oshiro/chat_collapse", this.oshiro.Position);
       Distort.AnxietyOrigin = new Vector2(0.5f, 0.5f);
       for (int i = 0; i < 4; ++i)
       {
-        cs03OshiroBreakdown.Add((Component) new Coroutine(cs03OshiroBreakdown.MoveDust(cs03OshiroBreakdown.creatures[i], cs03OshiroBreakdown.creatureHomes[i]), true));
+        this.Add((Component) new Coroutine(this.MoveDust(this.creatures[i], this.creatureHomes[i]), true));
         Distort.Anxiety = 0.1f + Calc.Random.NextFloat(0.1f);
         if (i % 4 == 0)
         {
           Distort.Anxiety = 0.1f + Calc.Random.NextFloat(0.1f);
-          cs03OshiroBreakdown.Level.Shake(0.3f);
+          this.Level.Shake(0.3f);
           Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
           yield return (object) 0.4f;
         }
@@ -126,13 +115,12 @@ namespace Celeste
 
     private IEnumerator CreateDustB()
     {
-      CS03_OshiroBreakdown cs03OshiroBreakdown = this;
-      cs03OshiroBreakdown.Add((Component) new SoundSource(cs03OshiroBreakdown.oshiro.Position, "event:/game/03_resort/sequence_oshirofluff_pt2"));
-      for (int i = 4; i < cs03OshiroBreakdown.creatures.Count; ++i)
+      this.Add((Component) new SoundSource(this.oshiro.Position, "event:/game/03_resort/sequence_oshirofluff_pt2"));
+      for (int i = 4; i < this.creatures.Count; ++i)
       {
-        cs03OshiroBreakdown.Add((Component) new Coroutine(cs03OshiroBreakdown.MoveDust(cs03OshiroBreakdown.creatures[i], cs03OshiroBreakdown.creatureHomes[i]), true));
+        this.Add((Component) new Coroutine(this.MoveDust(this.creatures[i], this.creatureHomes[i]), true));
         Distort.Anxiety = 0.1f + Calc.Random.NextFloat(0.1f);
-        cs03OshiroBreakdown.Level.Shake(0.3f);
+        this.Level.Shake(0.3f);
         Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
         if ((i - 4) % 4 == 0)
         {
@@ -148,32 +136,28 @@ namespace Celeste
         Distort.Anxiety -= Engine.DeltaTime;
         yield return (object) null;
       }
-      yield return (object) cs03OshiroBreakdown.Level.ZoomBack(0.5f);
-      Player player = cs03OshiroBreakdown.player;
-      Rectangle bounds = cs03OshiroBreakdown.Level.Bounds;
-      int x = ((Rectangle) ref bounds).get_Left() + 200;
-      yield return (object) player.DummyWalkToExact(x, false, 1f);
+      yield return (object) this.Level.ZoomBack(0.5f);
+      yield return (object) this.player.DummyWalkToExact(this.Level.Bounds.Left + 200, false, 1f);
       yield return (object) 1f;
-      Audio.Play("event:/char/oshiro/chat_get_up", cs03OshiroBreakdown.oshiro.Position);
-      cs03OshiroBreakdown.oshiro.Sprite.Play("recover", false, false);
+      Audio.Play("event:/char/oshiro/chat_get_up", this.oshiro.Position);
+      this.oshiro.Sprite.Play("recover", false, false);
       yield return (object) 0.7f;
-      cs03OshiroBreakdown.oshiro.Sprite.Scale.X = (__Null) 1.0;
+      this.oshiro.Sprite.Scale.X = 1f;
       yield return (object) 0.5f;
     }
 
     private IEnumerator MoveDust(DustStaticSpinner creature, Vector2 to)
     {
-      CS03_OshiroBreakdown cs03OshiroBreakdown = this;
-      Vector2 begin = Vector2.op_Addition(cs03OshiroBreakdown.oshiro.Position, new Vector2(0.0f, -12f));
-      SimpleCurve curve = new SimpleCurve(begin, to, Vector2.op_Addition(Vector2.op_Division(Vector2.op_Addition(to, begin), 2f), Vector2.op_Multiply(Vector2.get_UnitY(), Calc.Random.NextFloat(60f) - 30f)));
+      Vector2 from = this.oshiro.Position + new Vector2(0.0f, -12f);
+      SimpleCurve curve = new SimpleCurve(from, to, (to + from) / 2f + Vector2.UnitY * (Calc.Random.NextFloat(60f) - 30f));
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
       {
         yield return (object) null;
         creature.Sprite.Scale = (float) (0.5 + (double) p * 0.5);
         creature.Position = curve.GetPoint(Ease.CubeOut(p));
         creature.Visible = true;
-        if (cs03OshiroBreakdown.Scene.OnInterval(0.02f))
-          cs03OshiroBreakdown.SceneAs<Level>().ParticlesBG.Emit(DustStaticSpinner.P_Move, 1, creature.Position, Vector2.op_Multiply(Vector2.get_One(), 4f));
+        if (this.Scene.OnInterval(0.02f))
+          this.SceneAs<Level>().ParticlesBG.Emit(DustStaticSpinner.P_Move, 1, creature.Position, Vector2.One * 4f);
       }
     }
 
@@ -183,10 +167,7 @@ namespace Celeste
       this.player.StateMachine.State = 0;
       if (this.WasSkipped)
       {
-        Player player = this.player;
-        Rectangle bounds = level.Bounds;
-        double num = (double) (((Rectangle) ref bounds).get_Left() + 200);
-        player.X = (float) num;
+        this.player.X = (float) (level.Bounds.Left + 200);
         while (!this.player.OnGround(1))
           ++this.player.Y;
         for (int index = 0; index < this.creatures.Count; ++index)
@@ -202,3 +183,4 @@ namespace Celeste
     }
   }
 }
+

@@ -13,6 +13,8 @@ namespace Celeste
 {
   public class SandwichLava : Entity
   {
+    private bool leaving = false;
+    private float delay = 0.0f;
     private const float TopOffset = -160f;
     private const float Speed = 20f;
     public bool Waiting;
@@ -20,8 +22,6 @@ namespace Celeste
     private float startX;
     private float lerp;
     private float transitionStartY;
-    private bool leaving;
-    private float delay;
     private LavaRect bottomRect;
     private LavaRect topRect;
     private bool persistent;
@@ -31,8 +31,7 @@ namespace Celeste
     {
       get
       {
-        Rectangle bounds = this.SceneAs<Level>().Bounds;
-        return (float) ((Rectangle) ref bounds).get_Bottom() - 10f;
+        return (float) this.SceneAs<Level>().Bounds.Bottom - 10f;
       }
     }
 
@@ -84,15 +83,14 @@ namespace Celeste
     }
 
     public SandwichLava(EntityData data, Vector2 offset)
-      : this((float) (data.Position.X + offset.X))
+      : this(data.Position.X + offset.X)
     {
     }
 
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      Rectangle bounds = this.SceneAs<Level>().Bounds;
-      this.X = (float) (((Rectangle) ref bounds).get_Left() - 10);
+      this.X = (float) (this.SceneAs<Level>().Bounds.Left - 10);
       this.Y = this.centerY;
       this.iceMode = this.SceneAs<Level>().Session.CoreMode == Session.CoreModes.Cold;
     }
@@ -122,18 +120,8 @@ namespace Celeste
       this.Tag = (int) Tags.Persistent;
       if ((scene as Level).LastIntroType != Player.IntroTypes.Respawn)
       {
-        ref __Null local1 = ref this.topRect.Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 - 60f;
-        ref __Null local2 = ref this.bottomRect.Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 + 60f;
+        this.topRect.Position.Y -= 60f;
+        this.bottomRect.Position.Y += 60f;
       }
       else
         this.Visible = true;
@@ -153,21 +141,22 @@ namespace Celeste
         return;
       if (SaveData.Instance.Assists.Invincible)
       {
-        if ((double) this.delay > 0.0)
-          return;
-        int num = (double) player.Y > (double) this.Y + this.bottomRect.Position.Y - 32.0 ? 1 : -1;
-        float from = this.Y;
-        float to = this.Y + (float) (num * 48);
-        player.Speed.Y = (__Null) (double) (-num * 200);
-        if (num > 0)
-          player.RefillDash();
-        Tween.Set((Entity) this, Tween.TweenMode.Oneshot, 0.4f, Ease.CubeOut, (Action<Tween>) (t => this.Y = MathHelper.Lerp(from, to, t.Eased)), (Action<Tween>) null);
-        this.delay = 0.5f;
-        this.loopSfx.Param("rising", 0.0f);
-        Audio.Play("event:/game/general/assist_screenbottom", player.Position);
+        if ((double) this.delay <= 0.0)
+        {
+          int num = (double) player.Y > (double) this.Y + (double) this.bottomRect.Position.Y - 32.0 ? 1 : -1;
+          float from = this.Y;
+          float to = this.Y + (float) (num * 48);
+          player.Speed.Y = (float) (-num * 200);
+          if (num > 0)
+            player.RefillDash();
+          Tween.Set((Entity) this, Tween.TweenMode.Oneshot, 0.4f, Ease.CubeOut, (Action<Tween>) (t => this.Y = MathHelper.Lerp(from, to, t.Eased)), (Action<Tween>) null);
+          this.delay = 0.5f;
+          this.loopSfx.Param("rising", 0.0f);
+          Audio.Play("event:/game/general/assist_screenbottom", player.Position);
+        }
       }
       else
-        player.Die(Vector2.op_UnaryNegation(Vector2.get_UnitY()), false, true);
+        player.Die(-Vector2.UnitY, false, true);
     }
 
     public void Leave()
@@ -189,7 +178,7 @@ namespace Celeste
         this.Y = Calc.Approach(this.Y, this.centerY, 128f * Engine.DeltaTime);
         this.loopSfx.Param("rising", 0.0f);
         Player entity = this.Scene.Tracker.GetEntity<Player>();
-        if (entity != null && (double) entity.X >= (double) this.startX && (!entity.JustRespawned && entity.StateMachine.State != 11))
+        if (entity != null && (double) entity.X >= (double) this.startX && !entity.JustRespawned && entity.StateMachine.State != 11)
           this.Waiting = false;
       }
       else if (!this.leaving && (double) this.delay <= 0.0)
@@ -200,8 +189,8 @@ namespace Celeste
         else
           this.Y -= 20f * Engine.DeltaTime;
       }
-      this.topRect.Position.Y = (__Null) (double) Calc.Approach((float) this.topRect.Position.Y, (float) (-160.0 - (double) this.topRect.Height + (this.leaving ? -512.0 : 0.0)), (this.leaving ? 256f : 64f) * Engine.DeltaTime);
-      this.bottomRect.Position.Y = (__Null) (double) Calc.Approach((float) this.bottomRect.Position.Y, this.leaving ? 512f : 0.0f, (this.leaving ? 256f : 64f) * Engine.DeltaTime);
+      this.topRect.Position.Y = Calc.Approach(this.topRect.Position.Y, (float) (-160.0 - (double) this.topRect.Height + (this.leaving ? -512.0 : 0.0)), (this.leaving ? 256f : 64f) * Engine.DeltaTime);
+      this.bottomRect.Position.Y = Calc.Approach(this.bottomRect.Position.Y, this.leaving ? 512f : 0.0f, (this.leaving ? 256f : 64f) * Engine.DeltaTime);
       this.lerp = Calc.Approach(this.lerp, this.iceMode ? 1f : 0.0f, Engine.DeltaTime * 4f);
       this.bottomRect.SurfaceColor = Color.Lerp(RisingLava.Hot[0], RisingLava.Cold[0], this.lerp);
       this.bottomRect.EdgeColor = Color.Lerp(RisingLava.Hot[1], RisingLava.Cold[1], this.lerp);
@@ -218,3 +207,4 @@ namespace Celeste
     }
   }
 }
+

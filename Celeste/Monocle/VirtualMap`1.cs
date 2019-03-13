@@ -58,7 +58,7 @@ namespace Monocle
 
     public T SafeCheck(int x, int y)
     {
-      if (x >= 0 && y >= 0 && (x < this.Columns && y < this.Rows))
+      if (x >= 0 && y >= 0 && x < this.Columns && y < this.Rows)
         return this[x, y];
       return this.EmptyValue;
     }
@@ -117,3 +117,4 @@ namespace Monocle
     }
   }
 }
+

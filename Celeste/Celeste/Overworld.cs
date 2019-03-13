@@ -16,12 +16,12 @@ namespace Celeste
   public class Overworld : Scene, IOverlayHandler
   {
     public List<Oui> UIs = new List<Oui>();
+    public Oui Current = (Oui) null;
+    public Oui Last = (Oui) null;
+    public Oui Next = (Oui) null;
     public bool ShowInputUI = true;
     public bool ShowConfirmUI = true;
     private int lastArea = -1;
-    public Oui Current;
-    public Oui Last;
-    public Oui Next;
     public bool EnteringPico8;
     private float inputEase;
     public MountainRenderer Mountain;
@@ -134,8 +134,8 @@ namespace Celeste
       if (this.Mountain.Area >= 0 && !this.Mountain.Animating)
       {
         Vector3 mountainCursor = AreaData.Areas[this.Mountain.Area].MountainCursor;
-        if (Vector3.op_Inequality(mountainCursor, Vector3.get_Zero()))
-          this.Maddy.Position = Vector3.op_Addition(mountainCursor, new Vector3(0.0f, (float) Math.Sin((double) this.TimeActive * 2.0) * 0.02f, 0.0f));
+        if (mountainCursor != Vector3.Zero)
+          this.Maddy.Position = mountainCursor + new Vector3(0.0f, (float) Math.Sin((double) this.TimeActive * 2.0) * 0.02f, 0.0f);
       }
       if (this.Overlay != null)
       {
@@ -272,25 +272,16 @@ namespace Celeste
         string label2 = Dialog.Clean("ui_confirm", (Language) null);
         float num2 = ButtonUI.Width(label1, Input.MenuCancel);
         float num3 = ButtonUI.Width(label2, Input.MenuConfirm);
-        Vector2 position;
-        ((Vector2) ref position).\u002Ector(1880f, 1024f);
-        ref __Null local1 = ref position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + (float) ((40.0 + ((double) num3 + (double) num2) * (double) scale + (double) num1) * (1.0 - (double) Ease.CubeOut(inputEase)));
+        Vector2 position = new Vector2(1880f, 1024f);
+        position.X += (float) ((40.0 + ((double) num3 + (double) num2) * (double) scale + (double) num1) * (1.0 - (double) Ease.CubeOut(inputEase)));
         ButtonUI.Render(position, label1, Input.MenuCancel, scale, 1f, this.cancelWiggle.Value * 0.05f, 1f);
-        if (!this.Overworld.ShowConfirmUI)
-          return;
-        ref __Null local2 = ref position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 - (scale * num2 + (float) num1);
-        ButtonUI.Render(position, label2, Input.MenuConfirm, scale, 1f, this.confirmWiggle.Value * 0.05f, 1f);
+        if (this.Overworld.ShowConfirmUI)
+        {
+          position.X -= scale * num2 + (float) num1;
+          ButtonUI.Render(position, label2, Input.MenuConfirm, scale, 1f, this.confirmWiggle.Value * 0.05f, 1f);
+        }
       }
     }
   }
 }
+

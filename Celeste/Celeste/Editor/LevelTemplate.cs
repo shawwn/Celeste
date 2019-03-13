@@ -13,10 +13,10 @@ namespace Celeste.Editor
 {
   public class LevelTemplate
   {
-    private static readonly Color bgTilesColor = Color.op_Multiply(Color.get_DarkSlateGray(), 0.5f);
+    private static readonly Color bgTilesColor = Color.DarkSlateGray * 0.5f;
     private static readonly Color[] fgTilesColor = new Color[7]
     {
-      Color.get_White(),
+      Color.White,
       Calc.HexToColor("f6735e"),
       Calc.HexToColor("85f65e"),
       Calc.HexToColor("37d7e3"),
@@ -24,13 +24,13 @@ namespace Celeste.Editor
       Calc.HexToColor("c337e3"),
       Calc.HexToColor("e33773")
     };
-    private static readonly Color inactiveBorderColor = Color.get_DarkSlateGray();
-    private static readonly Color selectedBorderColor = Color.get_Red();
-    private static readonly Color hoveredBorderColor = Color.get_Yellow();
-    private static readonly Color dummyBgTilesColor = Color.op_Multiply(Color.get_DarkSlateGray(), 0.5f);
-    private static readonly Color dummyFgTilesColor = Color.get_LightGray();
-    private static readonly Color dummyInactiveBorderColor = Color.get_DarkOrange();
-    private static readonly Color firstBorderColor = Color.get_Aqua();
+    private static readonly Color inactiveBorderColor = Color.DarkSlateGray;
+    private static readonly Color selectedBorderColor = Color.Red;
+    private static readonly Color hoveredBorderColor = Color.Yellow;
+    private static readonly Color dummyBgTilesColor = Color.DarkSlateGray * 0.5f;
+    private static readonly Color dummyFgTilesColor = Color.LightGray;
+    private static readonly Color dummyInactiveBorderColor = Color.DarkOrange;
+    private static readonly Color firstBorderColor = Color.Aqua;
     private List<Rectangle> solids = new List<Rectangle>();
     private List<Rectangle> backs = new List<Rectangle>();
     public string Name;
@@ -67,43 +67,40 @@ namespace Celeste.Editor
       this.EditorColorIndex = data.EditorColorIndex;
       this.X = data.Bounds.X / 8;
       this.Y = data.Bounds.Y / 8;
-      this.ActualWidth = (int) data.Bounds.Width;
-      this.ActualHeight = (int) data.Bounds.Height;
+      this.ActualWidth = data.Bounds.Width;
+      this.ActualHeight = data.Bounds.Height;
       this.Width = (int) Math.Ceiling((double) this.ActualWidth / 8.0);
       this.Height = (int) Math.Ceiling((double) this.ActualHeight / 8.0);
       this.Grid = new Grid(8f, 8f, data.Solids);
       this.Back = new Grid(8f, 8f, data.Bg);
-      for (int index1 = 0; index1 < this.Height; ++index1)
+      for (int y = 0; y < this.Height; ++y)
       {
-        for (int index2 = 0; index2 < this.Width; ++index2)
+        for (int x = 0; x < this.Width; ++x)
         {
-          int num = 0;
-          while (index2 + num < this.Width && this.Back[index2 + num, index1] && !this.Grid[index2 + num, index1])
-            ++num;
-          if (num > 0)
+          int width = 0;
+          while (x + width < this.Width && this.Back[x + width, y] && !this.Grid[x + width, y])
+            ++width;
+          if (width > 0)
           {
-            this.backs.Add(new Rectangle(index2, index1, num, 1));
-            index2 += num - 1;
+            this.backs.Add(new Rectangle(x, y, width, 1));
+            x += width - 1;
           }
         }
-        for (int index2 = 0; index2 < this.Width; ++index2)
+        for (int x = 0; x < this.Width; ++x)
         {
-          int num = 0;
-          while (index2 + num < this.Width && this.Grid[index2 + num, index1])
-            ++num;
-          if (num > 0)
+          int width = 0;
+          while (x + width < this.Width && this.Grid[x + width, y])
+            ++width;
+          if (width > 0)
           {
-            this.solids.Add(new Rectangle(index2, index1, num, 1));
-            index2 += num - 1;
+            this.solids.Add(new Rectangle(x, y, width, 1));
+            x += width - 1;
           }
         }
       }
       this.Spawns = new List<Vector2>();
-      using (List<Vector2>.Enumerator enumerator = data.Spawns.GetEnumerator())
-      {
-        while (enumerator.MoveNext())
-          this.Spawns.Add(Vector2.op_Subtraction(Vector2.op_Division(enumerator.Current, 8f), new Vector2((float) this.X, (float) this.Y)));
-      }
+      foreach (Vector2 spawn in data.Spawns)
+        this.Spawns.Add(spawn / 8f - new Vector2((float) this.X, (float) this.Y));
       this.Strawberries = new List<Vector2>();
       this.StrawberryMetadata = new List<string>();
       this.Checkpoints = new List<Vector2>();
@@ -112,13 +109,13 @@ namespace Celeste.Editor
       {
         if (entity.Name.Equals("strawberry") || entity.Name.Equals("snowberry"))
         {
-          this.Strawberries.Add(Vector2.op_Division(entity.Position, 8f));
+          this.Strawberries.Add(entity.Position / 8f);
           this.StrawberryMetadata.Add(entity.Int("checkpointID", 0).ToString() + ":" + (object) entity.Int("order", 0));
         }
         else if (entity.Name.Equals("checkpoint"))
-          this.Checkpoints.Add(Vector2.op_Division(entity.Position, 8f));
+          this.Checkpoints.Add(entity.Position / 8f);
         else if (entity.Name.Equals("jumpThru"))
-          this.Jumpthrus.Add(new Rectangle((int) (entity.Position.X / 8.0), (int) (entity.Position.Y / 8.0), entity.Width / 8, 1));
+          this.Jumpthrus.Add(new Rectangle((int) ((double) entity.Position.X / 8.0), (int) ((double) entity.Position.Y / 8.0), entity.Width / 8, 1));
       }
       this.Dummy = data.Dummy;
       this.Type = LevelTemplateType.Level;
@@ -143,76 +140,36 @@ namespace Celeste.Editor
       {
         foreach (LevelTemplate allLevel in allLevels)
         {
-          if (allLevel != this)
+          if (allLevel != this && allLevel.Rect.Intersects(this.Rect))
           {
-            Rectangle rect = allLevel.Rect;
-            if (((Rectangle) ref rect).Intersects(this.Rect))
-            {
-              flag = true;
-              break;
-            }
+            flag = true;
+            break;
           }
         }
       }
       if (this.Type == LevelTemplateType.Level)
       {
-        Draw.Rect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, Color.op_Multiply(flag ? Color.get_Red() : Color.get_Black(), 0.5f));
-        if (this.Check(Vector2.get_Zero()))
+        Draw.Rect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, (flag ? Color.Red : Color.Black) * 0.5f);
+        if (this.Check(Vector2.Zero))
           Draw.HollowRect((float) (this.X + 1), (float) (this.Y + 1), (float) (this.Width - 2), (float) (this.Height - 2), LevelTemplate.firstBorderColor);
         Draw.HollowRect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, this.Dummy ? LevelTemplate.dummyInactiveBorderColor : LevelTemplate.inactiveBorderColor);
-        using (List<Rectangle>.Enumerator enumerator = this.backs.GetEnumerator())
-        {
-          while (enumerator.MoveNext())
-          {
-            Rectangle current = enumerator.Current;
-            Draw.Rect((float) (this.X + current.X), (float) (this.Y + current.Y), (float) current.Width, (float) current.Height, this.Dummy ? LevelTemplate.dummyBgTilesColor : LevelTemplate.bgTilesColor);
-          }
-        }
-        using (List<Rectangle>.Enumerator enumerator = this.solids.GetEnumerator())
-        {
-          while (enumerator.MoveNext())
-          {
-            Rectangle current = enumerator.Current;
-            Draw.Rect((float) (this.X + current.X), (float) (this.Y + current.Y), (float) current.Width, (float) current.Height, this.Dummy ? LevelTemplate.dummyFgTilesColor : LevelTemplate.fgTilesColor[this.EditorColorIndex]);
-          }
-        }
-        using (List<Vector2>.Enumerator enumerator = this.Spawns.GetEnumerator())
-        {
-          while (enumerator.MoveNext())
-          {
-            Vector2 current = enumerator.Current;
-            Draw.Rect((float) this.X + (float) current.X, (float) ((double) this.Y + current.Y - 1.0), 1f, 1f, Color.get_Red());
-          }
-        }
-        using (List<Vector2>.Enumerator enumerator = this.Strawberries.GetEnumerator())
-        {
-          while (enumerator.MoveNext())
-          {
-            Vector2 current = enumerator.Current;
-            Draw.HollowRect((float) ((double) this.X + current.X - 1.0), (float) ((double) this.Y + current.Y - 2.0), 3f, 3f, Color.get_LightPink());
-          }
-        }
-        using (List<Vector2>.Enumerator enumerator = this.Checkpoints.GetEnumerator())
-        {
-          while (enumerator.MoveNext())
-          {
-            Vector2 current = enumerator.Current;
-            Draw.HollowRect((float) ((double) this.X + current.X - 1.0), (float) ((double) this.Y + current.Y - 2.0), 3f, 3f, Color.get_Lime());
-          }
-        }
-        using (List<Rectangle>.Enumerator enumerator = this.Jumpthrus.GetEnumerator())
-        {
-          while (enumerator.MoveNext())
-          {
-            Rectangle current = enumerator.Current;
-            Draw.Rect((float) (this.X + current.X), (float) (this.Y + current.Y), (float) current.Width, 1f, Color.get_Yellow());
-          }
-        }
+        foreach (Rectangle back in this.backs)
+          Draw.Rect((float) (this.X + back.X), (float) (this.Y + back.Y), (float) back.Width, (float) back.Height, this.Dummy ? LevelTemplate.dummyBgTilesColor : LevelTemplate.bgTilesColor);
+        foreach (Rectangle solid in this.solids)
+          Draw.Rect((float) (this.X + solid.X), (float) (this.Y + solid.Y), (float) solid.Width, (float) solid.Height, this.Dummy ? LevelTemplate.dummyFgTilesColor : LevelTemplate.fgTilesColor[this.EditorColorIndex]);
+        foreach (Vector2 spawn in this.Spawns)
+          Draw.Rect((float) this.X + spawn.X, (float) ((double) this.Y + (double) spawn.Y - 1.0), 1f, 1f, Color.Red);
+        foreach (Vector2 strawberry in this.Strawberries)
+          Draw.HollowRect((float) ((double) this.X + (double) strawberry.X - 1.0), (float) ((double) this.Y + (double) strawberry.Y - 2.0), 3f, 3f, Color.LightPink);
+        foreach (Vector2 checkpoint in this.Checkpoints)
+          Draw.HollowRect((float) ((double) this.X + (double) checkpoint.X - 1.0), (float) ((double) this.Y + (double) checkpoint.Y - 2.0), 3f, 3f, Color.Lime);
+        foreach (Rectangle jumpthru in this.Jumpthrus)
+          Draw.Rect((float) (this.X + jumpthru.X), (float) (this.Y + jumpthru.Y), (float) jumpthru.Width, 1f, Color.Yellow);
       }
       else
       {
         Draw.Rect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, LevelTemplate.dummyFgTilesColor);
-        Draw.Rect((float) (this.X + this.Width) - (float) this.resizeHoldSize.X, (float) (this.Y + this.Height) - (float) this.resizeHoldSize.Y, (float) this.resizeHoldSize.X, (float) this.resizeHoldSize.Y, Color.get_Orange());
+        Draw.Rect((float) (this.X + this.Width) - this.resizeHoldSize.X, (float) (this.Y + this.Height) - this.resizeHoldSize.Y, this.resizeHoldSize.X, this.resizeHoldSize.Y, Color.Orange);
       }
       if (!(selected | hovered))
         return;
@@ -221,15 +178,12 @@ namespace Celeste.Editor
 
     public bool Check(Vector2 point)
     {
-      if (point.X >= (double) this.Left && point.Y >= (double) this.Top && point.X < (double) this.Right)
-        return point.Y < (double) this.Bottom;
-      return false;
+      return (double) point.X >= (double) this.Left && (double) point.Y >= (double) this.Top && (double) point.X < (double) this.Right && (double) point.Y < (double) this.Bottom;
     }
 
     public bool Check(Rectangle rect)
     {
-      Rectangle rect1 = this.Rect;
-      return ((Rectangle) ref rect1).Intersects(rect);
+      return this.Rect.Intersects(rect);
     }
 
     public void StartMoving()
@@ -239,8 +193,8 @@ namespace Celeste.Editor
 
     public void Move(Vector2 relativeMove, List<LevelTemplate> allLevels, bool snap)
     {
-      this.X = (int) (this.moveAnchor.X + relativeMove.X);
-      this.Y = (int) (this.moveAnchor.Y + relativeMove.Y);
+      this.X = (int) ((double) this.moveAnchor.X + (double) relativeMove.X);
+      this.Y = (int) ((double) this.moveAnchor.Y + (double) relativeMove.Y);
       if (!snap)
         return;
       foreach (LevelTemplate allLevel in allLevels)
@@ -249,13 +203,13 @@ namespace Celeste.Editor
         {
           if (this.Bottom >= allLevel.Top && this.Top <= allLevel.Bottom)
           {
-            int num = Math.Abs(this.Left - allLevel.Right) < 3 ? 1 : 0;
-            bool flag = Math.Abs(this.Right - allLevel.Left) < 3;
-            if (num != 0)
+            bool flag1 = Math.Abs(this.Left - allLevel.Right) < 3;
+            bool flag2 = Math.Abs(this.Right - allLevel.Left) < 3;
+            if (flag1)
               this.Left = allLevel.Right;
-            else if (flag)
+            else if (flag2)
               this.Right = allLevel.Left;
-            if ((num | (flag ? 1 : 0)) != 0)
+            if (flag1 | flag2)
             {
               if (Math.Abs(this.Top - allLevel.Top) < 3)
                 this.Top = allLevel.Top;
@@ -265,13 +219,13 @@ namespace Celeste.Editor
           }
           if (this.Right >= allLevel.Left && this.Left <= allLevel.Right)
           {
-            int num = Math.Abs(this.Top - allLevel.Bottom) < 5 ? 1 : 0;
-            bool flag = Math.Abs(this.Bottom - allLevel.Top) < 5;
-            if (num != 0)
+            bool flag1 = Math.Abs(this.Top - allLevel.Bottom) < 5;
+            bool flag2 = Math.Abs(this.Bottom - allLevel.Top) < 5;
+            if (flag1)
               this.Top = allLevel.Bottom;
-            else if (flag)
+            else if (flag2)
               this.Bottom = allLevel.Top;
-            if ((num | (flag ? 1 : 0)) != 0)
+            if (flag1 | flag2)
             {
               if (Math.Abs(this.Left - allLevel.Left) < 3)
                 this.Left = allLevel.Left;
@@ -290,17 +244,15 @@ namespace Celeste.Editor
 
     public void Resize(Vector2 relativeMove)
     {
-      this.Width = Math.Max(1, (int) (this.resizeAnchor.X + relativeMove.X));
-      this.Height = Math.Max(1, (int) (this.resizeAnchor.Y + relativeMove.Y));
+      this.Width = Math.Max(1, (int) ((double) this.resizeAnchor.X + (double) relativeMove.X));
+      this.Height = Math.Max(1, (int) ((double) this.resizeAnchor.Y + (double) relativeMove.Y));
       this.ActualWidth = this.Width * 8;
       this.ActualHeight = this.Height * 8;
     }
 
     public bool ResizePosition(Vector2 mouse)
     {
-      if (mouse.X > (double) (this.X + this.Width) - this.resizeHoldSize.X && mouse.Y > (double) (this.Y + this.Height) - this.resizeHoldSize.Y && mouse.X < (double) (this.X + this.Width))
-        return mouse.Y < (double) (this.Y + this.Height);
-      return false;
+      return (double) mouse.X > (double) (this.X + this.Width) - (double) this.resizeHoldSize.X && (double) mouse.Y > (double) (this.Y + this.Height) - (double) this.resizeHoldSize.Y && (double) mouse.X < (double) (this.X + this.Width) && (double) mouse.Y < (double) (this.Y + this.Height);
     }
 
     public Rectangle Rect
@@ -360,3 +312,4 @@ namespace Celeste.Editor
     }
   }
 }
+

@@ -13,7 +13,7 @@ namespace Celeste
   public class LightOcclude : Component
   {
     public float Alpha = 1f;
-    private Rectangle? bounds;
+    private Rectangle? bounds = new Rectangle?();
     public Rectangle RenderBounds;
     private Rectangle lastSize;
     private bool lastVisible;
@@ -23,12 +23,9 @@ namespace Celeste
     {
       get
       {
-        if (!this.bounds.HasValue)
-          return (int) this.Entity.Collider.AbsoluteLeft;
-        int x = (int) this.Entity.X;
-        Rectangle rectangle = this.bounds.Value;
-        int left = ((Rectangle) ref rectangle).get_Left();
-        return x + left;
+        if (this.bounds.HasValue)
+          return (int) this.Entity.X + this.bounds.Value.Left;
+        return (int) this.Entity.Collider.AbsoluteLeft;
       }
     }
 
@@ -37,7 +34,7 @@ namespace Celeste
       get
       {
         if (this.bounds.HasValue)
-          return (int) this.bounds.Value.Width;
+          return this.bounds.Value.Width;
         return (int) this.Entity.Collider.Width;
       }
     }
@@ -46,12 +43,9 @@ namespace Celeste
     {
       get
       {
-        if (!this.bounds.HasValue)
-          return (int) this.Entity.Collider.AbsoluteTop;
-        int y = (int) this.Entity.Y;
-        Rectangle rectangle = this.bounds.Value;
-        int top = ((Rectangle) ref rectangle).get_Top();
-        return y + top;
+        if (this.bounds.HasValue)
+          return (int) this.Entity.Y + this.bounds.Value.Top;
+        return (int) this.Entity.Collider.AbsoluteTop;
       }
     }
 
@@ -60,7 +54,7 @@ namespace Celeste
       get
       {
         if (this.bounds.HasValue)
-          return (int) this.bounds.Value.Height;
+          return this.bounds.Value.Height;
         return (int) this.Entity.Collider.Height;
       }
     }
@@ -97,9 +91,8 @@ namespace Celeste
     {
       base.Update();
       bool flag = this.Visible && this.Entity.Visible;
-      Rectangle rectangle;
-      ((Rectangle) ref rectangle).\u002Ector(this.Left, this.Top, this.Width, this.Height);
-      if (!Rectangle.op_Inequality(this.lastSize, rectangle) && this.lastVisible == flag && (double) this.lastAlpha == (double) this.Alpha)
+      Rectangle rectangle = new Rectangle(this.Left, this.Top, this.Width, this.Height);
+      if (!(this.lastSize != rectangle) && this.lastVisible == flag && (double) this.lastAlpha == (double) this.Alpha)
         return;
       this.MakeLightsDirty();
       this.lastVisible = flag;
@@ -121,18 +114,17 @@ namespace Celeste
 
     private void MakeLightsDirty()
     {
-      Rectangle rectangle1;
-      ((Rectangle) ref rectangle1).\u002Ector(this.Left, this.Top, this.Width, this.Height);
+      Rectangle rectangle1 = new Rectangle(this.Left, this.Top, this.Width, this.Height);
       foreach (VertexLight component in this.Entity.Scene.Tracker.GetComponents<VertexLight>())
       {
         if (!component.Dirty)
         {
-          Rectangle rectangle2;
-          ((Rectangle) ref rectangle2).\u002Ector((int) (component.Center.X - (double) component.EndRadius), (int) (component.Center.Y - (double) component.EndRadius), (int) component.EndRadius * 2, (int) component.EndRadius * 2);
-          if (((Rectangle) ref rectangle1).Intersects(rectangle2) || ((Rectangle) ref this.lastSize).Intersects(rectangle2))
+          Rectangle rectangle2 = new Rectangle((int) ((double) component.Center.X - (double) component.EndRadius), (int) ((double) component.Center.Y - (double) component.EndRadius), (int) component.EndRadius * 2, (int) component.EndRadius * 2);
+          if (rectangle1.Intersects(rectangle2) || this.lastSize.Intersects(rectangle2))
             component.Dirty = true;
         }
       }
     }
   }
 }
+

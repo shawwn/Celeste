@@ -49,10 +49,11 @@ namespace Celeste
     {
       if ((double) this.displayTimer <= 0.0)
         return;
-      Vector2 vector2 = Vector2.op_Multiply(this.level.Camera.CameraToScreen(Vector2.op_Addition(this.player.Position, new Vector2(0.0f, -18f))), 6f);
-      Color color = (double) this.drawStamina >= 20.0 ? Color.get_Lime() : Color.get_Red();
-      Draw.Rect((float) (vector2.X - 48.0 - 1.0), (float) (vector2.Y - 6.0 - 1.0), 98f, 14f, Color.get_Black());
-      Draw.Rect((float) (vector2.X - 48.0), (float) (vector2.Y - 6.0), (float) (96.0 * ((double) this.drawStamina / 110.0)), 12f, color);
+      Vector2 vector2 = this.level.Camera.CameraToScreen(this.player.Position + new Vector2(0.0f, -18f)) * 6f;
+      Color color = (double) this.drawStamina >= 20.0 ? Color.Lime : Color.Red;
+      Draw.Rect((float) ((double) vector2.X - 48.0 - 1.0), (float) ((double) vector2.Y - 6.0 - 1.0), 98f, 14f, Color.Black);
+      Draw.Rect(vector2.X - 48f, vector2.Y - 6f, (float) (96.0 * ((double) this.drawStamina / 110.0)), 12f, color);
     }
   }
 }
+

@@ -41,7 +41,7 @@ namespace Celeste
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create("bumper")));
       this.Add((Component) (this.spriteEvil = GFX.SpriteBank.Create("bumper_evil")));
       this.spriteEvil.Visible = false;
-      this.Add((Component) (this.light = new VertexLight(Color.get_Teal(), 1f, 16, 32)));
+      this.Add((Component) (this.light = new VertexLight(Color.Teal, 1f, 16, 32)));
       this.Add((Component) (this.bloom = new BloomPoint(0.5f, 16f)));
       this.node = node;
       this.anchor = this.Position;
@@ -61,12 +61,12 @@ namespace Celeste
         this.Add((Component) tween);
       }
       this.UpdatePosition();
-      this.Add((Component) (this.hitWiggler = Wiggler.Create(1.2f, 2f, (Action<float>) (v => this.spriteEvil.Position = Vector2.op_Multiply(Vector2.op_Multiply(this.hitDir, this.hitWiggler.Value), 8f)), false, false)));
+      this.Add((Component) (this.hitWiggler = Wiggler.Create(1.2f, 2f, (Action<float>) (v => this.spriteEvil.Position = this.hitDir * this.hitWiggler.Value * 8f), false, false)));
       this.Add((Component) new CoreModeListener(new Action<Session.CoreModes>(this.OnChangeMode)));
     }
 
     public Bumper(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.FirstNodeNullable(new Vector2?(offset)))
+      : this(data.Position + offset, data.FirstNodeNullable(new Vector2?(offset)))
     {
     }
 
@@ -87,7 +87,7 @@ namespace Celeste
 
     private void UpdatePosition()
     {
-      this.Position = Vector2.op_Addition(this.anchor, new Vector2(this.sine.Value * 3f, this.sine.ValueOverTwo * 2f));
+      this.Position = this.anchor + new Vector2(this.sine.Value * 3f, this.sine.ValueOverTwo * 2f);
     }
 
     public override void Update()
@@ -112,7 +112,7 @@ namespace Celeste
         ParticleType type = this.fireMode ? Bumper.P_FireAmbience : Bumper.P_Ambience;
         float direction = this.fireMode ? -1.570796f : angleRadians;
         float length = this.fireMode ? 12f : 8f;
-        this.SceneAs<Level>().Particles.Emit(type, 1, Vector2.op_Addition(this.Center, Calc.AngleToVector(angleRadians, length)), Vector2.op_Multiply(Vector2.get_One(), 2f), direction);
+        this.SceneAs<Level>().Particles.Emit(type, 1, this.Center + Calc.AngleToVector(angleRadians, length), Vector2.One * 2f, direction);
       }
       this.UpdatePosition();
     }
@@ -123,13 +123,13 @@ namespace Celeste
       {
         if (SaveData.Instance.Assists.Invincible)
           return;
-        Vector2 vector2 = Vector2.op_Subtraction(player.Center, this.Center).SafeNormalize();
-        this.hitDir = Vector2.op_UnaryNegation(vector2);
+        Vector2 vector2 = (player.Center - this.Center).SafeNormalize();
+        this.hitDir = -vector2;
         this.hitWiggler.Start();
         Audio.Play("event:/game/09_core/hotpinball_activate", this.Position);
         this.respawnTimer = 0.6f;
         player.Die(vector2, false, true);
-        this.SceneAs<Level>().Particles.Emit(Bumper.P_FireHit, 12, Vector2.op_Addition(this.Center, Vector2.op_Multiply(vector2, 12f)), Vector2.op_Multiply(Vector2.get_One(), 3f), vector2.Angle());
+        this.SceneAs<Level>().Particles.Emit(Bumper.P_FireHit, 12, this.Center + vector2 * 12f, Vector2.One * 3f, vector2.Angle());
       }
       else
       {
@@ -147,8 +147,9 @@ namespace Celeste
         this.bloom.Visible = false;
         this.SceneAs<Level>().DirectionalShake(vector2, 0.15f);
         this.SceneAs<Level>().Displacement.AddBurst(this.Center, 0.3f, 8f, 32f, 0.8f, (Ease.Easer) null, (Ease.Easer) null);
-        this.SceneAs<Level>().Particles.Emit(Bumper.P_Launch, 12, Vector2.op_Addition(this.Center, Vector2.op_Multiply(vector2, 12f)), Vector2.op_Multiply(Vector2.get_One(), 3f), vector2.Angle());
+        this.SceneAs<Level>().Particles.Emit(Bumper.P_Launch, 12, this.Center + vector2 * 12f, Vector2.One * 3f, vector2.Angle());
       }
     }
   }
 }
+

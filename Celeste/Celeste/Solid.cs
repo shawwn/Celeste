@@ -47,8 +47,8 @@ namespace Celeste
     public override void Update()
     {
       base.Update();
-      this.MoveH((float) this.Speed.X * Engine.DeltaTime);
-      this.MoveV((float) this.Speed.Y * Engine.DeltaTime);
+      this.MoveH(this.Speed.X * Engine.DeltaTime);
+      this.MoveV(this.Speed.Y * Engine.DeltaTime);
       if (!this.EnableAssistModeChecks || SaveData.Instance == null || (!SaveData.Instance.Assists.Invincible || this.Components.Get<SolidOnInvinciblePlayer>() != null) || !this.Collidable)
         return;
       Player player = this.CollideFirst<Player>();
@@ -59,9 +59,8 @@ namespace Celeste
       else
       {
         TheoCrystal theoCrystal = this.CollideFirst<TheoCrystal>();
-        if (theoCrystal == null || theoCrystal.Hold.IsHeld)
-          return;
-        this.Add((Component) new SolidOnInvinciblePlayer());
+        if (theoCrystal != null && !theoCrystal.Hold.IsHeld)
+          this.Add((Component) new SolidOnInvinciblePlayer());
       }
     }
 
@@ -97,7 +96,7 @@ namespace Celeste
 
     public Player GetPlayerOnTop()
     {
-      return this.CollideFirst<Player>(Vector2.op_Subtraction(this.Position, Vector2.get_UnitY()));
+      return this.CollideFirst<Player>(this.Position - Vector2.UnitY);
     }
 
     public bool HasPlayerClimbing()
@@ -109,7 +108,7 @@ namespace Celeste
     {
       foreach (Player entity in this.Scene.Tracker.GetEntities<Player>())
       {
-        if (entity.StateMachine.State == 1 && (entity.Facing == Facings.Left && this.CollideCheck((Entity) entity, Vector2.op_Addition(this.Position, Vector2.get_UnitX())) || entity.Facing == Facings.Right && this.CollideCheck((Entity) entity, Vector2.op_Subtraction(this.Position, Vector2.get_UnitX()))))
+        if (entity.StateMachine.State == 1 && (entity.Facing == Facings.Left && this.CollideCheck((Entity) entity, this.Position + Vector2.UnitX) || entity.Facing == Facings.Right && this.CollideCheck((Entity) entity, this.Position - Vector2.UnitX)))
           return entity;
       }
       return (Player) null;
@@ -130,10 +129,10 @@ namespace Celeste
       float right = this.Right;
       float left = this.Left;
       Player entity1 = this.Scene.Tracker.GetEntity<Player>();
-      if (entity1 != null && Input.MoveX.Value == Math.Sign(move) && (Math.Sign((float) entity1.Speed.X) == Math.Sign(move) && !Solid.riders.Contains((Actor) entity1)) && this.CollideCheck((Entity) entity1, Vector2.op_Subtraction(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.get_UnitX(), (float) move)), Vector2.get_UnitY())))
+      if (entity1 != null && Input.MoveX.Value == Math.Sign(move) && (Math.Sign(entity1.Speed.X) == Math.Sign(move) && !Solid.riders.Contains((Actor) entity1)) && this.CollideCheck((Entity) entity1, this.Position + Vector2.UnitX * (float) move - Vector2.UnitY))
         entity1.MoveV(1f, (Collision) null, (Solid) null);
       this.X += (float) move;
-      this.MoveStaticMovers(Vector2.op_Multiply(Vector2.get_UnitX(), (float) move));
+      this.MoveStaticMovers(Vector2.UnitX * (float) move);
       if (this.Collidable)
       {
         foreach (Actor entity2 in this.Scene.Tracker.GetEntities<Actor>())
@@ -154,7 +153,7 @@ namespace Celeste
             {
               this.Collidable = false;
               if (entity2.TreatNaive)
-                entity2.NaiveMove(Vector2.op_Multiply(Vector2.get_UnitX(), (float) move));
+                entity2.NaiveMove(Vector2.UnitX * (float) move);
               else
                 entity2.MoveHExact(move, (Collision) null, (Solid) null);
               entity2.LiftSpeed = this.LiftSpeed;
@@ -173,7 +172,7 @@ namespace Celeste
       float bottom = this.Bottom;
       float top = this.Top;
       this.Y += (float) move;
-      this.MoveStaticMovers(Vector2.op_Multiply(Vector2.get_UnitY(), (float) move));
+      this.MoveStaticMovers(Vector2.UnitY * (float) move);
       if (this.Collidable)
       {
         foreach (Actor entity in this.Scene.Tracker.GetEntities<Actor>())
@@ -194,7 +193,7 @@ namespace Celeste
             {
               this.Collidable = false;
               if (entity.TreatNaive)
-                entity.NaiveMove(Vector2.op_Multiply(Vector2.get_UnitY(), (float) move));
+                entity.NaiveMove(Vector2.UnitY * (float) move);
               else
                 entity.MoveVExact(move, (Collision) null, (Solid) null);
               entity.LiftSpeed = this.LiftSpeed;
@@ -208,3 +207,4 @@ namespace Celeste
     }
   }
 }
+

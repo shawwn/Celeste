@@ -22,9 +22,9 @@ namespace Celeste
     public CameraAdvanceTargetTrigger(EntityData data, Vector2 offset)
       : base(data, offset)
     {
-      this.Target = Vector2.op_Subtraction(Vector2.op_Addition(data.Nodes[0], offset), Vector2.op_Multiply(new Vector2(320f, 180f), 0.5f));
-      this.LerpStrength.X = (__Null) (double) data.Float("lerpStrengthX", 0.0f);
-      this.LerpStrength.Y = (__Null) (double) data.Float("lerpStrengthY", 0.0f);
+      this.Target = data.Nodes[0] + offset - new Vector2(320f, 180f) * 0.5f;
+      this.LerpStrength.X = data.Float("lerpStrengthX", 0.0f);
+      this.LerpStrength.Y = data.Float("lerpStrengthY", 0.0f);
       this.PositionModeX = data.Enum<Trigger.PositionModes>("positionModeX", Trigger.PositionModes.NoEffect);
       this.PositionModeY = data.Enum<Trigger.PositionModes>("positionModeY", Trigger.PositionModes.NoEffect);
       this.XOnly = data.Bool("xOnly", false);
@@ -34,8 +34,8 @@ namespace Celeste
     public override void OnStay(Player player)
     {
       player.CameraAnchor = this.Target;
-      player.CameraAnchorLerp.X = (__Null) (double) MathHelper.Clamp((float) this.LerpStrength.X * this.GetPositionLerp(player, this.PositionModeX), 0.0f, 1f);
-      player.CameraAnchorLerp.Y = (__Null) (double) MathHelper.Clamp((float) this.LerpStrength.Y * this.GetPositionLerp(player, this.PositionModeY), 0.0f, 1f);
+      player.CameraAnchorLerp.X = MathHelper.Clamp(this.LerpStrength.X * this.GetPositionLerp(player, this.PositionModeX), 0.0f, 1f);
+      player.CameraAnchorLerp.Y = MathHelper.Clamp(this.LerpStrength.Y * this.GetPositionLerp(player, this.PositionModeY), 0.0f, 1f);
       player.CameraAnchorIgnoreX = this.YOnly;
       player.CameraAnchorIgnoreY = this.XOnly;
     }
@@ -65,7 +65,8 @@ namespace Celeste
       }
       if (flag)
         return;
-      player.CameraAnchorLerp = Vector2.get_Zero();
+      player.CameraAnchorLerp = Vector2.Zero;
     }
   }
 }
+

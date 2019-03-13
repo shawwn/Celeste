@@ -12,13 +12,13 @@ namespace Monocle
   public class PixelText : Component
   {
     private List<PixelText.Char> characters = new List<PixelText.Char>();
-    public Color Color = Color.get_White();
-    public Vector2 Scale = Vector2.get_One();
+    public Vector2 Position = new Vector2();
+    public Color Color = Color.White;
+    public Vector2 Scale = Vector2.One;
     private PixelFont font;
     private PixelFontSize size;
     private string text;
     private bool dirty;
-    public Vector2 Position;
 
     public PixelFont Font
     {
@@ -83,18 +83,13 @@ namespace Monocle
       this.characters.Clear();
       int num1 = 0;
       int num2 = 1;
-      Vector2 zero = Vector2.get_Zero();
+      Vector2 zero = Vector2.Zero;
       for (int index = 0; index < this.text.Length; ++index)
       {
         if (this.text[index] == '\n')
         {
-          zero.X = (__Null) 0.0;
-          ref __Null local = ref zero.Y;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) this.size.LineHeight;
+          zero.X = 0.0f;
+          zero.Y += (float) this.size.LineHeight;
           ++num2;
         }
         PixelFontCharacter pixelFontCharacter = this.size.Get((int) this.text[index]);
@@ -102,18 +97,13 @@ namespace Monocle
         {
           this.characters.Add(new PixelText.Char()
           {
-            Offset = Vector2.op_Addition(zero, new Vector2((float) pixelFontCharacter.XOffset, (float) pixelFontCharacter.YOffset)),
+            Offset = zero + new Vector2((float) pixelFontCharacter.XOffset, (float) pixelFontCharacter.YOffset),
             CharData = pixelFontCharacter,
             Bounds = pixelFontCharacter.Texture.ClipRect
           });
-          if (zero.X > (double) num1)
+          if ((double) zero.X > (double) num1)
             num1 = (int) zero.X;
-          ref __Null local = ref zero.X;
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          // ISSUE: cast to a reference type
-          // ISSUE: explicit reference operation
-          ^(float&) ref local = ^(float&) ref local + (float) pixelFontCharacter.XAdvance;
+          zero.X += (float) pixelFontCharacter.XAdvance;
         }
       }
       this.Width = num1;
@@ -125,7 +115,7 @@ namespace Monocle
       if (this.dirty)
         this.Refresh();
       for (int index = 0; index < this.characters.Count; ++index)
-        this.characters[index].CharData.Texture.Draw(Vector2.op_Addition(this.Position, this.characters[index].Offset), Vector2.get_Zero(), this.Color);
+        this.characters[index].CharData.Texture.Draw(this.Position + this.characters[index].Offset, Vector2.Zero, this.Color);
     }
 
     private struct Char
@@ -136,3 +126,4 @@ namespace Monocle
     }
   }
 }
+

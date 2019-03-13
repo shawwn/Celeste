@@ -29,7 +29,7 @@ namespace Celeste
       base.Added(scene);
       if ((scene as Level).Session.GetFlag("granny"))
         this.Sprite.Play("laugh", false, false);
-      scene.Add((Entity) (this.Hahaha = new Hahaha(Vector2.op_Addition(this.Position, new Vector2(8f, -4f)), "", false, new Vector2?())));
+      scene.Add((Entity) (this.Hahaha = new Hahaha(this.Position + new Vector2(8f, -4f), "", false, new Vector2?())));
       this.Hahaha.Enabled = false;
     }
 
@@ -38,8 +38,7 @@ namespace Celeste
       Player entity = this.Level.Tracker.GetEntity<Player>();
       if (entity != null && !this.Session.GetFlag("granny") && !this.talking)
       {
-        Rectangle bounds = this.Level.Bounds;
-        int num = ((Rectangle) ref bounds).get_Left() + 96;
+        int num = this.Level.Bounds.Left + 96;
         if (entity.OnGround(1) && (double) entity.X >= (double) num && ((double) entity.X <= (double) this.X + 16.0 && (double) Math.Abs(entity.Y - this.Y) < 4.0) && entity.Facing == (Facings) Math.Sign(this.X - entity.X))
         {
           this.talking = true;
@@ -51,3 +50,4 @@ namespace Celeste
     }
   }
 }
+

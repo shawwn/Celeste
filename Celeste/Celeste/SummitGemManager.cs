@@ -16,7 +16,7 @@ namespace Celeste
     private List<SummitGemManager.Gem> gems = new List<SummitGemManager.Gem>();
 
     public SummitGemManager(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Depth = -10010;
       int index = 0;
@@ -37,39 +37,41 @@ namespace Celeste
 
     private IEnumerator Routine()
     {
-      SummitGemManager summitGemManager = this;
-      Level level = summitGemManager.Scene as Level;
+      Level level = this.Scene as Level;
       if (level.Session.HeartGem)
       {
-        foreach (SummitGemManager.Gem gem in summitGemManager.gems)
+        foreach (SummitGemManager.Gem gem1 in this.gems)
+        {
+          SummitGemManager.Gem gem = gem1;
           gem.Sprite.RemoveSelf();
-        summitGemManager.gems.Clear();
+          gem = (SummitGemManager.Gem) null;
+        }
+        this.gems.Clear();
       }
       else
       {
         while (true)
         {
-          Player entity = summitGemManager.Scene.Tracker.GetEntity<Player>();
-          if (entity != null)
+          Player player = this.Scene.Tracker.GetEntity<Player>();
+          if (player == null || (double) (player.Position - this.Position).Length() >= 64.0)
           {
-            Vector2 vector2 = Vector2.op_Subtraction(entity.Position, summitGemManager.Position);
-            if ((double) ((Vector2) ref vector2).Length() < 64.0)
-              break;
+            yield return (object) null;
+            player = (Player) null;
           }
-          yield return (object) null;
+          else
+            break;
         }
         yield return (object) 0.5f;
         bool alreadyHasHeart = level.Session.OldStats.Modes[0].HeartGem;
         int broken = 0;
         int index = 0;
-        List<SummitGemManager.Gem>.Enumerator enumerator = summitGemManager.gems.GetEnumerator();
-        while (enumerator.MoveNext())
+        foreach (SummitGemManager.Gem gem1 in this.gems)
         {
-          SummitGemManager.Gem gem = enumerator.Current;
-          bool flag = level.Session.SummitGems[index];
+          SummitGemManager.Gem gem = gem1;
+          bool breakGem = level.Session.SummitGems[index];
           if (!alreadyHasHeart)
-            flag = ((flag ? 1 : 0) | (SaveData.Instance.SummitGems == null ? 0 : (SaveData.Instance.SummitGems[index] ? 1 : 0))) != 0;
-          if (flag)
+            breakGem = ((breakGem ? 1 : 0) | (SaveData.Instance.SummitGems == null ? 0 : (SaveData.Instance.SummitGems[index] ? 1 : 0))) != 0;
+          if (breakGem)
           {
             switch (index)
             {
@@ -99,14 +101,14 @@ namespace Celeste
               if ((double) gem.Bloom.Alpha > 0.5)
                 gem.Shake = Calc.Random.ShakeVector();
               gem.Sprite.Y -= Engine.DeltaTime * 8f;
-              gem.Sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) gem.Bloom.Alpha * 0.100000001490116));
+              gem.Sprite.Scale = Vector2.One * (float) (1.0 + (double) gem.Bloom.Alpha * 0.100000001490116);
               yield return (object) null;
             }
             yield return (object) 0.2f;
             level.Shake(0.3f);
             Input.Rumble(RumbleStrength.Light, RumbleLength.Short);
-            for (int index1 = 0; index1 < 20; ++index1)
-              level.ParticlesFG.Emit(SummitGem.P_Shatter, Vector2.op_Addition(gem.Position, new Vector2((float) Calc.Random.Range(-8, 8), (float) Calc.Random.Range(-8, 8))), SummitGem.GemColors[index], Calc.Random.NextFloat(6.283185f));
+            for (int i = 0; i < 20; ++i)
+              level.ParticlesFG.Emit(SummitGem.P_Shatter, gem.Position + new Vector2((float) Calc.Random.Range(-8, 8), (float) Calc.Random.Range(-8, 8)), SummitGem.GemColors[index], Calc.Random.NextFloat(6.283185f));
             ++broken;
             gem.Bloom.RemoveSelf();
             gem.Sprite.RemoveSelf();
@@ -115,10 +117,9 @@ namespace Celeste
           ++index;
           gem = (SummitGemManager.Gem) null;
         }
-        enumerator = new List<SummitGemManager.Gem>.Enumerator();
         if (broken >= 6)
         {
-          HeartGem heart = summitGemManager.Scene.Entities.FindFirst<HeartGem>();
+          HeartGem heart = this.Scene.Entities.FindFirst<HeartGem>();
           if (heart != null)
           {
             Audio.Play("event:/game/07_summit/gem_unlock_complete", heart.Position);
@@ -126,10 +127,10 @@ namespace Celeste
             Vector2 from = heart.Position;
             for (float p = 0.0f; (double) p < 1.0 && heart.Scene != null; p += Engine.DeltaTime)
             {
-              heart.Position = Vector2.Lerp(from, Vector2.op_Addition(summitGemManager.Position, new Vector2(0.0f, -16f)), Ease.CubeOut(p));
+              heart.Position = Vector2.Lerp(from, this.Position + new Vector2(0.0f, -16f), Ease.CubeOut(p));
               yield return (object) null;
             }
-            from = (Vector2) null;
+            from = new Vector2();
           }
           heart = (HeartGem) null;
         }
@@ -167,10 +168,11 @@ namespace Celeste
       {
         Vector2 position = this.Sprite.Position;
         Sprite sprite = this.Sprite;
-        sprite.Position = Vector2.op_Addition(sprite.Position, this.Shake);
+        sprite.Position = sprite.Position + this.Shake;
         base.Render();
         this.Sprite.Position = position;
       }
     }
   }
 }
+

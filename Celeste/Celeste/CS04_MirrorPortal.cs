@@ -33,99 +33,89 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      CS04_MirrorPortal cs04MirrorPortal = this;
-      cs04MirrorPortal.player.StateMachine.State = 11;
-      cs04MirrorPortal.player.StateMachine.Locked = true;
-      cs04MirrorPortal.player.Dashes = 1;
+      this.player.StateMachine.State = 11;
+      this.player.StateMachine.Locked = true;
+      this.player.Dashes = 1;
       if (level.Session.Area.Mode == AreaMode.Normal)
         Audio.SetMusic((string) null, true, true);
       else
-        cs04MirrorPortal.Add((Component) new Coroutine(cs04MirrorPortal.MusicFadeOutBSide(), true));
-      cs04MirrorPortal.Add((Component) (cs04MirrorPortal.sfx = new SoundSource()));
-      cs04MirrorPortal.sfx.Position = cs04MirrorPortal.portal.Center;
-      cs04MirrorPortal.sfx.Play("event:/music/lvl5/mirror_cutscene", (string) null, 0.0f);
-      cs04MirrorPortal.Add((Component) new Coroutine(cs04MirrorPortal.CenterCamera(), true));
-      yield return (object) cs04MirrorPortal.player.DummyWalkToExact((int) cs04MirrorPortal.portal.X, false, 1f);
+        this.Add((Component) new Coroutine(this.MusicFadeOutBSide(), true));
+      this.Add((Component) (this.sfx = new SoundSource()));
+      this.sfx.Position = this.portal.Center;
+      this.sfx.Play("event:/music/lvl5/mirror_cutscene", (string) null, 0.0f);
+      this.Add((Component) new Coroutine(this.CenterCamera(), true));
+      yield return (object) this.player.DummyWalkToExact((int) this.portal.X, false, 1f);
       yield return (object) 0.25f;
-      yield return (object) cs04MirrorPortal.player.DummyWalkToExact((int) cs04MirrorPortal.portal.X - 16, false, 1f);
+      yield return (object) this.player.DummyWalkToExact((int) this.portal.X - 16, false, 1f);
       yield return (object) 0.5f;
-      yield return (object) cs04MirrorPortal.player.DummyWalkToExact((int) cs04MirrorPortal.portal.X + 16, false, 1f);
+      yield return (object) this.player.DummyWalkToExact((int) this.portal.X + 16, false, 1f);
       yield return (object) 0.25f;
-      cs04MirrorPortal.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.25f;
-      yield return (object) cs04MirrorPortal.player.DummyWalkToExact((int) cs04MirrorPortal.portal.X, false, 1f);
+      yield return (object) this.player.DummyWalkToExact((int) this.portal.X, false, 1f);
       yield return (object) 0.1f;
-      cs04MirrorPortal.player.DummyAutoAnimate = false;
-      cs04MirrorPortal.player.Sprite.Play("lookUp", false, false);
+      this.player.DummyAutoAnimate = false;
+      this.player.Sprite.Play("lookUp", false, false);
       yield return (object) 1f;
-      cs04MirrorPortal.player.DummyAutoAnimate = true;
-      cs04MirrorPortal.portal.Activate();
-      cs04MirrorPortal.Add((Component) new Coroutine(level.ZoomTo(new Vector2(160f, 90f), 3f, 12f), true));
+      this.player.DummyAutoAnimate = true;
+      this.portal.Activate();
+      this.Add((Component) new Coroutine(level.ZoomTo(new Vector2(160f, 90f), 3f, 12f), true));
       yield return (object) 0.25f;
-      cs04MirrorPortal.player.ForceStrongWindHair.X = (__Null) -1.0;
-      yield return (object) cs04MirrorPortal.player.DummyWalkToExact((int) cs04MirrorPortal.player.X + 12, true, 1f);
+      this.player.ForceStrongWindHair.X = -1f;
+      yield return (object) this.player.DummyWalkToExact((int) this.player.X + 12, true, 1f);
       yield return (object) 0.5f;
-      cs04MirrorPortal.player.Facing = Facings.Right;
-      cs04MirrorPortal.player.DummyAutoAnimate = false;
-      cs04MirrorPortal.player.DummyGravity = false;
-      cs04MirrorPortal.player.Sprite.Play("runWind", false, false);
-      while ((double) cs04MirrorPortal.player.Sprite.Rate > 0.0)
+      this.player.Facing = Facings.Right;
+      this.player.DummyAutoAnimate = false;
+      this.player.DummyGravity = false;
+      this.player.Sprite.Play("runWind", false, false);
+      while ((double) this.player.Sprite.Rate > 0.0)
       {
-        cs04MirrorPortal.player.MoveH(cs04MirrorPortal.player.Sprite.Rate * 10f * Engine.DeltaTime, (Collision) null, (Solid) null);
-        cs04MirrorPortal.player.MoveV((float) (-(1.0 - (double) cs04MirrorPortal.player.Sprite.Rate) * 6.0) * Engine.DeltaTime, (Collision) null, (Solid) null);
-        cs04MirrorPortal.player.Sprite.Rate -= Engine.DeltaTime * 0.15f;
+        this.player.MoveH(this.player.Sprite.Rate * 10f * Engine.DeltaTime, (Collision) null, (Solid) null);
+        this.player.MoveV((float) (-(1.0 - (double) this.player.Sprite.Rate) * 6.0) * Engine.DeltaTime, (Collision) null, (Solid) null);
+        this.player.Sprite.Rate -= Engine.DeltaTime * 0.15f;
         yield return (object) null;
       }
       yield return (object) 0.5f;
-      cs04MirrorPortal.player.Sprite.Play("fallFast", false, false);
-      cs04MirrorPortal.player.Sprite.Rate = 1f;
-      Vector2 target = Vector2.op_Addition(cs04MirrorPortal.portal.Center, new Vector2(0.0f, 8f));
-      Vector2 from = cs04MirrorPortal.player.Position;
-      float p;
-      for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 2f)
+      this.player.Sprite.Play("fallFast", false, false);
+      this.player.Sprite.Rate = 1f;
+      Vector2 target = this.portal.Center + new Vector2(0.0f, 8f);
+      Vector2 from = this.player.Position;
+      for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 2f)
       {
-        cs04MirrorPortal.player.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(target, from), Ease.SineInOut(p)));
+        this.player.Position = from + (target - from) * Ease.SineInOut(p);
         yield return (object) null;
       }
-      cs04MirrorPortal.player.ForceStrongWindHair.X = (__Null) 0.0;
-      target = (Vector2) null;
-      from = (Vector2) null;
-      cs04MirrorPortal.fader.Target = 1f;
+      this.player.ForceStrongWindHair.X = 0.0f;
+      target = new Vector2();
+      from = new Vector2();
+      this.fader.Target = 1f;
       yield return (object) 2f;
-      cs04MirrorPortal.player.Sprite.Play("sleep", false, false);
+      this.player.Sprite.Play("sleep", false, false);
       yield return (object) 1f;
       yield return (object) level.ZoomBack(1f);
       if (level.Session.Area.Mode == AreaMode.Normal)
       {
         level.Session.ColorGrade = "templevoid";
-        for (p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
+        for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime)
         {
           Glitch.Value = p * 0.05f;
           level.ScreenPadding = 32f * p;
           yield return (object) null;
         }
       }
-      while ((double) (cs04MirrorPortal.portal.DistortionFade -= Engine.DeltaTime * 2f) > 0.0)
+      while ((double) (this.portal.DistortionFade -= Engine.DeltaTime * 2f) > 0.0)
         yield return (object) null;
-      cs04MirrorPortal.EndCutscene(level, true);
+      this.EndCutscene(level, true);
     }
 
     private IEnumerator CenterCamera()
     {
-      CS04_MirrorPortal cs04MirrorPortal = this;
-      Camera camera = cs04MirrorPortal.Level.Camera;
-      Vector2 target = Vector2.op_Subtraction(cs04MirrorPortal.portal.Center, new Vector2(160f, 90f));
-      while (true)
+      Camera camera = this.Level.Camera;
+      Vector2 target = this.portal.Center - new Vector2(160f, 90f);
+      while ((double) (camera.Position - target).Length() > 1.0)
       {
-        Vector2 vector2 = Vector2.op_Subtraction(camera.Position, target);
-        if ((double) ((Vector2) ref vector2).Length() > 1.0)
-        {
-          Camera camera1 = camera;
-          camera1.Position = Vector2.op_Addition(camera1.Position, Vector2.op_Multiply(Vector2.op_Subtraction(target, camera.Position), 1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime)));
-          yield return (object) null;
-        }
-        else
-          break;
+        camera.Position += (target - camera.Position) * (1f - (float) Math.Pow(0.00999999977648258, (double) Engine.DeltaTime));
+        yield return (object) null;
       }
     }
 
@@ -159,10 +149,10 @@ namespace Celeste
           level.Session.Level = "void";
           Session session = level.Session;
           Level level1 = level;
-          Rectangle bounds1 = level.Bounds;
-          double left = (double) ((Rectangle) ref bounds1).get_Left();
-          Rectangle bounds2 = level.Bounds;
-          double top = (double) ((Rectangle) ref bounds2).get_Top();
+          Rectangle bounds = level.Bounds;
+          double left = (double) bounds.Left;
+          bounds = level.Bounds;
+          double top = (double) bounds.Top;
           Vector2 from = new Vector2((float) left, (float) top);
           Vector2? nullable = new Vector2?(level1.GetSpawnPoint(from));
           session.RespawnPoint = nullable;
@@ -173,10 +163,10 @@ namespace Celeste
           level.Session.Level = "c-00";
           Session session = level.Session;
           Level level1 = level;
-          Rectangle bounds1 = level.Bounds;
-          double left = (double) ((Rectangle) ref bounds1).get_Left();
-          Rectangle bounds2 = level.Bounds;
-          double top = (double) ((Rectangle) ref bounds2).get_Top();
+          Rectangle bounds = level.Bounds;
+          double left = (double) bounds.Left;
+          bounds = level.Bounds;
+          double top = (double) bounds.Top;
           Vector2 from = new Vector2((float) left, (float) top);
           Vector2? nullable = new Vector2?(level1.GetSpawnPoint(from));
           session.RespawnPoint = nullable;
@@ -195,9 +185,9 @@ namespace Celeste
 
     private class Fader : Entity
     {
-      public float Target;
+      public float Target = 0.0f;
+      private float fade = 0.0f;
       public bool Ended;
-      private float fade;
 
       public Fader()
       {
@@ -216,7 +206,7 @@ namespace Celeste
       {
         Camera camera = (this.Scene as Level).Camera;
         if ((double) this.fade > 0.0)
-          Draw.Rect(camera.X - 10f, camera.Y - 10f, 340f, 200f, Color.op_Multiply(Color.get_Black(), this.fade));
+          Draw.Rect(camera.X - 10f, camera.Y - 10f, 340f, 200f, Color.Black * this.fade);
         Player entity = this.Scene.Tracker.GetEntity<Player>();
         if (entity == null || entity.OnGround(2))
           return;
@@ -225,3 +215,4 @@ namespace Celeste
     }
   }
 }
+

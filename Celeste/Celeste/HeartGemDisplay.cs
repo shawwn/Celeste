@@ -33,17 +33,17 @@ namespace Celeste
         this.Sprites[index].Play("spin", false, false);
       }
       this.bg = new Monocle.Image(GFX.Gui["collectables/heartgem/0/spin00"]);
-      this.bg.Color = Color.get_Black();
+      this.bg.Color = Color.Black;
       this.bg.CenterOrigin();
       this.rotateWiggler = Wiggler.Create(0.4f, 6f, (Action<float>) null, false, false);
       this.rotateWiggler.UseRawDeltaTime = true;
-      SimpleCurve curve = new SimpleCurve(Vector2.op_Multiply(Vector2.get_UnitY(), 80f), Vector2.get_Zero(), Vector2.op_Multiply(Vector2.get_UnitY(), -160f));
+      SimpleCurve curve = new SimpleCurve(Vector2.UnitY * 80f, Vector2.Zero, Vector2.UnitY * -160f);
       this.tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 0.4f, false);
-      this.tween.OnStart = (Action<Tween>) (t => this.SpriteColor = Color.get_Transparent());
+      this.tween.OnStart = (Action<Tween>) (t => this.SpriteColor = Color.Transparent);
       this.tween.OnUpdate = (Action<Tween>) (t =>
       {
         this.bounce = curve.GetPoint(t.Eased);
-        this.SpriteColor = Color.op_Multiply(Color.get_White(), Calc.LerpClamp(0.0f, 1f, t.Percent * 1.5f));
+        this.SpriteColor = Color.White * Calc.LerpClamp(0.0f, 1f, t.Percent * 1.5f);
       });
     }
 
@@ -106,21 +106,21 @@ namespace Celeste
       this.Position = Calc.Approach(this.Position, this.TargetPosition, 200f * Engine.DeltaTime);
       for (int index = 0; index < this.Sprites.Length; ++index)
       {
-        this.Sprites[index].Scale.X = (__Null) (double) Calc.Approach((float) this.Sprites[index].Scale.X, 1f, 2f * Engine.DeltaTime);
-        this.Sprites[index].Scale.Y = (__Null) (double) Calc.Approach((float) this.Sprites[index].Scale.Y, 1f, 2f * Engine.DeltaTime);
+        this.Sprites[index].Scale.X = Calc.Approach(this.Sprites[index].Scale.X, 1f, 2f * Engine.DeltaTime);
+        this.Sprites[index].Scale.Y = Calc.Approach(this.Sprites[index].Scale.Y, 1f, 2f * Engine.DeltaTime);
       }
     }
 
     public override void Render()
     {
       base.Render();
-      this.bg.Position = Vector2.op_Addition(this.Entity.Position, this.Position);
+      this.bg.Position = this.Entity.Position + this.Position;
       for (int index = 0; index < this.Sprites.Length; ++index)
       {
         if (this.Sprites[index].Visible)
         {
           this.Sprites[index].Rotation = (float) ((double) this.rotateWiggler.Value * 30.0 * (Math.PI / 180.0));
-          this.Sprites[index].Position = Vector2.op_Addition(Vector2.op_Addition(this.Entity.Position, this.Position), this.bounce);
+          this.Sprites[index].Position = this.Entity.Position + this.Position + this.bounce;
           this.Sprites[index].Render();
         }
       }
@@ -143,3 +143,4 @@ namespace Celeste
     }
   }
 }
+

@@ -7,7 +7,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
-using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
@@ -15,6 +14,24 @@ namespace Celeste
 {
   public static class GFX
   {
+    public static readonly BlendState Subtract = new BlendState()
+    {
+      ColorSourceBlend = Blend.One,
+      ColorDestinationBlend = Blend.One,
+      ColorBlendFunction = BlendFunction.ReverseSubtract,
+      AlphaSourceBlend = Blend.One,
+      AlphaDestinationBlend = Blend.One,
+      AlphaBlendFunction = BlendFunction.Add
+    };
+    public static readonly BlendState DestinationTransparencySubtract = new BlendState()
+    {
+      ColorSourceBlend = Blend.One,
+      ColorDestinationBlend = Blend.One,
+      ColorBlendFunction = BlendFunction.ReverseSubtract,
+      AlphaSourceBlend = Blend.Zero,
+      AlphaDestinationBlend = Blend.One,
+      AlphaBlendFunction = BlendFunction.Add
+    };
     public static Atlas Game;
     public static Atlas Gui;
     public static Atlas Opening;
@@ -57,8 +74,6 @@ namespace Celeste
     public static VirtualTexture MountainFogTexture;
     public const float PortraitSize = 240f;
     public static bool LoadedMainContent;
-    public static readonly BlendState Subtract;
-    public static readonly BlendState DestinationTransparencySubtract;
 
     public static void LoadGame()
     {
@@ -136,11 +151,11 @@ namespace Celeste
     public static void LoadOther()
     {
       GFX.ColorGrades = Atlas.FromDirectory(Path.Combine("Graphics", "ColorGrading"));
-      GFX.MagicGlowNoise = VirtualContent.CreateTexture("glow-noise", 128, 128, Color.get_White());
-      Color[] colorArray = new Color[GFX.MagicGlowNoise.Width * GFX.MagicGlowNoise.Height];
-      for (int index = 0; index < colorArray.Length; ++index)
-        colorArray[index] = new Color(Calc.Random.NextFloat(), Calc.Random.NextFloat(), Calc.Random.NextFloat(), 0.0f);
-      GFX.MagicGlowNoise.Texture.SetData<Color>((M0[]) colorArray);
+      GFX.MagicGlowNoise = VirtualContent.CreateTexture("glow-noise", 128, 128, Color.White);
+      Color[] data = new Color[GFX.MagicGlowNoise.Width * GFX.MagicGlowNoise.Height];
+      for (int index = 0; index < data.Length; ++index)
+        data[index] = new Color(Calc.Random.NextFloat(), Calc.Random.NextFloat(), Calc.Random.NextFloat(), 0.0f);
+      GFX.MagicGlowNoise.Texture.SetData<Color>(data);
     }
 
     public static void UnloadOther()
@@ -179,7 +194,7 @@ namespace Celeste
       foreach (XmlElement xml in (XmlNode) Calc.LoadContentXML(Path.Combine("Graphics", "AnimatedTiles.xml"))["Data"])
       {
         if (xml != null)
-          GFX.AnimatedTilesBank.Add(xml.Attr("name"), xml.AttrFloat("delay", 0.0f), xml.AttrVector2("posX", "posY", Vector2.get_Zero()), xml.AttrVector2("origX", "origY", Vector2.get_Zero()), GFX.Game.GetAtlasSubtextures(xml.Attr("path")));
+          GFX.AnimatedTilesBank.Add(xml.Attr("name"), xml.AttrFloat("delay", 0.0f), xml.AttrVector2("posX", "posY", Vector2.Zero), xml.AttrVector2("origX", "origY", Vector2.Zero), GFX.Game.GetAtlasSubtextures(xml.Attr("path")));
       }
     }
 
@@ -206,12 +221,12 @@ namespace Celeste
       GFX.FxGlitch = GFX.LoadFx("Glitch");
       GFX.FxTexture = GFX.LoadFx("Texture");
       GFX.FxLighting = GFX.LoadFx("Lighting");
-      GFX.FxDebug = new BasicEffect(Engine.Graphics.get_GraphicsDevice());
+      GFX.FxDebug = new BasicEffect(Engine.Graphics.GraphicsDevice);
     }
 
     public static Effect LoadFx(string name)
     {
-      return (Effect) Engine.Instance.get_Content().Load<Effect>(Path.Combine("Effects", name));
+      return Engine.Instance.Content.Load<Effect>(Path.Combine("Effects", name));
     }
 
     public static void DrawVertices<T>(
@@ -223,26 +238,23 @@ namespace Celeste
       where T : struct, IVertexType
     {
       Effect effect1 = effect != null ? effect : GFX.FxPrimitive;
-      BlendState blendState1 = blendState != null ? blendState : (BlendState) BlendState.AlphaBlend;
-      Vector2 vector2;
+      BlendState blendState1 = blendState != null ? blendState : BlendState.AlphaBlend;
+      Vector2 vector2 = new Vector2();
       ref Vector2 local = ref vector2;
-      Viewport viewport = Engine.Graphics.get_GraphicsDevice().get_Viewport();
-      double width = (double) ((Viewport) ref viewport).get_Width();
-      viewport = Engine.Graphics.get_GraphicsDevice().get_Viewport();
-      double height = (double) ((Viewport) ref viewport).get_Height();
-      ((Vector2) ref local).\u002Ector((float) width, (float) height);
-      matrix = Matrix.op_Multiply(matrix, Matrix.CreateScale((float) (1.0 / vector2.X * 2.0), (float) (-(1.0 / vector2.Y) * 2.0), 1f));
-      matrix = Matrix.op_Multiply(matrix, Matrix.CreateTranslation(-1f, 1f, 0.0f));
-      Engine.Instance.get_GraphicsDevice().set_RasterizerState((RasterizerState) RasterizerState.CullNone);
-      Engine.Instance.get_GraphicsDevice().set_BlendState(blendState1);
-      effect1.get_Parameters().get_Item("World").SetValue(matrix);
-      using (List<EffectPass>.Enumerator enumerator = effect1.get_CurrentTechnique().get_Passes().GetEnumerator())
+      Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
+      double width = (double) viewport.Width;
+      viewport = Engine.Graphics.GraphicsDevice.Viewport;
+      double height = (double) viewport.Height;
+      local = new Vector2((float) width, (float) height);
+      matrix *= Matrix.CreateScale((float) (1.0 / (double) vector2.X * 2.0), (float) (-(1.0 / (double) vector2.Y) * 2.0), 1f);
+      matrix *= Matrix.CreateTranslation(-1f, 1f, 0.0f);
+      Engine.Instance.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+      Engine.Instance.GraphicsDevice.BlendState = blendState1;
+      effect1.Parameters["World"].SetValue(matrix);
+      foreach (EffectPass pass in effect1.CurrentTechnique.Passes)
       {
-        while (enumerator.MoveNext())
-        {
-          enumerator.Current.Apply();
-          Engine.Instance.get_GraphicsDevice().DrawUserPrimitives<T>((PrimitiveType) 0, vertices, 0, vertexCount / 3);
-        }
+        pass.Apply();
+        Engine.Instance.GraphicsDevice.DrawUserPrimitives<T>(PrimitiveType.TriangleList, vertices, 0, vertexCount / 3);
       }
     }
 
@@ -257,47 +269,25 @@ namespace Celeste
       where T : struct, IVertexType
     {
       Effect effect1 = effect != null ? effect : GFX.FxPrimitive;
-      BlendState blendState1 = blendState != null ? blendState : (BlendState) BlendState.AlphaBlend;
-      Vector2 vector2;
+      BlendState blendState1 = blendState != null ? blendState : BlendState.AlphaBlend;
+      Vector2 vector2 = new Vector2();
       ref Vector2 local = ref vector2;
-      Viewport viewport = Engine.Graphics.get_GraphicsDevice().get_Viewport();
-      double width = (double) ((Viewport) ref viewport).get_Width();
-      viewport = Engine.Graphics.get_GraphicsDevice().get_Viewport();
-      double height = (double) ((Viewport) ref viewport).get_Height();
-      ((Vector2) ref local).\u002Ector((float) width, (float) height);
-      matrix = Matrix.op_Multiply(matrix, Matrix.CreateScale((float) (1.0 / vector2.X * 2.0), (float) (-(1.0 / vector2.Y) * 2.0), 1f));
-      matrix = Matrix.op_Multiply(matrix, Matrix.CreateTranslation(-1f, 1f, 0.0f));
-      Engine.Instance.get_GraphicsDevice().set_RasterizerState((RasterizerState) RasterizerState.CullNone);
-      Engine.Instance.get_GraphicsDevice().set_BlendState(blendState1);
-      effect1.get_Parameters().get_Item("World").SetValue(matrix);
-      using (List<EffectPass>.Enumerator enumerator = effect1.get_CurrentTechnique().get_Passes().GetEnumerator())
+      Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
+      double width = (double) viewport.Width;
+      viewport = Engine.Graphics.GraphicsDevice.Viewport;
+      double height = (double) viewport.Height;
+      local = new Vector2((float) width, (float) height);
+      matrix *= Matrix.CreateScale((float) (1.0 / (double) vector2.X * 2.0), (float) (-(1.0 / (double) vector2.Y) * 2.0), 1f);
+      matrix *= Matrix.CreateTranslation(-1f, 1f, 0.0f);
+      Engine.Instance.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+      Engine.Instance.GraphicsDevice.BlendState = blendState1;
+      effect1.Parameters["World"].SetValue(matrix);
+      foreach (EffectPass pass in effect1.CurrentTechnique.Passes)
       {
-        while (enumerator.MoveNext())
-        {
-          enumerator.Current.Apply();
-          Engine.Instance.get_GraphicsDevice().DrawUserIndexedPrimitives<T>((PrimitiveType) 0, vertices, 0, vertexCount, indices, 0, primitiveCount);
-        }
+        pass.Apply();
+        Engine.Instance.GraphicsDevice.DrawUserIndexedPrimitives<T>(PrimitiveType.TriangleList, vertices, 0, vertexCount, indices, 0, primitiveCount);
       }
-    }
-
-    static GFX()
-    {
-      BlendState blendState1 = new BlendState();
-      blendState1.set_ColorSourceBlend((Blend) 0);
-      blendState1.set_ColorDestinationBlend((Blend) 0);
-      blendState1.set_ColorBlendFunction((BlendFunction) 2);
-      blendState1.set_AlphaSourceBlend((Blend) 0);
-      blendState1.set_AlphaDestinationBlend((Blend) 0);
-      blendState1.set_AlphaBlendFunction((BlendFunction) 0);
-      GFX.Subtract = blendState1;
-      BlendState blendState2 = new BlendState();
-      blendState2.set_ColorSourceBlend((Blend) 0);
-      blendState2.set_ColorDestinationBlend((Blend) 0);
-      blendState2.set_ColorBlendFunction((BlendFunction) 2);
-      blendState2.set_AlphaSourceBlend((Blend) 1);
-      blendState2.set_AlphaDestinationBlend((Blend) 0);
-      blendState2.set_AlphaBlendFunction((BlendFunction) 0);
-      GFX.DestinationTransparencySubtract = blendState2;
     }
   }
 }
+

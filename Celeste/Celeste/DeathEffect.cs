@@ -23,7 +23,7 @@ namespace Celeste
       : base(true, true)
     {
       this.Color = color;
-      this.Position = offset.HasValue ? offset.Value : Vector2.get_Zero();
+      this.Position = offset.HasValue ? offset.Value : Vector2.Zero;
       this.Percent = 0.0f;
     }
 
@@ -44,27 +44,28 @@ namespace Celeste
 
     public override void Render()
     {
-      DeathEffect.Draw(Vector2.op_Addition(this.Entity.Position, this.Position), this.Color, this.Percent);
+      DeathEffect.Draw(this.Entity.Position + this.Position, this.Color, this.Percent);
     }
 
     public static void Draw(Vector2 position, Color color, float ease)
     {
-      Color color1 = Math.Floor((double) ease * 10.0) % 2.0 == 0.0 ? color : Color.get_White();
+      Color color1 = Math.Floor((double) ease * 10.0) % 2.0 == 0.0 ? color : Color.White;
       MTexture mtexture = GFX.Game["characters/player/hair00"];
       float num = (double) ease < 0.5 ? 0.5f + ease : Ease.CubeOut((float) (1.0 - ((double) ease - 0.5) * 2.0));
       for (int index = 0; index < 8; ++index)
       {
         Vector2 vector = Calc.AngleToVector((float) (((double) index / 8.0 + (double) ease * 0.25) * 6.28318548202515), Ease.CubeOut(ease) * 24f);
-        mtexture.DrawCentered(Vector2.op_Addition(Vector2.op_Addition(position, vector), new Vector2(-1f, 0.0f)), Color.get_Black(), new Vector2(num, num));
-        mtexture.DrawCentered(Vector2.op_Addition(Vector2.op_Addition(position, vector), new Vector2(1f, 0.0f)), Color.get_Black(), new Vector2(num, num));
-        mtexture.DrawCentered(Vector2.op_Addition(Vector2.op_Addition(position, vector), new Vector2(0.0f, -1f)), Color.get_Black(), new Vector2(num, num));
-        mtexture.DrawCentered(Vector2.op_Addition(Vector2.op_Addition(position, vector), new Vector2(0.0f, 1f)), Color.get_Black(), new Vector2(num, num));
+        mtexture.DrawCentered(position + vector + new Vector2(-1f, 0.0f), Color.Black, new Vector2(num, num));
+        mtexture.DrawCentered(position + vector + new Vector2(1f, 0.0f), Color.Black, new Vector2(num, num));
+        mtexture.DrawCentered(position + vector + new Vector2(0.0f, -1f), Color.Black, new Vector2(num, num));
+        mtexture.DrawCentered(position + vector + new Vector2(0.0f, 1f), Color.Black, new Vector2(num, num));
       }
       for (int index = 0; index < 8; ++index)
       {
         Vector2 vector = Calc.AngleToVector((float) (((double) index / 8.0 + (double) ease * 0.25) * 6.28318548202515), Ease.CubeOut(ease) * 24f);
-        mtexture.DrawCentered(Vector2.op_Addition(position, vector), color1, new Vector2(num, num));
+        mtexture.DrawCentered(position + vector, color1, new Vector2(num, num));
       }
     }
   }
 }
+

@@ -27,7 +27,7 @@ namespace Celeste
     }
 
     public WaterFall(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
@@ -36,39 +36,26 @@ namespace Celeste
       base.Awake(scene);
       Level scene1 = this.Scene as Level;
       bool flag = false;
-      this.height = 8f;
-      while (true)
-      {
-        double num = (double) this.Y + (double) this.height;
-        Rectangle bounds = scene1.Bounds;
-        double bottom = (double) ((Rectangle) ref bounds).get_Bottom();
-        if (num < bottom && (this.water = this.Scene.CollideFirst<Water>(new Rectangle((int) this.X, (int) ((double) this.Y + (double) this.height), 8, 8))) == null && ((this.solid = this.Scene.CollideFirst<Solid>(new Rectangle((int) this.X, (int) ((double) this.Y + (double) this.height), 8, 8))) == null || !this.solid.BlockWaterfalls))
-        {
-          this.height += 8f;
-          this.solid = (Solid) null;
-        }
-        else
-          break;
-      }
+      for (this.height = 8f; (double) this.Y + (double) this.height < (double) scene1.Bounds.Bottom && (this.water = this.Scene.CollideFirst<Water>(new Rectangle((int) this.X, (int) ((double) this.Y + (double) this.height), 8, 8))) == null && ((this.solid = this.Scene.CollideFirst<Solid>(new Rectangle((int) this.X, (int) ((double) this.Y + (double) this.height), 8, 8))) == null || !this.solid.BlockWaterfalls); this.solid = (Solid) null)
+        this.height += 8f;
       if (this.water != null && !this.Scene.CollideCheck<Solid>(new Rectangle((int) this.X, (int) ((double) this.Y + (double) this.height), 8, 16)))
         flag = true;
       this.Add((Component) (this.loopingSfx = new SoundSource()));
       this.loopingSfx.Play("event:/env/local/waterfall_small_main", (string) null, 0.0f);
       this.Add((Component) (this.enteringSfx = new SoundSource()));
       this.enteringSfx.Play(flag ? "event:/env/local/waterfall_small_in_deep" : "event:/env/local/waterfall_small_in_shallow", (string) null, 0.0f);
-      this.enteringSfx.Position.Y = (__Null) (double) this.height;
+      this.enteringSfx.Position.Y = this.height;
       this.Add((Component) new DisplacementRenderHook(new Action(this.RenderDisplacement)));
     }
 
     public override void Update()
     {
-      this.loopingSfx.Position.Y = (__Null) (double) Calc.Clamp((float) ((this.Scene as Level).Camera.Position.Y + 90.0), this.Y, this.height);
+      this.loopingSfx.Position.Y = Calc.Clamp((this.Scene as Level).Camera.Position.Y + 90f, this.Y, this.height);
       if (this.water != null && this.Scene.OnInterval(0.3f))
         this.water.TopSurface.DoRipple(new Vector2(this.X + 4f, this.water.Y), 0.75f);
       if (this.water != null || this.solid != null)
       {
-        Vector2 position;
-        ((Vector2) ref position).\u002Ector(this.X + 4f, (float) ((double) this.Y + (double) this.height + 2.0));
+        Vector2 position = new Vector2(this.X + 4f, (float) ((double) this.Y + (double) this.height + 2.0));
         (this.Scene as Level).ParticlesFG.Emit(Water.P_Splash, 1, position, new Vector2(8f, 2f), new Vector2(0.0f, -1f).Angle());
       }
       base.Update();
@@ -90,7 +77,7 @@ namespace Celeste
       else
       {
         Water.Surface topSurface = this.water.TopSurface;
-        float num = this.height + (float) this.water.TopSurface.Position.Y - this.water.Y;
+        float num = this.height + this.water.TopSurface.Position.Y - this.water.Y;
         for (int index = 0; index < 6; ++index)
           Draw.Rect((float) ((double) this.X + (double) index + 1.0), this.Y, 1f, num - topSurface.GetSurfaceHeight(new Vector2(this.X + 1f + (float) index, this.water.Y)), Water.FillColor);
         Draw.Rect(this.X - 1f, this.Y, 2f, num - topSurface.GetSurfaceHeight(new Vector2(this.X, this.water.Y)), Water.SurfaceColor);
@@ -99,3 +86,4 @@ namespace Celeste
     }
   }
 }
+

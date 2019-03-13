@@ -16,16 +16,16 @@ namespace Celeste
     private MTexture border = GFX.Game["objects/touchswitch/container"];
     private Sprite icon = new Sprite(GFX.Game, "objects/touchswitch/icon");
     private Color inactiveColor = Calc.HexToColor("5fcde4");
-    private Color activeColor = Color.get_White();
+    private Color activeColor = Color.White;
     private Color finishColor = Calc.HexToColor("f141df");
-    private Vector2 pulse = Vector2.get_One();
+    private Vector2 pulse = Vector2.One;
+    private float timer = 0.0f;
     public static ParticleType P_Fire;
     public static ParticleType P_FireWhite;
     public Switch Switch;
     private SoundSource touchSfx;
     private float ease;
     private Wiggler wiggler;
-    private float timer;
     private BloomPoint bloom;
 
     private Level level
@@ -59,7 +59,7 @@ namespace Celeste
         for (int index = 0; index < 32; ++index)
         {
           float num = Calc.Random.NextFloat(6.283185f);
-          this.level.Particles.Emit(TouchSwitch.P_FireWhite, Vector2.op_Addition(this.Position, Calc.AngleToVector(num, 6f)), num);
+          this.level.Particles.Emit(TouchSwitch.P_FireWhite, this.Position + Calc.AngleToVector(num, 6f), num);
         }
         this.icon.Rate = 4f;
       });
@@ -71,13 +71,13 @@ namespace Celeste
         this.icon.Color = this.finishColor;
         this.ease = 1f;
       });
-      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (v => this.pulse = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) v * 0.25))), false, false)));
-      this.Add((Component) new VertexLight(Color.get_White(), 0.8f, 16, 32));
+      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (v => this.pulse = Vector2.One * (float) (1.0 + (double) v * 0.25)), false, false)));
+      this.Add((Component) new VertexLight(Color.White, 0.8f, 16, 32));
       this.Add((Component) (this.touchSfx = new SoundSource()));
     }
 
     public TouchSwitch(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset))
+      : this(data.Position + offset)
     {
     }
 
@@ -86,10 +86,11 @@ namespace Celeste
       if (this.Switch.Activated)
         return;
       this.touchSfx.Play("event:/game/general/touchswitch_any", (string) null, 0.0f);
-      if (!this.Switch.Activate())
-        return;
-      SoundEmitter.Play("event:/game/general/touchswitch_last_oneshot");
-      this.Add((Component) new SoundSource("event:/game/general/touchswitch_last_cutoff"));
+      if (this.Switch.Activate())
+      {
+        SoundEmitter.Play("event:/game/general/touchswitch_last_oneshot");
+        this.Add((Component) new SoundSource("event:/game/general/touchswitch_last_cutoff"));
+      }
     }
 
     private void OnPlayer(Player player)
@@ -115,7 +116,7 @@ namespace Celeste
       this.ease = Calc.Approach(this.ease, this.Switch.Finished || this.Switch.Activated ? 1f : 0.0f, Engine.DeltaTime * 2f);
       this.icon.Color = Color.Lerp(this.inactiveColor, this.Switch.Finished ? this.finishColor : this.activeColor, this.ease);
       Sprite icon = this.icon;
-      icon.Color = Color.op_Multiply(icon.Color, (float) (0.5 + (Math.Sin((double) this.timer) + 1.0) / 2.0 * (1.0 - (double) this.ease) * 0.5 + 0.5 * (double) this.ease));
+      icon.Color = icon.Color * (float) (0.5 + (Math.Sin((double) this.timer) + 1.0) / 2.0 * (1.0 - (double) this.ease) * 0.5 + 0.5 * (double) this.ease);
       this.bloom.Alpha = this.ease;
       if (this.Switch.Finished)
       {
@@ -132,7 +133,7 @@ namespace Celeste
         }
         else if (this.Scene.OnInterval(0.03f))
         {
-          Vector2 position = Vector2.op_Addition(Vector2.op_Addition(this.Position, new Vector2(0.0f, 1f)), Calc.AngleToVector(Calc.Random.NextAngle(), 5f));
+          Vector2 position = this.Position + new Vector2(0.0f, 1f) + Calc.AngleToVector(Calc.Random.NextAngle(), 5f);
           this.level.ParticlesBG.Emit(TouchSwitch.P_Fire, position);
         }
       }
@@ -141,9 +142,10 @@ namespace Celeste
 
     public override void Render()
     {
-      this.border.DrawCentered(Vector2.op_Addition(this.Position, new Vector2(0.0f, -1f)), Color.get_Black());
+      this.border.DrawCentered(this.Position + new Vector2(0.0f, -1f), Color.Black);
       this.border.DrawCentered(this.Position, this.icon.Color, this.pulse);
       base.Render();
     }
   }
 }
+

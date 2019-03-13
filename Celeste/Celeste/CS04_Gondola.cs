@@ -15,6 +15,13 @@ namespace Celeste
   public class CS04_Gondola : CutsceneEntity
   {
     private List<ReflectionTentacles> tentacles = new List<ReflectionTentacles>();
+    private float gondolaPercent = 0.0f;
+    private float gondolaSpeed = 0.0f;
+    private float shakeTimer = 0.0f;
+    private float anxiety = 0.0f;
+    private float anxietyStutter = 0.0f;
+    private float anxietyRumble = 0.0f;
+    private CS04_Gondola.GondolaStates gondolaState = CS04_Gondola.GondolaStates.Stopped;
     private NPC theo;
     private Gondola gondola;
     private Player player;
@@ -25,18 +32,11 @@ namespace Celeste
     private float LoopCloudsAt;
     private SoundSource moveLoopSfx;
     private SoundSource haltLoopSfx;
-    private float gondolaPercent;
     private bool AutoSnapCharacters;
     private float theoXOffset;
     private float playerXOffset;
-    private float gondolaSpeed;
-    private float shakeTimer;
     private const float gondolaMaxSpeed = 64f;
-    private float anxiety;
-    private float anxietyStutter;
-    private float anxietyRumble;
     private BreathingRumbler rumbler;
-    private CS04_Gondola.GondolaStates gondolaState;
 
     public CS04_Gondola(NPC theo, Gondola gondola, Player player)
       : base(false, true)
@@ -61,15 +61,14 @@ namespace Celeste
 
     private IEnumerator Cutscene()
     {
-      CS04_Gondola cs04Gondola = this;
-      cs04Gondola.player.StateMachine.State = 11;
-      yield return (object) cs04Gondola.player.DummyWalkToExact((int) cs04Gondola.gondola.X + 16, false, 1f);
-      while (!cs04Gondola.player.OnGround(1))
+      this.player.StateMachine.State = 11;
+      yield return (object) this.player.DummyWalkToExact((int) this.gondola.X + 16, false, 1f);
+      while (!this.player.OnGround(1))
         yield return (object) null;
       Audio.SetMusic("event:/music/lvl1/theo", true, true);
-      yield return (object) Textbox.Say("CH4_GONDOLA", new Func<IEnumerator>(cs04Gondola.EnterTheo), new Func<IEnumerator>(cs04Gondola.CheckOnTheo), new Func<IEnumerator>(cs04Gondola.GetUpTheo), new Func<IEnumerator>(cs04Gondola.LookAtLever), new Func<IEnumerator>(cs04Gondola.PullLever), new Func<IEnumerator>(cs04Gondola.WaitABit), new Func<IEnumerator>(cs04Gondola.WaitForCenter), new Func<IEnumerator>(cs04Gondola.SelfieThenStallsOut), new Func<IEnumerator>(cs04Gondola.MovePlayerLeft), new Func<IEnumerator>(cs04Gondola.SnapLeverOff), new Func<IEnumerator>(cs04Gondola.DarknessAppears), new Func<IEnumerator>(cs04Gondola.DarknessConsumes), new Func<IEnumerator>(cs04Gondola.CantBreath), new Func<IEnumerator>(cs04Gondola.StartBreathing), new Func<IEnumerator>(cs04Gondola.Ascend), new Func<IEnumerator>(cs04Gondola.WaitABit), new Func<IEnumerator>(cs04Gondola.TheoTakesOutPhone), new Func<IEnumerator>(cs04Gondola.FaceTheo));
-      yield return (object) cs04Gondola.ShowPhoto();
-      cs04Gondola.EndCutscene(cs04Gondola.Level, true);
+      yield return (object) Textbox.Say("CH4_GONDOLA", new Func<IEnumerator>(this.EnterTheo), new Func<IEnumerator>(this.CheckOnTheo), new Func<IEnumerator>(this.GetUpTheo), new Func<IEnumerator>(this.LookAtLever), new Func<IEnumerator>(this.PullLever), new Func<IEnumerator>(this.WaitABit), new Func<IEnumerator>(this.WaitForCenter), new Func<IEnumerator>(this.SelfieThenStallsOut), new Func<IEnumerator>(this.MovePlayerLeft), new Func<IEnumerator>(this.SnapLeverOff), new Func<IEnumerator>(this.DarknessAppears), new Func<IEnumerator>(this.DarknessConsumes), new Func<IEnumerator>(this.CantBreath), new Func<IEnumerator>(this.StartBreathing), new Func<IEnumerator>(this.Ascend), new Func<IEnumerator>(this.WaitABit), new Func<IEnumerator>(this.TheoTakesOutPhone), new Func<IEnumerator>(this.FaceTheo));
+      yield return (object) this.ShowPhoto();
+      this.EndCutscene(this.Level, true);
     }
 
     public override void OnEnd(Level level)
@@ -83,56 +82,49 @@ namespace Celeste
       if (this.WasSkipped)
         return;
       SpotlightWipe.Modifier = 120f;
-      SpotlightWipe.FocusPoint = Vector2.op_Division(new Vector2(320f, 180f), 2f);
+      SpotlightWipe.FocusPoint = new Vector2(320f, 180f) / 2f;
     }
 
     private IEnumerator EnterTheo()
     {
-      CS04_Gondola cs04Gondola1 = this;
-      cs04Gondola1.player.Facing = Facings.Left;
+      this.player.Facing = Facings.Left;
       yield return (object) 0.2f;
-      CS04_Gondola cs04Gondola2 = cs04Gondola1;
-      Rectangle bounds1 = cs04Gondola1.Level.Bounds;
-      Vector2 to1 = new Vector2((float) ((Rectangle) ref bounds1).get_Left(), cs04Gondola1.theo.Y - 90f);
-      yield return (object) cs04Gondola2.PanCamera(to1, 1f, (Ease.Easer) null);
-      cs04Gondola1.theo.Visible = true;
-      float theoStartX = cs04Gondola1.theo.X;
-      yield return (object) cs04Gondola1.theo.MoveTo(new Vector2(theoStartX + 35f, cs04Gondola1.theo.Y), false, new int?(), false);
+      yield return (object) this.PanCamera(new Vector2((float) this.Level.Bounds.Left, this.theo.Y - 90f), 1f, (Ease.Easer) null);
+      this.theo.Visible = true;
+      float theoStartX = this.theo.X;
+      yield return (object) this.theo.MoveTo(new Vector2(theoStartX + 35f, this.theo.Y), false, new int?(), false);
       yield return (object) 0.6f;
-      yield return (object) cs04Gondola1.theo.MoveTo(new Vector2(theoStartX + 60f, cs04Gondola1.theo.Y), false, new int?(), false);
-      Audio.Play("event:/game/04_cliffside/gondola_theo_fall", cs04Gondola1.theo.Position);
-      cs04Gondola1.theo.Sprite.Play("idleEdge", false, false);
+      yield return (object) this.theo.MoveTo(new Vector2(theoStartX + 60f, this.theo.Y), false, new int?(), false);
+      Audio.Play("event:/game/04_cliffside/gondola_theo_fall", this.theo.Position);
+      this.theo.Sprite.Play("idleEdge", false, false);
       yield return (object) 1f;
-      cs04Gondola1.theo.Sprite.Play("falling", false, false);
-      cs04Gondola1.theo.X += 4f;
-      cs04Gondola1.theo.Depth = -10010;
+      this.theo.Sprite.Play("falling", false, false);
+      this.theo.X += 4f;
+      this.theo.Depth = -10010;
       float speed = 80f;
-      while ((double) cs04Gondola1.theo.Y < (double) cs04Gondola1.player.Y)
+      while ((double) this.theo.Y < (double) this.player.Y)
       {
-        cs04Gondola1.theo.Y += speed * Engine.DeltaTime;
+        this.theo.Y += speed * Engine.DeltaTime;
         speed += 120f * Engine.DeltaTime;
         yield return (object) null;
       }
-      cs04Gondola1.Level.DirectionalShake(new Vector2(0.0f, 1f), 0.3f);
+      this.Level.DirectionalShake(new Vector2(0.0f, 1f), 0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      cs04Gondola1.theo.Y = cs04Gondola1.player.Y;
-      cs04Gondola1.theo.Sprite.Play("hitGround", false, false);
-      cs04Gondola1.theo.Sprite.Rate = 0.0f;
-      cs04Gondola1.theo.Depth = 1000;
-      cs04Gondola1.theo.Sprite.Scale = new Vector2(1.3f, 0.8f);
+      this.theo.Y = this.player.Y;
+      this.theo.Sprite.Play("hitGround", false, false);
+      this.theo.Sprite.Rate = 0.0f;
+      this.theo.Depth = 1000;
+      this.theo.Sprite.Scale = new Vector2(1.3f, 0.8f);
       yield return (object) 0.5f;
-      Vector2 start = cs04Gondola1.theo.Sprite.Scale;
+      Vector2 start = this.theo.Sprite.Scale;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 2f, true);
       tween.OnUpdate = (Action<Tween>) (t =>
       {
-        this.theo.Sprite.Scale.X = (__Null) (double) MathHelper.Lerp((float) start.X, 1f, t.Eased);
-        this.theo.Sprite.Scale.Y = (__Null) (double) MathHelper.Lerp((float) start.Y, 1f, t.Eased);
+        this.theo.Sprite.Scale.X = MathHelper.Lerp(start.X, 1f, t.Eased);
+        this.theo.Sprite.Scale.Y = MathHelper.Lerp(start.Y, 1f, t.Eased);
       });
-      cs04Gondola1.Add((Component) tween);
-      CS04_Gondola cs04Gondola3 = cs04Gondola1;
-      Rectangle bounds2 = cs04Gondola1.Level.Bounds;
-      Vector2 to2 = new Vector2((float) ((Rectangle) ref bounds2).get_Left(), cs04Gondola1.theo.Y - 120f);
-      yield return (object) cs04Gondola3.PanCamera(to2, 1f, (Ease.Easer) null);
+      this.Add((Component) tween);
+      yield return (object) this.PanCamera(new Vector2((float) this.Level.Bounds.Left, this.theo.Y - 120f), 1f, (Ease.Easer) null);
       yield return (object) 0.6f;
     }
 
@@ -156,38 +148,37 @@ namespace Celeste
     {
       yield return (object) this.theo.MoveTo(new Vector2(this.gondola.X + 7f, this.theo.Y), false, new int?(), false);
       this.player.Facing = Facings.Right;
-      this.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.theo.Sprite.Scale.X = -1f;
     }
 
     private IEnumerator PullLever()
     {
-      CS04_Gondola cs04Gondola = this;
-      cs04Gondola.Add((Component) new Coroutine(cs04Gondola.player.DummyWalkToExact((int) cs04Gondola.gondola.X - 7, false, 1f), true));
-      cs04Gondola.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.Add((Component) new Coroutine(this.player.DummyWalkToExact((int) this.gondola.X - 7, false, 1f), true));
+      this.theo.Sprite.Scale.X = -1f;
       yield return (object) 0.2f;
-      Audio.Play("event:/game/04_cliffside/gondola_theo_lever_start", cs04Gondola.theo.Position);
-      cs04Gondola.theo.Sprite.Play("pullVent", false, false);
+      Audio.Play("event:/game/04_cliffside/gondola_theo_lever_start", this.theo.Position);
+      this.theo.Sprite.Play("pullVent", false, false);
       yield return (object) 1f;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      cs04Gondola.gondola.Lever.Play("pulled", false, false);
-      cs04Gondola.theo.Sprite.Play("fallVent", false, false);
+      this.gondola.Lever.Play("pulled", false, false);
+      this.theo.Sprite.Play("fallVent", false, false);
       yield return (object) 0.6f;
-      cs04Gondola.Level.Shake(0.3f);
+      this.Level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Long);
       yield return (object) 0.5f;
-      yield return (object) cs04Gondola.PanCamera(Vector2.op_Addition(cs04Gondola.gondola.Position, new Vector2(-160f, -120f)), 1f, (Ease.Easer) null);
+      yield return (object) this.PanCamera(this.gondola.Position + new Vector2(-160f, -120f), 1f, (Ease.Easer) null);
       yield return (object) 0.5f;
-      cs04Gondola.Level.Background.Backdrops.Add((Backdrop) (cs04Gondola.loopingCloud = new Parallax(GFX.Game["bgs/04/bgCloudLoop"])));
-      cs04Gondola.Level.Background.Backdrops.Add((Backdrop) (cs04Gondola.bottomCloud = new Parallax(GFX.Game["bgs/04/bgCloud"])));
-      cs04Gondola.loopingCloud.LoopX = cs04Gondola.bottomCloud.LoopX = true;
-      cs04Gondola.loopingCloud.LoopY = cs04Gondola.bottomCloud.LoopY = false;
-      cs04Gondola.loopingCloud.Position.Y = (__Null) ((double) cs04Gondola.Level.Camera.Top - (double) cs04Gondola.loopingCloud.Texture.Height - (double) cs04Gondola.bottomCloud.Texture.Height);
-      cs04Gondola.bottomCloud.Position.Y = (__Null) ((double) cs04Gondola.Level.Camera.Top - (double) cs04Gondola.bottomCloud.Texture.Height);
-      cs04Gondola.LoopCloudsAt = (float) cs04Gondola.bottomCloud.Position.Y;
-      cs04Gondola.AutoSnapCharacters = true;
-      cs04Gondola.theoXOffset = cs04Gondola.theo.X - cs04Gondola.gondola.X;
-      cs04Gondola.playerXOffset = cs04Gondola.player.X - cs04Gondola.gondola.X;
-      cs04Gondola.player.StateMachine.State = 17;
+      this.Level.Background.Backdrops.Add((Backdrop) (this.loopingCloud = new Parallax(GFX.Game["bgs/04/bgCloudLoop"])));
+      this.Level.Background.Backdrops.Add((Backdrop) (this.bottomCloud = new Parallax(GFX.Game["bgs/04/bgCloud"])));
+      this.loopingCloud.LoopX = this.bottomCloud.LoopX = true;
+      this.loopingCloud.LoopY = this.bottomCloud.LoopY = false;
+      this.loopingCloud.Position.Y = this.Level.Camera.Top - (float) this.loopingCloud.Texture.Height - (float) this.bottomCloud.Texture.Height;
+      this.bottomCloud.Position.Y = this.Level.Camera.Top - (float) this.bottomCloud.Texture.Height;
+      this.LoopCloudsAt = this.bottomCloud.Position.Y;
+      this.AutoSnapCharacters = true;
+      this.theoXOffset = this.theo.X - this.gondola.X;
+      this.playerXOffset = this.player.X - this.gondola.X;
+      this.player.StateMachine.State = 17;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 16f, true);
       tween.OnUpdate = (Action<Tween>) (t =>
       {
@@ -195,21 +186,21 @@ namespace Celeste
           return;
         Audio.SetMusicParam("fade", 1f - t.Eased);
       });
-      cs04Gondola.Add((Component) tween);
-      SoundSource soundSource = new SoundSource();
-      soundSource.Position = cs04Gondola.gondola.LeftCliffside.Position;
-      soundSource.Play("event:/game/04_cliffside/gondola_cliffmechanism_start", (string) null, 0.0f);
-      cs04Gondola.Add((Component) soundSource);
-      cs04Gondola.moveLoopSfx.Play("event:/game/04_cliffside/gondola_movement_loop", (string) null, 0.0f);
-      cs04Gondola.Level.Shake(0.3f);
+      this.Add((Component) tween);
+      SoundSource sfx = new SoundSource();
+      sfx.Position = this.gondola.LeftCliffside.Position;
+      sfx.Play("event:/game/04_cliffside/gondola_cliffmechanism_start", (string) null, 0.0f);
+      this.Add((Component) sfx);
+      this.moveLoopSfx.Play("event:/game/04_cliffside/gondola_movement_loop", (string) null, 0.0f);
+      this.Level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.FullSecond);
-      cs04Gondola.gondolaSpeed = 32f;
-      cs04Gondola.gondola.RotationSpeed = 1f;
-      cs04Gondola.gondolaState = CS04_Gondola.GondolaStates.MovingToCenter;
+      this.gondolaSpeed = 32f;
+      this.gondola.RotationSpeed = 1f;
+      this.gondolaState = CS04_Gondola.GondolaStates.MovingToCenter;
       yield return (object) 1f;
-      yield return (object) cs04Gondola.MoveTheoOnGondola(12f, false);
+      yield return (object) this.MoveTheoOnGondola(12f, false);
       yield return (object) 0.2f;
-      cs04Gondola.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.theo.Sprite.Scale.X = -1f;
     }
 
     private IEnumerator WaitABit()
@@ -221,7 +212,7 @@ namespace Celeste
     {
       while (this.gondolaState != CS04_Gondola.GondolaStates.InCenter)
         yield return (object) null;
-      this.theo.Sprite.Scale.X = (__Null) 1.0;
+      this.theo.Sprite.Scale.X = 1f;
       yield return (object) 1f;
       yield return (object) this.MovePlayerOnGondola(-20f);
       yield return (object) 0.5f;
@@ -229,41 +220,40 @@ namespace Celeste
 
     private IEnumerator SelfieThenStallsOut()
     {
-      CS04_Gondola cs04Gondola = this;
       Audio.SetMusic("event:/music/lvl4/minigame", true, true);
-      cs04Gondola.Add((Component) new Coroutine(cs04Gondola.Level.ZoomTo(new Vector2(160f, 110f), 2f, 0.5f), true));
+      this.Add((Component) new Coroutine(this.Level.ZoomTo(new Vector2(160f, 110f), 2f, 0.5f), true));
       yield return (object) 0.3f;
-      cs04Gondola.theo.Sprite.Scale.X = (__Null) 1.0;
+      this.theo.Sprite.Scale.X = 1f;
       yield return (object) 0.2f;
-      cs04Gondola.Add((Component) new Coroutine(cs04Gondola.MovePlayerOnGondola(cs04Gondola.theoXOffset - 8f), true));
+      this.Add((Component) new Coroutine(this.MovePlayerOnGondola(this.theoXOffset - 8f), true));
       yield return (object) 0.4f;
-      Audio.Play("event:/game/04_cliffside/gondola_theoselfie_halt", cs04Gondola.theo.Position);
-      cs04Gondola.theo.Sprite.Play("holdOutPhone", false, false);
+      Audio.Play("event:/game/04_cliffside/gondola_theoselfie_halt", this.theo.Position);
+      this.theo.Sprite.Play("holdOutPhone", false, false);
       yield return (object) 1.5f;
-      cs04Gondola.theoXOffset += 4f;
-      cs04Gondola.playerXOffset += 4f;
-      cs04Gondola.gondola.RotationSpeed = -1f;
-      cs04Gondola.gondolaState = CS04_Gondola.GondolaStates.Stopped;
+      this.theoXOffset += 4f;
+      this.playerXOffset += 4f;
+      this.gondola.RotationSpeed = -1f;
+      this.gondolaState = CS04_Gondola.GondolaStates.Stopped;
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Long);
-      cs04Gondola.theo.Sprite.Play("takeSelfieImmediate", false, false);
-      cs04Gondola.Add((Component) new Coroutine(cs04Gondola.PanCamera(Vector2.op_Addition(Vector2.op_Addition(cs04Gondola.gondola.Position, Vector2.op_Multiply(Vector2.op_Subtraction(cs04Gondola.gondola.Destination, cs04Gondola.gondola.Position).SafeNormalize(), 32f)), new Vector2(-160f, -120f)), 0.3f, Ease.CubeOut), true));
+      this.theo.Sprite.Play("takeSelfieImmediate", false, false);
+      this.Add((Component) new Coroutine(this.PanCamera(this.gondola.Position + (this.gondola.Destination - this.gondola.Position).SafeNormalize() * 32f + new Vector2(-160f, -120f), 0.3f, Ease.CubeOut), true));
       yield return (object) 0.5f;
-      cs04Gondola.Level.Flash(Color.get_White(), false);
-      cs04Gondola.Level.Add((Entity) (cs04Gondola.evil = new BadelineDummy(Vector2.get_Zero())));
-      cs04Gondola.evil.Appear(cs04Gondola.Level, false);
-      cs04Gondola.evil.Floatness = 0.0f;
-      cs04Gondola.evil.Depth = -1000000;
-      cs04Gondola.moveLoopSfx.Stop(true);
-      cs04Gondola.haltLoopSfx.Play("event:/game/04_cliffside/gondola_halted_loop", (string) null, 0.0f);
-      cs04Gondola.gondolaState = CS04_Gondola.GondolaStates.Shaking;
-      yield return (object) cs04Gondola.PanCamera(Vector2.op_Addition(cs04Gondola.gondola.Position, new Vector2(-160f, -120f)), 1f, (Ease.Easer) null);
+      this.Level.Flash(Color.White, false);
+      this.Level.Add((Entity) (this.evil = new BadelineDummy(Vector2.Zero)));
+      this.evil.Appear(this.Level, false);
+      this.evil.Floatness = 0.0f;
+      this.evil.Depth = -1000000;
+      this.moveLoopSfx.Stop(true);
+      this.haltLoopSfx.Play("event:/game/04_cliffside/gondola_halted_loop", (string) null, 0.0f);
+      this.gondolaState = CS04_Gondola.GondolaStates.Shaking;
+      yield return (object) this.PanCamera(this.gondola.Position + new Vector2(-160f, -120f), 1f, (Ease.Easer) null);
       yield return (object) 1f;
     }
 
     private IEnumerator MovePlayerLeft()
     {
       yield return (object) this.MovePlayerOnGondola(-20f);
-      this.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.theo.Sprite.Scale.X = -1f;
       yield return (object) 0.5f;
       yield return (object) this.MovePlayerOnGondola(20f);
       yield return (object) 0.5f;
@@ -274,155 +264,121 @@ namespace Celeste
 
     private IEnumerator SnapLeverOff()
     {
-      CS04_Gondola cs04Gondola = this;
-      yield return (object) cs04Gondola.MoveTheoOnGondola(7f, true);
-      Audio.Play("event:/game/04_cliffside/gondola_theo_lever_fail", cs04Gondola.theo.Position);
-      cs04Gondola.theo.Sprite.Play("pullVent", false, false);
+      yield return (object) this.MoveTheoOnGondola(7f, true);
+      Audio.Play("event:/game/04_cliffside/gondola_theo_lever_fail", this.theo.Position);
+      this.theo.Sprite.Play("pullVent", false, false);
       yield return (object) 1f;
-      cs04Gondola.theo.Sprite.Play("fallVent", false, false);
+      this.theo.Sprite.Play("fallVent", false, false);
       yield return (object) 1f;
-      cs04Gondola.gondola.BreakLever();
+      this.gondola.BreakLever();
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      cs04Gondola.Level.Shake(0.3f);
+      this.Level.Shake(0.3f);
       yield return (object) 2.5f;
     }
 
     private IEnumerator DarknessAppears()
     {
-      CS04_Gondola cs04Gondola = this;
       Audio.SetMusicParam("calm", 0.0f);
       yield return (object) 0.25f;
-      cs04Gondola.player.Sprite.Play("tired", false, false);
+      this.player.Sprite.Play("tired", false, false);
       yield return (object) 0.25f;
-      cs04Gondola.evil.Vanish();
-      cs04Gondola.evil = (BadelineDummy) null;
+      this.evil.Vanish();
+      this.evil = (BadelineDummy) null;
       yield return (object) 0.3f;
-      cs04Gondola.Level.NextColorGrade("panicattack");
-      cs04Gondola.Level.Shake(0.3f);
+      this.Level.NextColorGrade("panicattack");
+      this.Level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-      cs04Gondola.BurstTentacles(3, 90f, 200f);
-      Audio.Play("event:/game/04_cliffside/gondola_scaryhair_01", cs04Gondola.gondola.Position);
+      this.BurstTentacles(3, 90f, 200f);
+      Audio.Play("event:/game/04_cliffside/gondola_scaryhair_01", this.gondola.Position);
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / 2f)
       {
         yield return (object) null;
-        cs04Gondola.Level.Background.Fade = p;
-        cs04Gondola.anxiety = p;
-        if (cs04Gondola.windSnowFg != null)
-          cs04Gondola.windSnowFg.Alpha = 1f - p;
+        this.Level.Background.Fade = p;
+        this.anxiety = p;
+        if (this.windSnowFg != null)
+          this.windSnowFg.Alpha = 1f - p;
       }
       yield return (object) 0.25f;
     }
 
     private IEnumerator DarknessConsumes()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      CS04_Gondola cs04Gondola = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        cs04Gondola.theo.Sprite.Play("comfortStart", false, false);
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      cs04Gondola.Level.Shake(0.3f);
+      this.Level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      Audio.Play("event:/game/04_cliffside/gondola_scaryhair_02", cs04Gondola.gondola.Position);
-      cs04Gondola.BurstTentacles(2, 60f, 200f);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) cs04Gondola.MoveTheoOnGondola(0.0f, true);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      Audio.Play("event:/game/04_cliffside/gondola_scaryhair_02", this.gondola.Position);
+      this.BurstTentacles(2, 60f, 200f);
+      yield return (object) this.MoveTheoOnGondola(0.0f, true);
+      this.theo.Sprite.Play("comfortStart", false, false);
     }
 
     private IEnumerator CantBreath()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      CS04_Gondola cs04Gondola = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      cs04Gondola.Level.Shake(0.3f);
+      this.Level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      Audio.Play("event:/game/04_cliffside/gondola_scaryhair_03", cs04Gondola.gondola.Position);
-      cs04Gondola.BurstTentacles(1, 30f, 200f);
-      cs04Gondola.BurstTentacles(0, 0.0f, 100f);
-      cs04Gondola.rumbler = new BreathingRumbler();
-      cs04Gondola.Scene.Add((Entity) cs04Gondola.rumbler);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) null;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      Audio.Play("event:/game/04_cliffside/gondola_scaryhair_03", this.gondola.Position);
+      this.BurstTentacles(1, 30f, 200f);
+      this.BurstTentacles(0, 0.0f, 100f);
+      this.rumbler = new BreathingRumbler();
+      this.Scene.Add((Entity) this.rumbler);
+      yield return (object) null;
     }
 
     private IEnumerator StartBreathing()
     {
-      CS04_Gondola cs04Gondola = this;
-      BreathingMinigame breathing = new BreathingMinigame(true, cs04Gondola.rumbler);
-      cs04Gondola.Scene.Add((Entity) breathing);
+      BreathingMinigame breathing = new BreathingMinigame(true, this.rumbler);
+      this.Scene.Add((Entity) breathing);
       while (!breathing.Completed)
         yield return (object) null;
-      foreach (Entity tentacle in cs04Gondola.tentacles)
-        tentacle.RemoveSelf();
-      cs04Gondola.anxiety = 0.0f;
-      cs04Gondola.Level.Background.Fade = 0.0f;
-      cs04Gondola.Level.SnapColorGrade((string) null);
-      cs04Gondola.gondola.CancelPullSides();
-      cs04Gondola.Level.ResetZoom();
+      foreach (ReflectionTentacles tentacle in this.tentacles)
+      {
+        ReflectionTentacles t = tentacle;
+        t.RemoveSelf();
+        t = (ReflectionTentacles) null;
+      }
+      this.anxiety = 0.0f;
+      this.Level.Background.Fade = 0.0f;
+      this.Level.SnapColorGrade((string) null);
+      this.gondola.CancelPullSides();
+      this.Level.ResetZoom();
       yield return (object) 0.5f;
-      Audio.Play("event:/game/04_cliffside/gondola_restart", cs04Gondola.gondola.Position);
+      Audio.Play("event:/game/04_cliffside/gondola_restart", this.gondola.Position);
       yield return (object) 1f;
-      cs04Gondola.moveLoopSfx.Play("event:/game/04_cliffside/gondola_movement_loop", (string) null, 0.0f);
-      cs04Gondola.haltLoopSfx.Stop(true);
-      cs04Gondola.Level.Shake(0.3f);
+      this.moveLoopSfx.Play("event:/game/04_cliffside/gondola_movement_loop", (string) null, 0.0f);
+      this.haltLoopSfx.Stop(true);
+      this.Level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Long);
-      cs04Gondola.gondolaState = CS04_Gondola.GondolaStates.InCenter;
-      cs04Gondola.gondola.RotationSpeed = 0.5f;
+      this.gondolaState = CS04_Gondola.GondolaStates.InCenter;
+      this.gondola.RotationSpeed = 0.5f;
       yield return (object) 1.2f;
     }
 
     private IEnumerator Ascend()
     {
-      CS04_Gondola cs04Gondola = this;
-      cs04Gondola.gondolaState = CS04_Gondola.GondolaStates.MovingToEnd;
-      while (cs04Gondola.gondolaState != CS04_Gondola.GondolaStates.Stopped)
+      this.gondolaState = CS04_Gondola.GondolaStates.MovingToEnd;
+      while ((uint) this.gondolaState > 0U)
         yield return (object) null;
-      cs04Gondola.Level.Shake(0.3f);
+      this.Level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Long);
-      cs04Gondola.moveLoopSfx.Stop(true);
-      Audio.Play("event:/game/04_cliffside/gondola_finish", cs04Gondola.gondola.Position);
-      cs04Gondola.gondola.RotationSpeed = 0.5f;
+      this.moveLoopSfx.Stop(true);
+      Audio.Play("event:/game/04_cliffside/gondola_finish", this.gondola.Position);
+      this.gondola.RotationSpeed = 0.5f;
       yield return (object) 0.1f;
-      while ((double) cs04Gondola.gondola.Rotation > 0.0)
+      while ((double) this.gondola.Rotation > 0.0)
         yield return (object) null;
-      cs04Gondola.gondola.Rotation = cs04Gondola.gondola.RotationSpeed = 0.0f;
-      cs04Gondola.Level.Shake(0.3f);
-      cs04Gondola.AutoSnapCharacters = false;
-      cs04Gondola.player.StateMachine.State = 11;
-      cs04Gondola.player.Position = cs04Gondola.player.Position.Floor();
-      while (cs04Gondola.player.CollideCheck<Solid>())
-        --cs04Gondola.player.Y;
-      cs04Gondola.theo.Position.Y = cs04Gondola.player.Position.Y;
-      cs04Gondola.theo.Sprite.Play("comfortRecover", false, false);
-      cs04Gondola.theo.Sprite.Scale.X = (__Null) 1.0;
-      yield return (object) cs04Gondola.player.DummyWalkTo(cs04Gondola.gondola.X + 80f, false, 1f, false);
-      cs04Gondola.player.DummyAutoAnimate = false;
-      cs04Gondola.player.Sprite.Play("tired", false, false);
-      yield return (object) cs04Gondola.theo.MoveTo(new Vector2(cs04Gondola.gondola.X + 64f, cs04Gondola.theo.Y), false, new int?(), false);
+      this.gondola.Rotation = this.gondola.RotationSpeed = 0.0f;
+      this.Level.Shake(0.3f);
+      this.AutoSnapCharacters = false;
+      this.player.StateMachine.State = 11;
+      this.player.Position = this.player.Position.Floor();
+      while (this.player.CollideCheck<Solid>())
+        --this.player.Y;
+      this.theo.Position.Y = this.player.Position.Y;
+      this.theo.Sprite.Play("comfortRecover", false, false);
+      this.theo.Sprite.Scale.X = 1f;
+      yield return (object) this.player.DummyWalkTo(this.gondola.X + 80f, false, 1f, false);
+      this.player.DummyAutoAnimate = false;
+      this.player.Sprite.Play("tired", false, false);
+      yield return (object) this.theo.MoveTo(new Vector2(this.gondola.X + 64f, this.theo.Y), false, new int?(), false);
       yield return (object) 0.5f;
     }
 
@@ -444,13 +400,12 @@ namespace Celeste
 
     private IEnumerator ShowPhoto()
     {
-      CS04_Gondola cs04Gondola = this;
-      cs04Gondola.theo.Sprite.Scale.X = (__Null) -1.0;
+      this.theo.Sprite.Scale.X = -1f;
       yield return (object) 0.25f;
-      yield return (object) cs04Gondola.player.DummyWalkTo(cs04Gondola.theo.X + 5f, false, 1f, false);
+      yield return (object) this.player.DummyWalkTo(this.theo.X + 5f, false, 1f, false);
       yield return (object) 1f;
-      Selfie selfie = new Selfie(cs04Gondola.SceneAs<Level>());
-      cs04Gondola.Scene.Add((Entity) selfie);
+      Selfie selfie = new Selfie(this.SceneAs<Level>());
+      this.Scene.Add((Entity) selfie);
       yield return (object) selfie.OpenRoutine("selfieGondola");
       yield return (object) selfie.WaitForInput();
     }
@@ -476,19 +431,9 @@ namespace Celeste
       }
       else if (this.gondolaState == CS04_Gondola.GondolaStates.InCenter)
       {
-        Vector2 vector2 = Vector2.op_Multiply(Vector2.op_Subtraction(this.gondola.Destination, this.gondola.Position).SafeNormalize(), this.gondolaSpeed);
-        ref __Null local1 = ref this.loopingCloud.CameraOffset.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local1 = ^(float&) ref local1 + (float) vector2.X * Engine.DeltaTime;
-        ref __Null local2 = ref this.loopingCloud.CameraOffset.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local2 = ^(float&) ref local2 + (float) vector2.Y * Engine.DeltaTime;
+        Vector2 vector2 = (this.gondola.Destination - this.gondola.Position).SafeNormalize() * this.gondolaSpeed;
+        this.loopingCloud.CameraOffset.X += vector2.X * Engine.DeltaTime;
+        this.loopingCloud.CameraOffset.Y += vector2.Y * Engine.DeltaTime;
         this.windSnowFg.CameraOffset = this.loopingCloud.CameraOffset;
         this.loopingCloud.LoopY = true;
       }
@@ -496,7 +441,7 @@ namespace Celeste
       {
         if (this.gondolaState == CS04_Gondola.GondolaStates.Shaking)
         {
-          this.Level.Wind.X = (__Null) -400.0;
+          this.Level.Wind.X = -400f;
           if ((double) this.shakeTimer <= 0.0 && ((double) this.gondola.Rotation == 0.0 || (double) this.gondola.Rotation < -0.25))
           {
             this.shakeTimer = 1f;
@@ -517,31 +462,28 @@ namespace Celeste
         return;
       this.theo.Position = this.gondola.GetRotatedFloorPositionAt(this.theoXOffset, 52f);
       this.player.Position = this.gondola.GetRotatedFloorPositionAt(this.playerXOffset, 52f);
-      if (this.evil == null)
-        return;
-      this.evil.Position = this.gondola.GetRotatedFloorPositionAt(-24f, 20f);
+      if (this.evil != null)
+        this.evil.Position = this.gondola.GetRotatedFloorPositionAt(-24f, 20f);
     }
 
     private void MoveGondolaTowards(float percent)
     {
-      Vector2 vector2 = Vector2.op_Subtraction(this.gondola.Start, this.gondola.Destination);
-      float num = ((Vector2) ref vector2).Length();
+      float num = (this.gondola.Start - this.gondola.Destination).Length();
       this.gondolaSpeed = Calc.Approach(this.gondolaSpeed, 64f, 120f * Engine.DeltaTime);
       this.gondolaPercent = Calc.Approach(this.gondolaPercent, percent, this.gondolaSpeed / num * Engine.DeltaTime);
-      this.gondola.Position = Vector2.op_Addition(this.gondola.Start, Vector2.op_Multiply(Vector2.op_Subtraction(this.gondola.Destination, this.gondola.Start), this.gondolaPercent)).Floor();
-      this.Level.Camera.Position = Vector2.op_Addition(this.gondola.Position, new Vector2(-160f, -120f));
+      this.gondola.Position = (this.gondola.Start + (this.gondola.Destination - this.gondola.Start) * this.gondolaPercent).Floor();
+      this.Level.Camera.Position = this.gondola.Position + new Vector2(-160f, -120f);
     }
 
     private IEnumerator PanCamera(Vector2 to, float duration, Ease.Easer ease = null)
     {
-      CS04_Gondola cs04Gondola = this;
       if (ease == null)
         ease = Ease.CubeInOut;
-      Vector2 from = cs04Gondola.Level.Camera.Position;
+      Vector2 from = this.Level.Camera.Position;
       for (float t = 0.0f; (double) t < 1.0; t += Engine.DeltaTime / duration)
       {
         yield return (object) null;
-        cs04Gondola.Level.Camera.Position = Vector2.op_Addition(from, Vector2.op_Multiply(Vector2.op_Subtraction(to, from), ease(Math.Min(t, 1f))));
+        this.Level.Camera.Position = from + (to - from) * ease(Math.Min(t, 1f));
       }
     }
 
@@ -561,7 +503,7 @@ namespace Celeste
     {
       this.theo.Sprite.Play("walk", false, false);
       if (changeFacing)
-        this.theo.Sprite.Scale.X = (__Null) (double) Math.Sign(x - this.theoXOffset);
+        this.theo.Sprite.Scale.X = (float) Math.Sign(x - this.theoXOffset);
       while ((double) this.theoXOffset != (double) x)
       {
         this.theoXOffset = Calc.Approach(this.theoXOffset, x, 48f * Engine.DeltaTime);
@@ -572,29 +514,27 @@ namespace Celeste
 
     private void BurstTentacles(int layer, float dist, float from = 200f)
     {
-      Vector2 vector2 = Vector2.op_Addition(this.Level.Camera.Position, new Vector2(160f, 90f));
+      Vector2 vector2 = this.Level.Camera.Position + new Vector2(160f, 90f);
       ReflectionTentacles reflectionTentacles1 = new ReflectionTentacles();
-      ReflectionTentacles reflectionTentacles2 = reflectionTentacles1;
-      int layer1 = layer;
-      List<Vector2> startNodes1 = new List<Vector2>();
-      startNodes1.Add(Vector2.op_Addition(vector2, new Vector2(-from, 0.0f)));
-      startNodes1.Add(Vector2.op_Addition(vector2, new Vector2(-800f, 0.0f)));
-      reflectionTentacles2.Create(0.0f, 0, layer1, startNodes1);
+      reflectionTentacles1.Create(0.0f, 0, layer, new List<Vector2>()
+      {
+        vector2 + new Vector2(-from, 0.0f),
+        vector2 + new Vector2(-800f, 0.0f)
+      });
       reflectionTentacles1.SnapTentacles();
-      reflectionTentacles1.Nodes[0] = Vector2.op_Addition(vector2, new Vector2(-dist, 0.0f));
-      ReflectionTentacles reflectionTentacles3 = new ReflectionTentacles();
-      ReflectionTentacles reflectionTentacles4 = reflectionTentacles3;
-      int layer2 = layer;
-      List<Vector2> startNodes2 = new List<Vector2>();
-      startNodes2.Add(Vector2.op_Addition(vector2, new Vector2(from, 0.0f)));
-      startNodes2.Add(Vector2.op_Addition(vector2, new Vector2(800f, 0.0f)));
-      reflectionTentacles4.Create(0.0f, 0, layer2, startNodes2);
-      reflectionTentacles3.SnapTentacles();
-      reflectionTentacles3.Nodes[0] = Vector2.op_Addition(vector2, new Vector2(dist, 0.0f));
+      reflectionTentacles1.Nodes[0] = vector2 + new Vector2(-dist, 0.0f);
+      ReflectionTentacles reflectionTentacles2 = new ReflectionTentacles();
+      reflectionTentacles2.Create(0.0f, 0, layer, new List<Vector2>()
+      {
+        vector2 + new Vector2(from, 0.0f),
+        vector2 + new Vector2(800f, 0.0f)
+      });
+      reflectionTentacles2.SnapTentacles();
+      reflectionTentacles2.Nodes[0] = vector2 + new Vector2(dist, 0.0f);
       this.tentacles.Add(reflectionTentacles1);
-      this.tentacles.Add(reflectionTentacles3);
+      this.tentacles.Add(reflectionTentacles2);
       this.Level.Add((Entity) reflectionTentacles1);
-      this.Level.Add((Entity) reflectionTentacles3);
+      this.Level.Add((Entity) reflectionTentacles2);
     }
 
     private enum GondolaStates
@@ -607,3 +547,4 @@ namespace Celeste
     }
   }
 }
+

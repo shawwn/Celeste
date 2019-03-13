@@ -25,7 +25,7 @@ namespace Celeste
     private List<MTexture> numbersActive;
 
     public SummitCheckpoint(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Number = data.Int("number", 0);
       this.numberString = this.Number.ToString("D2");
@@ -62,17 +62,18 @@ namespace Celeste
       if (this.Activated)
         return;
       Player player = this.CollideFirst<Player>();
-      if (player == null || !player.OnGround(1) || player.Speed.Y < 0.0)
-        return;
-      Level scene = this.Scene as Level;
-      this.Activated = true;
-      scene.Session.SetFlag("summit_checkpoint_" + (object) this.Number, true);
-      scene.Session.RespawnPoint = new Vector2?(this.respawn);
-      scene.Session.UpdateLevelStartDashes();
-      scene.Session.HitCheckpoint = true;
-      scene.Displacement.AddBurst(this.Position, 0.5f, 4f, 24f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
-      scene.Add((Entity) new SummitCheckpoint.ConfettiRenderer(this.Position));
-      Audio.Play("event:/game/07_summit/checkpoint_confetti", this.Position);
+      if (player != null && player.OnGround(1) && (double) player.Speed.Y >= 0.0)
+      {
+        Level scene = this.Scene as Level;
+        this.Activated = true;
+        scene.Session.SetFlag("summit_checkpoint_" + (object) this.Number, true);
+        scene.Session.RespawnPoint = new Vector2?(this.respawn);
+        scene.Session.UpdateLevelStartDashes();
+        scene.Session.HitCheckpoint = true;
+        scene.Displacement.AddBurst(this.Position, 0.5f, 4f, 24f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
+        scene.Add((Entity) new SummitCheckpoint.ConfettiRenderer(this.Position));
+        Audio.Play("event:/game/07_summit/checkpoint_confetti", this.Position);
+      }
     }
 
     public override void Render()
@@ -81,9 +82,9 @@ namespace Celeste
       MTexture mtexture = this.baseActive;
       if (!this.Activated)
         mtexture = this.Scene.BetweenInterval(0.25f) ? this.baseEmpty : this.baseToggle;
-      mtexture.Draw(Vector2.op_Subtraction(this.Position, new Vector2((float) (mtexture.Width / 2 + 1), (float) (mtexture.Height / 2))));
-      mtextureList[(int) this.numberString[0] - 48].DrawJustified(Vector2.op_Addition(this.Position, new Vector2(-1f, 1f)), new Vector2(1f, 0.0f));
-      mtextureList[(int) this.numberString[1] - 48].DrawJustified(Vector2.op_Addition(this.Position, new Vector2(0.0f, 1f)), new Vector2(0.0f, 0.0f));
+      mtexture.Draw(this.Position - new Vector2((float) (mtexture.Width / 2 + 1), (float) (mtexture.Height / 2)));
+      mtextureList[(int) this.numberString[0] - 48].DrawJustified(this.Position + new Vector2(-1f, 1f), new Vector2(1f, 0.0f));
+      mtextureList[(int) this.numberString[1] - 48].DrawJustified(this.Position + new Vector2(0.0f, 1f), new Vector2(0.0f, 0.0f));
     }
 
     private class ConfettiRenderer : Entity
@@ -102,7 +103,7 @@ namespace Celeste
         this.Depth = -10010;
         for (int index = 0; index < this.particles.Length; ++index)
         {
-          this.particles[index].Position = Vector2.op_Addition(this.Position, new Vector2((float) Calc.Random.Range(-3, 3), (float) Calc.Random.Range(-3, 3)));
+          this.particles[index].Position = this.Position + new Vector2((float) Calc.Random.Range(-3, 3), (float) Calc.Random.Range(-3, 3));
           this.particles[index].Color = Calc.Random.Choose<Color>(SummitCheckpoint.ConfettiRenderer.confettiColors);
           this.particles[index].Timer = Calc.Random.NextFloat();
           this.particles[index].Duration = (float) Calc.Random.Range(2, 4);
@@ -117,14 +118,13 @@ namespace Celeste
       {
         for (int index = 0; index < this.particles.Length; ++index)
         {
-          ref Vector2 local = ref this.particles[index].Position;
-          local = Vector2.op_Addition(local, Vector2.op_Multiply(this.particles[index].Speed, Engine.DeltaTime));
-          this.particles[index].Speed.X = (__Null) (double) Calc.Approach((float) this.particles[index].Speed.X, 0.0f, 80f * Engine.DeltaTime);
-          this.particles[index].Speed.Y = (__Null) (double) Calc.Approach((float) this.particles[index].Speed.Y, 20f, 500f * Engine.DeltaTime);
+          this.particles[index].Position += this.particles[index].Speed * Engine.DeltaTime;
+          this.particles[index].Speed.X = Calc.Approach(this.particles[index].Speed.X, 0.0f, 80f * Engine.DeltaTime);
+          this.particles[index].Speed.Y = Calc.Approach(this.particles[index].Speed.Y, 20f, 500f * Engine.DeltaTime);
           this.particles[index].Timer += Engine.DeltaTime;
           this.particles[index].Percent += Engine.DeltaTime / this.particles[index].Duration;
           this.particles[index].Alpha = Calc.ClampedMap(this.particles[index].Percent, 0.9f, 1f, 1f, 0.0f);
-          if (this.particles[index].Speed.Y > 0.0)
+          if ((double) this.particles[index].Speed.Y > 0.0)
             this.particles[index].Approach = Calc.Approach(this.particles[index].Approach, 5f, Engine.DeltaTime * 16f);
         }
       }
@@ -135,17 +135,17 @@ namespace Celeste
         {
           Vector2 position = this.particles[index].Position;
           float rotation;
-          if (this.particles[index].Speed.Y < 0.0)
+          if ((double) this.particles[index].Speed.Y < 0.0)
           {
             rotation = this.particles[index].Speed.Angle();
           }
           else
           {
             rotation = (float) Math.Sin((double) this.particles[index].Timer * 4.0) * 1f;
-            position = Vector2.op_Addition(position, Calc.AngleToVector(1.570796f + rotation, this.particles[index].Approach));
+            position += Calc.AngleToVector(1.570796f + rotation, this.particles[index].Approach);
           }
-          GFX.Game["particles/confetti"].DrawCentered(Vector2.op_Addition(position, Vector2.get_UnitY()), Color.op_Multiply(Color.get_Black(), this.particles[index].Alpha * 0.5f), 1f, rotation);
-          GFX.Game["particles/confetti"].DrawCentered(position, Color.op_Multiply(this.particles[index].Color, this.particles[index].Alpha), 1f, rotation);
+          GFX.Game["particles/confetti"].DrawCentered(position + Vector2.UnitY, Color.Black * (this.particles[index].Alpha * 0.5f), 1f, rotation);
+          GFX.Game["particles/confetti"].DrawCentered(position, this.particles[index].Color * this.particles[index].Alpha, 1f, rotation);
         }
       }
 
@@ -163,3 +163,4 @@ namespace Celeste
     }
   }
 }
+

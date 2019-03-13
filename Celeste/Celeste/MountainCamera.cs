@@ -19,13 +19,14 @@ namespace Celeste
     {
       this.Position = pos;
       this.Target = target;
-      this.Rotation = ((Quaternion) null).LookAt(this.Position, this.Target, Vector3.get_Up());
+      this.Rotation = new Quaternion().LookAt(this.Position, this.Target, Vector3.Up);
     }
 
     public void LookAt(Vector3 pos)
     {
       this.Target = pos;
-      this.Rotation = ((Quaternion) null).LookAt(this.Position, this.Target, Vector3.get_Up());
+      this.Rotation = new Quaternion().LookAt(this.Position, this.Target, Vector3.Up);
     }
   }
 }
+

@@ -39,9 +39,9 @@ namespace Celeste
       this.red = red;
       this.Add((Component) (this.sprite = GFX.SpriteBank.Create(red ? "boosterRed" : "booster")));
       this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 16, 32)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 16, 32)));
       this.Add((Component) (this.bloom = new BloomPoint(0.1f, 16f)));
-      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (f => this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) f * 0.25))), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (f => this.sprite.Scale = Vector2.One * (float) (1.0 + (double) f * 0.25)), false, false)));
       this.Add((Component) (this.dashRoutine = new Coroutine(false)));
       this.Add((Component) (this.dashListener = new DashListener()));
       this.Add((Component) new MirrorReflection());
@@ -51,7 +51,7 @@ namespace Celeste
     }
 
     public Booster(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Bool(nameof (red), false))
+      : this(data.Position + offset, data.Bool(nameof (red), false))
     {
     }
 
@@ -60,7 +60,7 @@ namespace Celeste
       base.Added(scene);
       Monocle.Image image = new Monocle.Image(GFX.Game["objects/booster/outline"]);
       image.CenterOrigin();
-      image.Color = Color.op_Multiply(Color.get_White(), 0.75f);
+      image.Color = Color.White * 0.75f;
       this.outline = new Entity(this.Position);
       this.outline.Depth = 8999;
       this.outline.Visible = false;
@@ -103,22 +103,21 @@ namespace Celeste
 
     private IEnumerator BoostRoutine(Player player, Vector2 dir)
     {
-      Booster booster = this;
-      float angle = Vector2.op_UnaryNegation(dir).Angle();
-      while ((player.StateMachine.State == 2 || player.StateMachine.State == 5) && booster.boostingPlayer)
+      float angle = (-dir).Angle();
+      while ((player.StateMachine.State == 2 || player.StateMachine.State == 5) && this.boostingPlayer)
       {
-        booster.sprite.RenderPosition = Vector2.op_Addition(player.Center, Booster.playerOffset);
-        booster.loopingSfx.Position = booster.sprite.Position;
-        if (booster.Scene.OnInterval(0.02f))
-          (booster.Scene as Level).ParticlesBG.Emit(booster.particleType, 2, Vector2.op_Addition(Vector2.op_Subtraction(player.Center, Vector2.op_Multiply(dir, 3f)), new Vector2(0.0f, -2f)), new Vector2(3f, 3f), angle);
+        this.sprite.RenderPosition = player.Center + Booster.playerOffset;
+        this.loopingSfx.Position = this.sprite.Position;
+        if (this.Scene.OnInterval(0.02f))
+          (this.Scene as Level).ParticlesBG.Emit(this.particleType, 2, player.Center - dir * 3f + new Vector2(0.0f, -2f), new Vector2(3f, 3f), angle);
         yield return (object) null;
       }
-      booster.PlayerReleased();
+      this.PlayerReleased();
       if (player.StateMachine.State == 4)
-        booster.sprite.Visible = false;
-      while (booster.SceneAs<Level>().Transitioning)
+        this.sprite.Visible = false;
+      while (this.SceneAs<Level>().Transitioning)
         yield return (object) null;
-      booster.Tag = 0;
+      this.Tag = 0;
     }
 
     public void OnPlayerDashed(Vector2 direction)
@@ -151,7 +150,7 @@ namespace Celeste
     public void Respawn()
     {
       Audio.Play(this.red ? "event:/game/05_mirror_temple/redbooster_reappear" : "event:/game/04_cliffside/greenbooster_reappear", this.Position);
-      this.sprite.Position = Vector2.get_Zero();
+      this.sprite.Position = Vector2.Zero;
       this.sprite.Play("loop", true, false);
       this.wiggler.Start();
       this.sprite.Visible = true;
@@ -171,10 +170,10 @@ namespace Celeste
       }
       if (!this.dashRoutine.Active && (double) this.respawnTimer <= 0.0)
       {
-        Vector2 target = Vector2.get_Zero();
+        Vector2 target = Vector2.Zero;
         Player entity = this.Scene.Tracker.GetEntity<Player>();
         if (entity != null && this.CollideCheck((Entity) entity))
-          target = Vector2.op_Subtraction(Vector2.op_Addition(entity.Center, Booster.playerOffset), this.Position);
+          target = entity.Center + Booster.playerOffset - this.Position;
         this.sprite.Position = Calc.Approach(this.sprite.Position, target, 80f * Engine.DeltaTime);
       }
       if (!(this.sprite.CurrentAnimationID == "inside") || this.boostingPlayer || this.CollideCheck<Player>())
@@ -190,3 +189,4 @@ namespace Celeste
     }
   }
 }
+

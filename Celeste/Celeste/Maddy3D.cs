@@ -13,7 +13,7 @@ namespace Celeste
 {
   public class Maddy3D : Entity
   {
-    public Vector2 Scale = Vector2.get_One();
+    public Vector2 Scale = Vector2.One;
     public bool Show = true;
     private float alpha = 1f;
     public MountainRenderer Renderer;
@@ -30,23 +30,19 @@ namespace Celeste
     public Maddy3D(MountainRenderer renderer)
     {
       this.Renderer = renderer;
-      this.Add((Component) (this.Image = new Billboard((MTexture) null, Vector3.get_Zero(), new Vector2?(), new Color?(), new Vector2?())));
+      this.Add((Component) (this.Image = new Billboard((MTexture) null, Vector3.Zero, new Vector2?(), new Color?(), new Vector2?())));
       this.Image.BeforeRender = (Action) (() =>
       {
         if (this.Disabled)
         {
-          this.Image.Color = Color.get_Transparent();
+          this.Image.Color = Color.Transparent;
         }
         else
         {
-          this.Image.Position = Vector3.op_Addition(this.Position, Vector3.op_Multiply(Vector3.op_Multiply(Vector3.op_Multiply((float) this.hideDown, Vector3.get_Up()), 1f - Ease.CubeOut(this.alpha)), 0.25f));
-          this.Image.Scale = Vector2.op_Addition(this.Scale, Vector2.op_Multiply(Vector2.op_Multiply(Vector2.op_Multiply(Vector2.get_One(), this.Wiggler.Value), this.Scale), 0.2f));
-          Billboard image = this.Image;
-          Vector2 scale = image.Scale;
-          Vector3 vector3 = Vector3.op_Subtraction(this.Renderer.Model.Camera.Position, this.Position);
-          double num = (double) ((Vector3) ref vector3).Length() / 20.0;
-          image.Scale = Vector2.op_Multiply(scale, (float) num);
-          this.Image.Color = Color.op_Multiply(Color.get_White(), this.alpha);
+          this.Image.Position = this.Position + (float) this.hideDown * Vector3.Up * (1f - Ease.CubeOut(this.alpha)) * 0.25f;
+          this.Image.Scale = this.Scale + Vector2.One * this.Wiggler.Value * this.Scale * 0.2f;
+          this.Image.Scale *= (this.Renderer.Model.Camera.Position - this.Position).Length() / 20f;
+          this.Image.Color = Color.White * this.alpha;
         }
       });
       this.Add((Component) (this.Wiggler = Wiggler.Create(0.5f, 3f, (Action<float>) null, false, false)));
@@ -61,7 +57,7 @@ namespace Celeste
       this.SetRunAnim();
       this.frameSpeed = 8f;
       this.frame = 0.0f;
-      this.Image.Size = Vector2.op_Division(new Vector2((float) this.frames[0].ClipRect.Width, (float) this.frames[0].ClipRect.Height), (float) this.frames[0].ClipRect.Width);
+      this.Image.Size = new Vector2((float) this.frames[0].ClipRect.Width, (float) this.frames[0].ClipRect.Height) / (float) this.frames[0].ClipRect.Width;
     }
 
     public void Falling()
@@ -72,7 +68,7 @@ namespace Celeste
       this.frames = GFX.Mountain.GetAtlasSubtextures("marker/Fall");
       this.frameSpeed = 2f;
       this.frame = 0.0f;
-      this.Image.Size = Vector2.op_Division(new Vector2((float) this.frames[0].ClipRect.Width, (float) this.frames[0].ClipRect.Height), (float) this.frames[0].ClipRect.Width);
+      this.Image.Size = new Vector2((float) this.frames[0].ClipRect.Width, (float) this.frames[0].ClipRect.Height) / (float) this.frames[0].ClipRect.Width;
     }
 
     public void Hide(bool down = true)
@@ -106,3 +102,4 @@ namespace Celeste
     }
   }
 }
+

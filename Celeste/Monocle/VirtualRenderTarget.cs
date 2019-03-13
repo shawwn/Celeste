@@ -22,9 +22,7 @@ namespace Monocle
     {
       get
       {
-        if (this.Target != null && !((GraphicsResource) this.Target).get_IsDisposed())
-          return ((GraphicsResource) this.Target).get_GraphicsDevice().get_IsDisposed();
-        return true;
+        return this.Target == null || this.Target.IsDisposed || this.Target.GraphicsDevice.IsDisposed;
       }
     }
 
@@ -32,7 +30,7 @@ namespace Monocle
     {
       get
       {
-        return ((Texture2D) this.Target).get_Bounds();
+        return this.Target.Bounds;
       }
     }
 
@@ -55,15 +53,15 @@ namespace Monocle
 
     internal override void Unload()
     {
-      if (this.Target == null || ((GraphicsResource) this.Target).get_IsDisposed())
+      if (this.Target == null || this.Target.IsDisposed)
         return;
-      ((GraphicsResource) this.Target).Dispose();
+      this.Target.Dispose();
     }
 
     internal override void Reload()
     {
       this.Unload();
-      this.Target = new RenderTarget2D(Engine.Instance.get_GraphicsDevice(), this.Width, this.Height, false, (SurfaceFormat) 0, this.Depth ? (DepthFormat) 3 : (DepthFormat) 0, this.MultiSampleCount, this.Preserve ? (RenderTargetUsage) 1 : (RenderTargetUsage) 0);
+      this.Target = new RenderTarget2D(Engine.Instance.GraphicsDevice, this.Width, this.Height, false, SurfaceFormat.Color, this.Depth ? DepthFormat.Depth24Stencil8 : DepthFormat.None, this.MultiSampleCount, this.Preserve ? RenderTargetUsage.PreserveContents : RenderTargetUsage.DiscardContents);
     }
 
     public override void Dispose()
@@ -79,3 +77,4 @@ namespace Monocle
     }
   }
 }
+

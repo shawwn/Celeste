@@ -19,8 +19,9 @@ namespace Celeste
     }
 
     public BlockField(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), data.Width, data.Height)
+      : this(data.Position + offset, data.Width, data.Height)
     {
     }
   }
 }
+

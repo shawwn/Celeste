@@ -13,12 +13,12 @@ namespace Celeste
 {
   public class OuiOptions : Oui
   {
+    private float alpha = 0.0f;
     private TextMenu menu;
     private const float onScreenX = 960f;
     private const float offScreenX = 2880f;
     private string startLanguage;
     private string currentLanguage;
-    private float alpha;
 
     public override void Added(Scene scene)
     {
@@ -27,7 +27,7 @@ namespace Celeste
 
     private void ReloadMenu()
     {
-      Vector2 vector2 = Vector2.get_Zero();
+      Vector2 vector2 = Vector2.Zero;
       int num = -1;
       if (this.menu != null)
       {
@@ -46,42 +46,40 @@ namespace Celeste
 
     public override IEnumerator Enter(Oui from)
     {
-      OuiOptions ouiOptions = this;
-      ouiOptions.ReloadMenu();
-      ouiOptions.menu.Visible = ouiOptions.Visible = true;
-      ouiOptions.menu.Focused = false;
-      ouiOptions.currentLanguage = ouiOptions.startLanguage = Settings.Instance.Language;
+      this.ReloadMenu();
+      this.menu.Visible = this.Visible = true;
+      this.menu.Focused = false;
+      this.currentLanguage = this.startLanguage = Settings.Instance.Language;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        ouiOptions.menu.X = (float) (2880.0 + -1920.0 * (double) Ease.CubeOut(p));
-        ouiOptions.alpha = Ease.CubeOut(p);
+        this.menu.X = (float) (2880.0 + -1920.0 * (double) Ease.CubeOut(p));
+        this.alpha = Ease.CubeOut(p);
         yield return (object) null;
       }
-      ouiOptions.menu.Focused = true;
+      this.menu.Focused = true;
     }
 
     public override IEnumerator Leave(Oui next)
     {
-      OuiOptions ouiOptions = this;
       Audio.Play("event:/ui/main/whoosh_large_out");
-      ouiOptions.menu.Focused = false;
+      this.menu.Focused = false;
       UserIO.SaveHandler(false, true);
       while (UserIO.Saving)
         yield return (object) null;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        ouiOptions.menu.X = (float) (960.0 + 1920.0 * (double) Ease.CubeIn(p));
-        ouiOptions.alpha = 1f - Ease.CubeIn(p);
+        this.menu.X = (float) (960.0 + 1920.0 * (double) Ease.CubeIn(p));
+        this.alpha = 1f - Ease.CubeIn(p);
         yield return (object) null;
       }
-      if (ouiOptions.startLanguage != Settings.Instance.Language)
+      if (this.startLanguage != Settings.Instance.Language)
       {
-        ouiOptions.Overworld.ReloadMenus(Overworld.StartMode.ReturnFromOptions);
+        this.Overworld.ReloadMenus(Overworld.StartMode.ReturnFromOptions);
         yield return (object) null;
       }
-      ouiOptions.menu.Visible = ouiOptions.Visible = false;
-      ouiOptions.menu.RemoveSelf();
-      ouiOptions.menu = (TextMenu) null;
+      this.menu.Visible = this.Visible = false;
+      this.menu.RemoveSelf();
+      this.menu = (TextMenu) null;
     }
 
     public override void Update()
@@ -102,8 +100,9 @@ namespace Celeste
     public override void Render()
     {
       if ((double) this.alpha > 0.0)
-        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), this.alpha), 0.4f));
+        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * this.alpha * 0.4f);
       base.Render();
     }
   }
 }
+

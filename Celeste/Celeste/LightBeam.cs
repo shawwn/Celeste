@@ -14,16 +14,16 @@ namespace Celeste
   {
     private MTexture texture = GFX.Game["util/lightbeam"];
     private Color color = new Color(0.8f, 1f, 1f);
+    private float alpha = 0.0f;
     private float timer = Calc.Random.NextFloat(1000f);
     public static ParticleType P_Glow;
-    private float alpha;
     public int LightWidth;
     public int LightLength;
     public float Rotation;
     public string Flag;
 
     public LightBeam(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Tag = (int) Tags.TransitionUpdate;
       this.Depth = -9998;
@@ -40,11 +40,11 @@ namespace Celeste
       Player entity = this.Scene.Tracker.GetEntity<Player>();
       if (entity != null && (string.IsNullOrEmpty(this.Flag) || scene.Session.GetFlag(this.Flag)))
       {
-        Vector2 vector2_1 = Calc.ClosestPointOnLine(this.Position, Vector2.op_Addition(this.Position, Vector2.op_Multiply(Calc.AngleToVector(this.Rotation + 1.570796f, 1f), 10000f)), entity.Center);
-        Vector2 vector2_2 = Vector2.op_Subtraction(vector2_1, this.Position);
-        float target = Math.Min(1f, (float) ((double) Math.Max(0.0f, (float) ((double) ((Vector2) ref vector2_2).Length() - 8.0)) / (double) this.LightLength));
-        vector2_2 = Vector2.op_Subtraction(vector2_1, entity.Center);
-        if ((double) ((Vector2) ref vector2_2).Length() > (double) this.LightWidth / 2.0)
+        Vector2 vector2_1 = Calc.ClosestPointOnLine(this.Position, this.Position + Calc.AngleToVector(this.Rotation + 1.570796f, 1f) * 10000f, entity.Center);
+        Vector2 vector2_2 = vector2_1 - this.Position;
+        float target = Math.Min(1f, (float) ((double) Math.Max(0.0f, (float) ((double) vector2_2.Length() - 8.0)) / (double) this.LightLength));
+        vector2_2 = vector2_1 - entity.Center;
+        if ((double) vector2_2.Length() > (double) this.LightWidth / 2.0)
           target = 1f;
         if (scene.Transitioning)
           target = 0.0f;
@@ -53,7 +53,7 @@ namespace Celeste
       if ((double) this.alpha >= 0.5 && scene.OnInterval(0.8f))
       {
         Vector2 vector = Calc.AngleToVector(this.Rotation + 1.570796f, 1f);
-        Vector2 position = Vector2.op_Addition(Vector2.op_Subtraction(this.Position, Vector2.op_Multiply(vector, 4f)), Vector2.op_Multiply((float) (Calc.Random.Next(this.LightWidth - 4) + 2 - this.LightWidth / 2), vector.Perpendicular()));
+        Vector2 position = this.Position - vector * 4f + (float) (Calc.Random.Next(this.LightWidth - 4) + 2 - this.LightWidth / 2) * vector.Perpendicular();
         scene.Particles.Emit(LightBeam.P_Glow, position, this.Rotation + 1.570796f);
       }
       base.Update();
@@ -80,7 +80,8 @@ namespace Celeste
       float rotation = this.Rotation + 1.570796f;
       if ((double) width < 1.0)
         return;
-      this.texture.Draw(Vector2.op_Addition(this.Position, Vector2.op_Multiply(Calc.AngleToVector(this.Rotation, 1f), offset)), new Vector2(0.0f, 0.5f), Color.op_Multiply(Color.op_Multiply(this.color, a), this.alpha), new Vector2(1f / (float) this.texture.Width * length, width), rotation);
+      this.texture.Draw(this.Position + Calc.AngleToVector(this.Rotation, 1f) * offset, new Vector2(0.0f, 0.5f), this.color * a * this.alpha, new Vector2(1f / (float) this.texture.Width * length, width), rotation);
     }
   }
 }
+

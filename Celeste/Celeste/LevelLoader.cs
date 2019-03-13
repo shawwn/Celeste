@@ -14,9 +14,9 @@ namespace Celeste
 {
   public class LevelLoader : Scene
   {
+    private bool started = false;
     private Session session;
     private Vector2? startPosition;
-    private bool started;
     public Player.IntroTypes? PlayerIntroTypeOverride;
 
     public Level Level { get; private set; }
@@ -77,16 +77,16 @@ namespace Celeste
       this.Level.Add((Entity) new GameplayStats());
       Rectangle tileBounds1 = mapData.TileBounds;
       GFX.FGAutotiler.LevelBounds.Clear();
-      VirtualMap<char> data1 = new VirtualMap<char>((int) tileBounds1.Width, (int) tileBounds1.Height, '0');
-      VirtualMap<char> data2 = new VirtualMap<char>((int) tileBounds1.Width, (int) tileBounds1.Height, '0');
-      VirtualMap<bool> virtualMap = new VirtualMap<bool>((int) tileBounds1.Width, (int) tileBounds1.Height, false);
+      VirtualMap<char> data1 = new VirtualMap<char>(tileBounds1.Width, tileBounds1.Height, '0');
+      VirtualMap<char> data2 = new VirtualMap<char>(tileBounds1.Width, tileBounds1.Height, '0');
+      VirtualMap<bool> virtualMap = new VirtualMap<bool>(tileBounds1.Width, tileBounds1.Height, false);
       Regex regex = new Regex("\\r\\n|\\n\\r|\\n|\\r");
       foreach (LevelData level in mapData.Levels)
       {
         Rectangle tileBounds2 = level.TileBounds;
-        int left1 = ((Rectangle) ref tileBounds2).get_Left();
+        int left1 = tileBounds2.Left;
         tileBounds2 = level.TileBounds;
-        int top1 = ((Rectangle) ref tileBounds2).get_Top();
+        int top1 = tileBounds2.Top;
         string[] strArray1 = regex.Split(level.Bg);
         for (int index1 = top1; index1 < top1 + strArray1.Length; ++index1)
         {
@@ -100,24 +100,24 @@ namespace Celeste
             data2[index2 - tileBounds1.X, index1 - tileBounds1.Y] = strArray2[index1 - top1][index2 - left1];
         }
         tileBounds2 = level.TileBounds;
-        int left2 = ((Rectangle) ref tileBounds2).get_Left();
+        int left2 = tileBounds2.Left;
         while (true)
         {
           int num1 = left2;
           tileBounds2 = level.TileBounds;
-          int right = ((Rectangle) ref tileBounds2).get_Right();
+          int right = tileBounds2.Right;
           if (num1 < right)
           {
             tileBounds2 = level.TileBounds;
-            int top2 = ((Rectangle) ref tileBounds2).get_Top();
+            int top2 = tileBounds2.Top;
             while (true)
             {
               int num2 = top2;
               tileBounds2 = level.TileBounds;
-              int bottom = ((Rectangle) ref tileBounds2).get_Bottom();
+              int bottom = tileBounds2.Bottom;
               if (num2 < bottom)
               {
-                virtualMap[left2 - ((Rectangle) ref tileBounds1).get_Left(), top2 - ((Rectangle) ref tileBounds1).get_Top()] = true;
+                virtualMap[left2 - tileBounds1.Left, top2 - tileBounds1.Top] = true;
                 ++top2;
               }
               else
@@ -128,72 +128,68 @@ namespace Celeste
           else
             break;
         }
-        GFX.FGAutotiler.LevelBounds.Add(new Rectangle((int) (level.TileBounds.X - tileBounds1.X), (int) (level.TileBounds.Y - tileBounds1.Y), (int) level.TileBounds.Width, (int) level.TileBounds.Height));
+        GFX.FGAutotiler.LevelBounds.Add(new Rectangle(level.TileBounds.X - tileBounds1.X, level.TileBounds.Y - tileBounds1.Y, level.TileBounds.Width, level.TileBounds.Height));
       }
-      using (List<Rectangle>.Enumerator enumerator = mapData.Filler.GetEnumerator())
+      foreach (Rectangle rectangle in mapData.Filler)
       {
-        while (enumerator.MoveNext())
+        for (int left = rectangle.Left; left < rectangle.Right; ++left)
         {
-          Rectangle current = enumerator.Current;
-          for (int left = ((Rectangle) ref current).get_Left(); left < ((Rectangle) ref current).get_Right(); ++left)
+          for (int top = rectangle.Top; top < rectangle.Bottom; ++top)
           {
-            for (int top = ((Rectangle) ref current).get_Top(); top < ((Rectangle) ref current).get_Bottom(); ++top)
+            char ch1 = '0';
+            if (rectangle.Top - tileBounds1.Y > 0)
             {
-              char ch1 = '0';
-              if (((Rectangle) ref current).get_Top() - tileBounds1.Y > 0)
-              {
-                char ch2 = data2[left - tileBounds1.X, ((Rectangle) ref current).get_Top() - tileBounds1.Y - 1];
-                if (ch2 != '0')
-                  ch1 = ch2;
-              }
-              if (ch1 == '0' && ((Rectangle) ref current).get_Left() - tileBounds1.X > 0)
-              {
-                char ch2 = data2[((Rectangle) ref current).get_Left() - tileBounds1.X - 1, top - tileBounds1.Y];
-                if (ch2 != '0')
-                  ch1 = ch2;
-              }
-              if (ch1 == '0' && ((Rectangle) ref current).get_Right() - tileBounds1.X < tileBounds1.Width - 1)
-              {
-                char ch2 = data2[((Rectangle) ref current).get_Right() - tileBounds1.X, top - tileBounds1.Y];
-                if (ch2 != '0')
-                  ch1 = ch2;
-              }
-              if (ch1 == '0' && ((Rectangle) ref current).get_Bottom() - tileBounds1.Y < tileBounds1.Height - 1)
-              {
-                char ch2 = data2[left - tileBounds1.X, ((Rectangle) ref current).get_Bottom() - tileBounds1.Y];
-                if (ch2 != '0')
-                  ch1 = ch2;
-              }
-              if (ch1 == '0')
-                ch1 = '1';
-              data2[left - tileBounds1.X, top - tileBounds1.Y] = ch1;
-              virtualMap[left - tileBounds1.X, top - tileBounds1.Y] = true;
+              char ch2 = data2[left - tileBounds1.X, rectangle.Top - tileBounds1.Y - 1];
+              if (ch2 != '0')
+                ch1 = ch2;
             }
+            if (ch1 == '0' && rectangle.Left - tileBounds1.X > 0)
+            {
+              char ch2 = data2[rectangle.Left - tileBounds1.X - 1, top - tileBounds1.Y];
+              if (ch2 != '0')
+                ch1 = ch2;
+            }
+            if (ch1 == '0' && rectangle.Right - tileBounds1.X < tileBounds1.Width - 1)
+            {
+              char ch2 = data2[rectangle.Right - tileBounds1.X, top - tileBounds1.Y];
+              if (ch2 != '0')
+                ch1 = ch2;
+            }
+            if (ch1 == '0' && rectangle.Bottom - tileBounds1.Y < tileBounds1.Height - 1)
+            {
+              char ch2 = data2[left - tileBounds1.X, rectangle.Bottom - tileBounds1.Y];
+              if (ch2 != '0')
+                ch1 = ch2;
+            }
+            if (ch1 == '0')
+              ch1 = '1';
+            data2[left - tileBounds1.X, top - tileBounds1.Y] = ch1;
+            virtualMap[left - tileBounds1.X, top - tileBounds1.Y] = true;
           }
         }
       }
       using (List<LevelData>.Enumerator enumerator = mapData.Levels.GetEnumerator())
       {
-label_71:
+label_75:
         while (enumerator.MoveNext())
         {
           LevelData current = enumerator.Current;
           Rectangle tileBounds2 = current.TileBounds;
-          int left1 = ((Rectangle) ref tileBounds2).get_Left();
+          int left1 = tileBounds2.Left;
           while (true)
           {
             int num1 = left1;
             tileBounds2 = current.TileBounds;
-            int right = ((Rectangle) ref tileBounds2).get_Right();
+            int right = tileBounds2.Right;
             if (num1 < right)
             {
               tileBounds2 = current.TileBounds;
-              int top = ((Rectangle) ref tileBounds2).get_Top();
+              int top = tileBounds2.Top;
               char ch1 = data1[left1 - tileBounds1.X, top - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[left1 - tileBounds1.X, top - tileBounds1.Y - index]; ++index)
                 data1[left1 - tileBounds1.X, top - tileBounds1.Y - index] = ch1;
               tileBounds2 = current.TileBounds;
-              int num2 = ((Rectangle) ref tileBounds2).get_Bottom() - 1;
+              int num2 = tileBounds2.Bottom - 1;
               char ch2 = data1[left1 - tileBounds1.X, num2 - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[left1 - tileBounds1.X, num2 - tileBounds1.Y + index]; ++index)
                 data1[left1 - tileBounds1.X, num2 - tileBounds1.Y + index] = ch2;
@@ -203,55 +199,55 @@ label_71:
               break;
           }
           tileBounds2 = current.TileBounds;
-          int num3 = ((Rectangle) ref tileBounds2).get_Top() - 4;
+          int num3 = tileBounds2.Top - 4;
           while (true)
           {
             int num1 = num3;
             tileBounds2 = current.TileBounds;
-            int num2 = ((Rectangle) ref tileBounds2).get_Bottom() + 4;
+            int num2 = tileBounds2.Bottom + 4;
             if (num1 < num2)
             {
               tileBounds2 = current.TileBounds;
-              int left2 = ((Rectangle) ref tileBounds2).get_Left();
+              int left2 = tileBounds2.Left;
               char ch1 = data1[left2 - tileBounds1.X, num3 - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[left2 - tileBounds1.X - index, num3 - tileBounds1.Y]; ++index)
                 data1[left2 - tileBounds1.X - index, num3 - tileBounds1.Y] = ch1;
               tileBounds2 = current.TileBounds;
-              int num4 = ((Rectangle) ref tileBounds2).get_Right() - 1;
+              int num4 = tileBounds2.Right - 1;
               char ch2 = data1[num4 - tileBounds1.X, num3 - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[num4 - tileBounds1.X + index, num3 - tileBounds1.Y]; ++index)
                 data1[num4 - tileBounds1.X + index, num3 - tileBounds1.Y] = ch2;
               ++num3;
             }
             else
-              goto label_71;
+              goto label_75;
           }
         }
       }
       using (List<LevelData>.Enumerator enumerator = mapData.Levels.GetEnumerator())
       {
-label_86:
+label_90:
         while (enumerator.MoveNext())
         {
           LevelData current = enumerator.Current;
           Rectangle tileBounds2 = current.TileBounds;
-          int left = ((Rectangle) ref tileBounds2).get_Left();
+          int left = tileBounds2.Left;
           while (true)
           {
             int num1 = left;
             tileBounds2 = current.TileBounds;
-            int right = ((Rectangle) ref tileBounds2).get_Right();
+            int right = tileBounds2.Right;
             if (num1 < right)
             {
               tileBounds2 = current.TileBounds;
-              int top = ((Rectangle) ref tileBounds2).get_Top();
+              int top = tileBounds2.Top;
               if (data2[left - tileBounds1.X, top - tileBounds1.Y] == '0')
               {
                 for (int index = 1; index < 8; ++index)
                   virtualMap[left - tileBounds1.X, top - tileBounds1.Y - index] = true;
               }
               tileBounds2 = current.TileBounds;
-              int num2 = ((Rectangle) ref tileBounds2).get_Bottom() - 1;
+              int num2 = tileBounds2.Bottom - 1;
               if (data2[left - tileBounds1.X, num2 - tileBounds1.Y] == '0')
               {
                 for (int index = 1; index < 8; ++index)
@@ -260,32 +256,32 @@ label_86:
               ++left;
             }
             else
-              goto label_86;
+              goto label_90;
           }
         }
       }
       using (List<LevelData>.Enumerator enumerator = mapData.Levels.GetEnumerator())
       {
-label_108:
+label_112:
         while (enumerator.MoveNext())
         {
           LevelData current = enumerator.Current;
           Rectangle tileBounds2 = current.TileBounds;
-          int left1 = ((Rectangle) ref tileBounds2).get_Left();
+          int left1 = tileBounds2.Left;
           while (true)
           {
             int num1 = left1;
             tileBounds2 = current.TileBounds;
-            int right = ((Rectangle) ref tileBounds2).get_Right();
+            int right = tileBounds2.Right;
             if (num1 < right)
             {
               tileBounds2 = current.TileBounds;
-              int top = ((Rectangle) ref tileBounds2).get_Top();
+              int top = tileBounds2.Top;
               char ch1 = data2[left1 - tileBounds1.X, top - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[left1 - tileBounds1.X, top - tileBounds1.Y - index]; ++index)
                 data2[left1 - tileBounds1.X, top - tileBounds1.Y - index] = ch1;
               tileBounds2 = current.TileBounds;
-              int num2 = ((Rectangle) ref tileBounds2).get_Bottom() - 1;
+              int num2 = tileBounds2.Bottom - 1;
               char ch2 = data2[left1 - tileBounds1.X, num2 - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[left1 - tileBounds1.X, num2 - tileBounds1.Y + index]; ++index)
                 data2[left1 - tileBounds1.X, num2 - tileBounds1.Y + index] = ch2;
@@ -295,32 +291,32 @@ label_108:
               break;
           }
           tileBounds2 = current.TileBounds;
-          int num3 = ((Rectangle) ref tileBounds2).get_Top() - 4;
+          int num3 = tileBounds2.Top - 4;
           while (true)
           {
             int num1 = num3;
             tileBounds2 = current.TileBounds;
-            int num2 = ((Rectangle) ref tileBounds2).get_Bottom() + 4;
+            int num2 = tileBounds2.Bottom + 4;
             if (num1 < num2)
             {
               tileBounds2 = current.TileBounds;
-              int left2 = ((Rectangle) ref tileBounds2).get_Left();
+              int left2 = tileBounds2.Left;
               char ch1 = data2[left2 - tileBounds1.X, num3 - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[left2 - tileBounds1.X - index, num3 - tileBounds1.Y]; ++index)
                 data2[left2 - tileBounds1.X - index, num3 - tileBounds1.Y] = ch1;
               tileBounds2 = current.TileBounds;
-              int num4 = ((Rectangle) ref tileBounds2).get_Right() - 1;
+              int num4 = tileBounds2.Right - 1;
               char ch2 = data2[num4 - tileBounds1.X, num3 - tileBounds1.Y];
               for (int index = 1; index < 4 && !virtualMap[num4 - tileBounds1.X + index, num3 - tileBounds1.Y]; ++index)
                 data2[num4 - tileBounds1.X + index, num3 - tileBounds1.Y] = ch2;
               ++num3;
             }
             else
-              goto label_108;
+              goto label_112;
           }
         }
       }
-      Vector2 position = Vector2.op_Multiply(new Vector2((float) tileBounds1.X, (float) tileBounds1.Y), 8f);
+      Vector2 position = new Vector2((float) tileBounds1.X, (float) tileBounds1.Y) * 8f;
       Calc.PushRandom(mapData.LoadSeed);
       Level level1 = this.Level;
       Level level2 = this.Level;
@@ -343,17 +339,15 @@ label_108:
       Calc.PopRandom();
       new Entity(position)
       {
-        (Component) (this.Level.FgTilesLightMask = new TileGrid(8, 8, (int) tileBounds1.Width, (int) tileBounds1.Height))
+        (Component) (this.Level.FgTilesLightMask = new TileGrid(8, 8, tileBounds1.Width, tileBounds1.Height))
       };
-      this.Level.FgTilesLightMask.Color = Color.get_Black();
+      this.Level.FgTilesLightMask.Color = Color.Black;
       foreach (LevelData level5 in mapData.Levels)
       {
-        Rectangle tileBounds2 = level5.TileBounds;
-        int left = ((Rectangle) ref tileBounds2).get_Left();
-        tileBounds2 = level5.TileBounds;
-        int top = ((Rectangle) ref tileBounds2).get_Top();
-        int width = (int) level5.TileBounds.Width;
-        int height = (int) level5.TileBounds.Height;
+        int left = level5.TileBounds.Left;
+        int top = level5.TileBounds.Top;
+        int width = level5.TileBounds.Width;
+        int height = level5.TileBounds.Height;
         if (!string.IsNullOrEmpty(level5.BgTiles))
         {
           int[,] tiles = Calc.ReadCSVIntGrid(level5.BgTiles, width, height);
@@ -393,3 +387,4 @@ label_108:
     }
   }
 }
+

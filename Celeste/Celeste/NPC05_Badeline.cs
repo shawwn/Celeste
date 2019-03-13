@@ -22,7 +22,7 @@ namespace Celeste
     private SoundSource moveSfx;
 
     public NPC05_Badeline(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.nodes = data.NodesOffset(offset);
       this.Add((Component) (this.moveSfx = new SoundSource()));
@@ -33,7 +33,7 @@ namespace Celeste
           if (this.shadow == null)
             return;
           this.shadow.Hair.Alpha = 1f - Math.Min(1f, f * 2f);
-          this.shadow.Sprite.Color = Color.op_Multiply(Color.get_White(), this.shadow.Hair.Alpha);
+          this.shadow.Sprite.Color = Color.White * this.shadow.Hair.Alpha;
           this.shadow.Light.Alpha = this.shadow.Hair.Alpha;
         })
       });
@@ -82,88 +82,80 @@ namespace Celeste
 
     private IEnumerator FirstScene()
     {
-      NPC05_Badeline npC05Badeline = this;
-      npC05Badeline.shadow.Sprite.Scale.X = (__Null) -1.0;
-      npC05Badeline.shadow.FloatSpeed = 150f;
+      this.shadow.Sprite.Scale.X = -1f;
+      this.shadow.FloatSpeed = 150f;
       bool playerHasFallen = false;
       bool startedMusic = false;
       Player player = (Player) null;
       Rectangle bounds;
       while (true)
       {
-        player = npC05Badeline.Scene.Tracker.GetEntity<Player>();
+        player = this.Scene.Tracker.GetEntity<Player>();
+        int num1;
         if (player != null)
         {
           double y = (double) player.Y;
-          bounds = npC05Badeline.Level.Bounds;
-          double num = (double) (((Rectangle) ref bounds).get_Top() + 180);
-          if (y > num && !player.OnGround(1) && !playerHasFallen)
+          bounds = this.Level.Bounds;
+          double num2 = (double) (bounds.Top + 180);
+          if (y > num2 && !player.OnGround(1))
           {
-            player.StateMachine.State = 20;
-            playerHasFallen = true;
+            num1 = !playerHasFallen ? 1 : 0;
+            goto label_4;
           }
+        }
+        num1 = 0;
+label_4:
+        if (num1 != 0)
+        {
+          player.StateMachine.State = 20;
+          playerHasFallen = true;
         }
         if (player != null & playerHasFallen && !startedMusic && player.OnGround(1))
         {
-          npC05Badeline.Level.Session.Audio.Music.Event = "event:/music/lvl5/middle_temple";
-          npC05Badeline.Level.Session.Audio.Apply();
+          this.Level.Session.Audio.Music.Event = "event:/music/lvl5/middle_temple";
+          this.Level.Session.Audio.Apply();
           startedMusic = true;
         }
-        if (player == null || (double) player.X <= (double) npC05Badeline.X - 64.0 || (double) player.Y <= (double) npC05Badeline.Y - 32.0)
+        if (player == null || (double) player.X <= (double) this.X - 64.0 || (double) player.Y <= (double) this.Y - 32.0)
           yield return (object) null;
         else
           break;
       }
-      npC05Badeline.MoveToNode(0, false);
+      this.MoveToNode(0, false);
       while (true)
       {
-        do
+        double x = (double) this.shadow.X;
+        bounds = this.Level.Bounds;
+        double num = (double) (bounds.Right + 8);
+        if (x < num)
         {
-          double x = (double) npC05Badeline.shadow.X;
-          bounds = npC05Badeline.Level.Bounds;
-          double num = (double) (((Rectangle) ref bounds).get_Right() + 8);
-          if (x < num)
-            yield return (object) null;
-          else
-            goto label_12;
+          yield return (object) null;
+          if ((double) player.X > (double) this.shadow.X - 24.0)
+            this.shadow.X = player.X + 24f;
         }
-        while ((double) player.X <= (double) npC05Badeline.shadow.X - 24.0);
-        npC05Badeline.shadow.X = player.X + 24f;
+        else
+          break;
       }
-label_12:
-      npC05Badeline.Scene.Remove((Entity) npC05Badeline.shadow);
-      npC05Badeline.RemoveSelf();
+      this.Scene.Remove((Entity) this.shadow);
+      this.RemoveSelf();
     }
 
     private IEnumerator SecondScene(int startIndex)
     {
-      NPC05_Badeline npc = this;
-      npc.shadow.Sprite.Scale.X = (__Null) -1.0;
-      npc.shadow.FloatSpeed = 300f;
-      npc.shadow.FloatAccel = 400f;
+      this.shadow.Sprite.Scale.X = -1f;
+      this.shadow.FloatSpeed = 300f;
+      this.shadow.FloatAccel = 400f;
       yield return (object) 0.1f;
       int index = startIndex;
-      while (index < npc.nodes.Length)
+      while (index < this.nodes.Length)
       {
-        Player player = npc.Scene.Tracker.GetEntity<Player>();
-        while (true)
-        {
-          if (player != null)
-            goto label_4;
-label_2:
+        Player player = this.Scene.Tracker.GetEntity<Player>();
+        while (player == null || (double) (player.Position - this.shadow.Position).Length() > 70.0)
           yield return (object) null;
-          continue;
-label_4:
-          Vector2 vector2 = Vector2.op_Subtraction(player.Position, npc.shadow.Position);
-          if ((double) ((Vector2) ref vector2).Length() > 70.0)
-            goto label_2;
-          else
-            break;
-        }
-        if (index < 4 && !npc.Session.GetFlag(CS05_Badeline.GetFlag(index)))
+        if (index < 4 && !this.Session.GetFlag(CS05_Badeline.GetFlag(index)))
         {
-          CS05_Badeline cutscene = new CS05_Badeline(player, npc, npc.shadow, index);
-          npc.Scene.Add((Entity) cutscene);
+          CS05_Badeline cutscene = new CS05_Badeline(player, this, this.shadow, index);
+          this.Scene.Add((Entity) cutscene);
           yield return (object) null;
           while (cutscene.Scene != null)
             yield return (object) null;
@@ -172,10 +164,10 @@ label_4:
         }
         player = (Player) null;
       }
-      npc.Tag |= (int) Tags.TransitionUpdate;
-      npc.shadow.Tag |= (int) Tags.TransitionUpdate;
-      npc.Scene.Remove((Entity) npc.shadow);
-      npc.RemoveSelf();
+      this.Tag |= (int) Tags.TransitionUpdate;
+      this.shadow.Tag |= (int) Tags.TransitionUpdate;
+      this.Scene.Remove((Entity) this.shadow);
+      this.RemoveSelf();
     }
 
     public void MoveToNode(int index, bool chatMove = true)
@@ -191,10 +183,10 @@ label_4:
       {
         this.shadow.Position = Vector2.Lerp(start, end, t.Eased);
         if (this.Scene.OnInterval(0.03f))
-          this.SceneAs<Level>().ParticlesFG.Emit(BadelineOldsite.P_Vanish, 2, Vector2.op_Addition(this.shadow.Position, new Vector2(0.0f, -6f)), Vector2.op_Multiply(Vector2.get_One(), 2f));
+          this.SceneAs<Level>().ParticlesFG.Emit(BadelineOldsite.P_Vanish, 2, this.shadow.Position + new Vector2(0.0f, -6f), Vector2.One * 2f);
         if ((double) t.Eased < 0.100000001490116 || (double) t.Eased > 0.899999976158142 || !this.Scene.OnInterval(0.05f))
           return;
-        TrailManager.Add((Entity) this.shadow, Color.get_Red(), 0.5f);
+        TrailManager.Add((Entity) this.shadow, Color.Red, 0.5f);
       });
       this.Add((Component) tween);
     }
@@ -205,3 +197,4 @@ label_4:
     }
   }
 }
+

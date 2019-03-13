@@ -14,11 +14,11 @@ namespace Celeste
   {
     private readonly float originalPadding = (float) Engine.ViewPadding;
     private float viewPadding = (float) Engine.ViewPadding;
+    private float inputDelay = 0.0f;
     private float leftAlpha = 1f;
     private float rightAlpha = 1f;
     private const float minPadding = 0.0f;
     private const float maxPadding = 128f;
-    private float inputDelay;
     private bool closing;
     private bool canceling;
     public Action OnClose;
@@ -56,7 +56,7 @@ namespace Celeste
         this.inputDelay += Engine.RawDeltaTime;
         if ((double) this.inputDelay > 0.25)
         {
-          if ((Input.MenuCancel.Pressed ? 1 : (Input.ESC.Pressed ? 1 : 0)) != 0)
+          if (Input.MenuCancel.Pressed || Input.ESC.Pressed)
             this.closing = this.canceling = true;
           else if (Input.MenuConfirm.Pressed)
             this.closing = true;
@@ -77,7 +77,7 @@ namespace Celeste
         return;
       }
       this.Alpha = Calc.Approach(this.Alpha, this.closing ? 0.0f : 1f, Engine.RawDeltaTime * 4f);
-      this.viewPadding -= (float) (Input.Aim.Value.X * 48.0) * Engine.RawDeltaTime;
+      this.viewPadding -= Input.Aim.Value.X * 48f * Engine.RawDeltaTime;
       this.viewPadding = Calc.Clamp(this.viewPadding, 0.0f, 128f);
       this.leftAlpha = Calc.Approach(this.leftAlpha, (double) this.viewPadding < 128.0 ? 1f : 0.25f, Engine.DeltaTime * 4f);
       this.rightAlpha = Calc.Approach(this.rightAlpha, (double) this.viewPadding > 0.0 ? 1f : 0.25f, Engine.DeltaTime * 4f);
@@ -87,8 +87,8 @@ namespace Celeste
     public override void Render()
     {
       float alpha = Ease.SineInOut(this.Alpha);
-      Color color1 = Color.op_Multiply(Color.op_Multiply(Color.get_Black(), 0.75f), alpha);
-      Color color2 = Color.op_Multiply(Color.get_White(), alpha);
+      Color color1 = Color.Black * 0.75f * alpha;
+      Color color2 = Color.White * alpha;
       if (!(this.Scene is Level))
         Draw.Rect(-1f, -1f, (float) (Engine.Width + 2), (float) (Engine.Height + 2), color1);
       Draw.Rect(0.0f, 0.0f, (float) Engine.Width, 16f, color2);
@@ -100,16 +100,17 @@ namespace Celeste
       Draw.LineAngle(new Vector2(8f, (float) (Engine.Height - 8)), -0.7853982f, 128f, color2, 16f);
       Draw.LineAngle(new Vector2((float) (Engine.Width - 8), (float) (Engine.Height - 8)), -2.356194f, 128f, color2, 16f);
       string text = Dialog.Clean("OPTIONS_VIEWPORT_PC", (Language) null);
-      ActiveFont.Measure(text);
+      float x = ActiveFont.Measure(text).X;
       float num1 = (float) Math.Sin((double) this.Scene.RawTimeActive * 2.0) * 16f;
-      Vector2 vector2_1 = Vector2.op_Multiply(new Vector2((float) Engine.Width, (float) Engine.Height), 0.5f);
-      ActiveFont.Draw(text, Vector2.op_Addition(vector2_1, new Vector2(0.0f, -60f)), new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 1.2f), color2);
+      Vector2 vector2_1 = new Vector2((float) Engine.Width, (float) Engine.Height) * 0.5f;
+      ActiveFont.Draw(text, vector2_1 + new Vector2(0.0f, -60f), new Vector2(0.5f, 0.5f), Vector2.One * 1.2f, color2);
       float num2 = ButtonUI.Width(Dialog.Clean("ui_confirm", (Language) null), Input.MenuConfirm) * 0.8f;
-      ButtonUI.Render(Vector2.op_Addition(vector2_1, new Vector2(0.0f, 60f)), Dialog.Clean("ui_confirm", (Language) null), Input.MenuConfirm, 0.8f, 0.5f, 0.0f, alpha);
-      Vector2 vector2_2 = Vector2.op_Addition(vector2_1, new Vector2((float) ((double) num2 * 0.600000023841858 + 80.0) + num1, 60f));
-      GFX.Gui["adjustarrowright"].DrawCentered(Vector2.op_Addition(vector2_2, new Vector2(8f, 4f)), Color.op_Multiply(color2, this.rightAlpha), Vector2.get_One());
-      Vector2 vector2_3 = Vector2.op_Addition(vector2_1, new Vector2((float) -((double) num2 * 0.600000023841858 + 80.0 + (double) num1), 60f));
-      GFX.Gui["adjustarrowleft"].DrawCentered(Vector2.op_Addition(vector2_3, new Vector2(-8f, 4f)), Color.op_Multiply(color2, this.leftAlpha), Vector2.get_One());
+      ButtonUI.Render(vector2_1 + new Vector2(0.0f, 60f), Dialog.Clean("ui_confirm", (Language) null), Input.MenuConfirm, 0.8f, 0.5f, 0.0f, alpha);
+      Vector2 vector2_2 = vector2_1 + new Vector2((float) ((double) num2 * 0.600000023841858 + 80.0) + num1, 60f);
+      GFX.Gui["adjustarrowright"].DrawCentered(vector2_2 + new Vector2(8f, 4f), color2 * this.rightAlpha, Vector2.One);
+      Vector2 vector2_3 = vector2_1 + new Vector2((float) -((double) num2 * 0.600000023841858 + 80.0 + (double) num1), 60f);
+      GFX.Gui["adjustarrowleft"].DrawCentered(vector2_3 + new Vector2(-8f, 4f), color2 * this.leftAlpha, Vector2.One);
     }
   }
 }
+

@@ -181,9 +181,7 @@ namespace Monocle
 
     public bool CollideCheck(Rectangle rect, Entity entity)
     {
-      if (entity.Collidable)
-        return entity.CollideRect(rect);
-      return false;
+      return entity.Collidable && entity.CollideRect(rect);
     }
 
     public Entity CollideFirst(Vector2 point, int tag)
@@ -302,19 +300,18 @@ namespace Monocle
 
     public Vector2 LineWalkCheck(Vector2 from, Vector2 to, int tag, float precision)
     {
-      Vector2 vector2_1 = Vector2.op_Subtraction(to, from);
-      ((Vector2) ref vector2_1).Normalize();
-      Vector2 vector2_2 = Vector2.op_Multiply(vector2_1, precision);
-      Vector2 vector2_3 = Vector2.op_Subtraction(from, to);
-      int num = (int) Math.Floor((double) ((Vector2) ref vector2_3).Length() / (double) precision);
-      Vector2 vector2_4 = from;
-      Vector2 point = Vector2.op_Addition(from, vector2_2);
+      Vector2 vector2_1 = to - from;
+      vector2_1.Normalize();
+      Vector2 vector2_2 = vector2_1 * precision;
+      int num = (int) Math.Floor((double) (from - to).Length() / (double) precision);
+      Vector2 vector2_3 = from;
+      Vector2 point = from + vector2_2;
       for (int index = 0; index <= num; ++index)
       {
         if (this.CollideCheck(point, tag))
-          return vector2_4;
-        vector2_4 = point;
-        point = Vector2.op_Addition(point, vector2_2);
+          return vector2_3;
+        vector2_3 = point;
+        point += vector2_2;
       }
       return to;
     }
@@ -498,19 +495,18 @@ namespace Monocle
 
     public Vector2 LineWalkCheck<T>(Vector2 from, Vector2 to, float precision) where T : Entity
     {
-      Vector2 vector2_1 = Vector2.op_Subtraction(to, from);
-      ((Vector2) ref vector2_1).Normalize();
-      Vector2 vector2_2 = Vector2.op_Multiply(vector2_1, precision);
-      Vector2 vector2_3 = Vector2.op_Subtraction(from, to);
-      int num = (int) Math.Floor((double) ((Vector2) ref vector2_3).Length() / (double) precision);
-      Vector2 vector2_4 = from;
-      Vector2 point = Vector2.op_Addition(from, vector2_2);
+      Vector2 vector2_1 = to - from;
+      vector2_1.Normalize();
+      Vector2 vector2_2 = vector2_1 * precision;
+      int num = (int) Math.Floor((double) (from - to).Length() / (double) precision);
+      Vector2 vector2_3 = from;
+      Vector2 point = from + vector2_2;
       for (int index = 0; index <= num; ++index)
       {
         if (this.CollideCheck<T>(point))
-          return vector2_4;
-        vector2_4 = point;
-        point = Vector2.op_Addition(point, vector2_2);
+          return vector2_3;
+        vector2_3 = point;
+        point += vector2_2;
       }
       return to;
     }
@@ -694,19 +690,18 @@ namespace Monocle
 
     public Vector2 LineWalkCheckByComponent<T>(Vector2 from, Vector2 to, float precision) where T : Component
     {
-      Vector2 vector2_1 = Vector2.op_Subtraction(to, from);
-      ((Vector2) ref vector2_1).Normalize();
-      Vector2 vector2_2 = Vector2.op_Multiply(vector2_1, precision);
-      Vector2 vector2_3 = Vector2.op_Subtraction(from, to);
-      int num = (int) Math.Floor((double) ((Vector2) ref vector2_3).Length() / (double) precision);
-      Vector2 vector2_4 = from;
-      Vector2 point = Vector2.op_Addition(from, vector2_2);
+      Vector2 vector2_1 = to - from;
+      vector2_1.Normalize();
+      Vector2 vector2_2 = vector2_1 * precision;
+      int num = (int) Math.Floor((double) (from - to).Length() / (double) precision);
+      Vector2 vector2_3 = from;
+      Vector2 point = from + vector2_2;
       for (int index = 0; index <= num; ++index)
       {
         if (this.CollideCheckByComponent<T>(point))
-          return vector2_4;
-        vector2_4 = point;
-        point = Vector2.op_Addition(point, vector2_2);
+          return vector2_3;
+        vector2_3 = point;
+        point += vector2_2;
       }
       return to;
     }
@@ -787,7 +782,7 @@ namespace Monocle
       List<Entity> entityList = new List<Entity>();
       foreach (Entity entity in this.Entities)
       {
-        if ((entity.Tag & mask) != 0)
+        if ((uint) (entity.Tag & mask) > 0U)
           entityList.Add(entity);
       }
       return entityList;
@@ -815,3 +810,4 @@ namespace Monocle
     }
   }
 }
+

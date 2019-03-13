@@ -52,7 +52,7 @@ namespace Celeste
     {
       get
       {
-        return Vector2.op_Addition(Vector2.op_Addition(this.Entity.Position, this.Position), this.shakeValue);
+        return this.Entity.Position + this.Position + this.shakeValue;
       }
     }
 
@@ -62,9 +62,7 @@ namespace Celeste
       {
         Camera camera = (this.Scene as Level).Camera;
         Vector2 position = this.Entity.Position;
-        if (position.X + 16.0 >= (double) camera.Left && position.Y + 16.0 >= (double) camera.Top && position.X - 16.0 <= (double) camera.Right)
-          return position.Y - 16.0 <= (double) camera.Bottom;
-        return false;
+        return (double) position.X + 16.0 >= (double) camera.Left && (double) position.Y + 16.0 >= (double) camera.Top && (double) position.X - 16.0 <= (double) camera.Right && (double) position.Y - 16.0 <= (double) camera.Bottom;
       }
     }
 
@@ -106,13 +104,13 @@ namespace Celeste
       {
         this.shakeTimer -= Engine.DeltaTime;
         if ((double) this.shakeTimer <= 0.0)
-          this.shakeValue = Vector2.get_Zero();
+          this.shakeValue = Vector2.Zero;
         else if (this.Scene.OnInterval(0.05f))
           this.shakeValue = Calc.Random.ShakeVector();
       }
       if (this.eyesExist)
       {
-        if (Vector2.op_Inequality(this.EyeDirection, this.EyeTargetDirection) & inView)
+        if (this.EyeDirection != this.EyeTargetDirection & inView)
         {
           if (!this.eyesMoveByRotation)
           {
@@ -131,7 +129,7 @@ namespace Celeste
           Player entity = this.Entity.Scene.Tracker.GetEntity<Player>();
           if (entity != null)
           {
-            Vector2 vector = Vector2.op_Subtraction(entity.Position, this.Entity.Position).SafeNormalize();
+            Vector2 vector = (entity.Position - this.Entity.Position).SafeNormalize();
             this.EyeTargetDirection = !this.eyesMoveByRotation ? vector : Calc.AngleToVector(Calc.AngleApproach(this.eyeLookRange.Angle(), vector.Angle(), 0.7853982f), 1f);
           }
         }
@@ -164,52 +162,24 @@ namespace Celeste
 
     public void AddDustNodesIfInCamera()
     {
-      if (this.nodes.Count > 0 || !this.InView || (DustEdges.DustGraphicEstabledCounter > 25 || this.Estableshed))
+      if (this.nodes.Count > 0 || !this.InView || DustEdges.DustGraphicEstabledCounter > 25 || this.Estableshed)
         return;
       Calc.PushRandom(this.randomSeed);
       int x = (int) this.Entity.X;
       int y = (int) this.Entity.Y;
       Vector2 vector2 = new Vector2(1f, 1f).SafeNormalize();
-      this.AddNode(new Vector2((float) -vector2.X, (float) -vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x - 8, y - 8, 8, 8)));
-      this.AddNode(new Vector2((float) vector2.X, (float) -vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x, y - 8, 8, 8)));
-      this.AddNode(new Vector2((float) -vector2.X, (float) vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x - 8, y, 8, 8)));
-      this.AddNode(new Vector2((float) vector2.X, (float) vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x, y, 8, 8)));
+      this.AddNode(new Vector2(-vector2.X, -vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x - 8, y - 8, 8, 8)));
+      this.AddNode(new Vector2(vector2.X, -vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x, y - 8, 8, 8)));
+      this.AddNode(new Vector2(-vector2.X, vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x - 8, y, 8, 8)));
+      this.AddNode(new Vector2(vector2.X, vector2.Y), this.ignoreSolids || !this.Entity.Scene.CollideCheck<Solid>(new Rectangle(x, y, 8, 8)));
       if (this.nodes[0].Enabled || this.nodes[2].Enabled)
-      {
-        ref __Null local = ref this.Position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local - 1f;
-      }
+        --this.Position.X;
       if (this.nodes[1].Enabled || this.nodes[3].Enabled)
-      {
-        ref __Null local = ref this.Position.X;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + 1f;
-      }
+        ++this.Position.X;
       if (this.nodes[0].Enabled || this.nodes[1].Enabled)
-      {
-        ref __Null local = ref this.Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local - 1f;
-      }
+        --this.Position.Y;
       if (this.nodes[2].Enabled || this.nodes[3].Enabled)
-      {
-        ref __Null local = ref this.Position.Y;
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        // ISSUE: cast to a reference type
-        // ISSUE: explicit reference operation
-        ^(float&) ref local = ^(float&) ref local + 1f;
-      }
+        ++this.Position.Y;
       int num = 0;
       foreach (DustGraphic.Node node in this.nodes)
       {
@@ -219,18 +189,18 @@ namespace Celeste
       this.eyesMoveByRotation = num < 4;
       if (this.autoControlEyes && this.eyesExist && this.eyesMoveByRotation)
       {
-        this.eyeLookRange = Vector2.get_Zero();
+        this.eyeLookRange = Vector2.Zero;
         if (this.nodes[0].Enabled)
-          this.eyeLookRange = Vector2.op_Addition(this.eyeLookRange, new Vector2(-1f, -1f).SafeNormalize());
+          this.eyeLookRange += new Vector2(-1f, -1f).SafeNormalize();
         if (this.nodes[1].Enabled)
-          this.eyeLookRange = Vector2.op_Addition(this.eyeLookRange, new Vector2(1f, -1f).SafeNormalize());
+          this.eyeLookRange += new Vector2(1f, -1f).SafeNormalize();
         if (this.nodes[2].Enabled)
-          this.eyeLookRange = Vector2.op_Addition(this.eyeLookRange, new Vector2(-1f, 1f).SafeNormalize());
+          this.eyeLookRange += new Vector2(-1f, 1f).SafeNormalize();
         if (this.nodes[3].Enabled)
-          this.eyeLookRange = Vector2.op_Addition(this.eyeLookRange, new Vector2(1f, 1f).SafeNormalize());
-        if (num > 0 && (double) ((Vector2) ref this.eyeLookRange).Length() > 0.0)
+          this.eyeLookRange += new Vector2(1f, 1f).SafeNormalize();
+        if (num > 0 && (double) this.eyeLookRange.Length() > 0.0)
         {
-          this.eyeLookRange = Vector2.op_Division(this.eyeLookRange, (float) num);
+          this.eyeLookRange /= (float) num;
           this.eyeLookRange = this.eyeLookRange.SafeNormalize();
         }
         this.EyeTargetDirection = this.EyeDirection = this.eyeLookRange;
@@ -251,31 +221,30 @@ namespace Celeste
 
     private void AddNode(Vector2 angle, bool enabled)
     {
-      Vector2 vector2;
-      ((Vector2) ref vector2).\u002Ector(1f, 1f);
+      Vector2 vector2 = new Vector2(1f, 1f);
       if (this.autoExpandDust)
       {
-        int num1 = Math.Sign((float) angle.X);
-        int num2 = Math.Sign((float) angle.Y);
+        int num1 = Math.Sign(angle.X);
+        int num2 = Math.Sign(angle.Y);
         this.Entity.Collidable = false;
         if (this.Scene.CollideCheck<Solid>(new Rectangle((int) ((double) this.Entity.X - 4.0 + (double) (num1 * 16)), (int) ((double) this.Entity.Y - 4.0 + (double) (num2 * 4)), 8, 8)) || this.Scene.CollideCheck<DustStaticSpinner>(new Rectangle((int) ((double) this.Entity.X - 4.0 + (double) (num1 * 16)), (int) ((double) this.Entity.Y - 4.0 + (double) (num2 * 4)), 8, 8)))
-          vector2.X = (__Null) 5.0;
+          vector2.X = 5f;
         if (this.Scene.CollideCheck<Solid>(new Rectangle((int) ((double) this.Entity.X - 4.0 + (double) (num1 * 4)), (int) ((double) this.Entity.Y - 4.0 + (double) (num2 * 16)), 8, 8)) || this.Scene.CollideCheck<DustStaticSpinner>(new Rectangle((int) ((double) this.Entity.X - 4.0 + (double) (num1 * 4)), (int) ((double) this.Entity.Y - 4.0 + (double) (num2 * 16)), 8, 8)))
-          vector2.Y = (__Null) 5.0;
+          vector2.Y = 5f;
         this.Entity.Collidable = true;
       }
       DustGraphic.Node node = new DustGraphic.Node();
       node.Base = Calc.Random.Choose<MTexture>(GFX.Game.GetAtlasSubtextures("danger/dustcreature/base"));
       node.Overlay = Calc.Random.Choose<MTexture>(GFX.Game.GetAtlasSubtextures("danger/dustcreature/overlay"));
       node.Rotation = Calc.Random.NextFloat(6.283185f);
-      node.Angle = Vector2.op_Multiply(angle, vector2);
+      node.Angle = angle * vector2;
       node.Enabled = enabled;
       this.nodes.Add(node);
-      if (angle.X < 0.0)
+      if ((double) angle.X < 0.0)
         this.LeftNodes.Add(node);
       else
         this.RightNodes.Add(node);
-      if (angle.Y < 0.0)
+      if ((double) angle.Y < 0.0)
         this.TopNodes.Add(node);
       else
         this.BottomNodes.Add(node);
@@ -303,11 +272,11 @@ namespace Celeste
       {
         if (node.Enabled)
         {
-          node.Base.DrawCentered(Vector2.op_Addition(renderPosition, Vector2.op_Multiply(node.Angle, this.Scale)), Color.get_White(), this.Scale, node.Rotation);
-          node.Overlay.DrawCentered(Vector2.op_Addition(renderPosition, Vector2.op_Multiply(node.Angle, this.Scale)), Color.get_White(), this.Scale, -node.Rotation);
+          node.Base.DrawCentered(renderPosition + node.Angle * this.Scale, Color.White, this.Scale, node.Rotation);
+          node.Overlay.DrawCentered(renderPosition + node.Angle * this.Scale, Color.White, this.Scale, -node.Rotation);
         }
       }
-      this.center.DrawCentered(renderPosition, Color.get_White(), this.Scale, this.timer);
+      this.center.DrawCentered(renderPosition, Color.White, this.Scale, this.timer);
     }
 
     public class Node
@@ -348,13 +317,13 @@ namespace Celeste
       {
         if (!this.Dust.Visible || !this.Dust.Entity.Visible)
           return;
-        Vector2 vector2 = new Vector2((float) -this.Dust.EyeDirection.Y, (float) this.Dust.EyeDirection.X).SafeNormalize();
+        Vector2 vector2 = new Vector2(-this.Dust.EyeDirection.Y, this.Dust.EyeDirection.X).SafeNormalize();
         if (this.Dust.leftEyeVisible)
-          this.Dust.eyeTexture.DrawCentered(Vector2.op_Addition(this.Dust.RenderPosition, Vector2.op_Multiply(Vector2.op_Addition(Vector2.op_Multiply(this.Dust.EyeDirection, 5f), Vector2.op_Multiply(vector2, 3f)), this.Dust.Scale)), this.Color, this.Dust.Scale);
-        if (!this.Dust.rightEyeVisible)
-          return;
-        this.Dust.eyeTexture.DrawCentered(Vector2.op_Addition(this.Dust.RenderPosition, Vector2.op_Multiply(Vector2.op_Subtraction(Vector2.op_Multiply(this.Dust.EyeDirection, 5f), Vector2.op_Multiply(vector2, 3f)), this.Dust.Scale)), this.Color, this.Dust.Scale);
+          this.Dust.eyeTexture.DrawCentered(this.Dust.RenderPosition + (this.Dust.EyeDirection * 5f + vector2 * 3f) * this.Dust.Scale, this.Color, this.Dust.Scale);
+        if (this.Dust.rightEyeVisible)
+          this.Dust.eyeTexture.DrawCentered(this.Dust.RenderPosition + (this.Dust.EyeDirection * 5f - vector2 * 3f) * this.Dust.Scale, this.Color, this.Dust.Scale);
       }
     }
   }
 }
+

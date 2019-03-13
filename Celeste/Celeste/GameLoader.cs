@@ -85,61 +85,61 @@ namespace Celeste
 
     public IEnumerator IntroRoutine()
     {
-      GameLoader gameLoader = this;
-      if (Celeste.Celeste.PlayMode != Celeste.Celeste.PlayModes.Debug)
+      if (Celeste.PlayMode != Celeste.PlayModes.Debug)
       {
-        float p;
-        for (p = 0.0f; (double) p > 1.0 && !gameLoader.skipped; p += Engine.DeltaTime)
+        for (float p = 0.0f; (double) p > 1.0 && !this.skipped; p += Engine.DeltaTime)
           yield return (object) null;
-        if (!gameLoader.skipped)
+        if (!this.skipped)
         {
           Monocle.Image img = new Monocle.Image(GFX.Opening["presentedby"]);
-          yield return (object) gameLoader.FadeInOut(img);
+          yield return (object) this.FadeInOut(img);
+          img = (Monocle.Image) null;
         }
-        if (!gameLoader.skipped)
+        if (!this.skipped)
         {
           Monocle.Image img = new Monocle.Image(GFX.Opening["gameby"]);
-          yield return (object) gameLoader.FadeInOut(img);
+          yield return (object) this.FadeInOut(img);
+          img = (Monocle.Image) null;
         }
-        if (!gameLoader.skipped)
+        if (!this.skipped)
         {
-          while (!gameLoader.dialogLoaded)
+          while (!this.dialogLoaded)
             yield return (object) null;
           AutoSavingNotice notice = new AutoSavingNotice();
-          gameLoader.Add((Monocle.Renderer) notice);
-          for (p = 0.0f; (double) p < 1.0 && !gameLoader.skipped; p += Engine.DeltaTime)
+          this.Add((Monocle.Renderer) notice);
+          for (float p = 0.0f; (double) p < 1.0 && !this.skipped; p += Engine.DeltaTime)
             yield return (object) null;
           notice.Display = false;
           while (notice.StillVisible)
           {
-            notice.ForceClose = gameLoader.skipped;
+            notice.ForceClose = this.skipped;
             yield return (object) null;
           }
-          gameLoader.Remove((Monocle.Renderer) notice);
+          this.Remove((Monocle.Renderer) notice);
           notice = (AutoSavingNotice) null;
         }
       }
-      gameLoader.ready = true;
-      if (!gameLoader.loaded)
+      this.ready = true;
+      if (!this.loaded)
       {
-        gameLoader.loadingTextures = GFX.Overworld.GetAtlasSubtextures("loading/");
-        Monocle.Image img = new Monocle.Image(gameLoader.loadingTextures[0]);
+        this.loadingTextures = GFX.Overworld.GetAtlasSubtextures("loading/");
+        Monocle.Image img = new Monocle.Image(this.loadingTextures[0]);
         img.CenterOrigin();
-        img.Scale = Vector2.op_Multiply(Vector2.get_One(), 0.5f);
-        gameLoader.handler.Add((Component) img);
-        while (!gameLoader.loaded || (double) gameLoader.loadingAlpha > 0.0)
+        img.Scale = Vector2.One * 0.5f;
+        this.handler.Add((Component) img);
+        while (!this.loaded || (double) this.loadingAlpha > 0.0)
         {
-          gameLoader.loadingFrame += Engine.DeltaTime * 10f;
-          gameLoader.loadingAlpha = Calc.Approach(gameLoader.loadingAlpha, gameLoader.loaded ? 0.0f : 1f, Engine.DeltaTime * 4f);
-          img.Texture = gameLoader.loadingTextures[(int) ((double) gameLoader.loadingFrame % (double) gameLoader.loadingTextures.Count)];
-          img.Color = Color.op_Multiply(Color.get_White(), Ease.CubeOut(gameLoader.loadingAlpha));
-          img.Position = new Vector2(1792f, (float) (1080.0 - 128.0 * (double) Ease.CubeOut(gameLoader.loadingAlpha)));
+          this.loadingFrame += Engine.DeltaTime * 10f;
+          this.loadingAlpha = Calc.Approach(this.loadingAlpha, this.loaded ? 0.0f : 1f, Engine.DeltaTime * 4f);
+          img.Texture = this.loadingTextures[(int) ((double) this.loadingFrame % (double) this.loadingTextures.Count)];
+          img.Color = Color.White * Ease.CubeOut(this.loadingAlpha);
+          img.Position = new Vector2(1792f, (float) (1080.0 - 128.0 * (double) Ease.CubeOut(this.loadingAlpha)));
           yield return (object) null;
         }
         img = (Monocle.Image) null;
       }
       MInput.Disabled = false;
-      Engine.Scene = (Scene) new OverworldLoader(Overworld.StartMode.Titlescreen, gameLoader.Snow);
+      Engine.Scene = (Scene) new OverworldLoader(Overworld.StartMode.Titlescreen, this.Snow);
       GFX.Opening.Dispose();
       GFX.Opening = (Atlas) null;
     }
@@ -147,18 +147,18 @@ namespace Celeste
     private IEnumerator FadeInOut(Monocle.Image img)
     {
       float alpha = 0.0f;
-      img.Color = Color.op_Multiply(Color.get_White(), 0.0f);
+      img.Color = Color.White * 0.0f;
       this.handler.Add((Component) img);
       for (float i = 0.0f; (double) i < 4.5 && !this.skipped; i += Engine.DeltaTime)
       {
         alpha = Ease.CubeOut(Math.Min(i, 1f));
-        img.Color = Color.op_Multiply(Color.get_White(), alpha);
+        img.Color = Color.White * alpha;
         yield return (object) null;
       }
       while ((double) alpha > 0.0)
       {
         alpha -= Engine.DeltaTime * (this.skipped ? 8f : 1f);
-        img.Color = Color.op_Multiply(Color.get_White(), alpha);
+        img.Color = Color.White * alpha;
         yield return (object) null;
       }
     }
@@ -172,13 +172,14 @@ namespace Celeste
       }
       if (!this.ready)
       {
-        int num = MInput.Disabled ? 1 : 0;
+        bool disabled = MInput.Disabled;
         MInput.Disabled = false;
         if (Input.MenuConfirm.Pressed)
           this.skipped = true;
-        MInput.Disabled = num != 0;
+        MInput.Disabled = disabled;
       }
       base.Update();
     }
   }
 }
+

@@ -44,7 +44,7 @@ namespace Celeste
     }
 
     public DashBlock(EntityData data, Vector2 offset, EntityID id)
-      : this(Vector2.op_Addition(data.Position, offset), data.Char("tiletype", '3'), (float) data.Width, (float) data.Height, data.Bool("blendin", false), data.Bool(nameof (permanent), true), data.Bool(nameof (canDash), true), id)
+      : this(data.Position + offset, data.Char("tiletype", '3'), (float) data.Width, (float) data.Height, data.Bool("blendin", false), data.Bool(nameof (permanent), true), data.Bool(nameof (canDash), true), id)
     {
     }
 
@@ -62,8 +62,8 @@ namespace Celeste
         Level level = this.SceneAs<Level>();
         Rectangle tileBounds = level.Session.MapData.TileBounds;
         VirtualMap<char> solidsData = level.SolidsData;
-        int x = (int) ((double) this.X / 8.0) - ((Rectangle) ref tileBounds).get_Left();
-        int y = (int) ((double) this.Y / 8.0) - ((Rectangle) ref tileBounds).get_Top();
+        int x = (int) ((double) this.X / 8.0) - tileBounds.Left;
+        int y = (int) ((double) this.Y / 8.0) - tileBounds.Top;
         int tilesX = (int) this.Width / 8;
         int tilesY = (int) this.Height / 8;
         tileGrid = GFX.FGAutotiler.GenerateOverlay(this.tileType, x, y, tilesX, tilesY, solidsData).TileGrid;
@@ -80,7 +80,7 @@ namespace Celeste
     public override void Removed(Scene scene)
     {
       base.Removed(scene);
-      Celeste.Celeste.Freeze(0.05f);
+      Celeste.Freeze(0.05f);
     }
 
     public void Break(Vector2 from, Vector2 direction, bool playSound = true)
@@ -99,7 +99,7 @@ namespace Celeste
       for (int index1 = 0; (double) index1 < (double) this.Width / 8.0; ++index1)
       {
         for (int index2 = 0; (double) index2 < (double) this.Height / 8.0; ++index2)
-          this.Scene.Add((Entity) Engine.Pooler.Create<Debris>().Init(Vector2.op_Addition(this.Position, new Vector2((float) (4 + index1 * 8), (float) (4 + index2 * 8))), this.tileType).BlastFrom(from));
+          this.Scene.Add((Entity) Engine.Pooler.Create<Debris>().Init(this.Position + new Vector2((float) (4 + index1 * 8), (float) (4 + index2 * 8)), this.tileType).BlastFrom(from));
       }
       this.Collidable = false;
       if (this.permanent)
@@ -130,3 +130,4 @@ namespace Celeste
     }
   }
 }
+

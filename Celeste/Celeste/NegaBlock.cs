@@ -18,14 +18,15 @@ namespace Celeste
     }
 
     public NegaBlock(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height)
+      : this(data.Position + offset, (float) data.Width, (float) data.Height)
     {
     }
 
     public override void Render()
     {
       base.Render();
-      Draw.Rect(this.Collider, Color.get_Red());
+      Draw.Rect(this.Collider, Color.Red);
     }
   }
 }
+

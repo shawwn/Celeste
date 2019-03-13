@@ -45,13 +45,13 @@ namespace Monocle
         if (this.on)
           return;
         this.Timer = 0.0f;
-        if (!Vector2.op_Inequality(this.Values[0], Vector2.get_Zero()))
-          return;
-        for (int index = 0; index < this.Values.Length; ++index)
-          this.Values[index] = Vector2.get_Zero();
-        if (this.OnShake == null)
-          return;
-        this.OnShake(this.Values);
+        if (this.Values[0] != Vector2.Zero)
+        {
+          for (int index = 0; index < this.Values.Length; ++index)
+            this.Values[index] = Vector2.Zero;
+          if (this.OnShake != null)
+            this.OnShake(this.Values);
+        }
       }
     }
 
@@ -72,7 +72,7 @@ namespace Monocle
         {
           this.on = false;
           for (int index = 0; index < this.Values.Length; ++index)
-            this.Values[index] = Vector2.get_Zero();
+            this.Values[index] = Vector2.Zero;
           if (this.OnShake != null)
             this.OnShake(this.Values);
           if (!this.RemoveOnFinish)
@@ -85,9 +85,9 @@ namespace Monocle
         return;
       for (int index = 0; index < this.Values.Length; ++index)
         this.Values[index] = Calc.Random.ShakeVector();
-      if (this.OnShake == null)
-        return;
-      this.OnShake(this.Values);
+      if (this.OnShake != null)
+        this.OnShake(this.Values);
     }
   }
 }
+

@@ -13,7 +13,7 @@ namespace Celeste
 {
   public class NPC02_Theo : NPC
   {
-    private int currentConversation;
+    private int currentConversation = 0;
     private const string DoneTalking = "theoDoneTalking";
     private const string HadntMetAtStart = "hadntMetTheoAtStart";
     private Coroutine talkRoutine;
@@ -45,55 +45,54 @@ namespace Celeste
 
     private IEnumerator Talk(Player player)
     {
-      NPC02_Theo npC02Theo = this;
       if (!SaveData.Instance.HasFlag("MetTheo"))
       {
-        npC02Theo.Session.SetFlag("hadntMetTheoAtStart", true);
+        this.Session.SetFlag("hadntMetTheoAtStart", true);
         SaveData.Instance.SetFlag("MetTheo");
-        yield return (object) npC02Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH2_THEO_INTRO_NEVER_MET");
       }
       else if (!SaveData.Instance.HasFlag("TheoKnowsName"))
       {
-        npC02Theo.Session.SetFlag("hadntMetTheoAtStart", true);
+        this.Session.SetFlag("hadntMetTheoAtStart", true);
         SaveData.Instance.SetFlag("TheoKnowsName");
-        yield return (object) npC02Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH2_THEO_INTRO_NEVER_INTRODUCED");
       }
-      else if (npC02Theo.currentConversation <= 0)
+      else if (this.currentConversation <= 0)
       {
-        yield return (object) npC02Theo.PlayerApproachRightSide(player, true, new float?());
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?());
         yield return (object) 0.2f;
-        if (npC02Theo.Session.GetFlag("hadntMetTheoAtStart"))
+        if (this.Session.GetFlag("hadntMetTheoAtStart"))
         {
-          yield return (object) npC02Theo.PlayerApproach48px();
-          yield return (object) Textbox.Say("CH2_THEO_A", new Func<IEnumerator>(npC02Theo.ShowPhotos), new Func<IEnumerator>(npC02Theo.HidePhotos), new Func<IEnumerator>(npC02Theo.Selfie));
+          yield return (object) this.PlayerApproach48px();
+          yield return (object) Textbox.Say("CH2_THEO_A", new Func<IEnumerator>(this.ShowPhotos), new Func<IEnumerator>(this.HidePhotos), new Func<IEnumerator>(this.Selfie));
         }
         else
-          yield return (object) Textbox.Say("CH2_THEO_A_EXT", new Func<IEnumerator>(npC02Theo.ShowPhotos), new Func<IEnumerator>(npC02Theo.HidePhotos), new Func<IEnumerator>(npC02Theo.Selfie), new Func<IEnumerator>(((NPC) npC02Theo).PlayerApproach48px));
+          yield return (object) Textbox.Say("CH2_THEO_A_EXT", new Func<IEnumerator>(this.ShowPhotos), new Func<IEnumerator>(this.HidePhotos), new Func<IEnumerator>(this.Selfie), new Func<IEnumerator>(((NPC) this).PlayerApproach48px));
       }
-      else if (npC02Theo.currentConversation == 1)
+      else if (this.currentConversation == 1)
       {
-        yield return (object) npC02Theo.PlayerApproachRightSide(player, true, new float?(48f));
-        yield return (object) Textbox.Say("CH2_THEO_B", new Func<IEnumerator>(npC02Theo.SelfieFiltered));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) Textbox.Say("CH2_THEO_B", new Func<IEnumerator>(this.SelfieFiltered));
       }
-      else if (npC02Theo.currentConversation == 2)
+      else if (this.currentConversation == 2)
       {
-        yield return (object) npC02Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH2_THEO_C");
       }
-      else if (npC02Theo.currentConversation == 3)
+      else if (this.currentConversation == 3)
       {
-        yield return (object) npC02Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH2_THEO_D");
       }
-      else if (npC02Theo.currentConversation == 4)
+      else if (this.currentConversation == 4)
       {
-        yield return (object) npC02Theo.PlayerApproachRightSide(player, true, new float?(48f));
+        yield return (object) this.PlayerApproachRightSide(player, true, new float?(48f));
         yield return (object) Textbox.Say("CH2_THEO_E");
       }
-      npC02Theo.Level.EndCutscene();
-      npC02Theo.OnTalkEnd(npC02Theo.Level);
+      this.Level.EndCutscene();
+      this.OnTalkEnd(this.Level);
     }
 
     private void OnTalkEnd(Level level)
@@ -114,7 +113,7 @@ namespace Celeste
           entity.Facing = Facings.Left;
         }
       }
-      this.Sprite.Scale.X = (__Null) 1.0;
+      this.Sprite.Scale.X = 1f;
       if (this.selfie != null)
         this.selfie.RemoveSelf();
       this.Session.IncrementCounter("theo");
@@ -125,72 +124,37 @@ namespace Celeste
 
     private IEnumerator ShowPhotos()
     {
-      NPC02_Theo npC02Theo = this;
-      Player entity = npC02Theo.Scene.Tracker.GetEntity<Player>();
-      yield return (object) npC02Theo.PlayerApproach(entity, true, new float?(10f), new int?());
-      npC02Theo.Sprite.Play("getPhone", false, false);
+      Player player = this.Scene.Tracker.GetEntity<Player>();
+      yield return (object) this.PlayerApproach(player, true, new float?(10f), new int?());
+      this.Sprite.Play("getPhone", false, false);
       yield return (object) 2f;
     }
 
     private IEnumerator HidePhotos()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      NPC02_Theo npC02Theo = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      npC02Theo.Sprite.Play("idle", false, false);
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) 0.5f;
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.Sprite.Play("idle", false, false);
+      yield return (object) 0.5f;
     }
 
     private IEnumerator Selfie()
     {
-      NPC02_Theo npC02Theo = this;
       yield return (object) 0.5f;
-      Audio.Play("event:/game/02_old_site/theoselfie_foley", npC02Theo.Position);
-      npC02Theo.Sprite.Scale.X = -npC02Theo.Sprite.Scale.X;
-      npC02Theo.Sprite.Play("takeSelfie", false, false);
+      Audio.Play("event:/game/02_old_site/theoselfie_foley", this.Position);
+      this.Sprite.Scale.X = -this.Sprite.Scale.X;
+      this.Sprite.Play("takeSelfie", false, false);
       yield return (object) 1f;
-      npC02Theo.Scene.Add((Entity) (npC02Theo.selfie = new Selfie(npC02Theo.SceneAs<Level>())));
-      yield return (object) npC02Theo.selfie.PictureRoutine("selfie");
-      npC02Theo.selfie = (Selfie) null;
-      npC02Theo.Sprite.Scale.X = -npC02Theo.Sprite.Scale.X;
+      this.Scene.Add((Entity) (this.selfie = new Selfie(this.SceneAs<Level>())));
+      yield return (object) this.selfie.PictureRoutine("selfie");
+      this.selfie = (Selfie) null;
+      this.Sprite.Scale.X = -this.Sprite.Scale.X;
     }
 
     private IEnumerator SelfieFiltered()
     {
-      // ISSUE: reference to a compiler-generated field
-      int num = this.\u003C\u003E1__state;
-      NPC02_Theo npC02Theo = this;
-      if (num != 0)
-      {
-        if (num != 1)
-          return false;
-        // ISSUE: reference to a compiler-generated field
-        this.\u003C\u003E1__state = -1;
-        npC02Theo.selfie = (Selfie) null;
-        return false;
-      }
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = -1;
-      npC02Theo.Scene.Add((Entity) (npC02Theo.selfie = new Selfie(npC02Theo.SceneAs<Level>())));
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E2__current = (object) npC02Theo.selfie.FilterRoutine();
-      // ISSUE: reference to a compiler-generated field
-      this.\u003C\u003E1__state = 1;
-      return true;
+      this.Scene.Add((Entity) (this.selfie = new Selfie(this.SceneAs<Level>())));
+      yield return (object) this.selfie.FilterRoutine();
+      this.selfie = (Selfie) null;
     }
   }
 }
+

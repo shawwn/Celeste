@@ -44,20 +44,20 @@ namespace Celeste
       ColorGrade.percent = Calc.Clamp(p, 0.0f, 1f);
       if (ColorGrade.from == ColorGrade.to || (double) ColorGrade.percent <= 0.0)
       {
-        ColorGrade.Effect.set_CurrentTechnique(ColorGrade.Effect.get_Techniques().get_Item("ColorGradeSingle"));
-        Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) ColorGrade.from.Texture.Texture);
+        ColorGrade.Effect.CurrentTechnique = ColorGrade.Effect.Techniques["ColorGradeSingle"];
+        Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) ColorGrade.from.Texture.Texture;
       }
       else if ((double) ColorGrade.percent >= 1.0)
       {
-        ColorGrade.Effect.set_CurrentTechnique(ColorGrade.Effect.get_Techniques().get_Item("ColorGradeSingle"));
-        Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) ColorGrade.to.Texture.Texture);
+        ColorGrade.Effect.CurrentTechnique = ColorGrade.Effect.Techniques["ColorGradeSingle"];
+        Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) ColorGrade.to.Texture.Texture;
       }
       else
       {
-        ColorGrade.Effect.set_CurrentTechnique(ColorGrade.Effect.get_Techniques().get_Item(nameof (ColorGrade)));
-        ColorGrade.Effect.get_Parameters().get_Item("percent").SetValue(ColorGrade.percent);
-        Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(1, (Texture) ColorGrade.from.Texture.Texture);
-        Engine.Graphics.get_GraphicsDevice().get_Textures().set_Item(2, (Texture) ColorGrade.to.Texture.Texture);
+        ColorGrade.Effect.CurrentTechnique = ColorGrade.Effect.Techniques[nameof (ColorGrade)];
+        ColorGrade.Effect.Parameters["percent"].SetValue(ColorGrade.percent);
+        Engine.Graphics.GraphicsDevice.Textures[1] = (Texture) ColorGrade.from.Texture.Texture;
+        Engine.Graphics.GraphicsDevice.Textures[2] = (Texture) ColorGrade.to.Texture.Texture;
       }
     }
 
@@ -74,3 +74,4 @@ namespace Celeste
     }
   }
 }
+

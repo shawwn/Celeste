@@ -13,7 +13,7 @@ namespace Monocle
     public static Quaternion Conjugated(this Quaternion q)
     {
       Quaternion quaternion = q;
-      ((Quaternion) ref quaternion).Conjugate();
+      quaternion.Conjugate();
       return quaternion;
     }
 
@@ -28,22 +28,23 @@ namespace Monocle
 
     public static Quaternion LookAt(this Quaternion q, Vector3 direction, Vector3 up)
     {
-      return Quaternion.CreateFromRotationMatrix(Matrix.CreateLookAt(Vector3.get_Zero(), direction, up));
+      return Quaternion.CreateFromRotationMatrix(Matrix.CreateLookAt(Vector3.Zero, direction, up));
     }
 
     public static Vector3 Forward(this Quaternion q)
     {
-      return Vector3.Transform(Vector3.get_Forward(), q.Conjugated());
+      return Vector3.Transform(Vector3.Forward, q.Conjugated());
     }
 
     public static Vector3 Left(this Quaternion q)
     {
-      return Vector3.Transform(Vector3.get_Left(), q.Conjugated());
+      return Vector3.Transform(Vector3.Left, q.Conjugated());
     }
 
     public static Vector3 Up(this Quaternion q)
     {
-      return Vector3.Transform(Vector3.get_Up(), q.Conjugated());
+      return Vector3.Transform(Vector3.Up, q.Conjugated());
     }
   }
 }
+

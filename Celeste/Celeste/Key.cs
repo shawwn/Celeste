@@ -65,24 +65,24 @@ namespace Celeste
           this.Visible = true;
           this.sprite.Visible = true;
           this.sprite.Rate = 1f;
-          this.sprite.Scale = Vector2.get_One();
+          this.sprite.Scale = Vector2.One;
           this.sprite.Play("idle", false, false);
           this.sprite.Rotation = 0.0f;
           this.wiggler.Stop();
           this.follower.MoveTowardsLeader = true;
         })
       });
-      this.Add((Component) (this.wiggler = Wiggler.Create(0.4f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.op_Multiply(Vector2.get_One(), (float) (1.0 + (double) v * 0.349999994039536))), false, false)));
-      this.Add((Component) (this.light = new VertexLight(Color.get_White(), 1f, 32, 48)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(0.4f, 4f, (Action<float>) (v => this.sprite.Scale = Vector2.One * (float) (1.0 + (double) v * 0.349999994039536)), false, false)));
+      this.Add((Component) (this.light = new VertexLight(Color.White, 1f, 32, 48)));
     }
 
     public Key(EntityData data, Vector2 offset, EntityID id)
-      : this(Vector2.op_Addition(data.Position, offset), id, data.NodesOffset(offset))
+      : this(data.Position + offset, id, data.NodesOffset(offset))
     {
     }
 
     public Key(Player player, EntityID id)
-      : this(Vector2.op_Addition(player.Position, new Vector2((float) (-12 * (int) player.Facing), -8f)), id, (Vector2[]) null)
+      : this(player.Position + new Vector2((float) (-12 * (int) player.Facing), -8f), id, (Vector2[]) null)
     {
       player.Leader.GainFollower(this.follower);
       this.Collidable = false;
@@ -92,7 +92,7 @@ namespace Celeste
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      this.Add((Component) (this.shimmerParticles = new ParticleEmitter((scene as Level).ParticlesFG, Key.P_Shimmer, Vector2.get_Zero(), new Vector2(6f, 6f), 1, 0.1f)));
+      this.Add((Component) (this.shimmerParticles = new ParticleEmitter((scene as Level).ParticlesFG, Key.P_Shimmer, Vector2.Zero, new Vector2(6f, 6f), 1, 0.1f)));
       this.shimmerParticles.SimulateCycle();
     }
 
@@ -108,7 +108,7 @@ namespace Celeste
 
     private void OnPlayer(Player player)
     {
-      this.SceneAs<Level>().Particles.Emit(Key.P_Collect, 10, this.Position, Vector2.op_Multiply(Vector2.get_One(), 3f));
+      this.SceneAs<Level>().Particles.Emit(Key.P_Collect, 10, this.Position, Vector2.One * 3f);
       Audio.Play("event:/game/general/key_get", this.Position);
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
       player.Leader.GainFollower(this.follower);
@@ -126,12 +126,11 @@ namespace Celeste
 
     private IEnumerator NodeRoutine(Player player)
     {
-      Key key = this;
       yield return (object) 0.3f;
       if (!player.Dead)
       {
-        Audio.Play("event:/game/general/cassette_bubblereturn", Vector2.op_Addition(key.SceneAs<Level>().Camera.Position, new Vector2(160f, 90f)));
-        player.StartCassetteFly(key.nodes[1], key.nodes[0]);
+        Audio.Play("event:/game/general/cassette_bubblereturn", this.SceneAs<Level>().Camera.Position + new Vector2(160f, 90f));
+        player.StartCassetteFly(this.nodes[1], this.nodes[0]);
       }
     }
 
@@ -145,38 +144,37 @@ namespace Celeste
 
     public IEnumerator UseRoutine(Vector2 target)
     {
-      Key key = this;
-      key.Turning = true;
-      key.follower.MoveTowardsLeader = false;
-      key.wiggler.Start();
-      key.wobbleActive = false;
-      key.sprite.Y = 0.0f;
-      Vector2 position = key.Position;
-      SimpleCurve curve = new SimpleCurve(position, target, Vector2.op_Addition(Vector2.op_Division(Vector2.op_Addition(target, position), 2f), new Vector2(0.0f, -48f)));
-      key.tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeOut, 1f, true);
-      key.tween.OnUpdate = (Action<Tween>) (t =>
+      this.Turning = true;
+      this.follower.MoveTowardsLeader = false;
+      this.wiggler.Start();
+      this.wobbleActive = false;
+      this.sprite.Y = 0.0f;
+      Vector2 from = this.Position;
+      SimpleCurve curve = new SimpleCurve(from, target, (target + from) / 2f + new Vector2(0.0f, -48f));
+      this.tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeOut, 1f, true);
+      this.tween.OnUpdate = (Action<Tween>) (t =>
       {
         this.Position = curve.GetPoint(t.Eased);
         this.sprite.Rate = (float) (1.0 + (double) t.Eased * 2.0);
       });
-      key.Add((Component) key.tween);
-      yield return (object) key.tween.Wait();
-      key.tween = (Tween) null;
-      while (key.sprite.CurrentAnimationFrame != 4)
+      this.Add((Component) this.tween);
+      yield return (object) this.tween.Wait();
+      this.tween = (Tween) null;
+      while (this.sprite.CurrentAnimationFrame != 4)
         yield return (object) null;
-      key.shimmerParticles.Active = false;
+      this.shimmerParticles.Active = false;
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      for (int index = 0; index < 16; ++index)
-        key.SceneAs<Level>().ParticlesFG.Emit(Key.P_Insert, key.Center, 0.3926991f * (float) index);
-      key.sprite.Play("enter", false, false);
+      for (int i = 0; i < 16; ++i)
+        this.SceneAs<Level>().ParticlesFG.Emit(Key.P_Insert, this.Center, 0.3926991f * (float) i);
+      this.sprite.Play("enter", false, false);
       yield return (object) 0.3f;
-      key.tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, 0.3f, true);
-      key.tween.OnUpdate = (Action<Tween>) (t => this.sprite.Rotation = t.Eased * 1.570796f);
-      key.Add((Component) key.tween);
-      yield return (object) key.tween.Wait();
-      key.tween = (Tween) null;
+      this.tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, 0.3f, true);
+      this.tween.OnUpdate = (Action<Tween>) (t => this.sprite.Rotation = t.Eased * 1.570796f);
+      this.Add((Component) this.tween);
+      yield return (object) this.tween.Wait();
+      this.tween = (Tween) null;
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-      key.alarm = Alarm.Set((Entity) key, 1f, (Action) (() =>
+      this.alarm = Alarm.Set((Entity) this, 1f, (Action) (() =>
       {
         this.alarm = (Alarm) null;
         this.tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 1f, true);
@@ -185,10 +183,11 @@ namespace Celeste
         this.Add((Component) this.tween);
       }), Alarm.AlarmMode.Oneshot);
       yield return (object) 0.2f;
-      for (int index = 0; index < 8; ++index)
-        key.SceneAs<Level>().ParticlesFG.Emit(Key.P_Insert, key.Center, 0.7853982f * (float) index);
-      key.sprite.Visible = false;
-      key.Turning = false;
+      for (int i = 0; i < 8; ++i)
+        this.SceneAs<Level>().ParticlesFG.Emit(Key.P_Insert, this.Center, 0.7853982f * (float) i);
+      this.sprite.Visible = false;
+      this.Turning = false;
     }
   }
 }
+

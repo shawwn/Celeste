@@ -13,8 +13,10 @@ namespace Celeste
 {
   public class AutoSavingNotice : Monocle.Renderer
   {
-    public static readonly Color TextColor = Color.get_White();
+    public static readonly Color TextColor = Color.White;
     public bool Display = true;
+    private float ease = 0.0f;
+    private float timer = 0.0f;
     private Sprite icon = GFX.GuiSpriteBank.Create("save");
     private float startTimer = 0.5f;
     private const string title = "autosaving_title_PC";
@@ -22,8 +24,6 @@ namespace Celeste
     private const float duration = 3f;
     public bool StillVisible;
     public bool ForceClose;
-    private float ease;
-    private float timer;
     private Wiggler wiggler;
 
     public AutoSavingNotice()
@@ -60,16 +60,17 @@ namespace Celeste
     public override void Render(Scene scene)
     {
       float num = Ease.CubeInOut(this.ease);
-      Color color = Color.op_Multiply(AutoSavingNotice.TextColor, num);
-      Draw.SpriteBatch.Begin((SpriteSortMode) 0, (BlendState) BlendState.AlphaBlend, (SamplerState) SamplerState.LinearClamp, (DepthStencilState) null, (RasterizerState) null, (Effect) null, Engine.ScreenMatrix);
-      ActiveFont.Draw(Dialog.Clean("autosaving_title_PC", (Language) null), new Vector2(960f, (float) (480.0 - 30.0 * (double) num)), new Vector2(0.5f, 1f), Vector2.get_One(), color);
+      Color color = AutoSavingNotice.TextColor * num;
+      Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, (DepthStencilState) null, (RasterizerState) null, (Effect) null, Engine.ScreenMatrix);
+      ActiveFont.Draw(Dialog.Clean("autosaving_title_PC", (Language) null), new Vector2(960f, (float) (480.0 - 30.0 * (double) num)), new Vector2(0.5f, 1f), Vector2.One, color);
       if (this.icon.Visible)
       {
-        this.icon.RenderPosition = Vector2.op_Division(new Vector2(1920f, 1080f), 2f);
+        this.icon.RenderPosition = new Vector2(1920f, 1080f) / 2f;
         this.icon.Render();
       }
-      ActiveFont.Draw(Dialog.Clean("autosaving_desc_PC", (Language) null), new Vector2(960f, (float) (600.0 + 30.0 * (double) num)), new Vector2(0.5f, 0.0f), Vector2.get_One(), color);
+      ActiveFont.Draw(Dialog.Clean("autosaving_desc_PC", (Language) null), new Vector2(960f, (float) (600.0 + 30.0 * (double) num)), new Vector2(0.5f, 0.0f), Vector2.One, color);
       Draw.SpriteBatch.End();
     }
   }
 }
+

@@ -73,22 +73,23 @@ namespace Celeste
         int right = (int) entity.Right;
         int top = (int) entity.Top;
         int bottom = (int) entity.Bottom;
-        Draw.Rect((float) (left + 4), (float) (top + 4), entity.Width - 8f, entity.Height - 8f, Color.op_Multiply(Color.get_White(), 0.25f));
+        Draw.Rect((float) (left + 4), (float) (top + 4), entity.Width - 8f, entity.Height - 8f, Color.White * 0.25f);
         for (float x1 = (float) left; (double) x1 < (double) (right - 3); x1 += 3f)
         {
-          Draw.Line(x1, (float) top, x1 + 2f, (float) top, Color.get_White());
-          Draw.Line(x1, (float) (bottom - 1), x1 + 2f, (float) (bottom - 1), Color.get_White());
+          Draw.Line(x1, (float) top, x1 + 2f, (float) top, Color.White);
+          Draw.Line(x1, (float) (bottom - 1), x1 + 2f, (float) (bottom - 1), Color.White);
         }
         for (float y1 = (float) top; (double) y1 < (double) (bottom - 3); y1 += 3f)
         {
-          Draw.Line((float) (left + 1), y1, (float) (left + 1), y1 + 2f, Color.get_White());
-          Draw.Line((float) right, y1, (float) right, y1 + 2f, Color.get_White());
+          Draw.Line((float) (left + 1), y1, (float) (left + 1), y1 + 2f, Color.White);
+          Draw.Line((float) right, y1, (float) right, y1 + 2f, Color.White);
         }
-        Draw.Rect((float) (left + 1), (float) top, 1f, 2f, Color.get_White());
-        Draw.Rect((float) (right - 2), (float) top, 2f, 2f, Color.get_White());
-        Draw.Rect((float) left, (float) (bottom - 2), 2f, 2f, Color.get_White());
-        Draw.Rect((float) (right - 2), (float) (bottom - 2), 2f, 2f, Color.get_White());
+        Draw.Rect((float) (left + 1), (float) top, 1f, 2f, Color.White);
+        Draw.Rect((float) (right - 2), (float) top, 2f, 2f, Color.White);
+        Draw.Rect((float) left, (float) (bottom - 2), 2f, 2f, Color.White);
+        Draw.Rect((float) (right - 2), (float) (bottom - 2), 2f, 2f, Color.White);
       }
     }
   }
 }
+

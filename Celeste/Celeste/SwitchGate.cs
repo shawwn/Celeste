@@ -14,7 +14,7 @@ namespace Celeste
   public class SwitchGate : Solid
   {
     private Color inactiveColor = Calc.HexToColor("5fcde4");
-    private Color activeColor = Color.get_White();
+    private Color activeColor = Color.White;
     private Color finishColor = Calc.HexToColor("f141df");
     public static ParticleType P_Behind;
     public static ParticleType P_Dust;
@@ -44,7 +44,7 @@ namespace Celeste
       this.icon.Color = this.inactiveColor;
       this.icon.Position = this.iconOffset = new Vector2(width / 2f, height / 2f);
       this.icon.CenterOrigin();
-      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (f => this.icon.Scale = Vector2.op_Multiply(Vector2.get_One(), 1f + f)), false, false)));
+      this.Add((Component) (this.wiggler = Wiggler.Create(0.5f, 4f, (Action<float>) (f => this.icon.Scale = Vector2.One * (1f + f)), false, false)));
       MTexture mtexture = GFX.Game["objects/switchgate/" + spriteName];
       this.nineSlice = new MTexture[3, 3];
       for (int index1 = 0; index1 < 3; ++index1)
@@ -57,7 +57,7 @@ namespace Celeste
     }
 
     public SwitchGate(EntityData data, Vector2 offset)
-      : this(Vector2.op_Addition(data.Position, offset), (float) data.Width, (float) data.Height, Vector2.op_Addition(data.Nodes[0], offset), data.Bool(nameof (persistent), false), data.Attr("sprite", "block"))
+      : this(data.Position + offset, (float) data.Width, (float) data.Height, data.Nodes[0] + offset, data.Bool(nameof (persistent), false), data.Attr("sprite", "block"))
     {
     }
 
@@ -82,28 +82,27 @@ namespace Celeste
       for (int val1_1 = 0; (double) val1_1 <= (double) num1; ++val1_1)
       {
         for (int val1_2 = 0; (double) val1_2 <= (double) num2; ++val1_2)
-          this.nineSlice[(double) val1_1 < (double) num1 ? Math.Min(val1_1, 1) : 2, (double) val1_2 < (double) num2 ? Math.Min(val1_2, 1) : 2].Draw(Vector2.op_Addition(Vector2.op_Addition(this.Position, this.Shake), new Vector2((float) (val1_1 * 8), (float) (val1_2 * 8))));
+          this.nineSlice[(double) val1_1 < (double) num1 ? Math.Min(val1_1, 1) : 2, (double) val1_2 < (double) num2 ? Math.Min(val1_2, 1) : 2].Draw(this.Position + this.Shake + new Vector2((float) (val1_1 * 8), (float) (val1_2 * 8)));
       }
-      this.icon.Position = Vector2.op_Addition(this.iconOffset, this.Shake);
+      this.icon.Position = this.iconOffset + this.Shake;
       this.icon.DrawOutline(1);
       base.Render();
     }
 
     private IEnumerator Sequence(Vector2 node)
     {
-      SwitchGate switchGate = this;
-      Vector2 start = switchGate.Position;
-      while (!Switch.Check(switchGate.Scene))
+      Vector2 start = this.Position;
+      while (!Switch.Check(this.Scene))
         yield return (object) null;
-      if (switchGate.persistent)
-        Switch.SetLevelFlag(switchGate.SceneAs<Level>());
+      if (this.persistent)
+        Switch.SetLevelFlag(this.SceneAs<Level>());
       yield return (object) 0.1f;
-      switchGate.openSfx.Play("event:/game/general/touchswitch_gate_open", (string) null, 0.0f);
-      switchGate.StartShaking(0.5f);
-      while ((double) switchGate.icon.Rate < 1.0)
+      this.openSfx.Play("event:/game/general/touchswitch_gate_open", (string) null, 0.0f);
+      this.StartShaking(0.5f);
+      while ((double) this.icon.Rate < 1.0)
       {
-        switchGate.icon.Color = Color.Lerp(switchGate.inactiveColor, switchGate.activeColor, switchGate.icon.Rate);
-        switchGate.icon.Rate += Engine.DeltaTime * 2f;
+        this.icon.Color = Color.Lerp(this.inactiveColor, this.activeColor, this.icon.Rate);
+        this.icon.Rate += Engine.DeltaTime * 2f;
         yield return (object) null;
       }
       yield return (object) 0.1f;
@@ -121,101 +120,107 @@ namespace Celeste
           for (int index2 = 0; (double) index2 < (double) this.Height / 8.0; ++index2)
           {
             if ((index1 + index2) % 2 == particleAt)
-              this.SceneAs<Level>().ParticlesBG.Emit(SwitchGate.P_Behind, Vector2.op_Addition(Vector2.op_Addition(this.Position, new Vector2((float) (index1 * 8), (float) (index2 * 8))), Calc.Random.Range(Vector2.op_Multiply(Vector2.get_One(), 2f), Vector2.op_Multiply(Vector2.get_One(), 6f))));
+              this.SceneAs<Level>().ParticlesBG.Emit(SwitchGate.P_Behind, this.Position + new Vector2((float) (index1 * 8), (float) (index2 * 8)) + Calc.Random.Range(Vector2.One * 2f, Vector2.One * 6f));
           }
         }
       });
-      switchGate.Add((Component) tween);
+      this.Add((Component) tween);
       yield return (object) 1.8f;
-      bool collidable1 = switchGate.Collidable;
-      switchGate.Collidable = false;
-      if (node.X <= start.X)
+      tween = (Tween) null;
+      bool was1 = this.Collidable;
+      this.Collidable = false;
+      if ((double) node.X <= (double) start.X)
       {
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(0.0f, 2f);
-        for (int index = 0; (double) index < (double) switchGate.Height / 8.0; ++index)
+        Vector2 add = new Vector2(0.0f, 2f);
+        for (int i = 0; (double) i < (double) this.Height / 8.0; ++i)
         {
-          Vector2 point1;
-          ((Vector2) ref point1).\u002Ector(switchGate.Left - 1f, switchGate.Top + 4f + (float) (index * 8));
-          Vector2 point2 = Vector2.op_Addition(point1, Vector2.get_UnitX());
-          if (switchGate.Scene.CollideCheck<Solid>(point1) && !switchGate.Scene.CollideCheck<Solid>(point2))
+          Vector2 at = new Vector2(this.Left - 1f, this.Top + 4f + (float) (i * 8));
+          Vector2 not = at + Vector2.UnitX;
+          if (this.Scene.CollideCheck<Solid>(at) && !this.Scene.CollideCheck<Solid>(not))
           {
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Addition(point1, vector2), 3.141593f);
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Subtraction(point1, vector2), 3.141593f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at + add, 3.141593f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at - add, 3.141593f);
           }
+          at = new Vector2();
+          not = new Vector2();
         }
+        add = new Vector2();
       }
-      if (node.X >= start.X)
+      if ((double) node.X >= (double) start.X)
       {
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(0.0f, 2f);
-        for (int index = 0; (double) index < (double) switchGate.Height / 8.0; ++index)
+        Vector2 add = new Vector2(0.0f, 2f);
+        for (int i = 0; (double) i < (double) this.Height / 8.0; ++i)
         {
-          Vector2 point1;
-          ((Vector2) ref point1).\u002Ector(switchGate.Right + 1f, switchGate.Top + 4f + (float) (index * 8));
-          Vector2 point2 = Vector2.op_Subtraction(point1, Vector2.op_Multiply(Vector2.get_UnitX(), 2f));
-          if (switchGate.Scene.CollideCheck<Solid>(point1) && !switchGate.Scene.CollideCheck<Solid>(point2))
+          Vector2 at = new Vector2(this.Right + 1f, this.Top + 4f + (float) (i * 8));
+          Vector2 not = at - Vector2.UnitX * 2f;
+          if (this.Scene.CollideCheck<Solid>(at) && !this.Scene.CollideCheck<Solid>(not))
           {
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Addition(point1, vector2), 0.0f);
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Subtraction(point1, vector2), 0.0f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at + add, 0.0f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at - add, 0.0f);
           }
+          at = new Vector2();
+          not = new Vector2();
         }
+        add = new Vector2();
       }
-      if (node.Y <= start.Y)
+      if ((double) node.Y <= (double) start.Y)
       {
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(2f, 0.0f);
-        for (int index = 0; (double) index < (double) switchGate.Width / 8.0; ++index)
+        Vector2 add = new Vector2(2f, 0.0f);
+        for (int i = 0; (double) i < (double) this.Width / 8.0; ++i)
         {
-          Vector2 point1;
-          ((Vector2) ref point1).\u002Ector(switchGate.Left + 4f + (float) (index * 8), switchGate.Top - 1f);
-          Vector2 point2 = Vector2.op_Addition(point1, Vector2.get_UnitY());
-          if (switchGate.Scene.CollideCheck<Solid>(point1) && !switchGate.Scene.CollideCheck<Solid>(point2))
+          Vector2 at = new Vector2(this.Left + 4f + (float) (i * 8), this.Top - 1f);
+          Vector2 not = at + Vector2.UnitY;
+          if (this.Scene.CollideCheck<Solid>(at) && !this.Scene.CollideCheck<Solid>(not))
           {
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Addition(point1, vector2), -1.570796f);
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Subtraction(point1, vector2), -1.570796f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at + add, -1.570796f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at - add, -1.570796f);
           }
+          at = new Vector2();
+          not = new Vector2();
         }
+        add = new Vector2();
       }
-      if (node.Y >= start.Y)
+      if ((double) node.Y >= (double) start.Y)
       {
-        Vector2 vector2;
-        ((Vector2) ref vector2).\u002Ector(2f, 0.0f);
-        for (int index = 0; (double) index < (double) switchGate.Width / 8.0; ++index)
+        Vector2 add = new Vector2(2f, 0.0f);
+        for (int i = 0; (double) i < (double) this.Width / 8.0; ++i)
         {
-          Vector2 point1;
-          ((Vector2) ref point1).\u002Ector(switchGate.Left + 4f + (float) (index * 8), switchGate.Bottom + 1f);
-          Vector2 point2 = Vector2.op_Subtraction(point1, Vector2.op_Multiply(Vector2.get_UnitY(), 2f));
-          if (switchGate.Scene.CollideCheck<Solid>(point1) && !switchGate.Scene.CollideCheck<Solid>(point2))
+          Vector2 at = new Vector2(this.Left + 4f + (float) (i * 8), this.Bottom + 1f);
+          Vector2 not = at - Vector2.UnitY * 2f;
+          if (this.Scene.CollideCheck<Solid>(at) && !this.Scene.CollideCheck<Solid>(not))
           {
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Addition(point1, vector2), 1.570796f);
-            switchGate.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, Vector2.op_Subtraction(point1, vector2), 1.570796f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at + add, 1.570796f);
+            this.SceneAs<Level>().ParticlesFG.Emit(SwitchGate.P_Dust, at - add, 1.570796f);
           }
+          at = new Vector2();
+          not = new Vector2();
         }
+        add = new Vector2();
       }
-      switchGate.Collidable = collidable1;
-      Audio.Play("event:/game/general/touchswitch_gate_finish", switchGate.Position);
-      switchGate.StartShaking(0.2f);
-      while ((double) switchGate.icon.Rate > 0.0)
+      this.Collidable = was1;
+      Audio.Play("event:/game/general/touchswitch_gate_finish", this.Position);
+      this.StartShaking(0.2f);
+      while ((double) this.icon.Rate > 0.0)
       {
-        switchGate.icon.Color = Color.Lerp(switchGate.activeColor, switchGate.finishColor, 1f - switchGate.icon.Rate);
-        switchGate.icon.Rate -= Engine.DeltaTime * 4f;
+        this.icon.Color = Color.Lerp(this.activeColor, this.finishColor, 1f - this.icon.Rate);
+        this.icon.Rate -= Engine.DeltaTime * 4f;
         yield return (object) null;
       }
-      switchGate.icon.Rate = 0.0f;
-      switchGate.icon.SetAnimationFrame(0);
-      switchGate.wiggler.Start();
-      bool collidable2 = switchGate.Collidable;
-      switchGate.Collidable = false;
-      if (!switchGate.Scene.CollideCheck<Solid>(switchGate.Center))
+      this.icon.Rate = 0.0f;
+      this.icon.SetAnimationFrame(0);
+      this.wiggler.Start();
+      bool was2 = this.Collidable;
+      this.Collidable = false;
+      if (!this.Scene.CollideCheck<Solid>(this.Center))
       {
-        for (int index = 0; index < 32; ++index)
+        for (int i = 0; i < 32; ++i)
         {
-          float num = Calc.Random.NextFloat(6.283185f);
-          switchGate.SceneAs<Level>().ParticlesFG.Emit(TouchSwitch.P_Fire, Vector2.op_Addition(Vector2.op_Addition(switchGate.Position, switchGate.iconOffset), Calc.AngleToVector(num, 4f)), num);
+          float angle = Calc.Random.NextFloat(6.283185f);
+          this.SceneAs<Level>().ParticlesFG.Emit(TouchSwitch.P_Fire, this.Position + this.iconOffset + Calc.AngleToVector(angle, 4f), angle);
         }
       }
-      switchGate.Collidable = collidable2;
+      this.Collidable = was2;
     }
   }
 }
+

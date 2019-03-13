@@ -14,7 +14,7 @@ namespace Celeste
   public class Killbox : Entity
   {
     public Killbox(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Collider = (Collider) new Hitbox((float) data.Width, 32f, 0.0f, 0.0f);
       this.Collidable = false;
@@ -26,7 +26,7 @@ namespace Celeste
       if (SaveData.Instance.Assists.Invincible)
         player.Bounce(this.Top);
       else
-        player.Die(Vector2.get_Zero(), false, true);
+        player.Die(Vector2.Zero, false, true);
     }
 
     public override void Update()
@@ -41,3 +41,4 @@ namespace Celeste
     }
   }
 }
+

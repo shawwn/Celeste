@@ -12,7 +12,7 @@ namespace Celeste
 {
   public class HudRenderer : HiresRenderer
   {
-    public float BackgroundFade;
+    public float BackgroundFade = 0.0f;
 
     public override void RenderContent(Scene scene)
     {
@@ -20,9 +20,10 @@ namespace Celeste
         return;
       HiresRenderer.BeginRender((BlendState) null, (SamplerState) null);
       if ((double) this.BackgroundFade > 0.0)
-        Draw.Rect(-1f, -1f, 1922f, 1082f, Color.op_Multiply(Color.op_Multiply(Color.get_Black(), this.BackgroundFade), 0.7f));
+        Draw.Rect(-1f, -1f, 1922f, 1082f, Color.Black * this.BackgroundFade * 0.7f);
       scene.Entities.RenderOnly((int) Tags.HUD);
       HiresRenderer.EndRender();
     }
   }
 }
+

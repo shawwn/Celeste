@@ -38,7 +38,7 @@ namespace Celeste
       if (SaveData.Instance.TotalStrawberries > this.strawberries.Amount && (double) this.strawberriesUpdateTimer <= 0.0)
         this.strawberriesUpdateTimer = 0.4f;
       Level scene = this.Scene as Level;
-      this.DrawLerp = SaveData.Instance.TotalStrawberries > this.strawberries.Amount || (double) this.strawberriesUpdateTimer > 0.0 || (double) this.strawberriesWaitTimer > 0.0 || scene.Paused && scene.PauseMainMenuOpen ? Calc.Approach(this.DrawLerp, 1f, 1.2f * Engine.RawDeltaTime) : Calc.Approach(this.DrawLerp, 0.0f, 2f * Engine.RawDeltaTime);
+      this.DrawLerp = SaveData.Instance.TotalStrawberries <= this.strawberries.Amount && (double) this.strawberriesUpdateTimer <= 0.0 && (double) this.strawberriesWaitTimer <= 0.0 && (!scene.Paused || !scene.PauseMainMenuOpen) ? Calc.Approach(this.DrawLerp, 0.0f, 2f * Engine.RawDeltaTime) : Calc.Approach(this.DrawLerp, 1f, 1.2f * Engine.RawDeltaTime);
       if ((double) this.strawberriesWaitTimer > 0.0)
         this.strawberriesWaitTimer -= Engine.RawDeltaTime;
       if ((double) this.strawberriesUpdateTimer > 0.0 && (double) this.DrawLerp == 1.0)
@@ -68,9 +68,10 @@ namespace Celeste
     public override void Render()
     {
       Vector2 vector2 = Vector2.Lerp(new Vector2((float) -this.bg.Width, this.Y), new Vector2(32f, this.Y), Ease.CubeOut(this.DrawLerp)).Round();
-      this.bg.DrawJustified(Vector2.op_Addition(vector2, new Vector2(-96f, 12f)), new Vector2(0.0f, 0.5f));
-      this.strawberries.Position = Vector2.op_Addition(vector2, new Vector2(0.0f, -this.Y));
+      this.bg.DrawJustified(vector2 + new Vector2(-96f, 12f), new Vector2(0.0f, 0.5f));
+      this.strawberries.Position = vector2 + new Vector2(0.0f, -this.Y);
       this.strawberries.Render();
     }
   }
 }
+

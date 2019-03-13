@@ -16,7 +16,7 @@ namespace Celeste
     private float alpha;
 
     public CoreMessage(EntityData data, Vector2 offset)
-      : base(Vector2.op_Addition(data.Position, offset))
+      : base(data.Position + offset)
     {
       this.Tag = (int) Tags.HUD;
       this.text = Dialog.Clean("app_ending", (Language) null).Split(new char[2]
@@ -37,11 +37,12 @@ namespace Celeste
     public override void Render()
     {
       Vector2 position1 = (this.Scene as Level).Camera.Position;
-      Vector2 vector2 = Vector2.op_Addition(position1, new Vector2(160f, 90f));
-      Vector2 position2 = Vector2.op_Multiply(Vector2.op_Addition(Vector2.op_Subtraction(this.Position, position1), Vector2.op_Multiply(Vector2.op_Subtraction(this.Position, vector2), 0.2f)), 6f);
+      Vector2 vector2 = position1 + new Vector2(160f, 90f);
+      Vector2 position2 = (this.Position - position1 + (this.Position - vector2) * 0.2f) * 6f;
       if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
-        position2.X = (__Null) (1920.0 - position2.X);
-      ActiveFont.Draw(this.text, position2, new Vector2(0.5f, 0.5f), Vector2.op_Multiply(Vector2.get_One(), 1.25f), Color.op_Multiply(Color.get_White(), this.alpha));
+        position2.X = 1920f - position2.X;
+      ActiveFont.Draw(this.text, position2, new Vector2(0.5f, 0.5f), Vector2.One * 1.25f, Color.White * this.alpha);
     }
   }
 }
+
