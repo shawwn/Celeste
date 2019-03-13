@@ -1,0 +1,425 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: Celeste.Decal
+// Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
+// Assembly location: M:\code\bin\Celeste\Celeste.exe
+
+using Microsoft.Xna.Framework;
+using Monocle;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+
+namespace Celeste
+{
+  public class Decal : Entity
+  {
+    public float AnimationSpeed = 12f;
+    private bool animated = true;
+    public const string Root = "decals";
+    public const string MirrorMaskRoot = "mirrormasks";
+    public string Name;
+    private Component image;
+    private List<MTexture> textures;
+    private Vector2 scale;
+    private float frame;
+    private bool parallax;
+    private float parallaxAmount;
+
+    public Decal(string texture, Vector2 position, Vector2 scale, int depth)
+      : base(position)
+    {
+      this.Depth = depth;
+      this.scale = scale;
+      string extension = Path.GetExtension(texture);
+      this.Name = Regex.Replace(Path.Combine("decals", texture.Replace(extension, "")).Replace('\\', '/'), "\\d+$", string.Empty);
+      this.textures = GFX.Game.GetAtlasSubtextures(this.Name);
+    }
+
+    public override void Added(Scene scene)
+    {
+      base.Added(scene);
+      string path = this.Name.ToLower().Replace("decals/", "");
+      switch (path)
+      {
+        case "0-prologue/house":
+          this.CreateSmoke(new Vector2(36f, -28f), true);
+          break;
+        case "1-forsakencity/rags":
+        case "1-forsakencity/ragsb":
+        case "3-resort/curtain_side_a":
+        case "3-resort/curtain_side_d":
+          this.MakeBanner(2f, 3.5f, 2, 0.05f, true, 0.0f, false);
+          break;
+        case "3-resort/bridgecolumn":
+          this.MakeSolid(-5f, -8f, 10f, 16f, 8, true);
+          break;
+        case "3-resort/bridgecolumntop":
+          this.MakeSolid(-8f, -8f, 16f, 8f, 8, true);
+          this.MakeSolid(-5f, 0.0f, 10f, 8f, 8, true);
+          break;
+        case "3-resort/brokenelevator":
+          this.MakeSolid(-16f, -20f, 32f, 48f, 22, true);
+          break;
+        case "3-resort/roofcenter":
+        case "3-resort/roofcenter_b":
+        case "3-resort/roofcenter_c":
+        case "3-resort/roofcenter_d":
+          this.MakeSolid(-8f, -4f, 16f, 8f, 14, true);
+          break;
+        case "3-resort/roofedge":
+        case "3-resort/roofedge_b":
+        case "3-resort/roofedge_c":
+        case "3-resort/roofedge_d":
+          this.MakeSolid(this.scale.X < 0.0 ? 0.0f : -8f, -4f, 8f, 8f, 14, true);
+          break;
+        case "3-resort/vent":
+          this.CreateSmoke(Vector2.get_Zero(), false);
+          break;
+        case "4-cliffside/bridge_a":
+          this.MakeSolid(-24f, 0.0f, 48f, 8f, 8, this.Depth != 9000);
+          break;
+        case "4-cliffside/flower_a":
+        case "4-cliffside/flower_b":
+        case "4-cliffside/flower_c":
+        case "4-cliffside/flower_d":
+          this.MakeBanner(2f, 2f, 1, 0.05f, false, 2f, true);
+          break;
+        case "5-temple-dark/mosaic_b":
+          this.Add((Component) new BloomPoint(new Vector2(0.0f, 5f), 0.75f, 16f));
+          break;
+        case "5-temple/bg_mirror_a":
+        case "5-temple/bg_mirror_b":
+        case "5-temple/bg_mirror_shard_a":
+        case "5-temple/bg_mirror_shard_b":
+        case "5-temple/bg_mirror_shard_c":
+        case "5-temple/bg_mirror_shard_d":
+        case "5-temple/bg_mirror_shard_e":
+        case "5-temple/bg_mirror_shard_f":
+        case "5-temple/bg_mirror_shard_g":
+        case "5-temple/bg_mirror_shard_group_a":
+        case "5-temple/bg_mirror_shard_group_a_b":
+        case "5-temple/bg_mirror_shard_group_a_c":
+        case "5-temple/bg_mirror_shard_group_b":
+        case "5-temple/bg_mirror_shard_group_c":
+        case "5-temple/bg_mirror_shard_group_d":
+        case "5-temple/bg_mirror_shard_group_e":
+        case "5-temple/bg_mirror_shard_h":
+        case "5-temple/bg_mirror_shard_i":
+        case "5-temple/bg_mirror_shard_j":
+        case "5-temple/bg_mirror_shard_k":
+          this.scale.Y = (__Null) 1.0;
+          this.MakeMirror(path, false);
+          break;
+        case "5-temple/bg_mirror_c":
+        case "5-temple/statue_d":
+          this.MakeMirror(path, true);
+          break;
+        case "6-reflection/crystal_reflection":
+          this.MakeMirrorSpecialCase(path, new Vector2(-12f, 2f));
+          break;
+        case "7-summit/cloud_a":
+        case "7-summit/cloud_b":
+        case "7-summit/cloud_bb":
+        case "7-summit/cloud_bc":
+        case "7-summit/cloud_bd":
+        case "7-summit/cloud_c":
+        case "7-summit/cloud_cb":
+        case "7-summit/cloud_cc":
+        case "7-summit/cloud_cd":
+        case "7-summit/cloud_ce":
+        case "7-summit/cloud_d":
+        case "7-summit/cloud_db":
+        case "7-summit/cloud_dc":
+        case "7-summit/cloud_dd":
+        case "7-summit/cloud_e":
+        case "7-summit/cloud_f":
+        case "7-summit/cloud_g":
+        case "7-summit/cloud_h":
+        case "7-summit/cloud_i":
+        case "7-summit/cloud_j":
+          this.Depth = -13001;
+          this.MakeParallax(0.1f);
+          this.scale = Vector2.op_Multiply(this.scale, 1.15f);
+          break;
+        case "7-summit/summitflag":
+          this.Add((Component) new SoundSource("event:/env/local/07_summit/flag_flap"));
+          break;
+        case "9-core/ball_a":
+          this.Add(this.image = (Component) new Decal.CoreSwapImage(this.textures[0], GFX.Game["decals/9-core/ball_a_ice"]));
+          break;
+        case "9-core/ball_a_ice":
+          this.Add(this.image = (Component) new Decal.CoreSwapImage(GFX.Game["decals/9-core/ball_a"], this.textures[0]));
+          break;
+        case "9-core/heart_bevel_a":
+        case "9-core/heart_bevel_b":
+        case "9-core/heart_bevel_c":
+        case "9-core/heart_bevel_d":
+          this.scale.Y = (__Null) 1.0;
+          this.scale.X = (__Null) 1.0;
+          break;
+        case "9-core/rock_e":
+          this.Add(this.image = (Component) new Decal.CoreSwapImage(this.textures[0], GFX.Game["decals/9-core/rock_e_ice"]));
+          break;
+        case "9-core/rock_e_ice":
+          this.Add(this.image = (Component) new Decal.CoreSwapImage(GFX.Game["decals/9-core/rock_e"], this.textures[0]));
+          break;
+        case "generic/grass_a":
+        case "generic/grass_b":
+        case "generic/grass_c":
+        case "generic/grass_d":
+          this.MakeBanner(2f, 2f, 1, 0.05f, false, -2f, false);
+          break;
+      }
+      if (this.image != null)
+        return;
+      this.Add(this.image = (Component) new Decal.DecalImage());
+    }
+
+    private void MakeBanner(
+      float speed,
+      float amplitude,
+      int sliceSize,
+      float sliceSinIncrement,
+      bool easeDown,
+      float offset = 0.0f,
+      bool onlyIfWindy = false)
+    {
+      Decal.Banner banner = new Decal.Banner()
+      {
+        WaveSpeed = speed,
+        WaveAmplitude = amplitude,
+        SliceSize = sliceSize,
+        SliceSinIncrement = sliceSinIncrement,
+        Segments = new List<List<MTexture>>(),
+        EaseDown = easeDown,
+        Offset = offset,
+        OnlyIfWindy = onlyIfWindy
+      };
+      foreach (MTexture texture in this.textures)
+      {
+        List<MTexture> mtextureList = new List<MTexture>();
+        for (int y = 0; y < texture.Height; y += sliceSize)
+          mtextureList.Add(texture.GetSubtexture(0, y, texture.Width, sliceSize, (MTexture) null));
+        banner.Segments.Add(mtextureList);
+      }
+      this.Add(this.image = (Component) banner);
+    }
+
+    private void MakeSolid(
+      float x,
+      float y,
+      float w,
+      float h,
+      int surfaceSoundIndex,
+      bool blockWaterfalls = true)
+    {
+      Solid solid = new Solid(Vector2.op_Addition(this.Position, new Vector2(x, y)), w, h, true);
+      solid.BlockWaterfalls = blockWaterfalls;
+      solid.SurfaceSoundIndex = surfaceSoundIndex;
+      this.Scene.Add((Entity) solid);
+    }
+
+    private void CreateSmoke(Vector2 offset, bool inbg)
+    {
+      Level scene = this.Scene as Level;
+      ParticleEmitter particleEmitter = new ParticleEmitter(inbg ? scene.ParticlesBG : scene.ParticlesFG, ParticleTypes.Chimney, offset, new Vector2(4f, 1f), -1.570796f, 1, 0.2f);
+      this.Add((Component) particleEmitter);
+      particleEmitter.SimulateCycle();
+    }
+
+    private void MakeMirror(string path, bool keepOffsetsClose)
+    {
+      this.Depth = 9500;
+      if (keepOffsetsClose)
+      {
+        this.MakeMirror(path, this.GetMirrorOffset());
+      }
+      else
+      {
+        foreach (MTexture atlasSubtexture in GFX.Game.GetAtlasSubtextures("mirrormasks/" + path))
+        {
+          MTexture mask = atlasSubtexture;
+          MirrorSurface surface = new MirrorSurface((Action) null)
+          {
+            ReflectionOffset = this.GetMirrorOffset()
+          };
+          surface.OnRender = (Action) (() => mask.DrawCentered(this.Position, surface.ReflectionColor, this.scale));
+          this.Add((Component) surface);
+        }
+      }
+    }
+
+    private void MakeMirror(string path, Vector2 offset)
+    {
+      this.Depth = 9500;
+      foreach (MTexture atlasSubtexture in GFX.Game.GetAtlasSubtextures("mirrormasks/" + path))
+      {
+        MTexture mask = atlasSubtexture;
+        MirrorSurface surface = new MirrorSurface((Action) null)
+        {
+          ReflectionOffset = Vector2.op_Addition(offset, new Vector2(Calc.Random.NextFloat(4f) - 2f, Calc.Random.NextFloat(4f) - 2f))
+        };
+        surface.OnRender = (Action) (() => mask.DrawCentered(this.Position, surface.ReflectionColor, this.scale));
+        this.Add((Component) surface);
+      }
+    }
+
+    private void MakeMirrorSpecialCase(string path, Vector2 offset)
+    {
+      this.Depth = 9500;
+      List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures("mirrormasks/" + path);
+      for (int index = 0; index < atlasSubtextures.Count; ++index)
+      {
+        Vector2 vector2;
+        ((Vector2) ref vector2).\u002Ector(Calc.Random.NextFloat(4f) - 2f, Calc.Random.NextFloat(4f) - 2f);
+        switch (index)
+        {
+          case 2:
+            ((Vector2) ref vector2).\u002Ector(4f, 2f);
+            break;
+          case 6:
+            ((Vector2) ref vector2).\u002Ector(-2f, 0.0f);
+            break;
+        }
+        MTexture mask = atlasSubtextures[index];
+        MirrorSurface surface = new MirrorSurface((Action) null)
+        {
+          ReflectionOffset = Vector2.op_Addition(offset, vector2)
+        };
+        surface.OnRender = (Action) (() => mask.DrawCentered(this.Position, surface.ReflectionColor, this.scale));
+        this.Add((Component) surface);
+      }
+    }
+
+    private Vector2 GetMirrorOffset()
+    {
+      return new Vector2((float) (Calc.Random.Range(5, 14) * Calc.Random.Choose<int>(1, -1)), (float) (Calc.Random.Range(2, 6) * Calc.Random.Choose<int>(1, -1)));
+    }
+
+    private void MakeParallax(float amount)
+    {
+      this.parallax = true;
+      this.parallaxAmount = amount;
+    }
+
+    public override void Update()
+    {
+      if (this.animated && this.textures.Count > 1)
+      {
+        this.frame += this.AnimationSpeed * Engine.DeltaTime;
+        this.frame %= (float) this.textures.Count;
+      }
+      base.Update();
+    }
+
+    public override void Render()
+    {
+      Vector2 position = this.Position;
+      if (this.parallax)
+        this.Position = Vector2.op_Addition(this.Position, Vector2.op_Multiply(Vector2.op_Subtraction(this.Position, Vector2.op_Addition((this.Scene as Level).Camera.Position, new Vector2(160f, 90f))), this.parallaxAmount));
+      base.Render();
+      this.Position = position;
+    }
+
+    private class Banner : Component
+    {
+      public float WindMultiplier = 1f;
+      private float sineTimer = Calc.Random.NextFloat();
+      public float WaveSpeed;
+      public float WaveAmplitude;
+      public int SliceSize;
+      public float SliceSinIncrement;
+      public bool EaseDown;
+      public float Offset;
+      public bool OnlyIfWindy;
+      public List<List<MTexture>> Segments;
+
+      public Decal Decal
+      {
+        get
+        {
+          return (Decal) this.Entity;
+        }
+      }
+
+      public Banner()
+        : base(true, true)
+      {
+      }
+
+      public override void Update()
+      {
+        if (this.OnlyIfWindy)
+        {
+          float x = (float) (this.Scene as Level).Wind.X;
+          this.WindMultiplier = Calc.Approach(this.WindMultiplier, Math.Min(3f, Math.Abs(x) * 0.004f), Engine.DeltaTime * 4f);
+          if ((double) x != 0.0)
+            this.Offset = (float) Math.Sign(x) * Math.Abs(this.Offset);
+        }
+        this.sineTimer += Engine.DeltaTime * this.WindMultiplier;
+        base.Update();
+      }
+
+      public override void Render()
+      {
+        MTexture texture = this.Decal.textures[(int) this.Decal.frame];
+        List<MTexture> segment = this.Segments[(int) this.Decal.frame];
+        for (int index = 0; index < segment.Count; ++index)
+        {
+          float num1 = (this.EaseDown ? (float) index / (float) segment.Count : (float) (1.0 - (double) index / (double) segment.Count)) * this.WindMultiplier;
+          float num2 = (float) (Math.Sin((double) this.sineTimer * (double) this.WaveSpeed + (double) index * (double) this.SliceSinIncrement) * (double) num1 * (double) this.WaveAmplitude + (double) num1 * (double) this.Offset);
+          segment[index].Draw(Vector2.op_Addition(this.Decal.Position, new Vector2(num2, 0.0f)), new Vector2((float) (texture.Width / 2), (float) (texture.Height / 2 - index * this.SliceSize)), Color.get_White(), this.Decal.scale);
+        }
+      }
+    }
+
+    private class DecalImage : Component
+    {
+      public Decal Decal
+      {
+        get
+        {
+          return (Decal) this.Entity;
+        }
+      }
+
+      public DecalImage()
+        : base(true, true)
+      {
+      }
+
+      public override void Render()
+      {
+        this.Decal.textures[(int) this.Decal.frame].DrawCentered(this.Decal.Position, Color.get_White(), this.Decal.scale);
+      }
+    }
+
+    private class CoreSwapImage : Component
+    {
+      private MTexture hot;
+      private MTexture cold;
+
+      public Decal Decal
+      {
+        get
+        {
+          return (Decal) this.Entity;
+        }
+      }
+
+      public CoreSwapImage(MTexture hot, MTexture cold)
+        : base(false, true)
+      {
+        this.hot = hot;
+        this.cold = cold;
+      }
+
+      public override void Render()
+      {
+        ((this.Scene as Level).CoreMode == Session.CoreModes.Cold ? this.cold : this.hot).DrawCentered(this.Decal.Position, Color.get_White(), this.Decal.scale);
+      }
+    }
+  }
+}

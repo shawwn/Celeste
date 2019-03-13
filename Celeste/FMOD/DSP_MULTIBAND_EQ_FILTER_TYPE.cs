@@ -1,0 +1,25 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: FMOD.DSP_MULTIBAND_EQ_FILTER_TYPE
+// Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
+// Assembly location: M:\code\bin\Celeste\Celeste.exe
+
+namespace FMOD
+{
+  public enum DSP_MULTIBAND_EQ_FILTER_TYPE
+  {
+    DISABLED,
+    LOWPASS_12DB,
+    LOWPASS_24DB,
+    LOWPASS_48DB,
+    HIGHPASS_12DB,
+    HIGHPASS_24DB,
+    HIGHPASS_48DB,
+    LOWSHELF,
+    HIGHSHELF,
+    PEAKING,
+    BANDPASS,
+    NOTCH,
+    ALLPASS,
+  }
+}
