@@ -2255,13 +2255,16 @@ namespace Microsoft.Xna.Framework
 			{
 				return false;
 			}
-
+#if RUMBLE
 			return SDL.SDL_GameControllerRumble(
 				device,
 				(ushort) (MathHelper.Clamp(leftMotor, 0.0f, 1.0f) * 0xFFFF),
 				(ushort) (MathHelper.Clamp(rightMotor, 0.0f, 1.0f) * 0xFFFF),
 				SDL.SDL_HAPTIC_INFINITY // Oh dear...
 			) == 0;
+#else
+			return false;
+#endif
 		}
 
 		public static string GetGamePadGUID(int index)
@@ -2331,12 +2334,16 @@ namespace Microsoft.Xna.Framework
 			INTERNAL_states[which].IsConnected = true;
 
 			// Initialize the haptics for the joystick, if applicable.
+#if RUMBLE
 			bool hasRumble = SDL.SDL_GameControllerRumble(
 				INTERNAL_devices[which],
 				0,
 				0,
 				SDL.SDL_HAPTIC_INFINITY
 			) == 0;
+#else
+			bool hasRumble = false;
+#endif
 
 			// An SDL_GameController _should_ always be complete...
 			GamePadCapabilities caps = new GamePadCapabilities();
