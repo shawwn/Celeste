@@ -1,8 +1,10 @@
 # Celeste
 
-This codebase builds and runs on macOS. It was generated using [JetBrains Rider](https://www.jetbrains.com/rider/).
+This codebase can be used to build a custom version of Celeste on macOS and Windows. The source files were generated using [JetBrains Rider](https://www.jetbrains.com/rider/).
 
-Demo of some basic modding by tweaking the constants in Player.cs:
+# Demo
+
+After changing some constants in Player.cs, I recorded this video:
 
 [https://www.youtube.com/watch?v=XNC5gJCAyKQ](https://www.youtube.com/watch?v=XNC5gJCAyKQ)
 
