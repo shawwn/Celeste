@@ -69,7 +69,7 @@ namespace Celeste
       Player entity = this.Scene.Tracker.GetEntity<Player>();
       if (entity == null)
         return;
-      this.sprite.Active = this.interacting || entity.StateMachine.State != 11;
+      this.sprite.Active = this.interacting || entity.StateMachine.State != Player.StDummy;
       if (!this.sprite.Active)
         this.sprite.SetAnimationFrame(0);
     }
@@ -82,11 +82,11 @@ namespace Celeste
       SandwichLava lava = this.Scene.Entities.FindFirst<SandwichLava>();
       if (lava != null)
         lava.Waiting = true;
-      player.StateMachine.State = 11;
+      player.StateMachine.State = Player.StDummy;
       yield return (object) player.DummyWalkToExact((int) this.X, false, 1f);
       if ((double) Math.Abs(this.X - player.X) > 4.0)
       {
-        player.StateMachine.State = 0;
+        player.StateMachine.State = Player.StNormal;
       }
       else
       {
@@ -354,7 +354,7 @@ namespace Celeste
         level.ZoomSnap(Vector2.Zero, 1f);
         this.Scene.Remove((Entity) this.hud);
         this.interacting = false;
-        player.StateMachine.State = 0;
+        player.StateMachine.State = Player.StNormal;
         yield return (object) null;
       }
     }

@@ -34,7 +34,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) 1f;
       this.player.Dashes = 1;

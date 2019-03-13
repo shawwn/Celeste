@@ -33,7 +33,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.player.Dashes = 1;
       if (level.Session.Area.Mode == AreaMode.Normal)

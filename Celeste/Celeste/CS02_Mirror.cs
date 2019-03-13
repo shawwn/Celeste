@@ -38,7 +38,7 @@ namespace Celeste
       this.sfx.Position = this.mirror.Center;
       this.sfx.Play("event:/music/lvl2/dreamblock_sting_pt1", (string) null, 0.0f);
       this.direction = Math.Sign(this.player.X - this.mirror.X);
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.playerEndX = (float) (8 * this.direction);
       yield return (object) 1f;
       this.player.Facing = ToFacing.Convert(-this.direction);
@@ -90,7 +90,7 @@ namespace Celeste
       Player entity1 = this.Scene.Tracker.GetEntity<Player>();
       if (entity1 != null)
       {
-        entity1.StateMachine.State = 0;
+        entity1.StateMachine.State = Player.StNormal;
         entity1.DummyAutoAnimate = true;
         entity1.Speed = Vector2.Zero;
         entity1.X = this.mirror.X + this.playerEndX;

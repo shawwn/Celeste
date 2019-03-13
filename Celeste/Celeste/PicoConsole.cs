@@ -55,7 +55,7 @@ namespace Celeste
 
     private IEnumerator InteractRoutine(Player player)
     {
-      player.StateMachine.State = 11;
+      player.StateMachine.State = Player.StDummy;
       yield return (object) player.DummyWalkToExact((int) this.X - 6, false, 1f);
       player.Facing = Facings.Right;
       bool wasUnlocked = Settings.Instance.Pico8OnMainMenu;
@@ -82,7 +82,7 @@ namespace Celeste
         yield return (object) null;
       yield return (object) 0.25f;
       this.talking = false;
-      player.StateMachine.State = 0;
+      player.StateMachine.State = Player.StNormal;
     }
 
     public override void SceneEnd(Scene scene)

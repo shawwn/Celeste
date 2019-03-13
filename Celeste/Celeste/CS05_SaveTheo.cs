@@ -34,7 +34,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.player.ForceCameraUpdate = true;
       level.Session.Audio.Music.Layer(6, 0.0f);
@@ -72,7 +72,7 @@ namespace Celeste
         yield return (object) null;
       }
       this.player.OverrideDashDirection = new Vector2?();
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       MInput.Disabled = false;
       this.player.DummyAutoAnimate = true;

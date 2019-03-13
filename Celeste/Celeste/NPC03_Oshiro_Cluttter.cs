@@ -121,7 +121,7 @@ namespace Celeste
       if (entity == null)
         return;
       entity.StateMachine.Locked = false;
-      entity.StateMachine.State = 0;
+      entity.StateMachine.State = Player.StNormal;
     }
 
     private IEnumerator StandUp()

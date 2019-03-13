@@ -107,7 +107,7 @@ namespace Celeste
 label_4:
         if (num1 != 0)
         {
-          player.StateMachine.State = 20;
+          player.StateMachine.State = Player.StTempleFall;
           playerHasFallen = true;
         }
         if (player != null & playerHasFallen && !startedMusic && player.OnGround(1))

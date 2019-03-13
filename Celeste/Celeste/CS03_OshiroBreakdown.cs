@@ -38,7 +38,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.Add((Component) new Coroutine(this.player.DummyWalkTo(this.player.X - 64f, false, 1f, false), true));
       List<DustStaticSpinner> dusts = level.Entities.FindAll<DustStaticSpinner>();
@@ -164,7 +164,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       if (this.WasSkipped)
       {
         this.player.X = (float) (level.Bounds.Left + 200);

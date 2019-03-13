@@ -32,7 +32,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.Dashes = 1;
       level.Session.Audio.Music.Layer(3, false);
       level.Session.Audio.Apply();

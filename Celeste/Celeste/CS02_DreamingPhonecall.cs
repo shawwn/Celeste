@@ -34,7 +34,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.Dashes = 1;
       yield return (object) 0.3f;
       this.ringtone.Play("event:/game/02_old_site/sequence_phone_ring_loop", (string) null, 0.0f);

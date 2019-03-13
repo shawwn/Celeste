@@ -35,7 +35,7 @@ namespace Celeste
     {
       while (this.player.Scene == null || !this.player.OnGround(1))
         yield return (object) null;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) 0.25f;
       this.theo = this.Scene.Tracker.GetEntity<TheoCrystal>();
@@ -95,7 +95,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.player.ForceCameraUpdate = false;
       this.player.DummyAutoAnimate = true;
       level.Session.DarkRoomAlpha = 0.3f;

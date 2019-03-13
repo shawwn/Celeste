@@ -34,7 +34,7 @@ namespace Celeste
 
     private IEnumerator Cutscene()
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       if ((double) Math.Abs(this.player.X - this.granny.X) < 20.0)
         yield return (object) this.player.DummyWalkTo(this.granny.X - 48f, false, 1f, false);
       this.player.Facing = Facings.Right;
@@ -111,7 +111,7 @@ namespace Celeste
       this.granny.Sprite.Scale.X = 1f;
       this.player.Position.X = this.endPlayerPosition.X;
       this.player.Facing = Facings.Left;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       level.Session.SetFlag("granny", true);
       level.ResetZoom();
     }

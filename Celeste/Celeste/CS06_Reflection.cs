@@ -31,7 +31,7 @@ namespace Celeste
     private IEnumerator Cutscene(Level level)
     {
       CS06_Reflection cs06Reflection = this;
-      cs06Reflection.player.StateMachine.State = 11;
+      cs06Reflection.player.StateMachine.State = Player.StDummy;
       cs06Reflection.player.StateMachine.Locked = true;
       cs06Reflection.player.ForceCameraUpdate = true;
       yield return (object) cs06Reflection.player.DummyWalkToExact((int) cs06Reflection.targetX, false, 1f);
@@ -47,7 +47,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.player.ForceCameraUpdate = false;
       this.player.FlipInReflection = false;
       level.Session.SetFlag("reflection", true);

@@ -33,7 +33,7 @@ namespace Celeste
       level.Session.Audio.Music.Layer(1, false);
       level.Session.Audio.Music.Layer(2, true);
       level.Session.Audio.Apply();
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) Textbox.Say("CH3_OSHIRO_HALLWAY_A");
       this.oshiro.MoveToAndRemove(new Vector2((float) (this.SceneAs<Level>().Bounds.Right + 64), this.oshiro.Y));
@@ -48,7 +48,7 @@ namespace Celeste
       level.Session.Audio.Music.Layer(2, false);
       level.Session.Audio.Apply();
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       level.Session.SetFlag("oshiro_resort_talked_2", true);
       if (!this.WasSkipped)
         return;

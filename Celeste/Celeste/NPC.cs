@@ -151,7 +151,7 @@ namespace Celeste
       int num = 0;
       if (nullable1.GetValueOrDefault() == num & nullable1.HasValue)
         side = new int?(1);
-      player.StateMachine.State = 11;
+      player.StateMachine.State = Player.StDummy;
       player.StateMachine.Locked = true;
       if (spacing.HasValue)
       {
@@ -199,7 +199,7 @@ namespace Celeste
       if (to.HasValue)
         yield return (object) player.DummyWalkToExact((int) to.Value, false, 1f);
       player.StateMachine.Locked = false;
-      player.StateMachine.State = 0;
+      player.StateMachine.State = Player.StNormal;
       yield return (object) null;
     }
 

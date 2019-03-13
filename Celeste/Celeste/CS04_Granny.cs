@@ -31,7 +31,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.player.ForceCameraUpdate = true;
       yield return (object) this.player.DummyWalkTo(this.granny.X - 30f, false, 1f, false);
@@ -84,7 +84,7 @@ namespace Celeste
     {
       this.player.X = this.granny.X + 30f;
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.player.ForceCameraUpdate = false;
       if (this.WasSkipped)
         level.Camera.Position = this.player.CameraTarget;

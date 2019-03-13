@@ -41,7 +41,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       while (!this.player.OnGround(1))
         yield return (object) null;
@@ -172,7 +172,7 @@ namespace Celeste
         level.Add((Entity) new LevelUpEffect(this.player.Position));
       this.player.DummyAutoAnimate = true;
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       FinalBossStarfield finalBossStarfield = this.Level.Background.Get<FinalBossStarfield>();
       if (finalBossStarfield != null)
         finalBossStarfield.Alpha = 0.0f;

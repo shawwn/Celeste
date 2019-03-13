@@ -54,7 +54,7 @@ namespace Celeste
 
     private IEnumerator TalkRoutine(Player player)
     {
-      player.StateMachine.State = 11;
+      player.StateMachine.State = Player.StDummy;
       player.ForceCameraUpdate = true;
       while (!player.OnGround(1))
         yield return (object) null;
@@ -94,7 +94,7 @@ namespace Celeste
     {
       if (this.player != null)
       {
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
         this.player.ForceCameraUpdate = false;
       }
       ++this.conversation;

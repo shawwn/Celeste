@@ -85,7 +85,7 @@ namespace Celeste
       TheoCrystal theo = this.Scene.Tracker.GetEntity<TheoCrystal>();
       if (player != null)
       {
-        player.StateMachine.State = 11;
+        player.StateMachine.State = Player.StDummy;
         player.StateMachine.Locked = true;
         if (player.OnGround(1))
         {

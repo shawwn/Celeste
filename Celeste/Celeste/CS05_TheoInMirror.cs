@@ -32,7 +32,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) this.player.DummyWalkTo(this.theo.X - 16f, false, 1f, false);
       yield return (object) 0.5f;
@@ -48,7 +48,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.player.X = (float) this.playerFinalX;
       this.player.MoveV(200f, (Collision) null, (Solid) null);
       this.player.Speed = Vector2.Zero;

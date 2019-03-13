@@ -302,7 +302,7 @@ namespace Celeste
       Player player = this.WindUpPlayerCheck();
       if (player == null)
         return;
-      player.StateMachine.State = 0;
+      player.StateMachine.State = Player.StNormal;
       player.Speed = liftSpeed;
       player.StartJumpGraceTime();
     }

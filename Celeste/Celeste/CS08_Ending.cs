@@ -85,7 +85,7 @@ namespace Celeste
         this.player = level.Tracker.GetEntity<Player>();
         yield return (object) null;
       }
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       yield return (object) 1f;
       yield return (object) this.player.DummyWalkToExact((int) this.player.X + 16, false, 1f);
       yield return (object) 0.25f;

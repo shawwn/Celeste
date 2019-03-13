@@ -35,7 +35,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.player.ForceCameraUpdate = true;
       if (this.index == 0)
@@ -118,7 +118,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.player.ForceCameraUpdate = false;
       this.granny.Sprite.Play("idle", false, false);
       level.Session.SetFlag("granny_" + (object) this.index, true);

@@ -61,7 +61,7 @@ namespace Celeste
 
     private IEnumerator Cutscene()
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       yield return (object) this.player.DummyWalkToExact((int) this.gondola.X + 16, false, 1f);
       while (!this.player.OnGround(1))
         yield return (object) null;
@@ -178,7 +178,7 @@ namespace Celeste
       this.AutoSnapCharacters = true;
       this.theoXOffset = this.theo.X - this.gondola.X;
       this.playerXOffset = this.player.X - this.gondola.X;
-      this.player.StateMachine.State = 17;
+      this.player.StateMachine.State = Player.StFrozen;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 16f, true);
       tween.OnUpdate = (Action<Tween>) (t =>
       {
@@ -368,7 +368,7 @@ namespace Celeste
       this.gondola.Rotation = this.gondola.RotationSpeed = 0.0f;
       this.Level.Shake(0.3f);
       this.AutoSnapCharacters = false;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.Position = this.player.Position.Floor();
       while (this.player.CollideCheck<Solid>())
         --this.player.Y;

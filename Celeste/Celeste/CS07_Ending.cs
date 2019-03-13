@@ -33,7 +33,7 @@ namespace Celeste
     private IEnumerator Cutscene(Level level)
     {
       Audio.SetMusic((string) null, true, true);
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       yield return (object) this.player.DummyWalkTo(this.target.X, false, 1f, false);
       yield return (object) 0.25f;
       this.Add((Component) new Coroutine(CutsceneEntity.CameraTo(this.target + new Vector2(-160f, -130f), 3f, Ease.CubeInOut, 0.0f), true));

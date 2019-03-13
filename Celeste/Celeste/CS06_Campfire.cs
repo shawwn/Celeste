@@ -93,7 +93,7 @@ namespace Celeste
       this.theoCampfirePosition = new Vector2(this.bonfire.X - 16f, this.bonfire.Y);
       this.player.Light.Alpha = 0.0f;
       this.player.X = (float) (level.Bounds.Left - 40);
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.playerCampfirePosition = new Vector2(this.bonfire.X + 20f, this.bonfire.Y);
       if (level.Session.GetFlag("campfire_chat"))
@@ -295,12 +295,12 @@ namespace Celeste
       this.player.Sprite.Play("asleep", false, false);
       this.player.Position = this.playerCampfirePosition;
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 15;
+      this.player.StateMachine.State = Player.StIntroWakeUp;
       this.player.Speed = Vector2.Zero;
       this.player.Facing = Facings.Left;
       level.Camera.Position = this.player.CameraTarget;
       if (this.WasSkipped)
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
       this.RemoveSelf();
     }
 

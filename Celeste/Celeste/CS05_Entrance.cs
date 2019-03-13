@@ -32,7 +32,7 @@ namespace Celeste
     private IEnumerator Cutscene(Level level)
     {
       this.player = level.Tracker.GetEntity<Player>();
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.player.X = this.theo.X - 32f;
       this.playerMoveTo = new Vector2(this.theo.X - 32f, this.player.Y);
@@ -68,7 +68,7 @@ namespace Celeste
       if (this.player != null)
       {
         this.player.StateMachine.Locked = false;
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
         this.player.ForceCameraUpdate = false;
         this.player.Position = this.playerMoveTo;
         this.player.Facing = Facings.Right;

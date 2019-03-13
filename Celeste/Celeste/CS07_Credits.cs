@@ -170,7 +170,7 @@ namespace Celeste
           other = new Player(trigger.Position, PlayerSpriteMode.Badeline);
           other.OverrideHairColor = new Color?(BadelineOldsite.HairColor);
           yield return (object) null;
-          other.StateMachine.State = 11;
+          other.StateMachine.State = Player.StDummy;
           other.Facing = Facings.Left;
           this.Scene.Add((Entity) other);
         }
@@ -429,7 +429,7 @@ namespace Celeste
       this.badelineWalkApproach = 0.0f;
       this.Level.Session.Inventory.Dashes = 1;
       this.player.Dashes = 1;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.DummyFriction = false;
       this.player.DummyMaxspeed = false;
       this.player.Facing = Facings.Left;
@@ -585,7 +585,7 @@ namespace Celeste
       this.player.StateMachine.State = this.player.StartDash();
       yield return (object) 0.6f;
       this.player.OverrideDashDirection = new Vector2?();
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.autoWalk = true;
     }
 
@@ -610,7 +610,7 @@ namespace Celeste
       this.player.StateMachine.State = this.player.StartDash();
       yield return (object) 0.6f;
       this.player.OverrideDashDirection = new Vector2?();
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.autoWalk = true;
       while (!this.player.OnGround(1))
         yield return (object) null;

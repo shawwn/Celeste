@@ -120,7 +120,7 @@ namespace Celeste
       {
         entity.DummyAutoAnimate = true;
         entity.StateMachine.Locked = false;
-        entity.StateMachine.State = 0;
+        entity.StateMachine.State = Player.StNormal;
       }
       this.Session.SetFlag("theoVentsTalked", true);
       this.RemoveSelf();

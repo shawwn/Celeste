@@ -58,7 +58,7 @@ namespace Celeste
       }
       while (!this.player.OnGround(1))
         yield return (object) null;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) 1f;
       if (level.Session.Area.Mode == AreaMode.Normal)
@@ -120,7 +120,7 @@ namespace Celeste
       {
         this.player.StateMachine.Locked = false;
         this.player.Facing = Facings.Left;
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
         this.player.JustRespawned = true;
       }
       this.badeline.Position = this.badelineEndPosition;

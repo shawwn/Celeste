@@ -43,7 +43,7 @@ namespace Celeste
         MInput.GamePads[Input.Gamepad].StopRumble();
       }
       Engine.TimeRate = 0.0f;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.Facing = Facings.Right;
       yield return (object) this.WaitFor(1f);
       EventInstance instance = Audio.Play("event:/game/general/bird_in", this.bird.Position);
@@ -88,7 +88,7 @@ namespace Celeste
         else
           break;
       }
-      this.player.StateMachine.State = 16;
+      this.player.StateMachine.State = Player.StBirdDashTutorial;
       this.player.Dashes = 0;
       level.Session.Inventory.Dashes = 1;
       Engine.TimeRate = 1f;
@@ -140,7 +140,7 @@ namespace Celeste
         if (this.player != null)
         {
           this.player.Position = new Vector2(2120f, 40f);
-          this.player.StateMachine.State = 11;
+          this.player.StateMachine.State = Player.StDummy;
           this.player.DummyAutoAnimate = false;
           this.player.Sprite.Play("tired", false, false);
           this.player.Speed = Vector2.Zero;

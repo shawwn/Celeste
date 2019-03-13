@@ -30,7 +30,7 @@ namespace Celeste
     private IEnumerator Cutscene(Level level)
     {
       CS05_Reflection1 cs05Reflection1 = this;
-      cs05Reflection1.player.StateMachine.State = 11;
+      cs05Reflection1.player.StateMachine.State = Player.StDummy;
       cs05Reflection1.player.StateMachine.Locked = true;
       cs05Reflection1.player.ForceCameraUpdate = true;
       TempleMirror first = cs05Reflection1.Scene.Entities.FindFirst<TempleMirror>();
@@ -74,7 +74,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.player.ForceCameraUpdate = false;
       this.player.FlipInReflection = false;
       level.Session.SetFlag("reflection", true);

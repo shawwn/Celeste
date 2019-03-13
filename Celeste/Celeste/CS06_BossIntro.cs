@@ -36,7 +36,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       while (!this.player.Dead && !this.player.OnGround(1))
         yield return (object) null;
@@ -84,7 +84,7 @@ namespace Celeste
           player = this.player;
       }
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.boss.Position = this.bossEndPosition;
       if (this.boss.NormalSprite != null)
       {

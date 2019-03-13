@@ -31,7 +31,7 @@ namespace Celeste
     private IEnumerator Routine()
     {
       CS05_TheoPhone cs05TheoPhone = this;
-      cs05TheoPhone.player.StateMachine.State = 11;
+      cs05TheoPhone.player.StateMachine.State = Player.StDummy;
       if ((double) cs05TheoPhone.player.X != (double) cs05TheoPhone.targetX)
         cs05TheoPhone.player.Facing = (Facings) Math.Sign(cs05TheoPhone.targetX - cs05TheoPhone.player.X);
       yield return (object) 0.5f;
@@ -63,7 +63,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.RemovePhone();
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
     }
 
     private void RemovePhone()

@@ -27,7 +27,7 @@ namespace Celeste
     private IEnumerator Routine()
     {
       CS03_Diary cs03Diary = this;
-      cs03Diary.player.StateMachine.State = 11;
+      cs03Diary.player.StateMachine.State = Player.StDummy;
       cs03Diary.player.StateMachine.Locked = true;
       yield return (object) Textbox.Say("CH3_DIARY");
       yield return (object) 0.1f;
@@ -37,7 +37,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
     }
   }
 }

@@ -47,7 +47,7 @@ namespace Celeste
       this.node = node;
       this.fastMoving = fastMoving;
       this.oneUse = oneUse;
-      this.SurfaceSoundIndex = 11;
+      this.SurfaceSoundIndex = Player.StDummy;
       this.particleTextures = new MTexture[4]
       {
         GFX.Game["objects/dreamblock/particles"].GetSubtexture(14, 0, 7, 7, (MTexture) null),

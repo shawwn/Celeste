@@ -43,7 +43,7 @@ namespace Celeste
       }
       Audio.SetMusic((string) null, true, true);
       yield return (object) 0.4f;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.Add((Component) new Coroutine(this.player.DummyWalkTo(this.oshiro.X + 32f, false, 1f, false), true));
       yield return (object) 1f;
@@ -180,7 +180,7 @@ namespace Celeste
       if (this.player != null)
       {
         this.player.StateMachine.Locked = false;
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
       }
       level.Lighting.Alpha = level.BaseLightingAlpha;
       level.Session.SetFlag("oshiro_resort_suite", true);

@@ -32,7 +32,7 @@ namespace Celeste
         this.player = this.Scene.Tracker.GetEntity<Player>();
         yield return (object) null;
       }
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       while (!this.player.OnGround(1))
         yield return (object) null;
@@ -55,7 +55,7 @@ namespace Celeste
       if (this.player != null)
       {
         this.player.StateMachine.Locked = false;
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
       }
       FinalBoss first = level.Entities.FindFirst<FinalBoss>();
       if (first != null)

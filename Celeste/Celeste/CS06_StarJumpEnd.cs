@@ -102,7 +102,7 @@ namespace Celeste
       if (this.player.StateMachine.State == 19)
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
       this.player.Dashes = 0;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.DummyGravity = false;
       this.player.DummyAutoAnimate = false;
       this.player.Sprite.Play("fallSlow", false, false);

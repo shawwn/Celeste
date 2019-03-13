@@ -27,7 +27,7 @@ namespace Celeste
     private IEnumerator Routine()
     {
       CS03_Guestbook cs03Guestbook = this;
-      cs03Guestbook.player.StateMachine.State = 11;
+      cs03Guestbook.player.StateMachine.State = Player.StDummy;
       cs03Guestbook.player.StateMachine.Locked = true;
       yield return (object) Textbox.Say("ch3_guestbook");
       yield return (object) 0.1f;
@@ -37,7 +37,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
     }
   }
 }

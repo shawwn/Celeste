@@ -31,7 +31,7 @@ namespace Celeste
 
     private IEnumerator Routine()
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       if (!this.Level.Session.GetFlag("memo_read"))
       {
@@ -50,7 +50,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       level.Session.SetFlag("memo_read", true);
       if (this.memo == null)
         return;

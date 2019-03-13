@@ -96,7 +96,7 @@ namespace Celeste
       if (entity != null)
       {
         entity.StateMachine.Locked = false;
-        entity.StateMachine.State = 0;
+        entity.StateMachine.State = Player.StNormal;
       }
       this.Session.IncrementCounter("theo");
       ++this.currentConversation;

@@ -59,7 +59,7 @@ namespace Celeste
 
     private IEnumerator TalkRoutine(Player player)
     {
-      player.StateMachine.State = 11;
+      player.StateMachine.State = Player.StDummy;
       while (!player.OnGround(1))
         yield return (object) null;
       this.Sprite.Scale.X = -1f;
@@ -92,7 +92,7 @@ namespace Celeste
     private void EndTalking(Level level)
     {
       if (this.player != null)
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
       this.Level.Session.SetFlag("granny_outside", true);
       this.RemoveSelf();
     }

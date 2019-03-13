@@ -165,7 +165,7 @@ namespace Celeste
         finishDelay = 6.066f;
       }
       this.Add((Component) Alarm.Create(Alarm.AlarmMode.Oneshot, (Action) (() => Audio.Play("event:/game/03_resort/clutterswitch_finish", this.Position)), finishDelay, true));
-      player.StateMachine.State = 11;
+      player.StateMachine.State = Player.StDummy;
       Vector2 target = this.Position + new Vector2(this.Width / 2f, 0.0f);
       ClutterAbsorbEffect effect = new ClutterAbsorbEffect();
       this.Scene.Add((Entity) effect);
@@ -209,7 +209,7 @@ namespace Celeste
         block = (ClutterBlockBase) null;
       }
       yield return (object) 1.5f;
-      player.StateMachine.State = 0;
+      player.StateMachine.State = Player.StNormal;
       List<MTexture> images = GFX.Game.GetAtlasSubtextures("objects/resortclutter/" + this.color.ToString() + "_");
       for (int i = 0; i < 25; ++i)
       {

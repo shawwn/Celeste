@@ -36,7 +36,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       int side = this.index != 1 && this.index != 2 ? 1 : -1;
       if (side == -1)
@@ -98,7 +98,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       if (this.oshiro.Sprite.CurrentAnimationID == "side")
         (this.oshiro.Sprite as OshiroSprite).Pop("idle", true);
       if (this.index < 3)

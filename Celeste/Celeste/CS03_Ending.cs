@@ -47,7 +47,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       this.player.ForceCameraUpdate = false;
       this.Add((Component) new Coroutine(this.player.DummyRunTo((float) ((double) this.roof.X + (double) this.roof.Width - 32.0), true), true));

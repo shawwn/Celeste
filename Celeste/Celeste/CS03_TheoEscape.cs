@@ -33,7 +33,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) this.player.DummyWalkTo(this.theo.X - 64f, false, 1f, false);
       this.player.Facing = Facings.Right;
@@ -70,7 +70,7 @@ namespace Celeste
         this.theo.Talker.Active = false;
       level.Session.SetFlag("resort_theo", true);
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       this.theo.CrawlUntilOut();
       yield return (object) level.ZoomBack(0.5f);
       this.EndCutscene(level, true);
@@ -124,7 +124,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       level.Session.SetFlag("resort_theo", true);
       SaveData.Instance.SetFlag("MetTheo");
       SaveData.Instance.SetFlag("TheoKnowsName");

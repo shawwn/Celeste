@@ -47,7 +47,7 @@ namespace Celeste
       this.startLightAlpha = level.Lighting.Alpha;
       float endLightAlpha = 1f;
       float from = this.oshiro.Y;
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) 0.5f;
       yield return (object) this.player.DummyWalkTo(this.oshiro.X - 16f, false, 1f, false);
@@ -137,7 +137,7 @@ namespace Celeste
     public override void OnEnd(Level level)
     {
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       if (this.WasSkipped)
       {
         foreach (MrOshiroDoor mrOshiroDoor in this.Scene.Entities.FindAll<MrOshiroDoor>())

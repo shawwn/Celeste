@@ -40,7 +40,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       yield return (object) 0.25f;
       if (this.index == 3)
@@ -64,7 +64,7 @@ namespace Celeste
     {
       this.npc.SnapToNode(this.index);
       this.player.StateMachine.Locked = false;
-      this.player.StateMachine.State = 0;
+      this.player.StateMachine.State = Player.StNormal;
       level.Session.SetFlag(CS05_Badeline.GetFlag(this.index), true);
     }
 

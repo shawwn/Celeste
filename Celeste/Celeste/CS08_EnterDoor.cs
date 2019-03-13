@@ -30,7 +30,7 @@ namespace Celeste
 
     private IEnumerator Cutscene(Level level)
     {
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.Add((Component) new Coroutine(this.player.DummyWalkToExact((int) this.targetX, false, 0.7f), true));
       this.Add((Component) new Coroutine(level.ZoomTo(new Vector2(this.targetX - level.Camera.X, 90f), 2f, 2f), true));
       FadeWipe wipe = new FadeWipe((Scene) level, false, (Action) null);

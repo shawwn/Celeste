@@ -78,7 +78,7 @@ namespace Celeste
         Audio.Play("event:/char/badeline/booster_begin", this.Position);
       else
         Audio.Play("event:/char/badeline/booster_final", this.Position);
-      player.StateMachine.State = 11;
+      player.StateMachine.State = Player.StDummy;
       player.DummyAutoAnimate = false;
       player.DummyGravity = false;
       player.Dashes = 1;

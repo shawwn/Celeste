@@ -47,7 +47,7 @@ namespace Celeste
         else
           break;
       }
-      this.player.StateMachine.State = 11;
+      this.player.StateMachine.State = Player.StDummy;
       this.player.StateMachine.Locked = true;
       while (!this.player.OnGround(1) || (double) this.player.Speed.Y < 0.0)
         yield return (object) null;
@@ -168,7 +168,7 @@ namespace Celeste
       if (this.player != null)
       {
         this.player.StateMachine.Locked = false;
-        this.player.StateMachine.State = 0;
+        this.player.StateMachine.State = Player.StNormal;
         this.player.X = (float) level.Bounds.Left + 170f;
         this.player.Speed.Y = 0.0f;
         while (this.player.CollideCheck<Solid>())
