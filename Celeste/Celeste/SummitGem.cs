@@ -83,7 +83,7 @@ namespace Celeste
       session.SummitGems[this.GemID] = true;
       SaveData.Instance.RegisterSummitGem(this.GemID);
       level.Shake(0.3f);
-      Celeste.Celeste.Freeze(0.1f);
+      Celeste.Freeze(0.1f);
       SummitGem.P_Shatter.Color = SummitGem.GemColors[this.GemID];
       float angle = player.Speed.Angle();
       level.ParticlesFG.Emit(SummitGem.P_Shatter, 5, this.Position, Vector2.One * 4f, angle - 1.570796f);

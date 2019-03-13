@@ -157,7 +157,7 @@ namespace Monocle
 
     public override bool Collide(Vector2 point)
     {
-      return Collide.RectToPoint(this.AbsoluteLeft, this.AbsoluteTop, this.Width, this.Height, point);
+      return Monocle.Collide.RectToPoint(this.AbsoluteLeft, this.AbsoluteTop, this.Width, this.Height, point);
     }
 
     public override bool Collide(Rectangle rect)
@@ -167,7 +167,7 @@ namespace Monocle
 
     public override bool Collide(Vector2 from, Vector2 to)
     {
-      return Collide.RectToLine(this.AbsoluteLeft, this.AbsoluteTop, this.Width, this.Height, from, to);
+      return Monocle.Collide.RectToLine(this.AbsoluteLeft, this.AbsoluteTop, this.Width, this.Height, from, to);
     }
 
     public override bool Collide(Hitbox hitbox)
@@ -182,7 +182,7 @@ namespace Monocle
 
     public override bool Collide(Circle circle)
     {
-      return Collide.RectToCircle(this.AbsoluteLeft, this.AbsoluteTop, this.Width, this.Height, circle.AbsolutePosition, circle.Radius);
+      return Monocle.Collide.RectToCircle(this.AbsoluteLeft, this.AbsoluteTop, this.Width, this.Height, circle.AbsolutePosition, circle.Radius);
     }
 
     public override bool Collide(ColliderList list)

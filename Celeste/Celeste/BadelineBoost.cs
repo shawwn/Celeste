@@ -89,7 +89,7 @@ namespace Celeste
         side = -1;
       BadelineDummy badeline = new BadelineDummy(this.Position);
       this.Scene.Add((Entity) badeline);
-      player.Facing = (Facings) -side;
+      player.Facing = ToFacing.Convert(-side);
       badeline.Sprite.Scale.X = (float) side;
       Vector2 playerFrom = player.Position;
       Vector2 playerTo = this.Position + new Vector2((float) (side * 4), -3f);

@@ -171,7 +171,7 @@ namespace Celeste
       if (UserIO.Saving)
         return;
       UserIO.Saving = true;
-      Celeste.Celeste.SaveRoutine = new Coroutine(UserIO.SaveRoutine(file, settings), true);
+      Celeste.SaveRoutine = new Coroutine(UserIO.SaveRoutine(file, settings), true);
     }
 
     private static IEnumerator SaveRoutine(bool file, bool settings)
@@ -208,7 +208,7 @@ namespace Celeste
       menu = (FileErrorOverlay) null;
 label_14:
       UserIO.Saving = false;
-      Celeste.Celeste.SaveRoutine = (Coroutine) null;
+      Celeste.SaveRoutine = (Coroutine) null;
     }
 
     private static void SaveThread()

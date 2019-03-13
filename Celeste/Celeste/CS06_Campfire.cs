@@ -420,7 +420,7 @@ namespace Celeste
         GFX.Portraits[this.Question.Textbox].Draw(position, Vector2.Zero, color1);
         Facings facings = this.Question.PortraitSide;
         if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
-          facings = (Facings) -(int) facings;
+          facings = ToFacing.Convert(-(int) facings);
         float num2 = 100f;
         this.Question.Portrait.Scale = Vector2.One * (num2 / this.Question.PortraitSize);
         if (facings == Facings.Right)

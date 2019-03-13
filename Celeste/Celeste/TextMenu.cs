@@ -220,32 +220,32 @@ namespace Celeste
         this.OnUpdate();
       if (this.Focused)
       {
-        if (Celeste.Input.MenuDown.Pressed)
+        if (Input.MenuDown.Pressed)
           this.MoveSelection(1, true);
-        else if (Celeste.Input.MenuUp.Pressed)
+        else if (Input.MenuUp.Pressed)
           this.MoveSelection(-1, true);
         if (this.Current != null)
         {
-          if (Celeste.Input.MenuLeft.Pressed)
+          if (Input.MenuLeft.Pressed)
             this.Current.LeftPressed();
-          if (Celeste.Input.MenuRight.Pressed)
+          if (Input.MenuRight.Pressed)
             this.Current.RightPressed();
-          if (Celeste.Input.MenuConfirm.Pressed)
+          if (Input.MenuConfirm.Pressed)
           {
             this.Current.ConfirmPressed();
             if (this.Current.OnPressed != null)
               this.Current.OnPressed();
           }
-          if (Celeste.Input.MenuJournal.Pressed && this.Current.OnAltPressed != null)
+          if (Input.MenuJournal.Pressed && this.Current.OnAltPressed != null)
             this.Current.OnAltPressed();
         }
-        if (!Celeste.Input.MenuConfirm.Pressed)
+        if (!Input.MenuConfirm.Pressed)
         {
-          if (Celeste.Input.MenuCancel.Pressed && this.OnCancel != null)
+          if (Input.MenuCancel.Pressed && this.OnCancel != null)
             this.OnCancel();
-          else if (Celeste.Input.ESC.Pressed && this.OnESC != null)
+          else if (Input.ESC.Pressed && this.OnESC != null)
             this.OnESC();
-          else if (Celeste.Input.Pause.Pressed && this.OnPause != null)
+          else if (Input.Pause.Pressed && this.OnPause != null)
             this.OnPause();
         }
       }
@@ -637,7 +637,7 @@ namespace Celeste
         {
           if (keys[index1] != Keys.None)
           {
-            MTexture mtexture = Celeste.Input.GuiKey(keys[index1], (string) null);
+            MTexture mtexture = Input.GuiKey(keys[index1], (string) null);
             if (mtexture != null)
             {
               this.Values.Add((object) mtexture);
@@ -664,7 +664,7 @@ namespace Celeste
         int index1 = 0;
         for (int index2 = Math.Min(4, buttons.Count); index1 < index2; ++index1)
         {
-          MTexture mtexture = Celeste.Input.GuiSingleButton(buttons[index1], (string) null);
+          MTexture mtexture = Input.GuiSingleButton(buttons[index1], (string) null);
           if (mtexture != null)
           {
             this.Values.Add((object) mtexture);

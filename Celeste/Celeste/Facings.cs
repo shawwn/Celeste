@@ -11,4 +11,12 @@ namespace Celeste
     Left = -1,
     Right = 1,
   }
+
+  public static class ToFacing
+  {
+    public static Facings Convert(int i)
+    {
+      return (Facings) i;
+    }
+  }
 }

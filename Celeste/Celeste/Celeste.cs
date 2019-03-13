@@ -11,13 +11,18 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+#if STEAM
+using Steamworks;
+#endif
 
 namespace Celeste
 {
   public class Celeste : Engine
   {
     public static PlayModes PlayMode = PlayModes.Normal;
-    //public static readonly AppId_t SteamID = new AppId_t(504230U);
+#if STEAM
+    public static readonly AppId_t SteamID = new AppId_t(504230U);
+#endif
     private bool firstLoad = true;
     public AutoSplitterInfo AutoSplitterInfo = new AutoSplitterInfo();
     public const int GameWidth = 320;
@@ -84,15 +89,17 @@ namespace Celeste
       }
       if (GFX.Game != null)
       {
-        //Draw.Particle = GFX.Game["util/particle"];
-        //Draw.Pixel = new MTexture(GFX.Game["util/pixel"], 1, 1, 1, 1);
+        Monocle.Draw.Particle = GFX.Game["util/particle"];
+        Monocle.Draw.Pixel = new MTexture(GFX.Game["util/pixel"], 1, 1, 1, 1);
       }
       GFX.LoadEffects();
     }
 
     protected override void Update(GameTime gameTime)
     {
-      //SteamAPI.RunCallbacks();
+#if STEAM
+      SteamAPI.RunCallbacks();
+#endif
       if (SaveRoutine != null)
         SaveRoutine.Update();
       this.AutoSplitterInfo.Update();
@@ -145,7 +152,7 @@ namespace Celeste
       {
         _mainThreadId = Thread.CurrentThread.ManagedThreadId;
         Settings.Initialize();
-        /*
+#if STEAM
         if (SteamAPI.RestartAppIfNecessary(SteamID))
           return;
         if (!SteamAPI.Init())
@@ -156,7 +163,7 @@ namespace Celeste
         }
         if (!Settings.Existed)
           Settings.Instance.Language = SteamApps.GetCurrentGameLanguage();
-        */
+#endif
         int num = Settings.Existed ? 1 : 0;
         for (int index = 0; index < args.Length - 1; ++index)
         {

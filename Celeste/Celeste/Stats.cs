@@ -4,7 +4,9 @@
 // MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
 // Assembly location: M:\code\bin\Celeste\Celeste.exe
 
+#if STEAM
 using Steamworks;
+#endif
 using System.Collections.Generic;
 
 namespace Celeste
@@ -12,12 +14,14 @@ namespace Celeste
   public static class Stats
   {
     private static Dictionary<Stat, string> statToString = new Dictionary<Stat, string>();
-    private static bool ready;
+    private static bool ready = false;
 
     public static void MakeRequest()
     {
+#if STEAM
       Stats.ready = SteamUserStats.RequestCurrentStats();
       SteamUserStats.RequestGlobalStats(0);
+#endif
     }
 
     public static bool Has()
@@ -32,9 +36,11 @@ namespace Celeste
       string pchName = (string) null;
       if (!Stats.statToString.TryGetValue(stat, out pchName))
         Stats.statToString.Add(stat, pchName = stat.ToString());
+#if STEAM
       int pData;
       if (SteamUserStats.GetStat(pchName, out pData))
         SteamUserStats.SetStat(pchName, pData + increment);
+#endif
     }
 
     public static int Local(Stat stat)
@@ -45,7 +51,9 @@ namespace Celeste
         string pchName = (string) null;
         if (!Stats.statToString.TryGetValue(stat, out pchName))
           Stats.statToString.Add(stat, pchName = stat.ToString());
+#if STEAM
         SteamUserStats.GetStat(pchName, out pData);
+#endif
       }
       return pData;
     }
@@ -58,7 +66,9 @@ namespace Celeste
         string pchStatName = (string) null;
         if (!Stats.statToString.TryGetValue(stat, out pchStatName))
           Stats.statToString.Add(stat, pchStatName = stat.ToString());
+#if STEAM
         SteamUserStats.GetGlobalStat(pchStatName, out pData);
+#endif
       }
       return pData;
     }
@@ -67,7 +77,9 @@ namespace Celeste
     {
       if (!Stats.ready)
         return;
+#if STEAM
       SteamUserStats.StoreStats();
+#endif
     }
 
     public static string Name(Stat stat)

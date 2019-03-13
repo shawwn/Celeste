@@ -19,7 +19,7 @@ namespace Celeste
     public MountainRenderer Renderer;
     public Billboard Image;
     public Wiggler Wiggler;
-    public Vector3 Position;
+    new public Vector3 Position;
     public bool Disabled;
     private List<MTexture> frames;
     private float frame;

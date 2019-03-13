@@ -49,7 +49,7 @@ namespace Celeste
       if ((double) Math.Abs(this.bounce.X) > (double) Math.Abs(this.bounce.Y))
       {
         this.sprite.Play("deadside", false, false);
-        this.facing = (Facings) -Math.Sign(this.bounce.X);
+        this.facing = ToFacing.Convert(-Math.Sign(this.bounce.X));
       }
       else
       {

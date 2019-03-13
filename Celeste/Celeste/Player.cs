@@ -550,7 +550,7 @@ namespace Celeste
         }
         if (this.reflection.IsRendering && this.FlipInReflection)
         {
-          this.Facing = (Facings) -(int) this.Facing;
+          this.Facing = ToFacing.Convert(-(int) this.Facing);
           this.Hair.Facing = this.Facing;
         }
         this.Sprite.Scale.X *= (float) this.Facing;
@@ -572,7 +572,7 @@ namespace Celeste
         this.Sprite.Scale.X *= (float) this.Facing;
         if (this.reflection.IsRendering && this.FlipInReflection)
         {
-          this.Facing = (Facings) -(int) this.Facing;
+          this.Facing = ToFacing.Convert(-(int) this.Facing);
           this.Hair.Facing = this.Facing;
         }
       }
@@ -1111,7 +1111,7 @@ namespace Celeste
               else if (this.Sprite.CurrentAnimationID != "skid")
                 this.Sprite.Play("flip", false, false);
             }
-            else if ((double) this.windDirection.X != 0.0 && (double) this.windTimeout > 0.0 && this.Facing == (Facings) -Math.Sign(this.windDirection.X))
+            else if ((double) this.windDirection.X != 0.0 && (double) this.windTimeout > 0.0 && this.Facing == ToFacing.Convert(-Math.Sign(this.windDirection.X)))
               this.Sprite.Play("runWind", false, false);
             else if (!this.Sprite.Running || this.Sprite.CurrentAnimationID == "runWind")
             {

@@ -434,6 +434,7 @@ label_107:
                 this.currentText += "\\";
                 return;
             }
+            break;
         }
       }
       if (key.ToString().Length != 1)
@@ -553,25 +554,21 @@ label_107:
         strArray[index] = parameterInfo.Name + ":";
         if (parameterInfo.ParameterType == typeof (string))
         {
-          // ISSUE: explicit reference operation
-          ^ref strArray[index] += "string";
+          strArray[index] += "string";
         }
         else if (parameterInfo.ParameterType == typeof (int))
         {
-          // ISSUE: explicit reference operation
-          ^ref strArray[index] += "int";
+          strArray[index] += "int";
         }
         else if (parameterInfo.ParameterType == typeof (float))
         {
-          // ISSUE: explicit reference operation
-          ^ref strArray[index] += "float";
+          strArray[index] += "float";
         }
         else
         {
           if (!(parameterInfo.ParameterType == typeof (bool)))
             throw new Exception(method.DeclaringType.Name + "." + method.Name + " is marked as a command, but has an invalid parameter type. Allowed types are: string, int, float, and bool");
-          // ISSUE: explicit reference operation
-          ^ref strArray[index] += "bool";
+          strArray[index] += "bool";
         }
         if (parameterInfo.DefaultValue == DBNull.Value)
           defaults[index] = (object) null;
@@ -636,8 +633,9 @@ label_107:
     {
       string str1 = stackTrace;
       char[] chArray = new char[1]{ '\n' };
-      foreach (string str2 in str1.Split(chArray))
+      foreach (string str2_ in str1.Split(chArray))
       {
+        string str2 = str2_;
         int length1 = str2.LastIndexOf(" in ") + 4;
         int startIndex1 = str2.LastIndexOf('\\') + 1;
         if (length1 != -1 && startIndex1 != -1)

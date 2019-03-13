@@ -75,7 +75,7 @@ namespace Celeste
     {
       if (this.CollideCheck((Entity) player))
         return;
-      Celeste.Celeste.Freeze(0.1f);
+      Celeste.Freeze(0.1f);
       player.Bounce(this.Top - 2f);
       this.Destroy();
       Audio.Play("event:/game/general/thing_booped", this.Position);

@@ -41,7 +41,7 @@ namespace Celeste
       this.player.StateMachine.State = 11;
       this.playerEndX = (float) (8 * this.direction);
       yield return (object) 1f;
-      this.player.Facing = (Facings) -this.direction;
+      this.player.Facing = ToFacing.Convert(-this.direction);
       yield return (object) 0.4f;
       yield return (object) this.player.DummyRunTo(this.mirror.X + this.playerEndX, false);
       yield return (object) 0.5f;
@@ -94,7 +94,7 @@ namespace Celeste
         entity1.DummyAutoAnimate = true;
         entity1.Speed = Vector2.Zero;
         entity1.X = this.mirror.X + this.playerEndX;
-        entity1.Facing = (uint) this.direction <= 0U ? Facings.Right : (Facings) -this.direction;
+        entity1.Facing = (uint) this.direction <= 0U ? Facings.Right : ToFacing.Convert(-this.direction);
       }
       foreach (DreamBlock entity2 in this.Scene.Tracker.GetEntities<DreamBlock>())
         entity2.ActivateNoRoutine();

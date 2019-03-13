@@ -71,8 +71,9 @@ namespace Celeste
       Color color = this.Color * this.visibleFade * this.Alpha;
       int num1 = (double) (scene as Level).Wind.Y == 0.0 ? (int) (double) this.positions.Length : (int) ((double) this.positions.Length * 0.600000023841858);
       int num2 = 0;
-      foreach (Vector2 position in this.positions)
+      foreach (Vector2 position_ in this.positions)
       {
+        Vector2 position = position_;
         position.Y -= (scene as Level).Camera.Y + this.CameraOffset.Y;
         position.Y %= this.loopHeight;
         if ((double) position.Y < 0.0)

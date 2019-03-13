@@ -182,7 +182,7 @@ namespace Celeste
         int x2 = (int) (nullable2.HasValue ? new float?(x1 + nullable2.GetValueOrDefault()) : new float?()).Value;
         yield return (object) player1.DummyWalkToExact(x2, false, 1f);
       }
-      player.Facing = (Facings) -side.Value;
+      player.Facing = ToFacing.Convert(-side.Value);
       if (turnToFace && this.Sprite != null)
         this.Sprite.Scale.X = (float) side.Value;
       yield return (object) null;

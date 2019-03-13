@@ -156,7 +156,7 @@ namespace Celeste
         yield return (object) null;
       tween = (Tween) null;
       this.Sprite.Play("fly", false, false);
-      this.Facing = (Facings) -(int) this.Facing;
+      this.Facing = ToFacing.Convert(-(int) this.Facing);
       Vector2 speed = new Vector2((float) ((int) this.Facing * 20), -40f);
       while ((double) this.Y > (double) this.level.Bounds.Top)
       {

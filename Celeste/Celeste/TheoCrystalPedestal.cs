@@ -31,7 +31,7 @@ namespace Celeste
         this.DroppedTheo = true;
         this.Collidable = false;
         (this.Scene as Level).Flash(Color.White, false);
-        Celeste.Celeste.Freeze(0.1f);
+        Celeste.Freeze(0.1f);
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
         Audio.Play("event:/game/05_mirror_temple/crystaltheo_break_free", entity.Position);
         return DashCollisionResults.Rebound;

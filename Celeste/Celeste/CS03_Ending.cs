@@ -75,7 +75,7 @@ namespace Celeste
       lightning.Play("once", false, false);
       this.Add((Component) lightning);
       yield return (object) null;
-      Celeste.Celeste.Freeze(0.3f);
+      Celeste.Freeze(0.3f);
       yield return (object) null;
       level.Shake(0.3f);
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Long);

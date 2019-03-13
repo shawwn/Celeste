@@ -32,7 +32,7 @@ namespace Celeste
       {
         if (!(a == "flipMouth") && !(a == "flipEyes"))
           return;
-        this.facing = (Facings) -(int) this.facing;
+        this.facing = ToFacing.Convert(-(int) this.facing);
       });
       this.Collider = (Collider) new Hitbox(10f, 10f, -5f, -5f);
       this.Add((Component) new MirrorReflection());

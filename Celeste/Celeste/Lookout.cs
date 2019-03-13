@@ -177,14 +177,13 @@ namespace Celeste
               num1 = 1;
             if (num1 != 0)
               speed.X = 0.0f;
-            ref Vector2 local1 = ref cam;
             double x2 = (double) cam.X;
             bounds1 = level.Bounds;
             double left2 = (double) bounds1.Left;
             bounds1 = level.Bounds;
             double num3 = (double) (bounds1.Right - 320);
             double num4 = (double) Calc.Clamp((float) x2, (float) left2, (float) num3);
-            local1.X = (float) num4;
+            cam.X = (float) num4;
             foreach (Entity entity in blockers)
             {
               Entity blocker = entity;
@@ -209,14 +208,13 @@ namespace Celeste
               num5 = 1;
             if (num5 != 0)
               speed.Y = 0.0f;
-            ref Vector2 local2 = ref cam;
             double y = (double) cam.Y;
             bounds2 = level.Bounds;
             double top = (double) bounds2.Top;
             bounds2 = level.Bounds;
             double num6 = (double) (bounds2.Bottom - 180);
             double num7 = (double) Calc.Clamp((float) y, (float) top, (float) num6);
-            local2.Y = (float) num7;
+            cam.Y = (float) num7;
             foreach (Entity entity in blockers)
             {
               Entity blocker = entity;

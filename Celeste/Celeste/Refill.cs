@@ -126,7 +126,7 @@ namespace Celeste
 
     private IEnumerator RefillRoutine(Player player)
     {
-      Celeste.Celeste.Freeze(0.05f);
+      Celeste.Freeze(0.05f);
       yield return (object) null;
       this.level.Shake(0.3f);
       this.sprite.Visible = this.flash.Visible = false;

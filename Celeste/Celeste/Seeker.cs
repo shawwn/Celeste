@@ -273,7 +273,7 @@ namespace Celeste
 
     private void GotBouncedOn(Entity entity)
     {
-      Celeste.Celeste.Freeze(0.15f);
+      Celeste.Freeze(0.15f);
       this.Speed = (this.Center - entity.Center).SafeNormalize(200f);
       this.State.State = 6;
       this.sprite.Scale = new Vector2(1.4f, 0.6f);

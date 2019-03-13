@@ -103,17 +103,17 @@ namespace Monocle
 
     public override bool Collide(Vector2 point)
     {
-      return Collide.CircleToPoint(this.AbsolutePosition, this.Radius, point);
+      return Monocle.Collide.CircleToPoint(this.AbsolutePosition, this.Radius, point);
     }
 
     public override bool Collide(Rectangle rect)
     {
-      return Collide.RectToCircle(rect, this.AbsolutePosition, this.Radius);
+      return Monocle.Collide.RectToCircle(rect, this.AbsolutePosition, this.Radius);
     }
 
     public override bool Collide(Vector2 from, Vector2 to)
     {
-      return Collide.CircleToLine(this.AbsolutePosition, this.Radius, from, to);
+      return Monocle.Collide.CircleToLine(this.AbsolutePosition, this.Radius, from, to);
     }
 
     public override bool Collide(Circle circle)

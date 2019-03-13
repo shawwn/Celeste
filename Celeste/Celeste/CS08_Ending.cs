@@ -115,7 +115,7 @@ namespace Celeste
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / duration1)
       {
         float e = Ease.CubeOut(p);
-        this.vignette.Position = Vector2.Lerp(Celeste.TargetCenter, Celeste.Celeste.TargetCenter + new Vector2(0.0f, 140f), e);
+        this.vignette.Position = Vector2.Lerp(Celeste.TargetCenter, Celeste.TargetCenter + new Vector2(0.0f, 140f), e);
         this.vignette.Scale = Vector2.One * (float) (0.649999976158142 + 0.349999994039536 * (1.0 - (double) e));
         this.vignette.Rotation = -0.025f * e;
         yield return (object) null;
@@ -129,7 +129,7 @@ namespace Celeste
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / duration2)
       {
         float e = Ease.CubeOut(p);
-        this.vignette.Position = Vector2.Lerp(posFrom, Celeste.Celeste.TargetCenter, e);
+        this.vignette.Position = Vector2.Lerp(posFrom, Celeste.TargetCenter, e);
         this.vignette.Scale = Vector2.One * MathHelper.Lerp(scaleFrom, 1f, e);
         this.vignette.Rotation = MathHelper.Lerp(rotFrom, 0.0f, e);
         yield return (object) null;
@@ -142,7 +142,7 @@ namespace Celeste
     {
       this.vignette.Visible = true;
       this.vignette.Color = Color.White;
-      this.vignette.Position = Celeste.Celeste.TargetCenter;
+      this.vignette.Position = Celeste.TargetCenter;
       this.vignette.Scale = Vector2.One;
       this.vignette.Rotation = 0.0f;
       if (this.player != null)
@@ -199,7 +199,7 @@ namespace Celeste
     private IEnumerator MaddyTurns()
     {
       yield return (object) 0.1f;
-      this.player.Facing = (Facings) -(int) this.player.Facing;
+      this.player.Facing = ToFacing.Convert(-(int) this.player.Facing);
       yield return (object) 0.1f;
     }
 

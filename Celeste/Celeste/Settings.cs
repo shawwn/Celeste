@@ -72,7 +72,7 @@ namespace Celeste
 
     public Settings()
     {
-      if (Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Debug)
+      if (Celeste.PlayMode == Celeste.PlayModes.Debug)
         return;
       this.Fullscreen = true;
     }
@@ -86,9 +86,9 @@ namespace Celeste
       this.SetDefaultKeyboardControls(false);
       this.SetDefaultButtonControls(false);
       if (this.LaunchInDebugMode)
-        Celeste.Celeste.PlayMode = Celeste.Celeste.PlayModes.Debug;
-      Settings.LastVersion = Settings.Existed ? Settings.Instance.Version : Celeste.Celeste.Instance.Version.ToString();
-      Settings.Instance.Version = Celeste.Celeste.Instance.Version.ToString();
+        Celeste.PlayMode = Celeste.PlayModes.Debug;
+      Settings.LastVersion = Settings.Existed ? Settings.Instance.Version : Celeste.Instance.Version.ToString();
+      Settings.Instance.Version = Celeste.Instance.Version.ToString();
     }
 
     public void SetDefaultKeyboardControls(bool reset)

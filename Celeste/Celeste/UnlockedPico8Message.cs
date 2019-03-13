@@ -65,13 +65,13 @@ namespace Celeste
     {
       float num = Ease.CubeOut(this.alpha);
       Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * num * 0.8f);
-      GFX.Gui["pico8"].DrawJustified(Celeste.Celeste.TargetCenter + new Vector2(0.0f, (float) (-64.0 * (1.0 - (double) num) - 16.0)), new Vector2(0.5f, 1f), Color.White * num);
-      Vector2 position = Celeste.Celeste.TargetCenter + new Vector2(0.0f, (float) (64.0 * (1.0 - (double) num) + 16.0));
+      GFX.Gui["pico8"].DrawJustified(Celeste.TargetCenter + new Vector2(0.0f, (float) (-64.0 * (1.0 - (double) num) - 16.0)), new Vector2(0.5f, 1f), Color.White * num);
+      Vector2 position = Celeste.TargetCenter + new Vector2(0.0f, (float) (64.0 * (1.0 - (double) num) + 16.0));
       Vector2 vector2 = ActiveFont.Measure(this.text);
       ActiveFont.Draw(this.text, position, new Vector2(0.5f, 0.0f), Vector2.One, Color.White * num);
       if (!this.waitForKeyPress)
         return;
-      GFX.Gui["textboxbutton"].DrawCentered(Celeste.Celeste.TargetCenter + new Vector2((float) ((double) vector2.X / 2.0 + 32.0), (float) ((double) vector2.Y + 48.0 + ((double) this.timer % 1.0 < 0.25 ? 6.0 : 0.0))));
+      GFX.Gui["textboxbutton"].DrawCentered(Celeste.TargetCenter + new Vector2((float) ((double) vector2.X / 2.0 + 32.0), (float) ((double) vector2.Y + 48.0 + ((double) this.timer % 1.0 < 0.25 ? 6.0 : 0.0))));
     }
   }
 }

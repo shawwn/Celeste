@@ -16,7 +16,7 @@ namespace Monocle
     public readonly T EmptyValue;
     private T[,][,] segments;
 
-    public VirtualMap(int columns, int rows, T emptyValue = null)
+    public VirtualMap(int columns, int rows, T emptyValue)
     {
       this.Columns = columns;
       this.Rows = rows;
@@ -26,7 +26,7 @@ namespace Monocle
       this.EmptyValue = emptyValue;
     }
 
-    public VirtualMap(T[,] map, T emptyValue = null)
+    public VirtualMap(T[,] map, T emptyValue)
       : this(map.GetLength(0), map.GetLength(1), emptyValue)
     {
       for (int index1 = 0; index1 < this.Columns; ++index1)

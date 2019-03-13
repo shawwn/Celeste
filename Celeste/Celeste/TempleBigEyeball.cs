@@ -74,7 +74,7 @@ namespace Celeste
       Level level = this.Scene as Level;
       level.StartCutscene(new Action<Level>(this.OnSkip), false, true);
       level.RegisterAreaComplete();
-      Celeste.Celeste.Freeze(0.1f);
+      Celeste.Freeze(0.1f);
       yield return (object) null;
       float start = Glitch.Value;
       Tween tween = Tween.Create(Tween.TweenMode.Oneshot, (Ease.Easer) null, 0.5f, true);

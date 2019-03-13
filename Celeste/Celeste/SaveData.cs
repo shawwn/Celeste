@@ -156,7 +156,7 @@ namespace Celeste
 
     public void BeforeSave()
     {
-      SaveData.Instance.Version = Celeste.Celeste.Instance.Version.ToString();
+      SaveData.Instance.Version = Celeste.Instance.Version.ToString();
     }
 
     public void StartSession(Session session)
@@ -338,7 +338,7 @@ namespace Celeste
 
     public bool FoundAnyCheckpoints(AreaKey area)
     {
-      if (Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Event)
+      if (Celeste.PlayMode == Celeste.PlayModes.Event)
         return false;
       if (!this.DebugMode && !this.CheatMode)
         return this.Areas[area.ID].Modes[(int) area.Mode].Checkpoints.Count > 0;
@@ -348,7 +348,7 @@ namespace Celeste
 
     public HashSet<string> GetCheckpoints(AreaKey area)
     {
-      if (Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Event)
+      if (Celeste.PlayMode == Celeste.PlayModes.Event)
         return new HashSet<string>();
       if (!this.DebugMode && !this.CheatMode)
         return this.Areas[area.ID].Modes[(int) area.Mode].Checkpoints;
@@ -393,7 +393,7 @@ namespace Celeste
     {
       get
       {
-        if (Celeste.Celeste.PlayMode == Celeste.Celeste.PlayModes.Event)
+        if (Celeste.PlayMode == Celeste.PlayModes.Event)
           return 2;
         return AreaData.Areas.Count - 1;
       }

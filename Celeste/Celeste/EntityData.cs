@@ -122,7 +122,7 @@ namespace Celeste
     {
       object obj;
       T result;
-      if (this.Values != null && this.Values.TryGetValue(key, out obj) && Enum.TryParse<T>(obj.ToString(), true, out result))
+      if (this.Values != null && this.Values.TryGetValue(key, out obj) && System.Enum.TryParse<T>(obj.ToString(), true, out result))
         return result;
       return defaultValue;
     }
