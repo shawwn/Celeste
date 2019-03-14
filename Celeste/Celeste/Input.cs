@@ -85,10 +85,11 @@ namespace Celeste
         (VirtualAxis.Node) new VirtualAxis.KeyboardKeys(VirtualInput.OverlapBehaviors.TakeNewer, Settings.Instance.Left, Settings.Instance.Right)
       });
       Input.MoveX.Inverted = flag;
-      Input.MoveY = new VirtualIntegerAxis(new VirtualAxis.Node[4]
+      Input.MoveY = new VirtualIntegerAxis(new VirtualAxis.Node[5]
       {
         (VirtualAxis.Node) new VirtualAxis.PadDpadUpDown(Input.Gamepad),
         (VirtualAxis.Node) new VirtualAxis.PadLeftStickY(Input.Gamepad, 0.7f),
+        (VirtualAxis.Node) new VirtualAxis.PadLeftTrigger(Input.Gamepad, 0.7f),
         (VirtualAxis.Node) new VirtualAxis.KeyboardKeys(VirtualInput.OverlapBehaviors.TakeNewer, Keys.Up, Keys.Down),
         (VirtualAxis.Node) new VirtualAxis.KeyboardKeys(VirtualInput.OverlapBehaviors.TakeNewer, Settings.Instance.Up, Settings.Instance.Down)
       });

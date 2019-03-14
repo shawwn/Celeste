@@ -55,6 +55,50 @@ namespace Monocle
     {
       public abstract float Value { get; }
     }
+    
+    public class PadLeftTrigger : VirtualAxis.Node
+    {
+      public int GamepadIndex;
+      public float Deadzone;
+      public float Direction;
+
+      public PadLeftTrigger(int gamepadIndex, float deadzone, float direction = 1)
+      {
+        this.GamepadIndex = gamepadIndex;
+        this.Deadzone = deadzone;
+        this.Direction = direction;
+      }
+
+      public override float Value
+      {
+        get
+        {
+          return this.Direction * Calc.SignThreshold(MInput.GamePads[this.GamepadIndex].CurrentState.Triggers.Left, this.Deadzone);
+        }
+      }
+    }
+    
+    public class PadRightTrigger : VirtualAxis.Node
+    {
+      public int GamepadIndex;
+      public float Deadzone;
+      public float Direction;
+
+      public PadRightTrigger(int gamepadIndex, float deadzone, float direction = 1)
+      {
+        this.GamepadIndex = gamepadIndex;
+        this.Deadzone = deadzone;
+        this.Direction = direction;
+      }
+
+      public override float Value
+      {
+        get
+        {
+          return this.Direction * Calc.SignThreshold(MInput.GamePads[this.GamepadIndex].CurrentState.Triggers.Right, this.Deadzone);
+        }
+      }
+    }
 
     public class PadLeftStickX : VirtualAxis.Node
     {
