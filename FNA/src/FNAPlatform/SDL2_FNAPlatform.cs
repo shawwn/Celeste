@@ -1,3 +1,5 @@
+#define RUMBLE
+
 #region License
 /* FNA - XNA4 Reimplementation for Desktop Platforms
  * Copyright 2009-2019 Ethan Lee and the MonoGame Team
@@ -2248,7 +2250,7 @@ namespace Microsoft.Xna.Framework
 			return gc_builtState;
 		}
 
-		public static bool SetGamePadVibration(int index, float leftMotor, float rightMotor)
+		public static bool SetGamePadVibration(int index, float leftMotor, float rightMotor, float time)
 		{
 			IntPtr device = INTERNAL_devices[index];
 			if (device == IntPtr.Zero)
@@ -2258,9 +2260,9 @@ namespace Microsoft.Xna.Framework
 #if RUMBLE
 			return SDL.SDL_GameControllerRumble(
 				device,
-				(ushort) (MathHelper.Clamp(leftMotor, 0.0f, 1.0f) * 0xFFFF),
-				(ushort) (MathHelper.Clamp(rightMotor, 0.0f, 1.0f) * 0xFFFF),
-				SDL.SDL_HAPTIC_INFINITY // Oh dear...
+				(ushort) (MathHelper.Clamp(leftMotor * ushort.MaxValue, 0.0f, ushort.MaxValue)),
+				(ushort) (MathHelper.Clamp(rightMotor * ushort.MaxValue, 0.0f, ushort.MaxValue)),
+				(uint)MathHelper.Clamp(1000.0f * time, 0.0f, uint.MaxValue)
 			) == 0;
 #else
 			return false;

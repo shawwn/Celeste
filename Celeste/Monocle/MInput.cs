@@ -388,7 +388,7 @@ namespace Monocle
           return;
         this.rumbleTime -= Engine.DeltaTime;
         if ((double) this.rumbleTime <= 0.0)
-          GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f);
+          GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f, 0.0f);
       }
 
       public void UpdateNull()
@@ -398,21 +398,21 @@ namespace Monocle
         this.Attached = GamePad.GetState(this.PlayerIndex).IsConnected;
         if ((double) this.rumbleTime > 0.0)
           this.rumbleTime -= Engine.DeltaTime;
-        GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f);
+        GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f, 0.0f);
       }
 
       public void Rumble(float strength, float time)
       {
         if ((double) this.rumbleTime > 0.0 && (double) strength <= (double) this.rumbleStrength && ((double) strength != (double) this.rumbleStrength || (double) time <= (double) this.rumbleTime))
           return;
-        GamePad.SetVibration(this.PlayerIndex, strength, strength);
+        GamePad.SetVibration(this.PlayerIndex, strength, strength, time);
         this.rumbleStrength = strength;
         this.rumbleTime = time;
       }
 
       public void StopRumble()
       {
-        GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f);
+        GamePad.SetVibration(this.PlayerIndex, 0.0f, 0.0f, 0.0f);
         this.rumbleTime = 0.0f;
       }
 

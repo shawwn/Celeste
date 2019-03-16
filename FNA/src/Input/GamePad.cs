@@ -77,12 +77,13 @@ namespace Microsoft.Xna.Framework.Input
 			);
 		}
 
-		public static bool SetVibration(PlayerIndex playerIndex, float leftMotor, float rightMotor)
+		public static bool SetVibration(PlayerIndex playerIndex, float leftMotor, float rightMotor, float time)
 		{
 			return FNAPlatform.SetGamePadVibration(
 				(int) playerIndex,
 				leftMotor,
-				rightMotor
+				rightMotor,
+				time
 			);
 		}
 

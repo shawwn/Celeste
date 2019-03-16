@@ -212,7 +212,8 @@ namespace Microsoft.Xna.Framework
 		public delegate bool SetGamePadVibrationFunc(
 			int index,
 			float leftMotor,
-			float rightMotor
+			float rightMotor,
+			float time
 		);
 		public static readonly SetGamePadVibrationFunc SetGamePadVibration;
 
