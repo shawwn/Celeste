@@ -620,7 +620,8 @@ namespace Celeste
       public static Bank Music;
       public static Bank Sfxs;
       public static Bank UI;
-      public static Bank NewContent;
+      public static Bank DlcMusic;
+      public static Bank DlcSfxs;
 
       public static Bank Load(string name, bool loadStrings)
       {

@@ -58,7 +58,8 @@ namespace Celeste
       Audio.Banks.Music = Audio.Banks.Load("music", false);
       Audio.Banks.Sfxs = Audio.Banks.Load("sfx", false);
       Audio.Banks.UI = Audio.Banks.Load("ui", false);
-      Audio.Banks.NewContent = Audio.Banks.Load("new_content", false);
+      Audio.Banks.DlcMusic = Audio.Banks.Load("dlc_music", false);
+      Audio.Banks.DlcSfxs = Audio.Banks.Load("dlc_sfx", false);
       Settings.Instance.ApplyVolumes();
       this.audioLoaded = true;
       Fonts.Load();

@@ -127,7 +127,7 @@ namespace Celeste
     public static void LoadMountain()
     {
       GFX.Mountain = Atlas.FromAtlas(Path.Combine("Graphics", "Atlases", "Mountain"), Atlas.AtlasDataFormat.PackerNoAtlas);
-      GFX.Checkpoints = Atlas.FromAtlas(Path.Combine("Graphics", "Atlases", "Checkpoints"), Atlas.AtlasDataFormat.Packer);
+      GFX.Checkpoints = Atlas.FromAtlas(Path.Combine("Graphics", "Atlases", "Checkpoints"), Atlas.AtlasDataFormat.PackerNoAtlas);
       GFX.MountainTerrainTextures = new VirtualTexture[3];
       GFX.MountainBuildingTextures = new VirtualTexture[3];
       GFX.MountainSkyboxTextures = new VirtualTexture[3];
