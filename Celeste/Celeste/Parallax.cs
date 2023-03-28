@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Parallax
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,9 +14,10 @@ namespace Celeste
   {
     public Vector2 CameraOffset = Vector2.Zero;
     public BlendState BlendState = BlendState.AlphaBlend;
-    private float fadeIn = 1f;
     public MTexture Texture;
     public bool DoFadeIn;
+    public float Alpha = 1f;
+    private float fadeIn = 1f;
 
     public Parallax(MTexture texture)
     {
@@ -28,6 +29,7 @@ namespace Celeste
     {
       base.Update(scene);
       this.Position = this.Position + this.Speed * Engine.DeltaTime;
+      this.Position = this.Position + this.WindMultiplier * (scene as Level).Wind * Engine.DeltaTime;
       if (this.DoFadeIn)
         this.fadeIn = Calc.Approach(this.fadeIn, this.Visible ? 1f : 0.0f, Engine.DeltaTime);
       else
@@ -38,14 +40,14 @@ namespace Celeste
     {
       Vector2 vector2_1 = ((scene as Level).Camera.Position + this.CameraOffset).Floor();
       Vector2 vector2_2 = (this.Position - vector2_1 * this.Scroll).Floor();
-      float fadeIn = this.fadeIn;
+      float num = this.fadeIn * this.Alpha * this.FadeAlphaMultiplier;
       if (this.FadeX != null)
-        fadeIn *= this.FadeX.Value(vector2_1.X + 160f);
+        num *= this.FadeX.Value(vector2_1.X + 160f);
       if (this.FadeY != null)
-        fadeIn *= this.FadeY.Value(vector2_1.Y + 90f);
+        num *= this.FadeY.Value(vector2_1.Y + 90f);
       Color color = this.Color;
-      if ((double) fadeIn < 1.0)
-        color *= fadeIn;
+      if ((double) num < 1.0)
+        color *= num;
       if (color.A <= (byte) 1)
         return;
       if (this.LoopX)
@@ -83,4 +85,3 @@ namespace Celeste
     }
   }
 }
-

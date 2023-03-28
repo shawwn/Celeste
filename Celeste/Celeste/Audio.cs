@@ -1,33 +1,38 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Audio
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using FMOD;
 using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Monocle;
+using SDL2;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Celeste
 {
   public static class Audio
   {
+    private static FMOD.Studio.System system;
     private static FMOD.Studio._3D_ATTRIBUTES attributes3d = new FMOD.Studio._3D_ATTRIBUTES();
     public static Dictionary<string, EventDescription> cachedEventDescriptions = new Dictionary<string, EventDescription>();
+    private static Camera currentCamera;
+    private static bool ready;
     private static EventInstance currentMusicEvent = (EventInstance) null;
     private static EventInstance currentAltMusicEvent = (EventInstance) null;
     private static EventInstance currentAmbientEvent = (EventInstance) null;
     private static EventInstance mainDownSnapshot = (EventInstance) null;
     public static string CurrentMusic = "";
-    private static FMOD.Studio.System system;
-    private static Camera currentCamera;
-    private static bool ready;
     private static bool musicUnderwater;
     private static EventInstance musicUnderwaterSnapshot;
+
+    [DllImport("fmod_SDL", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void FMOD_SDL_Register(IntPtr system);
 
     public static void Init()
     {
@@ -35,6 +40,10 @@ namespace Celeste
       if (Settings.Instance.LaunchWithFMODLiveUpdate)
         studioFlags = FMOD.Studio.INITFLAGS.LIVEUPDATE;
       Audio.CheckFmod(FMOD.Studio.System.create(out Audio.system));
+      FMOD.System system;
+      int lowLevelSystem = (int) Audio.system.getLowLevelSystem(out system);
+      if (SDL.SDL_GetPlatform().Equals("Linux"))
+        Audio.FMOD_SDL_Register(system.getRaw());
       Audio.CheckFmod(Audio.system.initialize(1024, studioFlags, FMOD.INITFLAGS.NORMAL, IntPtr.Zero));
       ref FMOD.Studio._3D_ATTRIBUTES local1 = ref Audio.attributes3d;
       VECTOR vector1 = new VECTOR();
@@ -66,6 +75,8 @@ namespace Celeste
       if (!((FMOD.Studio.HandleBase) Audio.system != (FMOD.Studio.HandleBase) null))
         return;
       Audio.CheckFmod(Audio.system.unloadAll());
+      Audio.CheckFmod(Audio.system.release());
+      Audio.system = (FMOD.Studio.System) null;
     }
 
     public static void SetListenerPosition(Vector3 forward, Vector3 up, Vector3 position)
@@ -87,20 +98,17 @@ namespace Celeste
       int num = (int) Audio.system.setListenerAttributes(0, attributes);
     }
 
-    public static void SetCamera(Camera camera)
-    {
-      Audio.currentCamera = camera;
-    }
+    public static void SetCamera(Camera camera) => Audio.currentCamera = camera;
 
     internal static void CheckFmod(RESULT result)
     {
-      if ((uint) result > 0U)
+      if (result != RESULT.OK)
         throw new Exception("FMOD Failed: " + (object) result);
     }
 
     public static EventInstance Play(string path)
     {
-      EventInstance instance = Audio.CreateInstance(path, new Vector2?());
+      EventInstance instance = Audio.CreateInstance(path);
       if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null)
       {
         int num1 = (int) instance.start();
@@ -111,7 +119,7 @@ namespace Celeste
 
     public static EventInstance Play(string path, string param, float value)
     {
-      EventInstance instance = Audio.CreateInstance(path, new Vector2?());
+      EventInstance instance = Audio.CreateInstance(path);
       if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null)
       {
         Audio.SetParameter(instance, param, value);
@@ -132,11 +140,7 @@ namespace Celeste
       return instance;
     }
 
-    public static EventInstance Play(
-      string path,
-      Vector2 position,
-      string param,
-      float value)
+    public static EventInstance Play(string path, Vector2 position, string param, float value)
     {
       EventInstance instance = Audio.CreateInstance(path, new Vector2?(position));
       if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null)
@@ -178,7 +182,7 @@ namespace Celeste
 
     public static EventInstance Loop(string path)
     {
-      EventInstance instance = Audio.CreateInstance(path, new Vector2?());
+      EventInstance instance = Audio.CreateInstance(path);
       if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null)
       {
         int num = (int) instance.start();
@@ -188,7 +192,7 @@ namespace Celeste
 
     public static EventInstance Loop(string path, string param, float value)
     {
-      EventInstance instance = Audio.CreateInstance(path, new Vector2?());
+      EventInstance instance = Audio.CreateInstance(path);
       if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null)
       {
         int num1 = (int) instance.setParameterValue(param, value);
@@ -207,11 +211,7 @@ namespace Celeste
       return instance;
     }
 
-    public static EventInstance Loop(
-      string path,
-      Vector2 position,
-      string param,
-      float value)
+    public static EventInstance Loop(string path, Vector2 position, string param, float value)
     {
       EventInstance instance = Audio.CreateInstance(path, new Vector2?(position));
       if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null)
@@ -292,7 +292,7 @@ namespace Celeste
           case RESULT.OK:
             int num = (int) _event.loadSampleData();
             Audio.cachedEventDescriptions.Add(path, _event);
-            goto case RESULT.ERR_EVENT_NOTFOUND;
+            break;
           case RESULT.ERR_EVENT_NOTFOUND:
             break;
           default:
@@ -300,6 +300,23 @@ namespace Celeste
         }
       }
       return _event;
+    }
+
+    public static void ReleaseUnusedDescriptions()
+    {
+      List<string> stringList = new List<string>();
+      foreach (KeyValuePair<string, EventDescription> eventDescription in Audio.cachedEventDescriptions)
+      {
+        int count;
+        int instanceCount = (int) eventDescription.Value.getInstanceCount(out count);
+        if (count <= 0)
+        {
+          int num = (int) eventDescription.Value.unloadSampleData();
+          stringList.Add(eventDescription.Key);
+        }
+      }
+      foreach (string key in stringList)
+        Audio.cachedEventDescriptions.Remove(key);
     }
 
     public static string GetEventName(EventInstance instance)
@@ -371,10 +388,10 @@ namespace Celeste
     public static float VCAVolume(string path, float? volume = null)
     {
       VCA vca1;
-      RESULT vca2 = Audio.system.getVCA(path, out vca1);
+      int vca2 = (int) Audio.system.getVCA(path, out vca1);
       float volume1 = 1f;
       float finalvolume = 1f;
-      if (vca2 == RESULT.OK)
+      if (vca2 == 0)
       {
         if (volume.HasValue)
         {
@@ -389,15 +406,13 @@ namespace Celeste
     {
       EventDescription _event;
       int num1 = (int) Audio.system.getEvent(name, out _event);
-      if ((FMOD.Studio.HandleBase) _event == (FMOD.Studio.HandleBase) null)
-        throw new Exception("Snapshot " + name + " doesn't exist");
-      EventInstance instance1;
-      int instance2 = (int) _event.createInstance(out instance1);
+      EventInstance instance;
+      int num2 = !((FMOD.Studio.HandleBase) _event == (FMOD.Studio.HandleBase) null) ? (int) _event.createInstance(out instance) : throw new Exception("Snapshot " + name + " doesn't exist");
       if (start)
       {
-        int num2 = (int) instance1.start();
+        int num3 = (int) instance.start();
       }
-      return instance1;
+      return instance;
     }
 
     public static void ResumeSnapshot(EventInstance snapshot)
@@ -431,21 +446,9 @@ namespace Celeste
       int num2 = (int) snapshot.release();
     }
 
-    public static EventInstance CurrentMusicEventInstance
-    {
-      get
-      {
-        return Audio.currentMusicEvent;
-      }
-    }
+    public static EventInstance CurrentMusicEventInstance => Audio.currentMusicEvent;
 
-    public static EventInstance CurrentAmbienceEventInstance
-    {
-      get
-      {
-        return Audio.currentAmbientEvent;
-      }
-    }
+    public static EventInstance CurrentAmbienceEventInstance => Audio.currentAmbientEvent;
 
     public static bool SetMusic(string path, bool startPlaying = true, bool allowFadeOut = true)
     {
@@ -458,7 +461,7 @@ namespace Celeste
       else if (!Audio.CurrentMusic.Equals(path, StringComparison.OrdinalIgnoreCase))
       {
         Audio.Stop(Audio.currentMusicEvent, allowFadeOut);
-        EventInstance instance = Audio.CreateInstance(path, new Vector2?());
+        EventInstance instance = Audio.CreateInstance(path);
         if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null & startPlaying)
         {
           int num = (int) instance.start();
@@ -474,13 +477,13 @@ namespace Celeste
     {
       if (string.IsNullOrEmpty(path) || path == "null")
       {
-        Audio.Stop(Audio.currentAmbientEvent, true);
+        Audio.Stop(Audio.currentAmbientEvent);
         Audio.currentAmbientEvent = (EventInstance) null;
       }
       else if (!Audio.GetEventName(Audio.currentAmbientEvent).Equals(path, StringComparison.OrdinalIgnoreCase))
       {
-        Audio.Stop(Audio.currentAmbientEvent, true);
-        EventInstance instance = Audio.CreateInstance(path, new Vector2?());
+        Audio.Stop(Audio.currentAmbientEvent);
+        EventInstance instance = Audio.CreateInstance(path);
         if ((FMOD.Studio.HandleBase) instance != (FMOD.Studio.HandleBase) null & startPlaying)
         {
           int num = (int) instance.start();
@@ -503,7 +506,7 @@ namespace Celeste
       if (string.IsNullOrEmpty(path))
       {
         Audio.EndSnapshot(Audio.mainDownSnapshot);
-        Audio.Stop(Audio.currentAltMusicEvent, true);
+        Audio.Stop(Audio.currentAltMusicEvent);
         Audio.currentAltMusicEvent = (EventInstance) null;
       }
       else
@@ -511,7 +514,7 @@ namespace Celeste
         if (Audio.GetEventName(Audio.currentAltMusicEvent).Equals(path, StringComparison.OrdinalIgnoreCase))
           return;
         Audio.StartMainDownSnapshot();
-        Audio.Stop(Audio.currentAltMusicEvent, true);
+        Audio.Stop(Audio.currentAltMusicEvent);
         Audio.currentAltMusicEvent = Audio.Loop(path);
       }
     }
@@ -519,22 +522,16 @@ namespace Celeste
     private static void StartMainDownSnapshot()
     {
       if ((FMOD.Studio.HandleBase) Audio.mainDownSnapshot == (FMOD.Studio.HandleBase) null)
-        Audio.mainDownSnapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute", true);
+        Audio.mainDownSnapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute");
       else
         Audio.ResumeSnapshot(Audio.mainDownSnapshot);
     }
 
-    private static void EndMainDownSnapshot()
-    {
-      Audio.EndSnapshot(Audio.mainDownSnapshot);
-    }
+    private static void EndMainDownSnapshot() => Audio.EndSnapshot(Audio.mainDownSnapshot);
 
     public static float MusicVolume
     {
-      get
-      {
-        return Audio.VCAVolume("vca:/music", new float?());
-      }
+      get => Audio.VCAVolume("vca:/music");
       set
       {
         double num = (double) Audio.VCAVolume("vca:/music", new float?(value));
@@ -543,10 +540,7 @@ namespace Celeste
 
     public static float SfxVolume
     {
-      get
-      {
-        return Audio.VCAVolume("vca:/gameplay_sfx", new float?());
-      }
+      get => Audio.VCAVolume("vca:/gameplay_sfx");
       set
       {
         double num1 = (double) Audio.VCAVolume("vca:/gameplay_sfx", new float?(value));
@@ -556,22 +550,13 @@ namespace Celeste
 
     public static bool PauseMusic
     {
-      get
-      {
-        return Audio.BusPaused("bus:/music", new bool?());
-      }
-      set
-      {
-        Audio.BusPaused("bus:/music", new bool?(value));
-      }
+      get => Audio.BusPaused("bus:/music");
+      set => Audio.BusPaused("bus:/music", new bool?(value));
     }
 
     public static bool PauseGameplaySfx
     {
-      get
-      {
-        return Audio.BusPaused("bus:/gameplay_sfx", new bool?());
-      }
+      get => Audio.BusPaused("bus:/gameplay_sfx");
       set
       {
         Audio.BusPaused("bus:/gameplay_sfx", new bool?(value));
@@ -581,22 +566,13 @@ namespace Celeste
 
     public static bool PauseUISfx
     {
-      get
-      {
-        return Audio.BusPaused("bus:/ui_sfx", new bool?());
-      }
-      set
-      {
-        Audio.BusPaused("bus:/ui_sfx", new bool?(value));
-      }
+      get => Audio.BusPaused("bus:/ui_sfx");
+      set => Audio.BusPaused("bus:/ui_sfx", new bool?(value));
     }
 
     public static bool MusicUnderwater
     {
-      get
-      {
-        return Audio.musicUnderwater;
-      }
+      get => Audio.musicUnderwater;
       set
       {
         if (Audio.musicUnderwater == value)
@@ -605,7 +581,7 @@ namespace Celeste
         if (Audio.musicUnderwater)
         {
           if ((FMOD.Studio.HandleBase) Audio.musicUnderwaterSnapshot == (FMOD.Studio.HandleBase) null)
-            Audio.musicUnderwaterSnapshot = Audio.CreateSnapshot("snapshot:/underwater", true);
+            Audio.musicUnderwaterSnapshot = Audio.CreateSnapshot("snapshot:/underwater");
           else
             Audio.ResumeSnapshot(Audio.musicUnderwaterSnapshot);
         }
@@ -626,16 +602,13 @@ namespace Celeste
       public static Bank Load(string name, bool loadStrings)
       {
         string str = Path.Combine(Engine.ContentDirectory, "FMOD", "Desktop", name);
-        Bank bank1;
-        Audio.CheckFmod(Audio.system.loadBankFile(str + ".bank", LOAD_BANK_FLAGS.NORMAL, out bank1));
+        Bank bank;
+        Audio.CheckFmod(Audio.system.loadBankFile(str + ".bank", LOAD_BANK_FLAGS.NORMAL, out bank));
+        int num = (int) bank.loadSampleData();
         if (loadStrings)
-        {
-          Bank bank2;
-          Audio.CheckFmod(Audio.system.loadBankFile(str + ".strings.bank", LOAD_BANK_FLAGS.NORMAL, out bank2));
-        }
-        return bank1;
+          Audio.CheckFmod(Audio.system.loadBankFile(str + ".strings.bank", LOAD_BANK_FLAGS.NORMAL, out Bank _));
+        return bank;
       }
     }
   }
 }
-

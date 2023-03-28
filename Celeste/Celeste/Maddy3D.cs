@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Maddy3D
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -13,24 +13,24 @@ namespace Celeste
 {
   public class Maddy3D : Entity
   {
-    public Vector2 Scale = Vector2.One;
-    public bool Show = true;
-    private float alpha = 1f;
     public MountainRenderer Renderer;
     public Billboard Image;
     public Wiggler Wiggler;
-    new public Vector3 Position;
+    public Vector2 Scale = Vector2.One;
+    public Vector3 Position;
+    public bool Show = true;
     public bool Disabled;
     private List<MTexture> frames;
     private float frame;
     private float frameSpeed;
+    private float alpha = 1f;
     private int hideDown;
     private bool running;
 
     public Maddy3D(MountainRenderer renderer)
     {
       this.Renderer = renderer;
-      this.Add((Component) (this.Image = new Billboard((MTexture) null, Vector3.Zero, new Vector2?(), new Color?(), new Vector2?())));
+      this.Add((Component) (this.Image = new Billboard((MTexture) null, Vector3.Zero)));
       this.Image.BeforeRender = (Action) (() =>
       {
         if (this.Disabled)
@@ -45,7 +45,7 @@ namespace Celeste
           this.Image.Color = Color.White * this.alpha;
         }
       });
-      this.Add((Component) (this.Wiggler = Wiggler.Create(0.5f, 3f, (Action<float>) null, false, false)));
+      this.Add((Component) (this.Wiggler = Wiggler.Create(0.5f, 3f)));
       this.Running(renderer.Area < 7);
     }
 
@@ -65,7 +65,7 @@ namespace Celeste
       this.running = false;
       this.Show = true;
       this.hideDown = -1;
-      this.frames = GFX.Mountain.GetAtlasSubtextures("marker/Fall");
+      this.frames = MTN.Mountain.GetAtlasSubtextures("marker/Fall");
       this.frameSpeed = 2f;
       this.frame = 0.0f;
       this.Image.Size = new Vector2((float) this.frames[0].ClipRect.Width, (float) this.frames[0].ClipRect.Height) / (float) this.frames[0].ClipRect.Width;
@@ -81,9 +81,9 @@ namespace Celeste
     private void SetRunAnim()
     {
       if (this.Renderer.Area < 7)
-        this.frames = GFX.Mountain.GetAtlasSubtextures("marker/runBackpack");
+        this.frames = MTN.Mountain.GetAtlasSubtextures("marker/runBackpack");
       else
-        this.frames = GFX.Mountain.GetAtlasSubtextures("marker/runNoBackpack");
+        this.frames = MTN.Mountain.GetAtlasSubtextures("marker/runNoBackpack");
     }
 
     public override void Update()
@@ -102,4 +102,3 @@ namespace Celeste
     }
   }
 }
-

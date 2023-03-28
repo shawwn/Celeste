@@ -1,9 +1,10 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Monocle.Engine
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
+using Celeste;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,18 +17,20 @@ namespace Monocle
 {
   public class Engine : Game
   {
-    private static int viewPadding = 0;
-    public static float TimeRate = 1f;
-    public static float TimeRateB = 1f;
-    private static string AssemblyDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-    private TimeSpan counterElapsed = TimeSpan.Zero;
-    private int fpsCounter = 0;
     public string Title;
     public Version Version;
     public static Action OverloadGameLoop;
+    private static int viewPadding = 0;
     private static bool resizing;
+    public static float TimeRate = 1f;
+    public static float TimeRateB = 1f;
     public static float FreezeTimer;
+    public static bool DashAssistFreeze;
+    public static bool DashAssistFreezePress;
     public static int FPS;
+    private TimeSpan counterElapsed = TimeSpan.Zero;
+    private int fpsCounter;
+    private static string AssemblyDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
     public static Color ClearColor;
     public static bool ExitOnEscapeKeypress;
     private Scene scene;
@@ -52,10 +55,7 @@ namespace Monocle
 
     public static int ViewPadding
     {
-      get
-      {
-        return Engine.viewPadding;
-      }
+      get => Engine.viewPadding;
       set
       {
         Engine.viewPadding = value;
@@ -67,13 +67,9 @@ namespace Monocle
 
     public static float RawDeltaTime { get; private set; }
 
-    public static string ContentDirectory
-    {
-      get
-      {
-        return Path.Combine(Engine.AssemblyDirectory, Engine.Instance.Content.RootDirectory);
-      }
-    }
+    public static ulong FrameCounter { get; private set; }
+
+    public static string ContentDirectory => Path.Combine(Engine.AssemblyDirectory, Engine.Instance.Content.RootDirectory);
 
     public Engine(
       int width,
@@ -81,7 +77,8 @@ namespace Monocle
       int windowWidth,
       int windowHeight,
       string windowTitle,
-      bool fullscreen)
+      bool fullscreen,
+      bool vsync)
     {
       Engine.Instance = this;
       this.Title = this.Window.Title = windowTitle;
@@ -92,18 +89,24 @@ namespace Monocle
       Engine.Graphics = new GraphicsDeviceManager((Game) this);
       Engine.Graphics.DeviceReset += new EventHandler<EventArgs>(this.OnGraphicsReset);
       Engine.Graphics.DeviceCreated += new EventHandler<EventArgs>(this.OnGraphicsCreate);
-      Engine.Graphics.SynchronizeWithVerticalRetrace = true;
+      Engine.Graphics.SynchronizeWithVerticalRetrace = vsync;
       Engine.Graphics.PreferMultiSampling = false;
       Engine.Graphics.GraphicsProfile = GraphicsProfile.HiDef;
       Engine.Graphics.PreferredBackBufferFormat = SurfaceFormat.Color;
       Engine.Graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
-      Engine.Graphics.ApplyChanges();
       this.Window.AllowUserResizing = true;
       this.Window.ClientSizeChanged += new EventHandler<EventArgs>(this.OnClientSizeChanged);
-      if (fullscreen)
+      if (Celeste.Celeste.IsGGP)
       {
-        Engine.Graphics.PreferredBackBufferWidth = this.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
-        Engine.Graphics.PreferredBackBufferHeight = this.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+        Engine.Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+        Engine.Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+        Engine.Graphics.IsFullScreen = false;
+        Engine.Graphics.SynchronizeWithVerticalRetrace = false;
+      }
+      else if (fullscreen)
+      {
+        Engine.Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+        Engine.Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
         Engine.Graphics.IsFullScreen = true;
       }
       else
@@ -191,6 +194,7 @@ namespace Monocle
     {
       Engine.RawDeltaTime = (float) gameTime.ElapsedGameTime.TotalSeconds;
       Engine.DeltaTime = Engine.RawDeltaTime * Engine.TimeRate * Engine.TimeRateB;
+      ++Engine.FrameCounter;
       MInput.Update();
       if (Engine.ExitOnEscapeKeypress && MInput.Keyboard.Pressed(Keys.Escape))
         this.Exit();
@@ -201,13 +205,33 @@ namespace Monocle
       }
       else
       {
-        if ((double) Engine.FreezeTimer > 0.0)
-          Engine.FreezeTimer = Math.Max(Engine.FreezeTimer - Engine.RawDeltaTime, 0.0f);
-        else if (this.scene != null)
+        if (Engine.DashAssistFreeze)
         {
-          this.scene.BeforeUpdate();
-          this.scene.Update();
-          this.scene.AfterUpdate();
+          if (Celeste.Input.Dash.Check || !Engine.DashAssistFreezePress)
+          {
+            if (Celeste.Input.Dash.Check)
+              Engine.DashAssistFreezePress = true;
+            if (this.scene != null)
+            {
+              this.scene.Tracker.GetEntity<PlayerDashAssist>()?.Update();
+              if (this.scene is Level)
+                (this.scene as Level).UpdateTime();
+              this.scene.Entities.UpdateLists();
+            }
+          }
+          else
+            Engine.DashAssistFreeze = false;
+        }
+        if (!Engine.DashAssistFreeze)
+        {
+          if ((double) Engine.FreezeTimer > 0.0)
+            Engine.FreezeTimer = Math.Max(Engine.FreezeTimer - Engine.RawDeltaTime, 0.0f);
+          else if (this.scene != null)
+          {
+            this.scene.BeforeUpdate();
+            this.scene.Update();
+            this.scene.AfterUpdate();
+          }
         }
         if (Engine.Commands.Open)
           Engine.Commands.UpdateOpen();
@@ -269,6 +293,7 @@ namespace Monocle
       }
       catch (Exception ex)
       {
+        Console.WriteLine(ex.ToString());
         ErrorLog.Write(ex);
         ErrorLog.Open();
       }
@@ -279,25 +304,20 @@ namespace Monocle
       GC.Collect();
       GC.WaitForPendingFinalizers();
       Engine.TimeRate = 1f;
+      Engine.DashAssistFreeze = false;
     }
 
     public static Scene Scene
     {
-      get
-      {
-        return Engine.Instance.scene;
-      }
-      set
-      {
-        Engine.Instance.nextScene = value;
-      }
+      get => Engine.Instance.scene;
+      set => Engine.Instance.nextScene = value;
     }
 
     public static Viewport Viewport { get; private set; }
 
     public static void SetWindowed(int width, int height)
     {
-      if (width <= 0 || height <= 0)
+      if (Celeste.Celeste.IsGGP || width <= 0 || height <= 0)
         return;
       Engine.resizing = true;
       Engine.Graphics.PreferredBackBufferWidth = width;
@@ -310,6 +330,8 @@ namespace Monocle
 
     public static void SetFullscreen()
     {
+      if (Celeste.Celeste.IsGGP)
+        return;
       Engine.resizing = true;
       Engine.Graphics.PreferredBackBufferWidth = Engine.Graphics.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
       Engine.Graphics.PreferredBackBufferHeight = Engine.Graphics.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
@@ -349,4 +371,3 @@ namespace Monocle
     }
   }
 }
-

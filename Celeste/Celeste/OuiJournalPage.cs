@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.OuiJournalPage
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,19 +14,16 @@ namespace Celeste
 {
   public abstract class OuiJournalPage
   {
-    public readonly Vector2 TextJustify = new Vector2(0.5f, 0.5f);
-    public readonly Color TextColor = Color.Black * 0.6f;
     public const int PageWidth = 1610;
     public const int PageHeight = 1000;
+    public readonly Vector2 TextJustify = new Vector2(0.5f, 0.5f);
     public const float TextScale = 0.5f;
+    public readonly Color TextColor = Color.Black * 0.6f;
     public int PageIndex;
     public string PageTexture;
     public OuiJournal Journal;
 
-    public OuiJournalPage(OuiJournal journal)
-    {
-      this.Journal = journal;
-    }
+    public OuiJournalPage(OuiJournal journal) => this.Journal = journal;
 
     public virtual void Redraw(VirtualRenderTarget buffer)
     {
@@ -38,37 +35,16 @@ namespace Celeste
     {
     }
 
-    internal void RenderStamps()
-    {
-      if (SaveData.Instance.AssistMode)
-        GFX.Gui["fileselect/assist"].DrawCentered(new Vector2(1250f, 810f), Color.White * 0.5f, 1f, 0.2f);
-      if (!SaveData.Instance.CheatMode)
-        return;
-      GFX.Gui["fileselect/cheatmode"].DrawCentered(new Vector2(1400f, 860f), Color.White * 0.5f, 1f, 0.0f);
-    }
-
     public class Table
     {
-      private List<OuiJournalPage.Row> rows = new List<OuiJournalPage.Row>();
       private const float headerHeight = 80f;
       private const float headerBottomMargin = 20f;
       private const float rowHeight = 60f;
+      private List<OuiJournalPage.Row> rows = new List<OuiJournalPage.Row>();
 
-      public int Rows
-      {
-        get
-        {
-          return this.rows.Count;
-        }
-      }
+      public int Rows => this.rows.Count;
 
-      public OuiJournalPage.Row Header
-      {
-        get
-        {
-          return this.rows.Count > 0 ? this.rows[0] : (OuiJournalPage.Row) null;
-        }
-      }
+      public OuiJournalPage.Row Header => this.rows.Count <= 0 ? (OuiJournalPage.Row) null : this.rows[0];
 
       public OuiJournalPage.Table AddColumn(OuiJournalPage.Cell label)
       {
@@ -85,10 +61,7 @@ namespace Celeste
         return row;
       }
 
-      public float Height()
-      {
-        return (float) (100.0 + 60.0 * (double) (this.rows.Count - 1));
-      }
+      public float Height() => (float) (100.0 + 60.0 * (double) (this.rows.Count - 1));
 
       public void Render(Vector2 position)
       {
@@ -102,21 +75,33 @@ namespace Celeste
         {
           float columnWidth = this.Header[index1].Width();
           this.Header[index1].Render(position + new Vector2(num1 + columnWidth * 0.5f, 40f), columnWidth);
+          int num3 = 1;
+          float y = 130f;
           for (int index2 = 1; index2 < this.rows.Count; ++index2)
           {
-            Vector2 center = position + new Vector2(num1 + columnWidth * 0.5f, (float) (100.0 + ((double) index2 - 0.5) * 60.0));
-            if (index2 % 2 == 0)
-              Draw.Rect(center.X - columnWidth * 0.5f, center.Y - 27f, columnWidth + 20f, 54f, Color.Black * 0.08f);
-            if (index1 < this.rows[index2].Count && this.rows[index2][index1] != null)
+            Vector2 center = position + new Vector2(num1 + columnWidth * 0.5f, y);
+            if (this.rows[index2].Count > 0)
             {
-              OuiJournalPage.Cell cell = this.rows[index2][index1];
-              if (cell.SpreadOverColumns > 1)
+              if (num3 % 2 == 0)
+                Draw.Rect(center.X - columnWidth * 0.5f, center.Y - 27f, columnWidth + 20f, 54f, Color.Black * 0.08f);
+              if (index1 < this.rows[index2].Count && this.rows[index2][index1] != null)
               {
-                for (int index3 = index1 + 1; index3 < index1 + cell.SpreadOverColumns; ++index3)
-                  center.X += this.Header[index3].Width() * 0.5f;
-                center.X += (float) ((double) (cell.SpreadOverColumns - 1) * 20.0 * 0.5);
+                OuiJournalPage.Cell cell = this.rows[index2][index1];
+                if (cell.SpreadOverColumns > 1)
+                {
+                  for (int index3 = index1 + 1; index3 < index1 + cell.SpreadOverColumns; ++index3)
+                    center.X += this.Header[index3].Width() * 0.5f;
+                  center.X += (float) ((double) (cell.SpreadOverColumns - 1) * 20.0 * 0.5);
+                }
+                this.rows[index2][index1].Render(center, columnWidth);
               }
-              this.rows[index2][index1].Render(center, columnWidth);
+              ++num3;
+              y += 60f;
+            }
+            else
+            {
+              Draw.Rect(center.X - columnWidth * 0.5f, center.Y - 25.5f, columnWidth + 20f, 6f, Color.Black * 0.3f);
+              y += 15f;
             }
           }
           num1 += columnWidth + 20f;
@@ -134,31 +119,16 @@ namespace Celeste
         return this;
       }
 
-      public int Count
-      {
-        get
-        {
-          return this.Entries.Count;
-        }
-      }
+      public int Count => this.Entries.Count;
 
-      public OuiJournalPage.Cell this[int index]
-      {
-        get
-        {
-          return this.Entries[index];
-        }
-      }
+      public OuiJournalPage.Cell this[int index] => this.Entries[index];
     }
 
     public abstract class Cell
     {
       public int SpreadOverColumns = 1;
 
-      public virtual float Width()
-      {
-        return 0.0f;
-      }
+      public virtual float Width() => 0.0f;
 
       public virtual void Render(Vector2 center, float columnWidth)
       {
@@ -169,15 +139,9 @@ namespace Celeste
     {
       private float width;
 
-      public EmptyCell(float width)
-      {
-        this.width = width;
-      }
+      public EmptyCell(float width) => this.width = width;
 
-      public override float Width()
-      {
-        return this.width;
-      }
+      public override float Width() => this.width;
     }
 
     public class TextCell : OuiJournalPage.Cell
@@ -205,12 +169,7 @@ namespace Celeste
         this.forceWidth = forceWidth;
       }
 
-      public override float Width()
-      {
-        if (this.forceWidth)
-          return this.width;
-        return Math.Max(this.width, ActiveFont.Measure(this.text).X * this.scale);
-      }
+      public override float Width() => this.forceWidth ? this.width : Math.Max(this.width, ActiveFont.Measure(this.text).X * this.scale);
 
       public override void Render(Vector2 center, float columnWidth)
       {
@@ -233,15 +192,9 @@ namespace Celeste
         this.width = width;
       }
 
-      public override float Width()
-      {
-        return Math.Max((float) GFX.Journal[this.icon].Width, this.width);
-      }
+      public override float Width() => Math.Max((float) MTN.Journal[this.icon].Width, this.width);
 
-      public override void Render(Vector2 center, float columnWidth)
-      {
-        GFX.Journal[this.icon].DrawCentered(center);
-      }
+      public override void Render(Vector2 center, float columnWidth) => MTN.Journal[this.icon].DrawCentered(center);
     }
 
     public class IconsCell : OuiJournalPage.Cell
@@ -255,16 +208,13 @@ namespace Celeste
         this.icons = icons;
       }
 
-      public IconsCell(params string[] icons)
-      {
-        this.icons = icons;
-      }
+      public IconsCell(params string[] icons) => this.icons = icons;
 
       public override float Width()
       {
         float num = 0.0f;
         for (int index = 0; index < this.icons.Length; ++index)
-          num += (float) GFX.Journal[this.icons[index]].Width;
+          num += (float) MTN.Journal[this.icons[index]].Width;
         return num + (float) (this.icons.Length - 1) * this.iconSpacing;
       }
 
@@ -274,7 +224,7 @@ namespace Celeste
         Vector2 position = center + new Vector2((float) (-(double) num * 0.5), 0.0f);
         for (int index = 0; index < this.icons.Length; ++index)
         {
-          MTexture mtexture = GFX.Journal[this.icons[index]];
+          MTexture mtexture = MTN.Journal[this.icons[index]];
           mtexture.DrawJustified(position, new Vector2(0.0f, 0.5f));
           position.X += (float) mtexture.Width + this.iconSpacing;
         }
@@ -282,4 +232,3 @@ namespace Celeste
     }
   }
 }
-

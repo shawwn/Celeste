@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.BackdropRenderer
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,7 +15,7 @@ namespace Celeste
   {
     public Matrix Matrix = Matrix.Identity;
     public List<Backdrop> Backdrops = new List<Backdrop>();
-    public float Fade = 0.0f;
+    public float Fade;
     public Color FadeColor = Color.Black;
     private bool usingSpritebatch;
 
@@ -47,14 +47,32 @@ namespace Celeste
       return default (T);
     }
 
-    private void StartSpritebatch(BlendState blendState)
+    public IEnumerable<T> GetEach<T>() where T : class
+    {
+      foreach (Backdrop backdrop in this.Backdrops)
+      {
+        if (backdrop is T)
+          yield return backdrop as T;
+      }
+    }
+
+    public IEnumerable<T> GetEach<T>(string tag) where T : class
+    {
+      foreach (Backdrop backdrop in this.Backdrops)
+      {
+        if (backdrop is T && backdrop.Tags.Contains(tag))
+          yield return backdrop as T;
+      }
+    }
+
+    public void StartSpritebatch(BlendState blendState)
     {
       if (!this.usingSpritebatch)
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, blendState, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, (Effect) null, this.Matrix);
       this.usingSpritebatch = true;
     }
 
-    private void EndSpritebatch()
+    public void EndSpritebatch()
     {
       if (this.usingSpritebatch)
         Draw.SpriteBatch.End();
@@ -95,4 +113,3 @@ namespace Celeste
     }
   }
 }
-

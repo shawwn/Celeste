@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.MovingPlatform
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -28,14 +28,14 @@ namespace Celeste
       this.Add((Component) (this.sfx = new SoundSource()));
       this.SurfaceSoundIndex = 5;
       this.lastSfx = Math.Sign(this.start.X - this.end.X) > 0 || Math.Sign(this.start.Y - this.end.Y) > 0 ? "event:/game/03_resort/platform_horiz_left" : "event:/game/03_resort/platform_horiz_right";
-      Tween tween = Tween.Create(Tween.TweenMode.YoyoLooping, Ease.SineInOut, 2f, false);
+      Tween tween = Tween.Create(Tween.TweenMode.YoyoLooping, Ease.SineInOut, 2f);
       tween.OnUpdate = (Action<Tween>) (t => this.MoveTo(Vector2.Lerp(this.start, this.end, t.Eased) + Vector2.UnitY * this.addY));
       tween.OnStart = (Action<Tween>) (t =>
       {
         if (this.lastSfx == "event:/game/03_resort/platform_horiz_left")
-          this.sfx.Play(this.lastSfx = "event:/game/03_resort/platform_horiz_right", (string) null, 0.0f);
+          this.sfx.Play(this.lastSfx = "event:/game/03_resort/platform_horiz_right");
         else
-          this.sfx.Play(this.lastSfx = "event:/game/03_resort/platform_horiz_left", (string) null, 0.0f);
+          this.sfx.Play(this.lastSfx = "event:/game/03_resort/platform_horiz_left");
       });
       this.Add((Component) tween);
       tween.Start(false);
@@ -50,10 +50,11 @@ namespace Celeste
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      MTexture mtexture = GFX.Game["objects/woodPlatform/" + AreaData.Get(scene).WoodPlatform];
+      Session session = this.SceneAs<Level>().Session;
+      MTexture mtexture = session.Area.ID != 7 || !session.Level.StartsWith("e-") ? GFX.Game["objects/woodPlatform/" + AreaData.Get(scene).WoodPlatform] : GFX.Game["objects/woodPlatform/" + AreaData.Get(4).WoodPlatform];
       this.textures = new MTexture[mtexture.Width / 8];
       for (int index = 0; index < this.textures.Length; ++index)
-        this.textures[index] = mtexture.GetSubtexture(index * 8, 0, 8, 8, (MTexture) null);
+        this.textures[index] = mtexture.GetSubtexture(index * 8, 0, 8, 8);
       Vector2 vector2 = new Vector2(this.Width, this.Height + 4f) / 2f;
       scene.Add((Entity) new MovingPlatformLine(this.start + vector2, this.end + vector2));
     }
@@ -61,16 +62,13 @@ namespace Celeste
     public override void Render()
     {
       this.textures[0].Draw(this.Position);
-      for (int index = 8; (double) index < (double) this.Width - 8.0; index += 8)
-        this.textures[1].Draw(this.Position + new Vector2((float) index, 0.0f));
+      for (int x = 8; (double) x < (double) this.Width - 8.0; x += 8)
+        this.textures[1].Draw(this.Position + new Vector2((float) x, 0.0f));
       this.textures[3].Draw(this.Position + new Vector2(this.Width - 8f, 0.0f));
       this.textures[2].Draw(this.Position + new Vector2((float) ((double) this.Width / 2.0 - 4.0), 0.0f));
     }
 
-    public override void OnStaticMoverTrigger()
-    {
-      this.sinkTimer = 0.4f;
-    }
+    public override void OnStaticMoverTrigger(StaticMover sm) => this.sinkTimer = 0.4f;
 
     public override void Update()
     {
@@ -90,4 +88,3 @@ namespace Celeste
     }
   }
 }
-

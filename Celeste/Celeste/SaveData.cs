@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.SaveData
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using System;
 using System.Collections.Generic;
@@ -13,23 +13,21 @@ namespace Celeste
   [Serializable]
   public class SaveData
   {
-    public string Name = "Madeline";
-    public Assists Assists = Assists.Default;
-    public HashSet<string> Flags = new HashSet<string>();
-    public List<string> Poem = new List<string>();
-    public List<AreaStats> Areas = new List<AreaStats>();
     public const int MaxStrawberries = 175;
     public const int MaxGoldenStrawberries = 25;
+    public const int MaxStrawberriesDLC = 202;
     public const int MaxHeartGems = 24;
     public const int MaxCassettes = 8;
     public const int MaxCompletions = 8;
     public static SaveData Instance;
     public string Version;
+    public string Name = "Madeline";
     public long Time;
     public DateTime LastSave;
     public bool CheatMode;
     public bool AssistMode;
     public bool VariantMode;
+    public Assists Assists = Assists.Default;
     public string TheoSisterName;
     public int UnlockedAreas;
     public int TotalDeaths;
@@ -38,9 +36,13 @@ namespace Celeste
     public int TotalJumps;
     public int TotalWallJumps;
     public int TotalDashes;
+    public HashSet<string> Flags = new HashSet<string>();
+    public List<string> Poem = new List<string>();
     public bool[] SummitGems;
+    public bool RevealedChapter9;
     public AreaKey LastArea;
     public Session CurrentSession;
+    public List<AreaStats> Areas = new List<AreaStats>();
     [XmlIgnore]
     [NonSerialized]
     public int FileSlot;
@@ -58,24 +60,16 @@ namespace Celeste
       SaveData.Instance.AfterInitialize();
     }
 
-    public static string GetFilename(int slot)
-    {
-      if (slot == 4)
-        return "debug";
-      return slot.ToString();
-    }
+    public static string GetFilename(int slot) => slot == 4 ? "debug" : slot.ToString();
 
-    public static string GetFilename()
-    {
-      return SaveData.GetFilename(SaveData.Instance.FileSlot);
-    }
+    public static string GetFilename() => SaveData.GetFilename(SaveData.Instance.FileSlot);
 
     public static void InitializeDebugMode(bool loadExisting = true)
     {
       SaveData data = (SaveData) null;
       if (loadExisting && UserIO.Open(UserIO.Mode.Read))
       {
-        data = UserIO.Load<SaveData>(SaveData.GetFilename(4), false);
+        data = UserIO.Load<SaveData>(SaveData.GetFilename(4));
         UserIO.Close();
       }
       if (data == null)
@@ -85,10 +79,7 @@ namespace Celeste
       SaveData.Start(data, 4);
     }
 
-    public static bool TryDelete(int slot)
-    {
-      return UserIO.Delete(SaveData.GetFilename(slot));
-    }
+    public static bool TryDelete(int slot) => UserIO.Delete(SaveData.GetFilename(slot));
 
     public void AfterInitialize()
     {
@@ -99,7 +90,7 @@ namespace Celeste
       int num = -1;
       for (int index = 0; index < this.Areas.Count; ++index)
       {
-        if (this.Areas[index].Modes[0].Completed)
+        if (this.Areas[index].Modes[0].Completed || this.Areas[index].Modes.Length > 1 && this.Areas[index].Modes[1].Completed)
           num = index;
       }
       if (this.UnlockedAreas < num + 1 && this.MaxArea >= num + 1)
@@ -107,13 +98,16 @@ namespace Celeste
       if (this.DebugMode)
       {
         this.CurrentSession = (Session) null;
+        this.RevealedChapter9 = true;
         this.UnlockedAreas = this.MaxArea;
       }
+      if (this.CheatMode)
+        this.UnlockedAreas = this.MaxArea;
       if (string.IsNullOrEmpty(this.TheoSisterName))
       {
-        this.TheoSisterName = Dialog.Clean("THEO_SISTER_NAME", (Language) null);
+        this.TheoSisterName = Dialog.Clean("THEO_SISTER_NAME");
         if (this.Name.IndexOf(this.TheoSisterName, StringComparison.InvariantCultureIgnoreCase) >= 0)
-          this.TheoSisterName = Dialog.Clean("THEO_SISTER_ALT_NAME", (Language) null);
+          this.TheoSisterName = Dialog.Clean("THEO_SISTER_ALT_NAME");
       }
       this.AssistModeChecks();
       foreach (AreaStats area in this.Areas)
@@ -146,18 +140,12 @@ namespace Celeste
         this.Assists.EnfornceAssistMode();
       if (this.Assists.GameSpeed < 5 || this.Assists.GameSpeed > 20)
         this.Assists.GameSpeed = 10;
-      Input.MoveX.Inverted = Input.Aim.InvertedX = this.Assists.MirrorMode;
+      Input.MoveX.Inverted = Input.Aim.InvertedX = Input.Feather.InvertedX = this.Assists.MirrorMode;
     }
 
-    public static void NoFileAssistChecks()
-    {
-      Input.MoveX.Inverted = Input.Aim.InvertedX = false;
-    }
+    public static void NoFileAssistChecks() => Input.MoveX.Inverted = Input.Aim.InvertedX = Input.Feather.InvertedX = false;
 
-    public void BeforeSave()
-    {
-      SaveData.Instance.Version = Celeste.Instance.Version.ToString();
-    }
+    public void BeforeSave() => SaveData.Instance.Version = Celeste.Instance.Version.ToString();
 
     public void StartSession(Session session)
     {
@@ -178,7 +166,8 @@ namespace Celeste
     {
       ++this.TotalDeaths;
       ++this.Areas[area.ID].Modes[(int) area.Mode].Deaths;
-      Stats.Increment(Stat.DEATHS, 1);
+      Stats.Increment(Stat.DEATHS);
+      StatsForStadia.Increment(StadiaStat.DEATHS);
     }
 
     public void AddStrawberry(AreaKey area, EntityID strawberry, bool golden)
@@ -197,24 +186,16 @@ namespace Celeste
           Achievements.Register(Achievement.STRB2);
         if (this.TotalStrawberries >= 175)
           Achievements.Register(Achievement.STRB3);
+        StatsForStadia.SetIfLarger(StadiaStat.BERRIES, this.TotalStrawberries);
       }
-      Stats.Increment(golden ? Stat.GOLDBERRIES : Stat.BERRIES, 1);
+      Stats.Increment(golden ? Stat.GOLDBERRIES : Stat.BERRIES);
     }
 
-    public void AddStrawberry(EntityID strawberry, bool golden)
-    {
-      this.AddStrawberry(this.CurrentSession.Area, strawberry, golden);
-    }
+    public void AddStrawberry(EntityID strawberry, bool golden) => this.AddStrawberry(this.CurrentSession.Area, strawberry, golden);
 
-    public bool CheckStrawberry(AreaKey area, EntityID strawberry)
-    {
-      return this.Areas[area.ID].Modes[(int) area.Mode].Strawberries.Contains(strawberry);
-    }
+    public bool CheckStrawberry(AreaKey area, EntityID strawberry) => this.Areas[area.ID].Modes[(int) area.Mode].Strawberries.Contains(strawberry);
 
-    public bool CheckStrawberry(EntityID strawberry)
-    {
-      return this.CheckStrawberry(this.CurrentSession.Area, strawberry);
-    }
+    public bool CheckStrawberry(EntityID strawberry) => this.CheckStrawberry(this.CurrentSession.Area, strawberry);
 
     public void AddTime(AreaKey area, long time)
     {
@@ -240,20 +221,12 @@ namespace Celeste
         else if (area.ID == 6)
           Achievements.Register(Achievement.HEART6);
         else if (area.ID == 7)
-        {
           Achievements.Register(Achievement.HEART7);
-        }
-        else
-        {
-          if (area.ID != 9)
-            return;
+        else if (area.ID == 9)
           Achievements.Register(Achievement.HEART8);
-        }
       }
-      else
+      else if (area.Mode == AreaMode.BSide)
       {
-        if (area.Mode != AreaMode.BSide)
-          return;
         if (area.ID == 1)
           Achievements.Register(Achievement.BSIDE1);
         else if (area.ID == 2)
@@ -271,6 +244,7 @@ namespace Celeste
         else if (area.ID == 9)
           Achievements.Register(Achievement.BSIDE8);
       }
+      StatsForStadia.SetIfLarger(StadiaStat.HEARTS, this.TotalHeartGems);
     }
 
     public void RegisterCassette(AreaKey area)
@@ -336,6 +310,8 @@ namespace Celeste
       return true;
     }
 
+    public bool HasCheckpoint(AreaKey area, string level) => this.Areas[area.ID].Modes[(int) area.Mode].Checkpoints.Contains(level);
+
     public bool FoundAnyCheckpoints(AreaKey area)
     {
       if (Celeste.PlayMode == Celeste.PlayModes.Event)
@@ -343,7 +319,7 @@ namespace Celeste
       if (!this.DebugMode && !this.CheatMode)
         return this.Areas[area.ID].Modes[(int) area.Mode].Checkpoints.Count > 0;
       ModeProperties modeProperties = AreaData.Areas[area.ID].Mode[(int) area.Mode];
-      return modeProperties != null && modeProperties.Checkpoints != null && (uint) modeProperties.Checkpoints.Length > 0U;
+      return modeProperties != null && modeProperties.Checkpoints != null && modeProperties.Checkpoints.Length != 0;
     }
 
     public HashSet<string> GetCheckpoints(AreaKey area)
@@ -352,20 +328,17 @@ namespace Celeste
         return new HashSet<string>();
       if (!this.DebugMode && !this.CheatMode)
         return this.Areas[area.ID].Modes[(int) area.Mode].Checkpoints;
-      HashSet<string> stringSet = new HashSet<string>();
+      HashSet<string> checkpoints = new HashSet<string>();
       ModeProperties modeProperties = AreaData.Areas[area.ID].Mode[(int) area.Mode];
       if (modeProperties.Checkpoints != null)
       {
         foreach (CheckpointData checkpoint in modeProperties.Checkpoints)
-          stringSet.Add(checkpoint.Level);
+          checkpoints.Add(checkpoint.Level);
       }
-      return stringSet;
+      return checkpoints;
     }
 
-    public bool HasFlag(string flag)
-    {
-      return this.Flags.Contains(flag);
-    }
+    public bool HasFlag(string flag) => this.Flags.Contains(flag);
 
     public void SetFlag(string flag)
     {
@@ -389,30 +362,24 @@ namespace Celeste
       }
     }
 
-    public int MaxArea
-    {
-      get
-      {
-        if (Celeste.PlayMode == Celeste.PlayModes.Event)
-          return 2;
-        return AreaData.Areas.Count - 1;
-      }
-    }
+    public int MaxArea => Celeste.PlayMode == Celeste.PlayModes.Event ? 2 : AreaData.Areas.Count - 1;
+
+    public int MaxAssistArea => AreaData.Areas.Count - 1;
 
     public int TotalHeartGems
     {
       get
       {
-        int num = 0;
+        int totalHeartGems = 0;
         foreach (AreaStats area in this.Areas)
         {
           for (int index = 0; index < area.Modes.Length; ++index)
           {
             if (area.Modes[index] != null && area.Modes[index].HeartGem)
-              ++num;
+              ++totalHeartGems;
           }
         }
-        return num;
+        return totalHeartGems;
       }
     }
 
@@ -420,13 +387,13 @@ namespace Celeste
     {
       get
       {
-        int num = 0;
-        for (int id = 0; id <= this.MaxArea; ++id)
+        int totalCassettes = 0;
+        for (int index = 0; index <= this.MaxArea; ++index)
         {
-          if (!AreaData.Get(id).Interlude && this.Areas[id].Cassette)
-            ++num;
+          if (!AreaData.Get(index).Interlude && this.Areas[index].Cassette)
+            ++totalCassettes;
         }
-        return num;
+        return totalCassettes;
       }
     }
 
@@ -434,13 +401,26 @@ namespace Celeste
     {
       get
       {
-        int num = 0;
-        for (int id = 0; id <= this.MaxArea; ++id)
+        int totalCompletions = 0;
+        for (int index = 0; index <= this.MaxArea; ++index)
         {
-          if (!AreaData.Get(id).Interlude && this.Areas[id].Modes[0].Completed)
-            ++num;
+          if (!AreaData.Get(index).Interlude && this.Areas[index].Modes[0].Completed)
+            ++totalCompletions;
         }
-        return num;
+        return totalCompletions;
+      }
+    }
+
+    public bool HasAllFullClears
+    {
+      get
+      {
+        for (int index = 0; index <= this.MaxArea; ++index)
+        {
+          if (AreaData.Get(index).CanFullClear && !this.Areas[index].Modes[0].FullClear)
+            return false;
+        }
+        return true;
       }
     }
 
@@ -452,14 +432,13 @@ namespace Celeste
         float num2 = this.TotalHeartGems < 24 ? num1 + (float) ((double) this.TotalHeartGems / 24.0 * 24.0) : num1 + 24f;
         float num3 = this.TotalStrawberries < 175 ? num2 + (float) ((double) this.TotalStrawberries / 175.0 * 55.0) : num2 + 55f;
         float num4 = this.TotalCassettes < 8 ? num3 + (float) ((double) this.TotalCassettes / 8.0 * 7.0) : num3 + 7f;
-        float num5 = this.TotalCompletions < 8 ? num4 + (float) ((double) this.TotalCompletions / 8.0 * 14.0) : num4 + 14f;
-        if ((double) num5 < 0.0)
-          num5 = 0.0f;
-        else if ((double) num5 > 100.0)
-          num5 = 100f;
-        return (int) num5;
+        float completionPercent = this.TotalCompletions < 8 ? num4 + (float) ((double) this.TotalCompletions / 8.0 * 14.0) : num4 + 14f;
+        if ((double) completionPercent < 0.0)
+          completionPercent = 0.0f;
+        else if ((double) completionPercent > 100.0)
+          completionPercent = 100f;
+        return (int) completionPercent;
       }
     }
   }
 }
-

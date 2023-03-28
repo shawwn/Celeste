@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.PlayerHair
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -14,21 +14,21 @@ namespace Celeste
   [Tracked(false)]
   public class PlayerHair : Component
   {
+    public const string Hair = "characters/player/hair00";
     public Color Color = Player.NormalHairColor;
     public Color Border = Color.Black;
     public float Alpha = 1f;
+    public Facings Facing;
+    public bool DrawPlayerSpriteOutline;
     public bool SimulateMotion = true;
     public Vector2 StepPerSegment = new Vector2(0.0f, 2f);
     public float StepInFacingPerSegment = 0.5f;
     public float StepApproach = 64f;
-    public float StepYSinePerSegment = 0.0f;
+    public float StepYSinePerSegment;
+    public PlayerSprite Sprite;
     public List<Vector2> Nodes = new List<Vector2>();
     private List<MTexture> bangs = GFX.Game.GetAtlasSubtextures("characters/player/bangs");
-    private float wave = 0.0f;
-    public const string Hair = "characters/player/hair00";
-    public Facings Facing;
-    public bool DrawPlayerSpriteOutline;
-    public PlayerSprite Sprite;
+    private float wave;
 
     public PlayerHair(PlayerSprite sprite)
       : base(true, true)
@@ -71,6 +71,12 @@ namespace Celeste
     {
       this.wave += Engine.DeltaTime * 4f;
       base.Update();
+    }
+
+    public void MoveHairBy(Vector2 amount)
+    {
+      for (int index = 0; index < this.Nodes.Count; ++index)
+        this.Nodes[index] += amount;
     }
 
     public override void Render()
@@ -124,4 +130,3 @@ namespace Celeste
     }
   }
 }
-

@@ -221,5 +221,6 @@ project.lock.json
 #####
 
 Celeste/Game/Content
+Celeste.app
 
 error_log.txt

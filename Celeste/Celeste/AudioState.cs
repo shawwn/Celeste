@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.AudioState
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using FMOD.Studio;
 using System;
@@ -47,13 +47,16 @@ namespace Celeste
       this.Ambience.Event = ambience;
     }
 
-    public void Apply()
+    public void Apply(bool forceSixteenthNoteHack = false)
     {
-      bool flag1 = Audio.SetMusic(this.Music.Event, false, true);
+      bool flag1 = Audio.SetMusic(this.Music.Event, false);
       if ((HandleBase) Audio.CurrentMusicEventInstance != (HandleBase) null)
       {
         foreach (MEP parameter in this.Music.Parameters)
-          Audio.SetParameter(Audio.CurrentMusicEventInstance, parameter.Key, parameter.Value);
+        {
+          if (!(parameter.Key == "sixteenth_note") || forceSixteenthNoteHack)
+            Audio.SetParameter(Audio.CurrentMusicEventInstance, parameter.Key, parameter.Value);
+        }
         if (flag1)
         {
           int num = (int) Audio.CurrentMusicEventInstance.start();
@@ -72,16 +75,13 @@ namespace Celeste
     public void Stop(bool allowFadeOut = true)
     {
       Audio.SetMusic((string) null, false, allowFadeOut);
-      Audio.SetAmbience((string) null, true);
+      Audio.SetAmbience((string) null);
     }
 
-    public AudioState Clone()
+    public AudioState Clone() => new AudioState()
     {
-      return new AudioState()
-      {
-        Music = this.Music.Clone(),
-        Ambience = this.Ambience.Clone()
-      };
-    }
+      Music = this.Music.Clone(),
+      Ambience = this.Ambience.Clone()
+    };
   }
 }

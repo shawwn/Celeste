@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.QuickResetHint
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -24,62 +24,93 @@ namespace Celeste
       this.Tag = (int) Tags.HUD;
       Buttons buttons1 = Buttons.LeftShoulder;
       Buttons buttons2 = Buttons.RightShoulder;
-      this.textStart = Dialog.Clean("UI_QUICK_RESTART_TITLE", (Language) null) + " ";
-      this.textHold = Dialog.Clean("UI_QUICK_RESTART_HOLD", (Language) null);
-      this.textPress = Dialog.Clean("UI_QUICK_RESTART_PRESS", (Language) null);
-      this.controllerList = new List<object>()
+      this.textStart = Dialog.Clean("UI_QUICK_RESTART_TITLE") + " ";
+      this.textHold = Dialog.Clean("UI_QUICK_RESTART_HOLD");
+      this.textPress = Dialog.Clean("UI_QUICK_RESTART_PRESS");
+      if (Settings.Instance.Language == "japanese")
       {
-        (object) this.textStart,
-        (object) this.textHold,
-        (object) buttons1,
-        (object) buttons2,
-        (object) ",  ",
-        (object) this.textPress,
-        (object) Input.FirstButton(Input.Pause)
-      };
-      this.keyboardList = new List<object>()
+        this.controllerList = new List<object>()
+        {
+          (object) this.textStart,
+          (object) buttons1,
+          (object) buttons2,
+          (object) this.textHold,
+          (object) "、",
+          (object) Input.FirstButton(Input.Pause),
+          (object) this.textPress
+        };
+        this.keyboardList = new List<object>()
+        {
+          (object) this.textStart,
+          (object) Input.FirstKey(Input.QuickRestart),
+          (object) this.textPress
+        };
+      }
+      else
       {
-        (object) this.textStart,
-        (object) this.textPress,
-        (object) Input.FirstKey(Input.QuickRestart)
-      };
+        this.controllerList = new List<object>()
+        {
+          (object) this.textStart,
+          (object) this.textHold,
+          (object) buttons1,
+          (object) buttons2,
+          (object) ",  ",
+          (object) this.textPress,
+          (object) Input.FirstButton(Input.Pause)
+        };
+        this.keyboardList = new List<object>()
+        {
+          (object) this.textStart,
+          (object) this.textPress,
+          (object) Input.FirstKey(Input.QuickRestart)
+        };
+      }
     }
 
     public override void Render()
     {
       List<object> objectList = Input.GuiInputController() ? this.controllerList : this.keyboardList;
       float num = 0.0f;
-      foreach (object obj in objectList)
+      foreach (object text in objectList)
       {
-        if (obj is string)
-          num += ActiveFont.Measure(obj as string).X;
-        else if (obj is Buttons)
-          num += (float) Input.GuiSingleButton((Buttons) obj, "controls/keyboard/oemquestion").Width + 16f;
-        else if (obj is Keys)
-          num += (float) Input.GuiKey((Keys) obj, "controls/keyboard/oemquestion").Width + 16f;
+        switch (text)
+        {
+          case string _:
+            num += ActiveFont.Measure(text as string).X;
+            continue;
+          case Buttons button:
+            num += (float) Input.GuiSingleButton(button).Width + 16f;
+            continue;
+          case Keys key:
+            num += (float) Input.GuiKey(key).Width + 16f;
+            continue;
+          default:
+            continue;
+        }
       }
       Vector2 position = new Vector2((float) ((1920.0 - (double) (num * 0.75f)) / 2.0), 980f);
-      foreach (object obj in objectList)
+      foreach (object text in objectList)
       {
-        if (obj is string)
+        switch (text)
         {
-          ActiveFont.DrawOutline(obj as string, position, new Vector2(0.0f, 0.5f), Vector2.One * 0.75f, Color.LightGray, 2f, Color.Black);
-          position.X += ActiveFont.Measure(obj as string).X * 0.75f;
-        }
-        else if (obj is Buttons)
-        {
-          MTexture mtexture = Input.GuiSingleButton((Buttons) obj, "controls/keyboard/oemquestion");
-          mtexture.DrawJustified(position + new Vector2((float) (((double) mtexture.Width + 16.0) * 0.75 * 0.5), 0.0f), new Vector2(0.5f, 0.5f), Color.White, 0.75f);
-          position.X += (float) (((double) mtexture.Width + 16.0) * 0.75);
-        }
-        else if (obj is Keys)
-        {
-          MTexture mtexture = Input.GuiKey((Keys) obj, "controls/keyboard/oemquestion");
-          mtexture.DrawJustified(position + new Vector2((float) (((double) mtexture.Width + 16.0) * 0.75 * 0.5), 0.0f), new Vector2(0.5f, 0.5f), Color.White, 0.75f);
-          position.X += (float) (((double) mtexture.Width + 16.0) * 0.75);
+          case string _:
+            ActiveFont.DrawOutline(text as string, position, new Vector2(0.0f, 0.5f), Vector2.One * 0.75f, Color.LightGray, 2f, Color.Black);
+            position.X += ActiveFont.Measure(text as string).X * 0.75f;
+            continue;
+          case Buttons button:
+            MTexture mtexture1 = Input.GuiSingleButton(button);
+            mtexture1.DrawJustified(position + new Vector2((float) (((double) mtexture1.Width + 16.0) * 0.75 * 0.5), 0.0f), new Vector2(0.5f, 0.5f), Color.White, 0.75f);
+            position.X += (float) (((double) mtexture1.Width + 16.0) * 0.75);
+            continue;
+          case Keys key:
+            MTexture mtexture2 = Input.GuiKey(key);
+            mtexture2.DrawJustified(position + new Vector2((float) (((double) mtexture2.Width + 16.0) * 0.75 * 0.5), 0.0f), new Vector2(0.5f, 0.5f), Color.White, 0.75f);
+            position.X += (float) (((double) mtexture2.Width + 16.0) * 0.75);
+            continue;
+          default:
+            continue;
         }
       }
     }
   }
 }
-

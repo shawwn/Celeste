@@ -1,12 +1,11 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.FallingBlock
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
-using System;
 using System.Collections;
 
 namespace Celeste
@@ -48,8 +47,8 @@ namespace Celeste
         Calc.PopRandom();
         this.highlight.Alpha = 0.0f;
       }
-      this.Add((Component) new Coroutine(this.Sequence(), true));
-      this.Add((Component) new LightOcclude(1f));
+      this.Add((Component) new Coroutine(this.Sequence()));
+      this.Add((Component) new LightOcclude());
       this.Add((Component) new TileInterceptor(this.tiles, false));
       this.TileType = tile;
       this.SurfaceSoundIndex = SurfaceIndex.TileToIndex[tile];
@@ -59,14 +58,11 @@ namespace Celeste
     }
 
     public FallingBlock(EntityData data, Vector2 offset)
-      : this(data.Position + offset, data.Char("tiletype", '3'), data.Width, data.Height, false, data.Bool("behind", false), data.Bool(nameof (climbFall), true))
+      : this(data.Position + offset, data.Char("tiletype", '3'), data.Width, data.Height, false, data.Bool("behind"), data.Bool(nameof (climbFall), true))
     {
     }
 
-    public static FallingBlock CreateFinalBossBlock(EntityData data, Vector2 offset)
-    {
-      return new FallingBlock(data.Position + offset, 'g', data.Width, data.Height, true, false, false);
-    }
+    public static FallingBlock CreateFinalBossBlock(EntityData data, Vector2 offset) => new FallingBlock(data.Position + offset, 'g', data.Width, data.Height, true, false, false);
 
     public override void OnShake(Vector2 amount)
     {
@@ -77,7 +73,7 @@ namespace Celeste
       this.highlight.Position += amount;
     }
 
-    public override void OnStaticMoverTrigger()
+    public override void OnStaticMoverTrigger(StaticMover sm)
     {
       if (this.finalBoss)
         return;
@@ -86,121 +82,98 @@ namespace Celeste
 
     public bool HasStartedFalling { get; private set; }
 
-    private bool PlayerFallCheck()
-    {
-      if (this.climbFall)
-        return this.HasPlayerRider();
-      return this.HasPlayerOnTop();
-    }
+    private bool PlayerFallCheck() => this.climbFall ? this.HasPlayerRider() : this.HasPlayerOnTop();
 
     private bool PlayerWaitCheck()
     {
       if (this.Triggered || this.PlayerFallCheck())
         return true;
-      if (this.climbFall)
-        return this.CollideCheck<Player>(this.Position - Vector2.UnitX) || this.CollideCheck<Player>(this.Position + Vector2.UnitX);
-      return false;
+      if (!this.climbFall)
+        return false;
+      return this.CollideCheck<Player>(this.Position - Vector2.UnitX) || this.CollideCheck<Player>(this.Position + Vector2.UnitX);
     }
 
     private IEnumerator Sequence()
     {
-      while (true)
+      FallingBlock fallingBlock = this;
+      while (!fallingBlock.Triggered && (fallingBlock.finalBoss || !fallingBlock.PlayerFallCheck()))
+        yield return (object) null;
+      while ((double) fallingBlock.FallDelay > 0.0)
       {
-        if (!this.Triggered && (this.finalBoss || !this.PlayerFallCheck()))
-          yield return (object) null;
-        else
-          break;
-      }
-      while ((double) this.FallDelay > 0.0)
-      {
-        this.FallDelay -= Engine.DeltaTime;
+        fallingBlock.FallDelay -= Engine.DeltaTime;
         yield return (object) null;
       }
-      this.HasStartedFalling = true;
-label_32:
-      this.ShakeSfx();
-      this.StartShaking(0.0f);
+      fallingBlock.HasStartedFalling = true;
+label_6:
+      fallingBlock.ShakeSfx();
+      fallingBlock.StartShaking();
       Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-      if (this.finalBoss)
-        this.Add((Component) new Coroutine(this.HighlightFade(1f), true));
+      if (fallingBlock.finalBoss)
+        fallingBlock.Add((Component) new Coroutine(fallingBlock.HighlightFade(1f)));
       yield return (object) 0.2f;
       float timer = 0.4f;
-      if (this.finalBoss)
+      if (fallingBlock.finalBoss)
         timer = 0.2f;
-      for (; (double) timer > 0.0 && this.PlayerWaitCheck(); timer -= Engine.DeltaTime)
+      for (; (double) timer > 0.0 && fallingBlock.PlayerWaitCheck(); timer -= Engine.DeltaTime)
         yield return (object) null;
-      this.StopShaking();
-      for (int i = 2; (double) i < (double) this.Width; i += 4)
+      fallingBlock.StopShaking();
+      for (int x = 2; (double) x < (double) fallingBlock.Width; x += 4)
       {
-        if (this.Scene.CollideCheck<Solid>(this.TopLeft + new Vector2((float) i, -2f)))
-          this.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustA, 2, new Vector2(this.X + (float) i, this.Y), Vector2.One * 4f, 1.570796f);
-        this.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustB, 2, new Vector2(this.X + (float) i, this.Y), Vector2.One * 4f);
+        if (fallingBlock.Scene.CollideCheck<Solid>(fallingBlock.TopLeft + new Vector2((float) x, -2f)))
+          fallingBlock.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustA, 2, new Vector2(fallingBlock.X + (float) x, fallingBlock.Y), Vector2.One * 4f, 1.5707964f);
+        fallingBlock.SceneAs<Level>().Particles.Emit(FallingBlock.P_FallDustB, 2, new Vector2(fallingBlock.X + (float) x, fallingBlock.Y), Vector2.One * 4f);
       }
       float speed = 0.0f;
-      float maxSpeed = this.finalBoss ? 130f : 160f;
+      float maxSpeed = fallingBlock.finalBoss ? 130f : 160f;
       Level level;
       while (true)
       {
-        level = this.SceneAs<Level>();
+        level = fallingBlock.SceneAs<Level>();
         speed = Calc.Approach(speed, maxSpeed, 500f * Engine.DeltaTime);
-        if (!this.MoveVCollideSolids(speed * Engine.DeltaTime, true, (Action<Vector2, Vector2, Platform>) null))
+        if (!fallingBlock.MoveVCollideSolids(speed * Engine.DeltaTime, true))
         {
-          double top1 = (double) this.Top;
-          Rectangle bounds = level.Bounds;
-          double num1 = (double) (bounds.Bottom + 16);
-          int num2;
-          if (top1 <= num1)
-          {
-            double top2 = (double) this.Top;
-            bounds = level.Bounds;
-            double num3 = (double) (bounds.Bottom - 1);
-            num2 = top2 <= num3 ? 0 : (this.CollideCheck<Solid>(this.Position + new Vector2(0.0f, 1f)) ? 1 : 0);
-          }
-          else
-            num2 = 1;
-          if (num2 == 0)
+          if ((double) fallingBlock.Top <= (double) (level.Bounds.Bottom + 16) && ((double) fallingBlock.Top <= (double) (level.Bounds.Bottom - 1) || !fallingBlock.CollideCheck<Solid>(fallingBlock.Position + new Vector2(0.0f, 1f))))
           {
             yield return (object) null;
             level = (Level) null;
           }
           else
-            goto label_24;
+            goto label_23;
         }
         else
           break;
       }
-      this.ImpactSfx();
+      fallingBlock.ImpactSfx();
       Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-      this.SceneAs<Level>().DirectionalShake(Vector2.UnitY, this.finalBoss ? 0.2f : 0.3f);
-      if (this.finalBoss)
-        this.Add((Component) new Coroutine(this.HighlightFade(0.0f), true));
-      this.StartShaking(0.0f);
-      this.LandParticles();
+      fallingBlock.SceneAs<Level>().DirectionalShake(Vector2.UnitY, fallingBlock.finalBoss ? 0.2f : 0.3f);
+      if (fallingBlock.finalBoss)
+        fallingBlock.Add((Component) new Coroutine(fallingBlock.HighlightFade(0.0f)));
+      fallingBlock.StartShaking();
+      fallingBlock.LandParticles();
       yield return (object) 0.2f;
-      this.StopShaking();
-      if (this.CollideCheck<SolidTiles>(this.Position + new Vector2(0.0f, 1f)))
+      fallingBlock.StopShaking();
+      if (fallingBlock.CollideCheck<SolidTiles>(fallingBlock.Position + new Vector2(0.0f, 1f)))
       {
-        this.Safe = true;
+        fallingBlock.Safe = true;
         yield break;
       }
       else
       {
-        while (this.CollideCheck<Platform>(this.Position + new Vector2(0.0f, 1f)))
+        while (fallingBlock.CollideCheck<Platform>(fallingBlock.Position + new Vector2(0.0f, 1f)))
           yield return (object) 0.1f;
-        goto label_32;
+        goto label_6;
       }
-label_24:
-      this.Collidable = this.Visible = false;
+label_23:
+      fallingBlock.Collidable = fallingBlock.Visible = false;
       yield return (object) 0.2f;
-      bool canTransition = level.Session.MapData.CanTransitionTo(level, new Vector2(this.Center.X, this.Bottom + 12f));
-      if (canTransition)
+      if (level.Session.MapData.CanTransitionTo(level, new Vector2(fallingBlock.Center.X, fallingBlock.Bottom + 12f)))
       {
         yield return (object) 0.2f;
-        this.SceneAs<Level>().Shake(0.3f);
+        fallingBlock.SceneAs<Level>().Shake();
         Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
       }
-      this.RemoveSelf();
-      this.DestroyStaticMovers();
+      fallingBlock.RemoveSelf();
+      fallingBlock.DestroyStaticMovers();
     }
 
     private IEnumerator HighlightFade(float to)
@@ -218,13 +191,13 @@ label_24:
 
     private void LandParticles()
     {
-      for (int index = 2; (double) index <= (double) this.Width; index += 4)
+      for (int x = 2; (double) x <= (double) this.Width; x += 4)
       {
-        if (this.Scene.CollideCheck<Solid>(this.BottomLeft + new Vector2((float) index, 3f)))
+        if (this.Scene.CollideCheck<Solid>(this.BottomLeft + new Vector2((float) x, 3f)))
         {
-          this.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_FallDustA, 1, new Vector2(this.X + (float) index, this.Bottom), Vector2.One * 4f, -1.570796f);
-          float direction = (double) index >= (double) this.Width / 2.0 ? 0.0f : 3.141593f;
-          this.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_LandDust, 1, new Vector2(this.X + (float) index, this.Bottom), Vector2.One * 4f, direction);
+          this.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_FallDustA, 1, new Vector2(this.X + (float) x, this.Bottom), Vector2.One * 4f, -1.5707964f);
+          float direction = (double) x >= (double) this.Width / 2.0 ? 0.0f : 3.1415927f;
+          this.SceneAs<Level>().ParticlesFG.Emit(FallingBlock.P_LandDust, 1, new Vector2(this.X + (float) x, this.Bottom), Vector2.One * 4f, direction);
         }
       }
     }
@@ -254,4 +227,3 @@ label_24:
     }
   }
 }
-

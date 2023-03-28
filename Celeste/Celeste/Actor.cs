@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Actor
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -13,12 +13,12 @@ namespace Celeste
   [Tracked(true)]
   public class Actor : Entity
   {
-    public bool AllowPushing = true;
-    public float LiftSpeedGraceTime = 0.16f;
     public Collision SquishCallback;
     public bool TreatNaive;
     private Vector2 movementCounter;
     public bool IgnoreJumpThrus;
+    public bool AllowPushing = true;
+    public float LiftSpeedGraceTime = 0.16f;
     private Vector2 currentLiftSpeed;
     private Vector2 lastLiftSpeed;
     private float liftSpeedTimer;
@@ -36,14 +36,14 @@ namespace Celeste
       this.RemoveSelf();
     }
 
-    protected bool TrySquishWiggle(CollisionData data)
+    protected bool TrySquishWiggle(CollisionData data, int wiggleX = 3, int wiggleY = 3)
     {
       data.Pusher.Collidable = true;
-      for (int index1 = 0; index1 <= 3; ++index1)
+      for (int index1 = 0; index1 <= wiggleX; ++index1)
       {
-        for (int index2 = 0; index2 <= 3; ++index2)
+        for (int index2 = 0; index2 <= wiggleY; ++index2)
         {
-          if (index1 != 0 || (uint) index2 > 0U)
+          if (index1 != 0 || index2 != 0)
           {
             for (int index3 = 1; index3 >= -1; index3 -= 2)
             {
@@ -61,61 +61,59 @@ namespace Celeste
           }
         }
       }
+      for (int index5 = 0; index5 <= wiggleX; ++index5)
+      {
+        for (int index6 = 0; index6 <= wiggleY; ++index6)
+        {
+          if (index5 != 0 || index6 != 0)
+          {
+            for (int index7 = 1; index7 >= -1; index7 -= 2)
+            {
+              for (int index8 = 1; index8 >= -1; index8 -= 2)
+              {
+                Vector2 vector2 = new Vector2((float) (index5 * index7), (float) (index6 * index8));
+                if (!this.CollideCheck<Solid>(data.TargetPosition + vector2))
+                {
+                  this.Position = data.TargetPosition + vector2;
+                  data.Pusher.Collidable = false;
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
       data.Pusher.Collidable = false;
       return false;
     }
 
-    public virtual bool IsRiding(JumpThru jumpThru)
-    {
-      if (this.IgnoreJumpThrus)
-        return false;
-      return this.CollideCheckOutside((Entity) jumpThru, this.Position + Vector2.UnitY);
-    }
+    public virtual bool IsRiding(JumpThru jumpThru) => !this.IgnoreJumpThrus && this.CollideCheckOutside((Entity) jumpThru, this.Position + Vector2.UnitY);
 
-    public virtual bool IsRiding(Solid solid)
-    {
-      return this.CollideCheck((Entity) solid, this.Position + Vector2.UnitY);
-    }
+    public virtual bool IsRiding(Solid solid) => this.CollideCheck((Entity) solid, this.Position + Vector2.UnitY);
 
     public bool OnGround(int downCheck = 1)
     {
-      return this.CollideCheck<Solid>(this.Position + Vector2.UnitY * (float) downCheck) || !this.IgnoreJumpThrus && this.CollideCheckOutside<JumpThru>(this.Position + Vector2.UnitY * (float) downCheck);
+      if (this.CollideCheck<Solid>(this.Position + Vector2.UnitY * (float) downCheck))
+        return true;
+      return !this.IgnoreJumpThrus && this.CollideCheckOutside<JumpThru>(this.Position + Vector2.UnitY * (float) downCheck);
     }
 
     public bool OnGround(Vector2 at, int downCheck = 1)
     {
       Vector2 position = this.Position;
       this.Position = at;
-      bool flag = this.OnGround(downCheck);
+      int num = this.OnGround(downCheck) ? 1 : 0;
       this.Position = position;
-      return flag;
+      return num != 0;
     }
 
-    public Vector2 ExactPosition
-    {
-      get
-      {
-        return this.Position + this.movementCounter;
-      }
-    }
+    public Vector2 ExactPosition => this.Position + this.movementCounter;
 
-    public Vector2 PositionRemainder
-    {
-      get
-      {
-        return this.movementCounter;
-      }
-    }
+    public Vector2 PositionRemainder => this.movementCounter;
 
-    public void ZeroRemainderX()
-    {
-      this.movementCounter.X = 0.0f;
-    }
+    public void ZeroRemainderX() => this.movementCounter.X = 0.0f;
 
-    public void ZeroRemainderY()
-    {
-      this.movementCounter.Y = 0.0f;
-    }
+    public void ZeroRemainderY() => this.movementCounter.Y = 0.0f;
 
     public override void Update()
     {
@@ -124,8 +122,9 @@ namespace Celeste
       if ((double) this.liftSpeedTimer <= 0.0)
         return;
       this.liftSpeedTimer -= Engine.DeltaTime;
-      if ((double) this.liftSpeedTimer <= 0.0)
-        this.lastLiftSpeed = Vector2.Zero;
+      if ((double) this.liftSpeedTimer > 0.0)
+        return;
+      this.lastLiftSpeed = Vector2.Zero;
     }
 
     public Vector2 LiftSpeed
@@ -138,12 +137,7 @@ namespace Celeste
         this.lastLiftSpeed = value;
         this.liftSpeedTimer = this.LiftSpeedGraceTime;
       }
-      get
-      {
-        if (this.currentLiftSpeed == Vector2.Zero)
-          return this.lastLiftSpeed;
-        return this.currentLiftSpeed;
-      }
+      get => this.currentLiftSpeed == Vector2.Zero ? this.lastLiftSpeed : this.currentLiftSpeed;
     }
 
     public void ResetLiftSpeed()
@@ -156,7 +150,7 @@ namespace Celeste
     {
       this.movementCounter.X += moveH;
       int moveH1 = (int) Math.Round((double) this.movementCounter.X, MidpointRounding.ToEven);
-      if ((uint) moveH1 <= 0U)
+      if (moveH1 == 0)
         return false;
       this.movementCounter.X -= (float) moveH1;
       return this.MoveHExact(moveH1, onCollide, pusher);
@@ -166,7 +160,7 @@ namespace Celeste
     {
       this.movementCounter.Y += moveV;
       int moveV1 = (int) Math.Round((double) this.movementCounter.Y, MidpointRounding.ToEven);
-      if ((uint) moveV1 <= 0U)
+      if (moveV1 == 0)
         return false;
       this.movementCounter.Y -= (float) moveV1;
       return this.MoveVExact(moveV1, onCollide, pusher);
@@ -177,7 +171,7 @@ namespace Celeste
       Vector2 vector2 = this.Position + Vector2.UnitX * (float) moveH;
       int num1 = Math.Sign(moveH);
       int num2 = 0;
-      while ((uint) moveH > 0U)
+      while (moveH != 0)
       {
         Solid solid = this.CollideFirst<Solid>(this.Position + Vector2.UnitX * (float) num1);
         if (solid != null)
@@ -206,7 +200,7 @@ namespace Celeste
       Vector2 vector2 = this.Position + Vector2.UnitY * (float) moveV;
       int num1 = Math.Sign(moveV);
       int num2 = 0;
-      while ((uint) moveV > 0U)
+      while (moveV != 0)
       {
         Platform platform1 = (Platform) this.CollideFirst<Solid>(this.Position + Vector2.UnitY * (float) num1);
         if (platform1 != null)
@@ -248,34 +242,21 @@ namespace Celeste
       return false;
     }
 
-    public void MoveTowardsX(float targetX, float maxAmount, Collision onCollide = null)
-    {
-      this.MoveToX(Calc.Approach(this.ExactPosition.X, targetX, maxAmount), onCollide);
-    }
+    public void MoveTowardsX(float targetX, float maxAmount, Collision onCollide = null) => this.MoveToX(Calc.Approach(this.ExactPosition.X, targetX, maxAmount), onCollide);
 
-    public void MoveTowardsY(float targetY, float maxAmount, Collision onCollide = null)
-    {
-      this.MoveToY(Calc.Approach(this.ExactPosition.Y, targetY, maxAmount), onCollide);
-    }
+    public void MoveTowardsY(float targetY, float maxAmount, Collision onCollide = null) => this.MoveToY(Calc.Approach(this.ExactPosition.Y, targetY, maxAmount), onCollide);
 
-    public void MoveToX(float toX, Collision onCollide = null)
-    {
-      this.MoveH(toX - this.ExactPosition.X, onCollide, (Solid) null);
-    }
+    public void MoveToX(float toX, Collision onCollide = null) => this.MoveH(toX - this.ExactPosition.X, onCollide);
 
-    public void MoveToY(float toY, Collision onCollide = null)
-    {
-      this.MoveV(toY - this.ExactPosition.Y, onCollide, (Solid) null);
-    }
+    public void MoveToY(float toY, Collision onCollide = null) => this.MoveV(toY - this.ExactPosition.Y, onCollide);
 
     public void NaiveMove(Vector2 amount)
     {
       this.movementCounter += amount;
-      int num1 = (int) Math.Round((double) this.movementCounter.X);
-      int num2 = (int) Math.Round((double) this.movementCounter.Y);
-      this.Position = this.Position + new Vector2((float) num1, (float) num2);
-      this.movementCounter -= new Vector2((float) num1, (float) num2);
+      int x = (int) Math.Round((double) this.movementCounter.X);
+      int y = (int) Math.Round((double) this.movementCounter.Y);
+      this.Position = this.Position + new Vector2((float) x, (float) y);
+      this.movementCounter -= new Vector2((float) x, (float) y);
     }
   }
 }
-

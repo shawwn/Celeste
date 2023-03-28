@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Editor.MapEditor
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,26 +10,27 @@ using Microsoft.Xna.Framework.Input;
 using Monocle;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Celeste.Editor
 {
   public class MapEditor : Scene
   {
     private static readonly Color gridColor = new Color(0.1f, 0.1f, 0.1f);
+    private static Camera Camera;
     private static AreaKey area = AreaKey.None;
     private static float saveFlash = 0.0f;
-    private List<LevelTemplate> levels = new List<LevelTemplate>();
-    private HashSet<LevelTemplate> selection = new HashSet<LevelTemplate>();
-    private HashSet<LevelTemplate> hovered = new HashSet<LevelTemplate>();
-    private float fade = 0.0f;
-    private List<Vector2[]> undoStack = new List<Vector2[]>();
-    private List<Vector2[]> redoStack = new List<Vector2[]>();
-    private static Camera Camera;
     private MapData mapData;
+    private List<LevelTemplate> levels = new List<LevelTemplate>();
     private Vector2 mousePosition;
     private MapEditor.MouseModes mouseMode;
     private Vector2 lastMouseScreenPosition;
     private Vector2 mouseDragStart;
+    private HashSet<LevelTemplate> selection = new HashSet<LevelTemplate>();
+    private HashSet<LevelTemplate> hovered = new HashSet<LevelTemplate>();
+    private float fade;
+    private List<Vector2[]> undoStack = new List<Vector2[]>();
+    private List<Vector2[]> redoStack = new List<Vector2[]>();
 
     public MapEditor(AreaKey area, bool reloadMapData = true)
     {
@@ -50,13 +51,57 @@ namespace Celeste.Editor
       }
       if (SaveData.Instance != null)
         return;
-      SaveData.InitializeDebugMode(true);
+      SaveData.InitializeDebugMode();
     }
 
     public override void GainFocus()
     {
       base.GainFocus();
       this.SaveAndReload();
+    }
+
+    private void SelectAll()
+    {
+      this.selection.Clear();
+      foreach (LevelTemplate level in this.levels)
+        this.selection.Add(level);
+    }
+
+    public void Rename(string oldName, string newName)
+    {
+      LevelTemplate levelTemplate1 = (LevelTemplate) null;
+      LevelTemplate levelTemplate2 = (LevelTemplate) null;
+      foreach (LevelTemplate level in this.levels)
+      {
+        if (levelTemplate1 == null && level.Name == oldName)
+        {
+          levelTemplate1 = level;
+          if (levelTemplate2 != null)
+            break;
+        }
+        else if (levelTemplate2 == null && level.Name == newName)
+        {
+          levelTemplate2 = level;
+          if (levelTemplate1 != null)
+            break;
+        }
+      }
+      string path1 = Path.Combine("..", "..", "..", "Content", "Levels", this.mapData.Filename);
+      if (levelTemplate2 == null)
+      {
+        File.Move(Path.Combine(path1, levelTemplate1.Name + ".xml"), Path.Combine(path1, newName + ".xml"));
+        levelTemplate1.Name = newName;
+      }
+      else
+      {
+        string str = Path.Combine(path1, "TEMP.xml");
+        File.Move(Path.Combine(path1, levelTemplate1.Name + ".xml"), str);
+        File.Move(Path.Combine(path1, levelTemplate2.Name + ".xml"), Path.Combine(path1, oldName + ".xml"));
+        File.Move(str, Path.Combine(path1, newName + ".xml"));
+        levelTemplate1.Name = newName;
+        levelTemplate2.Name = oldName;
+      }
+      this.Save();
     }
 
     private void Save()
@@ -67,10 +112,7 @@ namespace Celeste.Editor
     {
     }
 
-    private void UpdateMouse()
-    {
-      this.mousePosition = Vector2.Transform(MInput.Mouse.Position, Matrix.Invert(MapEditor.Camera.Matrix));
-    }
+    private void UpdateMouse() => this.mousePosition = Vector2.Transform(MInput.Mouse.Position, Matrix.Invert(MapEditor.Camera.Matrix));
 
     public override void Update()
     {
@@ -82,8 +124,12 @@ namespace Celeste.Editor
         MapEditor.Camera.Zoom = 6f;
         MapEditor.Camera.Position = Vector2.Zero;
       }
-      MapEditor.Camera.Zoom += (float) Math.Sign(MInput.Mouse.WheelDelta) * 1f;
-      MapEditor.Camera.Zoom = Math.Max(1f, Math.Min(24f, MapEditor.Camera.Zoom));
+      int num = Math.Sign(MInput.Mouse.WheelDelta);
+      if (num > 0 && (double) MapEditor.Camera.Zoom >= 1.0 || (double) MapEditor.Camera.Zoom > 1.0)
+        MapEditor.Camera.Zoom += (float) num;
+      else
+        MapEditor.Camera.Zoom += (float) num * 0.25f;
+      MapEditor.Camera.Zoom = Math.Max(0.25f, Math.Min(24f, MapEditor.Camera.Zoom));
       MapEditor.Camera.Position += new Vector2((float) Input.MoveX.Value, (float) Input.MoveY.Value) * 300f * Engine.DeltaTime;
       this.UpdateMouse();
       this.hovered.Clear();
@@ -165,6 +211,8 @@ namespace Celeste.Editor
               this.Undo();
             else if (MInput.Keyboard.Pressed(Keys.Y))
               this.Redo();
+            else if (MInput.Keyboard.Pressed(Keys.A))
+              this.SelectAll();
           }
         }
       }
@@ -252,16 +300,20 @@ namespace Celeste.Editor
       float num3 = (float) Math.Floor((double) MapEditor.Camera.Top / (double) num1 - 1.0) * (float) num1;
       for (float num4 = num2; (double) num4 <= (double) num2 + (double) width + 10.0; num4 += 5f)
         Draw.Line(num4, MapEditor.Camera.Top, num4, MapEditor.Camera.Top + height, MapEditor.gridColor);
-      for (float num4 = num3; (double) num4 <= (double) num3 + (double) height + 10.0; num4 += 5f)
-        Draw.Line(MapEditor.Camera.Left, num4, MapEditor.Camera.Left + width, num4, MapEditor.gridColor);
-      Draw.Line(0.0f, MapEditor.Camera.Top, 0.0f, MapEditor.Camera.Top + height, Color.DarkSlateBlue);
-      Draw.Line(MapEditor.Camera.Left, 0.0f, MapEditor.Camera.Left + width, 0.0f, Color.DarkSlateBlue);
+      for (float num5 = num3; (double) num5 <= (double) num3 + (double) height + 10.0; num5 += 5f)
+        Draw.Line(MapEditor.Camera.Left, num5, MapEditor.Camera.Left + width, num5, MapEditor.gridColor);
+      Draw.Line(0.0f, MapEditor.Camera.Top, 0.0f, MapEditor.Camera.Top + height, Color.DarkSlateBlue, 1f / MapEditor.Camera.Zoom);
+      Draw.Line(MapEditor.Camera.Left, 0.0f, MapEditor.Camera.Left + width, 0.0f, Color.DarkSlateBlue, 1f / MapEditor.Camera.Zoom);
       foreach (LevelTemplate level in this.levels)
-        level.Render(this.selection.Contains(level), this.hovered.Contains(level), this.levels);
+        level.RenderContents(MapEditor.Camera, this.levels);
+      foreach (LevelTemplate level in this.levels)
+        level.RenderOutline(MapEditor.Camera);
+      foreach (LevelTemplate level in this.levels)
+        level.RenderHighlight(MapEditor.Camera, this.selection.Contains(level), this.hovered.Contains(level));
       if (this.mouseMode == MapEditor.MouseModes.Hover)
       {
-        Draw.Line(this.mousePosition.X - 4f, this.mousePosition.Y, this.mousePosition.X + 3f, this.mousePosition.Y, Color.Yellow);
-        Draw.Line(this.mousePosition.X, this.mousePosition.Y - 3f, this.mousePosition.X, this.mousePosition.Y + 4f, Color.Yellow);
+        Draw.Line(this.mousePosition.X - 12f / MapEditor.Camera.Zoom, this.mousePosition.Y, this.mousePosition.X + 12f / MapEditor.Camera.Zoom, this.mousePosition.Y, Color.Yellow, 3f / MapEditor.Camera.Zoom);
+        Draw.Line(this.mousePosition.X, this.mousePosition.Y - 12f / MapEditor.Camera.Zoom, this.mousePosition.X, this.mousePosition.Y + 12f / MapEditor.Camera.Zoom, Color.Yellow, 3f / MapEditor.Camera.Zoom);
       }
       else if (this.mouseMode == MapEditor.MouseModes.Select)
         Draw.Rect(this.GetMouseRect(this.mouseDragStart, this.mousePosition), Color.Lime * 0.25f);
@@ -277,12 +329,24 @@ namespace Celeste.Editor
       if (MInput.Keyboard.Check(Keys.Q))
       {
         Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * 0.25f);
-        foreach (LevelTemplate level in this.levels)
+        using (List<LevelTemplate>.Enumerator enumerator = this.levels.GetEnumerator())
         {
-          for (int index = 0; level.Strawberries != null && index < level.Strawberries.Count; ++index)
+label_35:
+          while (enumerator.MoveNext())
           {
-            Vector2 strawberry = level.Strawberries[index];
-            ActiveFont.DrawOutline(level.StrawberryMetadata[index], (new Vector2((float) level.X + strawberry.X, (float) level.Y + strawberry.Y) - MapEditor.Camera.Position) * MapEditor.Camera.Zoom + new Vector2(960f, 532f), new Vector2(0.5f, 1f), Vector2.One * 1f, Color.Red, 2f, Color.Black);
+            LevelTemplate current = enumerator.Current;
+            int index = 0;
+            while (true)
+            {
+              if (current.Strawberries != null && index < current.Strawberries.Count)
+              {
+                Vector2 strawberry = current.Strawberries[index];
+                ActiveFont.DrawOutline(current.StrawberryMetadata[index], (new Vector2((float) current.X + strawberry.X, (float) current.Y + strawberry.Y) - MapEditor.Camera.Position) * MapEditor.Camera.Zoom + new Vector2(960f, 532f), new Vector2(0.5f, 1f), Vector2.One * 1f, Color.Red, 2f, Color.Black);
+                ++index;
+              }
+              else
+                goto label_35;
+            }
           }
         }
       }
@@ -294,8 +358,8 @@ namespace Celeste.Editor
         }
         else
         {
-          ActiveFont.Draw(Dialog.Clean(this.mapData.Data.Name, (Language) null), position1, Color.Aqua);
-          ActiveFont.Draw(((int) this.mapData.Area.Mode).ToString() + " MODE", position2, Vector2.UnitX, Vector2.One, Color.Red);
+          ActiveFont.Draw(Dialog.Clean(this.mapData.Data.Name), position1, Color.Aqua);
+          ActiveFont.Draw(this.mapData.Area.Mode.ToString() + " MODE", position2, Vector2.UnitX, Vector2.One, Color.Red);
         }
       }
       else if (this.hovered.Count == 1)
@@ -308,7 +372,11 @@ namespace Celeste.Editor
         }
         string text = levelTemplate.ActualWidth.ToString() + "x" + levelTemplate.ActualHeight.ToString() + "   " + (object) levelTemplate.X + "," + (object) levelTemplate.Y + "   " + (object) (levelTemplate.X * 8) + "," + (object) (levelTemplate.Y * 8);
         ActiveFont.Draw(levelTemplate.Name, position1, Color.Yellow);
-        ActiveFont.Draw(text, position2, Vector2.UnitX, Vector2.One, Color.Green);
+        Vector2 position3 = position2;
+        Vector2 unitX = Vector2.UnitX;
+        Vector2 one = Vector2.One;
+        Color green = Color.Green;
+        ActiveFont.Draw(text, position3, unitX, one, green);
       }
       else
         ActiveFont.Draw(this.hovered.Count.ToString() + " levels", position1, Color.Yellow);
@@ -318,7 +386,7 @@ namespace Celeste.Editor
     private void LoadLevel(LevelTemplate level, Vector2 at)
     {
       this.Save();
-      Engine.Scene = (Scene) new LevelLoader(new Session(MapEditor.area, (string) null, (AreaStats) null)
+      Engine.Scene = (Scene) new LevelLoader(new Session(MapEditor.area)
       {
         FirstLevel = false,
         Level = level.Name,
@@ -470,4 +538,3 @@ namespace Celeste.Editor
     }
   }
 }
-

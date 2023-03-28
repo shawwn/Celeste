@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Overworld
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -16,13 +16,12 @@ namespace Celeste
   public class Overworld : Scene, IOverlayHandler
   {
     public List<Oui> UIs = new List<Oui>();
-    public Oui Current = (Oui) null;
-    public Oui Last = (Oui) null;
-    public Oui Next = (Oui) null;
+    public Oui Current;
+    public Oui Last;
+    public Oui Next;
+    public bool EnteringPico8;
     public bool ShowInputUI = true;
     public bool ShowConfirmUI = true;
-    private int lastArea = -1;
-    public bool EnteringPico8;
     private float inputEase;
     public MountainRenderer Mountain;
     public HiresSnow Snow;
@@ -30,6 +29,7 @@ namespace Celeste
     public Maddy3D Maddy;
     private Entity routineEntity;
     private bool transitioning;
+    private int lastArea = -1;
 
     public Overlay Overlay { get; set; }
 
@@ -41,10 +41,11 @@ namespace Celeste
       this.Add((Entity) new Overworld.InputEntity(this));
       this.Snow = loader.Snow;
       if (this.Snow == null)
-        this.Snow = new HiresSnow(0.45f);
+        this.Snow = new HiresSnow();
       this.Add((Monocle.Renderer) this.Snow);
       this.RendererList.UpdateLists();
       this.Add((Entity) (this.Snow3D = new Snow3D(this.Mountain.Model)));
+      this.Add((Entity) new MoonParticle3D(this.Mountain.Model, new Vector3(0.0f, 31f, 0.0f)));
       this.Add((Entity) (this.Maddy = new Maddy3D(this.Mountain)));
       this.ReloadMenus(loader.StartMode);
       this.Mountain.OnEaseEnd = (Action) (() =>
@@ -58,7 +59,7 @@ namespace Celeste
       });
       this.lastArea = this.Mountain.Area;
       if (this.Mountain.Area < 0)
-        this.Maddy.Hide(true);
+        this.Maddy.Hide();
       else
         this.Maddy.Position = AreaData.Areas[this.Mountain.Area].MountainCursor;
       Settings.Instance.ApplyVolumes();
@@ -68,7 +69,8 @@ namespace Celeste
     {
       base.Begin();
       this.SetNormalMusic();
-      FadeWipe fadeWipe = new FadeWipe((Scene) this, true, (Action) null);
+      ScreenWipe.WipeColor = Color.Black;
+      FadeWipe fadeWipe = new FadeWipe((Scene) this, true);
       this.RendererList.UpdateLists();
       if (!this.EnteringPico8)
       {
@@ -110,15 +112,17 @@ namespace Celeste
 
     public void SetNormalMusic()
     {
-      Audio.SetMusic("event:/music/menu/level_select", true, true);
-      Audio.SetAmbience("event:/env/amb/worldmap", true);
+      Audio.SetMusic("event:/music/menu/level_select");
+      Audio.SetAmbience("event:/env/amb/worldmap");
     }
 
     public void ReloadMountainStuff()
     {
-      GFX.MountainTerrain.ReassignVertices();
-      GFX.MountainBuildings.ReassignVertices();
-      GFX.MountainCoreWall.ReassignVertices();
+      MTN.MountainBird.ReassignVertices();
+      MTN.MountainMoon.ReassignVertices();
+      MTN.MountainTerrain.ReassignVertices();
+      MTN.MountainBuildings.ReassignVertices();
+      MTN.MountainCoreWall.ReassignVertices();
       this.Mountain.Model.DisposeBillboardBuffers();
       this.Mountain.Model.ResetBillboardBuffers();
     }
@@ -155,6 +159,10 @@ namespace Celeste
           this.inputEase = Calc.Approach(this.inputEase, !this.ShowInputUI || Input.GuiInputController() ? 0.0f : 1f, Engine.DeltaTime * 4f);
         base.Update();
       }
+      if (SaveData.Instance != null && SaveData.Instance.LastArea.ID == 10 && 10 <= SaveData.Instance.UnlockedAreas && !this.IsCurrent<OuiMainMenu>())
+        Audio.SetMusicParam("moon", 1f);
+      else
+        Audio.SetMusicParam("moon", 0.0f);
       float num = 1f;
       bool flag1 = false;
       foreach (Monocle.Renderer renderer in this.RendererList.Renderers)
@@ -175,26 +183,21 @@ namespace Celeste
     {
       T ui = this.GetUI<T>();
       if ((object) ui != null)
-        this.routineEntity.Add((Component) new Coroutine(this.GotoRoutine((Oui) ui), true));
+        this.routineEntity.Add((Component) new Coroutine(this.GotoRoutine((Oui) ui)));
       return ui;
     }
 
-    public bool IsCurrent<T>() where T : Oui
-    {
-      if (this.Current != null)
-        return this.Current is T;
-      return this.Last is T;
-    }
+    public bool IsCurrent<T>() where T : Oui => this.Current != null ? this.Current is T : this.Last is T;
 
     public T GetUI<T>() where T : Oui
     {
-      Oui oui = (Oui) null;
-      foreach (Oui ui in this.UIs)
+      Oui ui1 = (Oui) null;
+      foreach (Oui ui2 in this.UIs)
       {
-        if (ui is T)
-          oui = ui;
+        if (ui2 is T)
+          ui1 = ui2;
       }
-      return oui as T;
+      return ui1 as T;
     }
 
     private IEnumerator GotoRoutine(Oui next)
@@ -240,8 +243,8 @@ namespace Celeste
         this.Overworld = overworld;
         this.Tag = (int) Tags.HUD;
         this.Depth = -100000;
-        this.Add((Component) (this.confirmWiggle = Wiggler.Create(0.4f, 4f, (Action<float>) null, false, false)));
-        this.Add((Component) (this.cancelWiggle = Wiggler.Create(0.4f, 4f, (Action<float>) null, false, false)));
+        this.Add((Component) (this.confirmWiggle = Wiggler.Create(0.4f, 4f)));
+        this.Add((Component) (this.cancelWiggle = Wiggler.Create(0.4f, 4f)));
       }
 
       public override void Update()
@@ -268,20 +271,18 @@ namespace Celeste
           return;
         float scale = 0.5f;
         int num1 = 32;
-        string label1 = Dialog.Clean("ui_cancel", (Language) null);
-        string label2 = Dialog.Clean("ui_confirm", (Language) null);
+        string label1 = Dialog.Clean("ui_cancel");
+        string label2 = Dialog.Clean("ui_confirm");
         float num2 = ButtonUI.Width(label1, Input.MenuCancel);
         float num3 = ButtonUI.Width(label2, Input.MenuConfirm);
         Vector2 position = new Vector2(1880f, 1024f);
         position.X += (float) ((40.0 + ((double) num3 + (double) num2) * (double) scale + (double) num1) * (1.0 - (double) Ease.CubeOut(inputEase)));
-        ButtonUI.Render(position, label1, Input.MenuCancel, scale, 1f, this.cancelWiggle.Value * 0.05f, 1f);
-        if (this.Overworld.ShowConfirmUI)
-        {
-          position.X -= scale * num2 + (float) num1;
-          ButtonUI.Render(position, label2, Input.MenuConfirm, scale, 1f, this.confirmWiggle.Value * 0.05f, 1f);
-        }
+        ButtonUI.Render(position, label1, Input.MenuCancel, scale, 1f, this.cancelWiggle.Value * 0.05f);
+        if (!this.Overworld.ShowConfirmUI)
+          return;
+        position.X -= scale * num2 + (float) num1;
+        ButtonUI.Render(position, label2, Input.MenuConfirm, scale, 1f, this.confirmWiggle.Value * 0.05f);
       }
     }
   }
 }
-

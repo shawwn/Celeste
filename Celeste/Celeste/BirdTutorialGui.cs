@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.BirdTutorialGui
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -13,18 +13,18 @@ namespace Celeste
 {
   public class BirdTutorialGui : Entity
   {
-    public float Scale = 0.0f;
-    private float buttonPadding = 8f;
-    private Color bgColor = Calc.HexToColor("061526");
-    private Color lineColor = new Color(1f, 1f, 1f);
-    private Color textColor = Calc.HexToColor("6179e2");
     public Entity Entity;
     public bool Open;
+    public float Scale;
     private object info;
     private List<object> controls;
     private float controlsWidth;
     private float infoWidth;
     private float infoHeight;
+    private float buttonPadding = 8f;
+    private Color bgColor = Calc.HexToColor("061526");
+    private Color lineColor = new Color(1f, 1f, 1f);
+    private Color textColor = Calc.HexToColor("6179e2");
 
     public BirdTutorialGui(Entity entity, Vector2 position, object info, params object[] controls)
     {
@@ -33,32 +33,48 @@ namespace Celeste
       this.Position = position;
       this.info = info;
       this.controls = new List<object>((IEnumerable<object>) controls);
-      if (info is string)
+      switch (info)
       {
-        this.infoWidth = ActiveFont.Measure((string) info).X;
-        this.infoHeight = ActiveFont.LineHeight;
+        case string _:
+          this.infoWidth = ActiveFont.Measure((string) info).X;
+          this.infoHeight = ActiveFont.LineHeight;
+          break;
+        case MTexture _:
+          this.infoWidth = (float) ((MTexture) info).Width;
+          this.infoHeight = (float) ((MTexture) info).Height;
+          break;
       }
-      else if (info is MTexture)
-      {
-        this.infoWidth = (float) ((MTexture) info).Width;
-        this.infoHeight = (float) ((MTexture) info).Height;
-      }
+      this.UpdateControlsSize();
+    }
+
+    public void UpdateControlsSize()
+    {
       this.controlsWidth = 0.0f;
-      foreach (object control in controls)
+      foreach (object control in this.controls)
       {
-        if (control is VirtualButton)
-          this.controlsWidth += (float) Input.GuiButton((VirtualButton) control, "controls/keyboard/oemquestion").Width + this.buttonPadding * 2f;
-        else if (control is Vector2)
-          this.controlsWidth += (float) Input.GuiDirection((Vector2) control).Width + this.buttonPadding * 2f;
-        else if (control is string)
-          this.controlsWidth += ActiveFont.Measure(control.ToString()).X;
-        else if (control is MTexture)
-          this.controlsWidth += (float) ((MTexture) control).Width;
+        switch (control)
+        {
+          case BirdTutorialGui.ButtonPrompt prompt:
+            this.controlsWidth += (float) Input.GuiButton(BirdTutorialGui.ButtonPromptToVirtualButton(prompt)).Width + this.buttonPadding * 2f;
+            continue;
+          case Vector2 direction:
+            this.controlsWidth += (float) Input.GuiDirection(direction).Width + this.buttonPadding * 2f;
+            continue;
+          case string _:
+            this.controlsWidth += ActiveFont.Measure(control.ToString()).X;
+            continue;
+          case MTexture _:
+            this.controlsWidth += (float) ((MTexture) control).Width;
+            continue;
+          default:
+            continue;
+        }
       }
     }
 
     public override void Update()
     {
+      this.UpdateControlsSize();
       this.Scale = Calc.Approach(this.Scale, this.Open ? 1f : 0.0f, Engine.RawDeltaTime * 8f);
       base.Update();
     }
@@ -76,10 +92,10 @@ namespace Celeste
       float lineHeight = ActiveFont.LineHeight;
       float width1 = (Math.Max(this.controlsWidth, this.infoWidth) + 64f) * this.Scale;
       float height = (float) ((double) this.infoHeight + (double) lineHeight + 32.0);
-      float x1 = vector2_1.X - width1 / 2f;
+      double x1 = (double) vector2_1.X - (double) width1 / 2.0;
       float y = (float) ((double) vector2_1.Y - (double) height - 32.0);
-      Draw.Rect(x1 - 6f, y - 6f, width1 + 12f, height + 12f, this.lineColor);
-      Draw.Rect(x1, y, width1, height, this.bgColor);
+      Draw.Rect((float) (x1 - 6.0), y - 6f, width1 + 12f, height + 12f, this.lineColor);
+      Draw.Rect((float) x1, y, width1, height, this.bgColor);
       for (int index = 0; index <= 36; ++index)
       {
         float width2 = (float) (73 - index * 2) * this.Scale;
@@ -98,39 +114,63 @@ namespace Celeste
       Vector2 vector2_2 = new Vector2((float) (-(double) this.controlsWidth / 2.0), 0.0f);
       foreach (object control in this.controls)
       {
-        if (control is VirtualButton)
+        switch (control)
         {
-          MTexture mtexture = Input.GuiButton((VirtualButton) control, "controls/keyboard/oemquestion");
-          vector2_2.X += this.buttonPadding;
-          mtexture.Draw(position, new Vector2(-vector2_2.X, (float) (mtexture.Height / 2)), Color.White, new Vector2(this.Scale, 1f));
-          vector2_2.X += (float) mtexture.Width + this.buttonPadding;
-        }
-        else if (control is Vector2)
-        {
-          Vector2 direction = (Vector2) control;
-          if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
-            direction.X = -direction.X;
-          MTexture mtexture = Input.GuiDirection(direction);
-          vector2_2.X += this.buttonPadding;
-          mtexture.Draw(position, new Vector2(-vector2_2.X, (float) (mtexture.Height / 2)), Color.White, new Vector2(this.Scale, 1f));
-          vector2_2.X += (float) mtexture.Width + this.buttonPadding;
-        }
-        else if (control is string)
-        {
-          string text = control.ToString();
-          float x2 = ActiveFont.Measure(text).X;
-          ActiveFont.Draw(text, position + new Vector2(1f, 2f), new Vector2(-vector2_2.X / x2, 0.5f), new Vector2(this.Scale, 1f), this.textColor);
-          ActiveFont.Draw(text, position + new Vector2(1f, -2f), new Vector2(-vector2_2.X / x2, 0.5f), new Vector2(this.Scale, 1f), Color.White);
-          vector2_2.X += x2 + 1f;
-        }
-        else if (control is MTexture)
-        {
-          MTexture mtexture = (MTexture) control;
-          mtexture.Draw(position, new Vector2(-vector2_2.X, (float) (mtexture.Height / 2)), Color.White, new Vector2(this.Scale, 1f));
-          vector2_2.X += (float) mtexture.Width;
+          case BirdTutorialGui.ButtonPrompt prompt:
+            MTexture mtexture1 = Input.GuiButton(BirdTutorialGui.ButtonPromptToVirtualButton(prompt));
+            vector2_2.X += this.buttonPadding;
+            mtexture1.Draw(position, new Vector2(-vector2_2.X, (float) (mtexture1.Height / 2)), Color.White, new Vector2(this.Scale, 1f));
+            vector2_2.X += (float) mtexture1.Width + this.buttonPadding;
+            continue;
+          case Vector2 direction:
+            if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
+              direction.X = -direction.X;
+            MTexture mtexture2 = Input.GuiDirection(direction);
+            vector2_2.X += this.buttonPadding;
+            mtexture2.Draw(position, new Vector2(-vector2_2.X, (float) (mtexture2.Height / 2)), Color.White, new Vector2(this.Scale, 1f));
+            vector2_2.X += (float) mtexture2.Width + this.buttonPadding;
+            continue;
+          case string _:
+            string text = control.ToString();
+            float x2 = ActiveFont.Measure(text).X;
+            ActiveFont.Draw(text, position + new Vector2(1f, 2f), new Vector2(-vector2_2.X / x2, 0.5f), new Vector2(this.Scale, 1f), this.textColor);
+            ActiveFont.Draw(text, position + new Vector2(1f, -2f), new Vector2(-vector2_2.X / x2, 0.5f), new Vector2(this.Scale, 1f), Color.White);
+            vector2_2.X += x2 + 1f;
+            continue;
+          case MTexture _:
+            MTexture mtexture3 = (MTexture) control;
+            mtexture3.Draw(position, new Vector2(-vector2_2.X, (float) (mtexture3.Height / 2)), Color.White, new Vector2(this.Scale, 1f));
+            vector2_2.X += (float) mtexture3.Width;
+            continue;
+          default:
+            continue;
         }
       }
     }
+
+    public static VirtualButton ButtonPromptToVirtualButton(BirdTutorialGui.ButtonPrompt prompt)
+    {
+      switch (prompt)
+      {
+        case BirdTutorialGui.ButtonPrompt.Dash:
+          return Input.Dash;
+        case BirdTutorialGui.ButtonPrompt.Jump:
+          return Input.Jump;
+        case BirdTutorialGui.ButtonPrompt.Grab:
+          return Input.Grab;
+        case BirdTutorialGui.ButtonPrompt.Talk:
+          return Input.Talk;
+        default:
+          return Input.Jump;
+      }
+    }
+
+    public enum ButtonPrompt
+    {
+      Dash,
+      Jump,
+      Grab,
+      Talk,
+    }
   }
 }
-

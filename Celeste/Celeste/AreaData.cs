@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.AreaData
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -15,49 +15,48 @@ namespace Celeste
 {
   public class AreaData
   {
-    public int CassetteCheckpointIndex = -1;
-    public Color TitleBaseColor = Color.White;
-    public Color TitleAccentColor = Color.Gray;
-    public Color TitleTextColor = Color.White;
-    public float DarknessAlpha = 0.05f;
-    public float BloomBase = 0.0f;
-    public float BloomStrength = 1f;
-    public string Jumpthru = "wood";
-    public string Spike = "default";
-    public string CrumbleBlock = "default";
-    public string WoodPlatform = "default";
-    public Color CassseteNoteColor = Color.White;
-    public Color CobwebColor = Calc.HexToColor("696a6a");
-    public string CassetteSong = "event:/music/cassette/01_forsaken_city";
-    public Session.CoreModes CoreMode = Session.CoreModes.None;
-    public int MountainState = 0;
     public static List<AreaData> Areas;
     public string Name;
     public string Icon;
     public int ID;
     public bool Interlude;
+    public bool CanFullClear;
+    public bool IsFinal;
     public string CompleteScreenName;
     public ModeProperties[] Mode;
+    public int CassetteCheckpointIndex = -1;
+    public Color TitleBaseColor = Color.White;
+    public Color TitleAccentColor = Color.Gray;
+    public Color TitleTextColor = Color.White;
     public Player.IntroTypes IntroType;
     public bool Dreaming;
     public string ColorGrade;
     public Action<Scene, bool, Action> Wipe;
+    public float DarknessAlpha = 0.05f;
+    public float BloomBase;
+    public float BloomStrength = 1f;
     public Action<Level> OnLevelBegin;
+    public string Jumpthru = "wood";
+    public string Spike = "default";
+    public string CrumbleBlock = "default";
+    public string WoodPlatform = "default";
+    public Color CassseteNoteColor = Color.White;
+    public Color[] CobwebColor = new Color[1]
+    {
+      Calc.HexToColor("696a6a")
+    };
+    public string CassetteSong = "event:/music/cassette/01_forsaken_city";
+    public Session.CoreModes CoreMode;
+    public int MountainState;
     public MountainCamera MountainIdle;
     public MountainCamera MountainSelect;
     public MountainCamera MountainZoom;
     public Vector3 MountainCursor;
     public float MountainCursorScale;
 
-    public static ModeProperties GetMode(AreaKey area)
-    {
-      return AreaData.GetMode(area.ID, area.Mode);
-    }
+    public static ModeProperties GetMode(AreaKey area) => AreaData.GetMode(area.ID, area.Mode);
 
-    public static ModeProperties GetMode(int id, AreaMode mode = AreaMode.Normal)
-    {
-      return AreaData.Areas[id].Mode[(int) mode];
-    }
+    public static ModeProperties GetMode(int id, AreaMode mode = AreaMode.Normal) => AreaData.Areas[id].Mode[(int) mode];
 
     public static void Load()
     {
@@ -101,6 +100,7 @@ namespace Celeste
       areaData3.Name = "area_1";
       areaData3.Icon = "areas/city";
       areaData3.Interlude = false;
+      areaData3.CanFullClear = true;
       areaData3.CompleteScreenName = "ForsakenCity";
       areaData3.CassetteCheckpointIndex = 2;
       areaData3.Mode = new ModeProperties[3]
@@ -111,8 +111,8 @@ namespace Celeste
           Path = "1-ForsakenCity",
           Checkpoints = new CheckpointData[2]
           {
-            new CheckpointData("6", "checkpoint_1_0", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("9b", "checkpoint_1_1", new PlayerInventory?(), false, (AudioState) null)
+            new CheckpointData("6", "checkpoint_1_0"),
+            new CheckpointData("9b", "checkpoint_1_1")
           },
           Inventory = PlayerInventory.Default,
           AudioState = new AudioState("event:/music/lvl1/main", "event:/env/amb/01_main")
@@ -123,8 +123,8 @@ namespace Celeste
           Path = "1H-ForsakenCity",
           Checkpoints = new CheckpointData[2]
           {
-            new CheckpointData("04", "checkpoint_1h_0", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("08", "checkpoint_1h_1", new PlayerInventory?(), false, (AudioState) null)
+            new CheckpointData("04", "checkpoint_1h_0"),
+            new CheckpointData("08", "checkpoint_1h_1")
           },
           Inventory = PlayerInventory.Default,
           AudioState = new AudioState("event:/music/remix/01_forsaken_city", "event:/env/amb/01_main")
@@ -159,6 +159,7 @@ namespace Celeste
       areaData5.Name = "area_2";
       areaData5.Icon = "areas/oldsite";
       areaData5.Interlude = false;
+      areaData5.CanFullClear = true;
       areaData5.CompleteScreenName = "OldSite";
       areaData5.CassetteCheckpointIndex = 0;
       areaData5.Mode = new ModeProperties[3]
@@ -169,8 +170,8 @@ namespace Celeste
           Path = "2-OldSite",
           Checkpoints = new CheckpointData[2]
           {
-            new CheckpointData("3", "checkpoint_2_0", new PlayerInventory?(PlayerInventory.Default), true, (AudioState) null),
-            new CheckpointData("end_3", "checkpoint_2_1", new PlayerInventory?(), false, (AudioState) null)
+            new CheckpointData("3", "checkpoint_2_0", new PlayerInventory?(PlayerInventory.Default), true),
+            new CheckpointData("end_3", "checkpoint_2_1")
           },
           Inventory = PlayerInventory.OldSite,
           AudioState = new AudioState("event:/music/lvl2/beginning", "event:/env/amb/02_dream")
@@ -181,8 +182,8 @@ namespace Celeste
           Path = "2H-OldSite",
           Checkpoints = new CheckpointData[2]
           {
-            new CheckpointData("03", "checkpoint_2h_0", new PlayerInventory?(), true, (AudioState) null),
-            new CheckpointData("08b", "checkpoint_2h_1", new PlayerInventory?(), true, (AudioState) null)
+            new CheckpointData("03", "checkpoint_2h_0", dreaming: true),
+            new CheckpointData("08b", "checkpoint_2h_1", dreaming: true)
           },
           Inventory = PlayerInventory.Default,
           AudioState = new AudioState("event:/music/remix/02_old_site", "event:/env/amb/02_dream")
@@ -222,6 +223,7 @@ namespace Celeste
       areaData7.Name = "area_3";
       areaData7.Icon = "areas/resort";
       areaData7.Interlude = false;
+      areaData7.CanFullClear = true;
       areaData7.CompleteScreenName = "CelestialResort";
       areaData7.CassetteCheckpointIndex = 2;
       AreaData areaData8 = areaData7;
@@ -231,15 +233,15 @@ namespace Celeste
       modeProperties1.Path = "3-CelestialResort";
       modeProperties1.Checkpoints = new CheckpointData[3]
       {
-        new CheckpointData("08-a", "checkpoint_3_0", new PlayerInventory?(), false, (AudioState) null)
+        new CheckpointData("08-a", "checkpoint_3_0")
         {
           AudioState = new AudioState(new AudioTrackState("event:/music/lvl3/explore").SetProgress(3), new AudioTrackState("event:/env/amb/03_interior"))
         },
-        new CheckpointData("09-d", "checkpoint_3_1", new PlayerInventory?(), false, (AudioState) null)
+        new CheckpointData("09-d", "checkpoint_3_1")
         {
           AudioState = new AudioState(new AudioTrackState("event:/music/lvl3/clean").SetProgress(3), new AudioTrackState("event:/env/amb/03_interior"))
         },
-        new CheckpointData("00-d", "checkpoint_3_2", new PlayerInventory?(), false, (AudioState) null)
+        new CheckpointData("00-d", "checkpoint_3_2")
       };
       modeProperties1.Inventory = PlayerInventory.Default;
       modeProperties1.AudioState = new AudioState("event:/music/lvl3/intro", "event:/env/amb/03_exterior");
@@ -250,9 +252,9 @@ namespace Celeste
         Path = "3H-CelestialResort",
         Checkpoints = new CheckpointData[3]
         {
-          new CheckpointData("06", "checkpoint_3h_0", new PlayerInventory?(), false, (AudioState) null),
-          new CheckpointData("11", "checkpoint_3h_1", new PlayerInventory?(), false, (AudioState) null),
-          new CheckpointData("16", "checkpoint_3h_2", new PlayerInventory?(), false, (AudioState) null)
+          new CheckpointData("06", "checkpoint_3h_0"),
+          new CheckpointData("11", "checkpoint_3h_1"),
+          new CheckpointData("16", "checkpoint_3h_2")
         },
         Inventory = PlayerInventory.Default,
         AudioState = new AudioState("event:/music/remix/03_resort", "event:/env/amb/03_exterior")
@@ -287,6 +289,7 @@ namespace Celeste
       areaData10.Name = "area_4";
       areaData10.Icon = "areas/cliffside";
       areaData10.Interlude = false;
+      areaData10.CanFullClear = true;
       areaData10.CompleteScreenName = "Cliffside";
       areaData10.CassetteCheckpointIndex = 0;
       areaData10.TitleBaseColor = Calc.HexToColor("FF7F83");
@@ -300,9 +303,9 @@ namespace Celeste
           Path = "4-GoldenRidge",
           Checkpoints = new CheckpointData[3]
           {
-            new CheckpointData("b-00", "checkpoint_4_0", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("c-00", "checkpoint_4_1", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("d-00", "checkpoint_4_2", new PlayerInventory?(), false, (AudioState) null)
+            new CheckpointData("b-00", "checkpoint_4_0"),
+            new CheckpointData("c-00", "checkpoint_4_1"),
+            new CheckpointData("d-00", "checkpoint_4_2")
           },
           Inventory = PlayerInventory.Default,
           AudioState = new AudioState("event:/music/lvl4/main", "event:/env/amb/04_main")
@@ -313,9 +316,9 @@ namespace Celeste
           Path = "4H-GoldenRidge",
           Checkpoints = new CheckpointData[3]
           {
-            new CheckpointData("b-00", "checkpoint_4h_0", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("c-00", "checkpoint_4h_1", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("d-00", "checkpoint_4h_2", new PlayerInventory?(), false, (AudioState) null)
+            new CheckpointData("b-00", "checkpoint_4h_0"),
+            new CheckpointData("c-00", "checkpoint_4h_1"),
+            new CheckpointData("d-00", "checkpoint_4h_2")
           },
           Inventory = PlayerInventory.Default,
           AudioState = new AudioState("event:/music/remix/04_cliffside", "event:/env/amb/04_main")
@@ -350,6 +353,7 @@ namespace Celeste
       areaData12.Name = "area_5";
       areaData12.Icon = "areas/temple";
       areaData12.Interlude = false;
+      areaData12.CanFullClear = true;
       areaData12.CompleteScreenName = "MirrorTemple";
       areaData12.CassetteCheckpointIndex = 1;
       areaData12.Mode = new ModeProperties[3]
@@ -360,10 +364,10 @@ namespace Celeste
           Path = "5-MirrorTemple",
           Checkpoints = new CheckpointData[4]
           {
-            new CheckpointData("b-00", "checkpoint_5_0", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("c-00", "checkpoint_5_1", new PlayerInventory?(), true, new AudioState("event:/music/lvl5/middle_temple", "event:/env/amb/05_interior_dark")),
-            new CheckpointData("d-00", "checkpoint_5_2", new PlayerInventory?(), true, new AudioState("event:/music/lvl5/middle_temple", "event:/env/amb/05_interior_dark")),
-            new CheckpointData("e-00", "checkpoint_5_3", new PlayerInventory?(), true, new AudioState("event:/music/lvl5/mirror", "event:/env/amb/05_interior_dark"))
+            new CheckpointData("b-00", "checkpoint_5_0"),
+            new CheckpointData("c-00", "checkpoint_5_1", dreaming: true, audioState: new AudioState("event:/music/lvl5/middle_temple", "event:/env/amb/05_interior_dark")),
+            new CheckpointData("d-00", "checkpoint_5_2", dreaming: true, audioState: new AudioState("event:/music/lvl5/middle_temple", "event:/env/amb/05_interior_dark")),
+            new CheckpointData("e-00", "checkpoint_5_3", dreaming: true, audioState: new AudioState("event:/music/lvl5/mirror", "event:/env/amb/05_interior_dark"))
           },
           Inventory = PlayerInventory.Default,
           AudioState = new AudioState("event:/music/lvl5/normal", "event:/env/amb/05_interior_main")
@@ -374,9 +378,9 @@ namespace Celeste
           Path = "5H-MirrorTemple",
           Checkpoints = new CheckpointData[3]
           {
-            new CheckpointData("b-00", "checkpoint_5h_0", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("c-00", "checkpoint_5h_1", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("d-00", "checkpoint_5h_2", new PlayerInventory?(), false, (AudioState) null)
+            new CheckpointData("b-00", "checkpoint_5h_0"),
+            new CheckpointData("c-00", "checkpoint_5h_1"),
+            new CheckpointData("d-00", "checkpoint_5h_2")
           },
           Inventory = PlayerInventory.Default,
           AudioState = new AudioState("event:/music/remix/05_mirror_temple", "event:/env/amb/05_interior_main")
@@ -409,7 +413,10 @@ namespace Celeste
       });
       areaData12.Jumpthru = "temple";
       areaData12.CassseteNoteColor = Calc.HexToColor("5a56e6");
-      areaData12.CobwebColor = Calc.HexToColor("9f2166");
+      areaData12.CobwebColor = new Color[1]
+      {
+        Calc.HexToColor("9f2166")
+      };
       areaData12.CassetteSong = "event:/music/cassette/05_mirror_temple";
       AreaData areaData13 = areaData12;
       areas6.Add(areaData13);
@@ -418,6 +425,7 @@ namespace Celeste
       areaData14.Name = "area_6";
       areaData14.Icon = "areas/reflection";
       areaData14.Interlude = false;
+      areaData14.CanFullClear = true;
       areaData14.CompleteScreenName = "Fall";
       areaData14.CassetteCheckpointIndex = 2;
       AreaData areaData15 = areaData14;
@@ -427,11 +435,11 @@ namespace Celeste
       modeProperties2.Path = "6-Reflection";
       modeProperties2.Checkpoints = new CheckpointData[5]
       {
-        new CheckpointData("00", "checkpoint_6_0", new PlayerInventory?(), false, (AudioState) null),
-        new CheckpointData("04", "checkpoint_6_1", new PlayerInventory?(), false, (AudioState) null),
-        new CheckpointData("b-00", "checkpoint_6_2", new PlayerInventory?(), false, (AudioState) null),
-        new CheckpointData("boss-00", "checkpoint_6_3", new PlayerInventory?(), false, (AudioState) null),
-        new CheckpointData("after-00", "checkpoint_6_4", new PlayerInventory?(PlayerInventory.CH6End), false, (AudioState) null)
+        new CheckpointData("00", "checkpoint_6_0"),
+        new CheckpointData("04", "checkpoint_6_1"),
+        new CheckpointData("b-00", "checkpoint_6_2"),
+        new CheckpointData("boss-00", "checkpoint_6_3"),
+        new CheckpointData("after-00", "checkpoint_6_4", new PlayerInventory?(PlayerInventory.CH6End))
         {
           Flags = new HashSet<string>()
           {
@@ -449,9 +457,9 @@ namespace Celeste
         Path = "6H-Reflection",
         Checkpoints = new CheckpointData[3]
         {
-          new CheckpointData("b-00", "checkpoint_6h_0", new PlayerInventory?(), false, (AudioState) null),
-          new CheckpointData("c-00", "checkpoint_6h_1", new PlayerInventory?(), false, (AudioState) null),
-          new CheckpointData("d-00", "checkpoint_6h_2", new PlayerInventory?(), false, (AudioState) null)
+          new CheckpointData("b-00", "checkpoint_6h_0"),
+          new CheckpointData("c-00", "checkpoint_6h_1"),
+          new CheckpointData("d-00", "checkpoint_6h_2")
         },
         Inventory = PlayerInventory.Default,
         AudioState = new AudioState("event:/music/remix/06_reflection", "event:/env/amb/06_main")
@@ -487,6 +495,7 @@ namespace Celeste
       areaData17.Name = "area_7";
       areaData17.Icon = "areas/summit";
       areaData17.Interlude = false;
+      areaData17.CanFullClear = true;
       areaData17.CompleteScreenName = "Summit";
       areaData17.CassetteCheckpointIndex = 3;
       areaData17.Mode = new ModeProperties[3]
@@ -497,12 +506,12 @@ namespace Celeste
           Path = "7-Summit",
           Checkpoints = new CheckpointData[6]
           {
-            new CheckpointData("b-00", "checkpoint_7_0", new PlayerInventory?(), false, new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(1), (AudioTrackState) null)),
-            new CheckpointData("c-00", "checkpoint_7_1", new PlayerInventory?(), false, new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(2), (AudioTrackState) null)),
-            new CheckpointData("d-00", "checkpoint_7_2", new PlayerInventory?(), false, new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(3), (AudioTrackState) null)),
-            new CheckpointData("e-00b", "checkpoint_7_3", new PlayerInventory?(), false, new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(4), (AudioTrackState) null)),
-            new CheckpointData("f-00", "checkpoint_7_4", new PlayerInventory?(), false, new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(5), (AudioTrackState) null)),
-            new CheckpointData("g-00", "checkpoint_7_5", new PlayerInventory?(), false, new AudioState("event:/music/lvl7/final_ascent", (string) null))
+            new CheckpointData("b-00", "checkpoint_7_0", audioState: new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(1), (AudioTrackState) null)),
+            new CheckpointData("c-00", "checkpoint_7_1", audioState: new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(2), (AudioTrackState) null)),
+            new CheckpointData("d-00", "checkpoint_7_2", audioState: new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(3), (AudioTrackState) null)),
+            new CheckpointData("e-00b", "checkpoint_7_3", audioState: new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(4), (AudioTrackState) null)),
+            new CheckpointData("f-00", "checkpoint_7_4", audioState: new AudioState(new AudioTrackState("event:/music/lvl7/main").SetProgress(5), (AudioTrackState) null)),
+            new CheckpointData("g-00", "checkpoint_7_5", audioState: new AudioState("event:/music/lvl7/final_ascent", (string) null))
           },
           Inventory = PlayerInventory.TheSummit,
           AudioState = new AudioState("event:/music/lvl7/main", (string) null)
@@ -513,12 +522,12 @@ namespace Celeste
           Path = "7H-Summit",
           Checkpoints = new CheckpointData[6]
           {
-            new CheckpointData("b-00", "checkpoint_7H_0", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("c-01", "checkpoint_7H_1", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("d-00", "checkpoint_7H_2", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("e-00", "checkpoint_7H_3", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("f-00", "checkpoint_7H_4", new PlayerInventory?(), false, (AudioState) null),
-            new CheckpointData("g-00", "checkpoint_7H_5", new PlayerInventory?(), false, (AudioState) null)
+            new CheckpointData("b-00", "checkpoint_7H_0"),
+            new CheckpointData("c-01", "checkpoint_7H_1"),
+            new CheckpointData("d-00", "checkpoint_7H_2"),
+            new CheckpointData("e-00", "checkpoint_7H_3"),
+            new CheckpointData("f-00", "checkpoint_7H_4"),
+            new CheckpointData("g-00", "checkpoint_7H_5")
           },
           Inventory = PlayerInventory.TheSummit,
           AudioState = new AudioState("event:/music/remix/07_summit", (string) null)
@@ -589,6 +598,7 @@ namespace Celeste
       areaData21.Name = "area_9";
       areaData21.Icon = "areas/core";
       areaData21.Interlude = false;
+      areaData21.CanFullClear = true;
       areaData21.CompleteScreenName = "Core";
       areaData21.CassetteCheckpointIndex = 3;
       AreaData areaData22 = areaData21;
@@ -598,12 +608,12 @@ namespace Celeste
       modeProperties3.Path = "9-Core";
       modeProperties3.Checkpoints = new CheckpointData[3]
       {
-        new CheckpointData("a-00", "checkpoint_8_0", new PlayerInventory?(), false, (AudioState) null),
-        new CheckpointData("c-00", "checkpoint_8_1", new PlayerInventory?(), false, (AudioState) null)
+        new CheckpointData("a-00", "checkpoint_8_0"),
+        new CheckpointData("c-00", "checkpoint_8_1")
         {
           CoreMode = new Session.CoreModes?(Session.CoreModes.Cold)
         },
-        new CheckpointData("d-00", "checkpoint_8_2", new PlayerInventory?(), false, (AudioState) null)
+        new CheckpointData("d-00", "checkpoint_8_2")
       };
       modeProperties3.Inventory = PlayerInventory.Core;
       modeProperties3.AudioState = new AudioState("event:/music/lvl9/main", "event:/env/amb/09_main");
@@ -615,9 +625,9 @@ namespace Celeste
         Path = "9H-Core",
         Checkpoints = new CheckpointData[3]
         {
-          new CheckpointData("a-00", "checkpoint_8H_0", new PlayerInventory?(), false, (AudioState) null),
-          new CheckpointData("b-00", "checkpoint_8H_1", new PlayerInventory?(), false, (AudioState) null),
-          new CheckpointData("c-01", "checkpoint_8H_2", new PlayerInventory?(), false, (AudioState) null)
+          new CheckpointData("a-00", "checkpoint_8H_0"),
+          new CheckpointData("b-00", "checkpoint_8H_1"),
+          new CheckpointData("c-01", "checkpoint_8H_2")
         },
         Inventory = PlayerInventory.Core,
         AudioState = new AudioState("event:/music/remix/09_core", "event:/env/amb/09_main")
@@ -648,17 +658,75 @@ namespace Celeste
       areaData21.CoreMode = Session.CoreModes.Hot;
       AreaData areaData23 = areaData21;
       areas10.Add(areaData23);
-      int length = Enum.GetNames(typeof (AreaMode)).Length;
-      for (int id = 0; id < AreaData.Areas.Count; ++id)
+      List<AreaData> areas11 = AreaData.Areas;
+      AreaData areaData24 = new AreaData();
+      areaData24.Name = "area_10";
+      areaData24.Icon = "areas/farewell";
+      areaData24.Interlude = false;
+      areaData24.CanFullClear = false;
+      areaData24.IsFinal = true;
+      areaData24.CompleteScreenName = "Core";
+      areaData24.CassetteCheckpointIndex = -1;
+      AreaData areaData25 = areaData24;
+      ModeProperties[] modePropertiesArray4 = new ModeProperties[1];
+      ModeProperties modeProperties4 = new ModeProperties();
+      modeProperties4.PoemID = "fw";
+      modeProperties4.Path = "LostLevels";
+      modeProperties4.Checkpoints = new CheckpointData[8]
       {
-        AreaData.Areas[id].ID = id;
-        AreaData.Areas[id].Mode[0].MapData = new MapData(new AreaKey(id, AreaMode.Normal));
-        if (!AreaData.Areas[id].Interlude)
+        new CheckpointData("a-00", "checkpoint_9_0", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/part01").SetProgress(1), (AudioTrackState) null)),
+        new CheckpointData("c-00", "checkpoint_9_1", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/part01").SetProgress(1), (AudioTrackState) null)),
+        new CheckpointData("e-00z", "checkpoint_9_2", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/part02"), (AudioTrackState) null)),
+        new CheckpointData("f-door", "checkpoint_9_3", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/intermission_heartgroove"), (AudioTrackState) null)),
+        new CheckpointData("h-00b", "checkpoint_9_4", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/part03"), (AudioTrackState) null)),
+        new CheckpointData("i-00", "checkpoint_9_5", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/cassette_rooms").Param("sixteenth_note", 7f), (AudioTrackState) null))
         {
-          for (int index = 1; index < length; ++index)
+          ColorGrade = "feelingdown"
+        },
+        new CheckpointData("j-00", "checkpoint_9_6", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/cassette_rooms").Param("sixteenth_note", 7f).SetProgress(3), (AudioTrackState) null))
+        {
+          ColorGrade = "feelingdown"
+        },
+        new CheckpointData("j-16", "checkpoint_9_7", audioState: new AudioState(new AudioTrackState("event:/new_content/music/lvl10/final_run").SetProgress(3), (AudioTrackState) null))
+      };
+      modeProperties4.Inventory = PlayerInventory.Farewell;
+      modeProperties4.AudioState = new AudioState(new AudioTrackState("event:/new_content/music/lvl10/part01").SetProgress(1), new AudioTrackState("event:/env/amb/00_prologue"));
+      modePropertiesArray4[0] = modeProperties4;
+      areaData25.Mode = modePropertiesArray4;
+      areaData24.TitleBaseColor = Calc.HexToColor("240d7c");
+      areaData24.TitleAccentColor = Calc.HexToColor("FF6AA9");
+      areaData24.TitleTextColor = Color.White;
+      areaData24.IntroType = Player.IntroTypes.ThinkForABit;
+      areaData24.Dreaming = false;
+      areaData24.ColorGrade = (string) null;
+      StarfieldWipe starfieldWipe;
+      areaData24.Wipe = (Action<Scene, bool, Action>) ((scene, wipeIn, onComplete) => starfieldWipe = new StarfieldWipe(scene, wipeIn, onComplete));
+      areaData24.DarknessAlpha = 0.05f;
+      areaData24.BloomBase = 0.5f;
+      areaData24.BloomStrength = 1f;
+      areaData24.OnLevelBegin = (Action<Level>) null;
+      areaData24.Jumpthru = "wood";
+      areaData24.CassseteNoteColor = Calc.HexToColor("e6566a");
+      areaData24.CassetteSong = (string) null;
+      areaData24.CobwebColor = new Color[3]
+      {
+        Calc.HexToColor("42c192"),
+        Calc.HexToColor("af36a8"),
+        Calc.HexToColor("3474a6")
+      };
+      AreaData areaData26 = areaData24;
+      areas11.Add(areaData26);
+      int length = Enum.GetNames(typeof (AreaMode)).Length;
+      for (int index = 0; index < AreaData.Areas.Count; ++index)
+      {
+        AreaData.Areas[index].ID = index;
+        AreaData.Areas[index].Mode[0].MapData = new MapData(new AreaKey(index));
+        if (!AreaData.Areas[index].Interlude)
+        {
+          for (int mode = 1; mode < length; ++mode)
           {
-            if (AreaData.Areas[id].HasMode((AreaMode) index))
-              AreaData.Areas[id].Mode[index].MapData = new MapData(new AreaKey(id, (AreaMode) index));
+            if (AreaData.Areas[index].HasMode((AreaMode) mode))
+              AreaData.Areas[index].Mode[mode].MapData = new MapData(new AreaKey(index, (AreaMode) mode));
           }
         }
       }
@@ -692,7 +760,7 @@ namespace Celeste
     {
       foreach (AreaData area in AreaData.Areas)
       {
-        if (area.Mode[1] != null && !string.IsNullOrEmpty(area.Mode[1].PoemID) && area.Mode[1].PoemID.Equals(id, StringComparison.OrdinalIgnoreCase))
+        if (area.Mode.Length > 1 && area.Mode[1] != null && !string.IsNullOrEmpty(area.Mode[1].PoemID) && area.Mode[1].PoemID.Equals(id, StringComparison.OrdinalIgnoreCase))
           return true;
       }
       return false;
@@ -703,10 +771,10 @@ namespace Celeste
       CheckpointData[] checkpoints = AreaData.Areas[area.ID].Mode[(int) area.Mode].Checkpoints;
       if (checkpoints != null)
       {
-        for (int index = 0; index < checkpoints.Length; ++index)
+        for (int checkpointId = 0; checkpointId < checkpoints.Length; ++checkpointId)
         {
-          if (checkpoints[index].Level.Equals(level))
-            return index;
+          if (checkpoints[checkpointId].Level.Equals(level))
+            return checkpointId;
         }
       }
       return -1;
@@ -717,10 +785,10 @@ namespace Celeste
       CheckpointData[] checkpoints = AreaData.Areas[area.ID].Mode[(int) area.Mode].Checkpoints;
       if (level != null && checkpoints != null)
       {
-        foreach (CheckpointData checkpointData in checkpoints)
+        foreach (CheckpointData checkpoint in checkpoints)
         {
-          if (checkpointData.Level.Equals(level))
-            return checkpointData;
+          if (checkpoint.Level.Equals(level))
+            return checkpoint;
         }
       }
       return (CheckpointData) null;
@@ -731,79 +799,42 @@ namespace Celeste
       if (string.IsNullOrEmpty(level))
         return "START";
       CheckpointData checkpoint = AreaData.GetCheckpoint(area, level);
-      if (checkpoint != null)
-        return Dialog.Clean(checkpoint.Name, (Language) null);
-      return (string) null;
+      return checkpoint != null ? Dialog.Clean(checkpoint.Name) : (string) null;
     }
 
     public static PlayerInventory GetCheckpointInventory(AreaKey area, string level)
     {
       CheckpointData checkpoint = AreaData.GetCheckpoint(area, level);
-      if (checkpoint != null && checkpoint.Inventory.HasValue)
-        return checkpoint.Inventory.Value;
-      return AreaData.Areas[area.ID].Mode[(int) area.Mode].Inventory;
+      return checkpoint != null && checkpoint.Inventory.HasValue ? checkpoint.Inventory.Value : AreaData.Areas[area.ID].Mode[(int) area.Mode].Inventory;
     }
 
     public static bool GetCheckpointDreaming(AreaKey area, string level)
     {
       CheckpointData checkpoint = AreaData.GetCheckpoint(area, level);
-      if (checkpoint != null)
-        return checkpoint.Dreaming;
-      return AreaData.Areas[area.ID].Dreaming;
+      return checkpoint != null ? checkpoint.Dreaming : AreaData.Areas[area.ID].Dreaming;
     }
 
     public static Session.CoreModes GetCheckpointCoreMode(AreaKey area, string level)
     {
       CheckpointData checkpoint = AreaData.GetCheckpoint(area, level);
-      if (checkpoint != null && checkpoint.CoreMode.HasValue)
-        return checkpoint.CoreMode.Value;
-      return AreaData.Areas[area.ID].CoreMode;
+      return checkpoint != null && checkpoint.CoreMode.HasValue ? checkpoint.CoreMode.Value : AreaData.Areas[area.ID].CoreMode;
     }
 
-    public static AudioState GetCheckpointAudioState(AreaKey area, string level)
-    {
-      CheckpointData checkpoint = AreaData.GetCheckpoint(area, level);
-      if (checkpoint != null)
-        return checkpoint.AudioState;
-      return (AudioState) null;
-    }
+    public static AudioState GetCheckpointAudioState(AreaKey area, string level) => AreaData.GetCheckpoint(area, level)?.AudioState;
 
-    public static void Unload()
-    {
-      AreaData.Areas = (List<AreaData>) null;
-    }
+    public static string GetCheckpointColorGrading(AreaKey area, string level) => AreaData.GetCheckpoint(area, level)?.ColorGrade;
 
-    public static AreaData Get(Scene scene)
-    {
-      if (scene != null && scene is Level)
-        return AreaData.Areas[(scene as Level).Session.Area.ID];
-      return (AreaData) null;
-    }
+    public static void Unload() => AreaData.Areas = (List<AreaData>) null;
 
-    public static AreaData Get(Session session)
-    {
-      if (session != null)
-        return AreaData.Areas[session.Area.ID];
-      return (AreaData) null;
-    }
+    public static AreaData Get(Scene scene) => scene != null && scene is Level ? AreaData.Areas[(scene as Level).Session.Area.ID] : (AreaData) null;
 
-    public static AreaData Get(AreaKey area)
-    {
-      return AreaData.Areas[area.ID];
-    }
+    public static AreaData Get(Session session) => session != null ? AreaData.Areas[session.Area.ID] : (AreaData) null;
 
-    public static AreaData Get(int id)
-    {
-      return AreaData.Areas[id];
-    }
+    public static AreaData Get(AreaKey area) => AreaData.Areas[area.ID];
 
-    public XmlElement CompleteScreenXml
-    {
-      get
-      {
-        return GFX.CompleteScreensXml["Screens"][this.CompleteScreenName];
-      }
-    }
+    public static AreaData Get(int id) => AreaData.Areas[id];
+
+    public XmlElement CompleteScreenXml => GFX.CompleteScreensXml["Screens"][this.CompleteScreenName];
 
     public void DoScreenWipe(Scene scene, bool wipeIn, Action onComplete = null)
     {
@@ -815,10 +846,6 @@ namespace Celeste
         this.Wipe(scene, wipeIn, onComplete);
     }
 
-    public bool HasMode(AreaMode mode)
-    {
-      return (AreaMode) this.Mode.Length > mode && this.Mode[(int) mode] != null && this.Mode[(int) mode].Path != null;
-    }
+    public bool HasMode(AreaMode mode) => (AreaMode) this.Mode.Length > mode && this.Mode[(int) mode] != null && this.Mode[(int) mode].Path != null;
   }
 }
-

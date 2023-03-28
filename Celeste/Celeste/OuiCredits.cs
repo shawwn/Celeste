@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.OuiCredits
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -26,31 +26,33 @@ namespace Celeste
 
     public override IEnumerator Enter(Oui from)
     {
-      Audio.SetMusic("event:/music/menu/credits", true, true);
-      this.Overworld.ShowConfirmUI = false;
+      OuiCredits ouiCredits = this;
+      Audio.SetMusic("event:/music/menu/credits");
+      ouiCredits.Overworld.ShowConfirmUI = false;
       Credits.BorderColor = Color.Black;
-      this.credits = new Credits(0.5f, 1f, true, false);
-      this.credits.Enabled = false;
-      this.Visible = true;
-      this.vignetteAlpha = 0.0f;
+      ouiCredits.credits = new Credits();
+      ouiCredits.credits.Enabled = false;
+      ouiCredits.Visible = true;
+      ouiCredits.vignetteAlpha = 0.0f;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        this.Position = this.offScreen + (this.onScreen - this.offScreen) * Ease.CubeOut(p);
+        ouiCredits.Position = ouiCredits.offScreen + (ouiCredits.onScreen - ouiCredits.offScreen) * Ease.CubeOut(p);
         yield return (object) null;
       }
     }
 
     public override IEnumerator Leave(Oui next)
     {
+      OuiCredits ouiCredits = this;
       Audio.Play("event:/ui/main/whoosh_large_out");
-      this.Overworld.SetNormalMusic();
-      this.Overworld.ShowConfirmUI = true;
+      ouiCredits.Overworld.SetNormalMusic();
+      ouiCredits.Overworld.ShowConfirmUI = true;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime * 4f)
       {
-        this.Position = this.onScreen + (this.offScreen - this.onScreen) * Ease.CubeIn(p);
+        ouiCredits.Position = ouiCredits.onScreen + (ouiCredits.offScreen - ouiCredits.onScreen) * Ease.CubeIn(p);
         yield return (object) null;
       }
-      this.Visible = false;
+      ouiCredits.Visible = false;
     }
 
     public override void Update()
@@ -71,7 +73,7 @@ namespace Celeste
       if ((double) this.vignetteAlpha > 0.0)
       {
         Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * this.vignetteAlpha * 0.4f);
-        GFX.Overworld["vignette"].Draw(Vector2.Zero, Vector2.Zero, Color.White * Ease.CubeInOut(this.vignetteAlpha), 1f);
+        OVR.Atlas["vignette"].Draw(Vector2.Zero, Vector2.Zero, Color.White * Ease.CubeInOut(this.vignetteAlpha), 1f);
       }
       if (this.credits == null)
         return;

@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Snow3D
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -16,8 +16,8 @@ namespace Celeste
     private List<Snow3D.Particle> particles = new List<Snow3D.Particle>();
     private BoundingFrustum Frustum = new BoundingFrustum(Matrix.Identity);
     private BoundingFrustum LastFrustum = new BoundingFrustum(Matrix.Identity);
-    private float Range = 30f;
     private MountainModel Model;
+    private float Range = 30f;
 
     public Snow3D(MountainModel model)
     {
@@ -38,24 +38,20 @@ namespace Celeste
       this.Range = 20f;
       if (SaveData.Instance != null && scene != null && (scene.IsCurrent<OuiChapterPanel>() || scene.IsCurrent<OuiChapterSelect>()))
       {
-        int id = SaveData.Instance.LastArea.ID;
-        int num;
-        switch (id)
+        switch (SaveData.Instance.LastArea.ID)
         {
           case 0:
           case 2:
-            num = 1;
+          case 8:
+            this.Range = 3f;
             break;
-          default:
-            num = id == 8 ? 1 : 0;
+          case 1:
+            this.Range = 12f;
             break;
         }
-        if (num != 0)
-          this.Range = 3f;
-        else if (id == 1)
-          this.Range = 12f;
       }
-      Matrix matrix = Matrix.CreateTranslation(-this.Model.Camera.Position) * Matrix.CreateFromQuaternion(this.Model.Camera.Rotation) * Matrix.CreatePerspectiveFieldOfView(0.9817477f, (float) Engine.Width / (float) Engine.Height, 0.1f, this.Range);
+      Matrix perspectiveFieldOfView = Matrix.CreatePerspectiveFieldOfView(0.98174775f, (float) Engine.Width / (float) Engine.Height, 0.1f, this.Range);
+      Matrix matrix = Matrix.CreateTranslation(-this.Model.Camera.Position) * Matrix.CreateFromQuaternion(this.Model.Camera.Rotation) * perspectiveFieldOfView;
       if (this.Scene.OnInterval(0.05f))
         this.LastFrustum.Matrix = matrix;
       this.Frustum.Matrix = matrix;
@@ -73,7 +69,7 @@ namespace Celeste
       private float size;
 
       public Particle(Snow3D manager, float size)
-        : base(GFX.Overworld["snow"], Vector3.Zero, new Vector2?(), new Color?(), new Vector2?())
+        : base(OVR.Atlas["snow"], Vector3.Zero)
       {
         this.Manager = manager;
         this.size = size;
@@ -117,22 +113,21 @@ namespace Celeste
           }
         }
         this.Percent += Engine.DeltaTime / this.Duration;
-        this.Color = Color.White * Calc.YoYo(this.Percent);
-        this.Position.Y -= this.Speed * Engine.DeltaTime;
+        float num1 = Calc.YoYo(this.Percent);
+        if ((double) this.Manager.Model.SnowForceFloat > 0.0)
+          num1 *= this.Manager.Model.SnowForceFloat;
+        else if ((double) this.Manager.Model.StarEase > 0.0)
+          num1 *= Calc.Map(this.Manager.Model.StarEase, 0.0f, 1f, 1f, 0.0f);
+        this.Color = Color.White * num1;
+        this.Size.Y = this.size + this.Manager.Model.SnowStretch * (1f - this.Manager.Model.SnowForceFloat);
+        this.Position.Y -= (float) (((double) this.Speed + (double) this.Manager.Model.SnowSpeedAddition) * (1.0 - (double) this.Manager.Model.SnowForceFloat)) * Engine.DeltaTime;
         this.Position.X += this.Float.X * Engine.DeltaTime;
         this.Position.Z += this.Float.Y * Engine.DeltaTime;
       }
 
-      private bool InView()
-      {
-        return this.Manager.Frustum.Contains(this.Position) == ContainmentType.Contains && (double) this.Position.Y > 0.0;
-      }
+      private bool InView() => this.Manager.Frustum.Contains(this.Position) == ContainmentType.Contains && (double) this.Position.Y > 0.0;
 
-      private bool InLastView()
-      {
-        return this.Manager.LastFrustum != (BoundingFrustum) null && this.Manager.LastFrustum.Contains(this.Position) == ContainmentType.Contains;
-      }
+      private bool InLastView() => this.Manager.LastFrustum != (BoundingFrustum) null && this.Manager.LastFrustum.Contains(this.Position) == ContainmentType.Contains;
     }
   }
 }
-

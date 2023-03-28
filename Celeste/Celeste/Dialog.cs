@@ -1,13 +1,12 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Dialog
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Monocle;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,10 +17,8 @@ namespace Celeste
   public static class Dialog
   {
     public static Language Language = (Language) null;
-    private static readonly Regex command = new Regex("\\{(.*?)\\}", RegexOptions.RightToLeft);
-    private static readonly Regex insert = new Regex("\\{\\+\\s*(.*?)\\}");
-    private static readonly Regex variable = new Regex("^\\w+\\=.*");
-    private static readonly Regex portrait = new Regex("\\[(?<content>[^\\[\\\\]*(?:\\\\.[^\\]\\\\]*)*)\\]", RegexOptions.IgnoreCase);
+    public static Dictionary<string, Language> Languages;
+    public static List<Language> OrderedLanguages;
     private static string[] LanguageDataVariables = new string[7]
     {
       "language",
@@ -32,8 +29,6 @@ namespace Celeste
       "periods",
       "font"
     };
-    public static Dictionary<string, Language> Languages;
-    public static List<Language> OrderedLanguages;
     private const string path = "Dialog";
 
     public static void Load()
@@ -42,156 +37,25 @@ namespace Celeste
       Dialog.Languages = new Dictionary<string, Language>();
       foreach (string file in Directory.GetFiles(Path.Combine(Engine.ContentDirectory, nameof (Dialog)), "*.txt", SearchOption.AllDirectories))
         Dialog.LoadLanguage(file);
-      Dialog.InitLanguages();
+      if (Settings.Instance != null && Settings.Instance.Language != null && Dialog.Languages.ContainsKey(Settings.Instance.Language))
+        Dialog.Language = Dialog.Languages[Settings.Instance.Language];
+      else if (Dialog.Languages.ContainsKey("english"))
+        Dialog.Language = Dialog.Languages["english"];
+      else
+        Dialog.Language = Dialog.Languages.Count > 0 ? Dialog.Languages.ElementAt<KeyValuePair<string, Language>>(0).Value : throw new Exception("Missing Language Files");
+      Settings.Instance.Language = Dialog.Language.Id;
       Dialog.OrderedLanguages = new List<Language>();
       foreach (KeyValuePair<string, Language> language in Dialog.Languages)
         Dialog.OrderedLanguages.Add(language.Value);
-      Dialog.OrderedLanguages.Sort((Comparison<Language>) ((a, b) =>
-      {
-        if (a.Order != b.Order)
-          return a.Order - b.Order;
-        return a.Id.CompareTo(b.Id);
-      }));
+      Dialog.OrderedLanguages.Sort((Comparison<Language>) ((a, b) => a.Order != b.Order ? a.Order - b.Order : a.Id.CompareTo(b.Id)));
     }
 
     public static Language LoadLanguage(string filename)
     {
-      Language language = (Language) null;
-      string key = "";
-      StringBuilder stringBuilder = new StringBuilder();
-      string input1 = "";
-      foreach (string readLine in File.ReadLines(filename, Encoding.UTF8))
-      {
-        string input2 = readLine.Trim();
-        if (input2.Length > 0 && input2[0] != '#')
-        {
-          if (input2.IndexOf('[') >= 0)
-            input2 = Dialog.portrait.Replace(input2, "{portrait ${content}}");
-          string input3 = input2.Replace("\\#", "#");
-          if (input3.Length > 0)
-          {
-            if (Dialog.variable.IsMatch(input3))
-            {
-              if (!string.IsNullOrEmpty(key) && !language.Dialog.ContainsKey(key))
-                language.Dialog.Add(key, stringBuilder.ToString());
-              string[] strArray1 = input3.Split('=');
-              string str1 = strArray1[0].Trim();
-              string str2 = strArray1.Length > 1 ? strArray1[1].Trim() : "";
-              if (str1.Equals("language", StringComparison.OrdinalIgnoreCase))
-              {
-                string[] strArray2 = str2.Split(',');
-                if (!Dialog.Languages.TryGetValue(strArray2[0], out language))
-                {
-                  language = new Language();
-                  language.FontFace = (string) null;
-                  language.Id = strArray2[0];
-                  Dialog.Languages.Add(language.Id, language);
-                }
-                if (strArray2.Length > 1)
-                  language.Label = strArray2[1];
-              }
-              else if (str1.Equals("icon", StringComparison.OrdinalIgnoreCase))
-              {
-                VirtualTexture texture = VirtualContent.CreateTexture(Path.Combine(nameof (Dialog), str2));
-                language.Icon = new MTexture(texture);
-              }
-              else if (str1.Equals("order", StringComparison.OrdinalIgnoreCase))
-                language.Order = int.Parse(str2);
-              else if (str1.Equals("font", StringComparison.OrdinalIgnoreCase))
-              {
-                string[] strArray2 = str2.Split(',');
-                language.FontFace = strArray2[0];
-                language.FontFaceSize = float.Parse(strArray2[1], (IFormatProvider) CultureInfo.InvariantCulture);
-              }
-              else if (str1.Equals("SPLIT_REGEX", StringComparison.OrdinalIgnoreCase))
-                language.SplitRegex = str2;
-              else if (str1.Equals("commas", StringComparison.OrdinalIgnoreCase))
-                language.CommaCharacters = str2;
-              else if (str1.Equals("periods", StringComparison.OrdinalIgnoreCase))
-              {
-                language.PeriodCharacters = str2;
-              }
-              else
-              {
-                key = str1;
-                stringBuilder.Clear();
-                stringBuilder.Append(str2);
-              }
-            }
-            else
-            {
-              if (stringBuilder.Length > 0)
-              {
-                string str = stringBuilder.ToString();
-                if (!str.EndsWith("{break}") && !str.EndsWith("{n}") && Dialog.command.Replace(input1, "").Length > 0)
-                  stringBuilder.Append("{break}");
-              }
-              stringBuilder.Append(input3);
-            }
-            input1 = input3;
-          }
-        }
-      }
-      if (!string.IsNullOrEmpty(key) && !language.Dialog.ContainsKey(key))
-        language.Dialog.Add(key, stringBuilder.ToString());
+      Language language = !File.Exists(filename + ".export") ? Language.FromTxt(filename) : Language.FromExport(filename + ".export");
+      if (language != null)
+        Dialog.Languages[language.Id] = language;
       return language;
-    }
-
-    public static void InitLanguages()
-    {
-      foreach (KeyValuePair<string, Language> language1 in Dialog.Languages)
-      {
-        Language language2 = language1.Value;
-        if (!language2.Initialized)
-        {
-          language2.Initialized = true;
-          List<string> stringList = new List<string>();
-          foreach (KeyValuePair<string, string> keyValuePair in language2.Dialog)
-            stringList.Add(keyValuePair.Key);
-          foreach (string index1 in stringList)
-          {
-            string input = language2.Dialog[index1];
-            MatchCollection matchCollection = (MatchCollection) null;
-            while (matchCollection == null || matchCollection.Count > 0)
-            {
-              matchCollection = Dialog.insert.Matches(input);
-              for (int index2 = 0; index2 < matchCollection.Count; ++index2)
-              {
-                Match match = matchCollection[index2];
-                string key = match.Groups[1].Value;
-                string newValue;
-                input = !language2.Dialog.TryGetValue(key, out newValue) ? input.Replace(match.Value, "[XXX]") : input.Replace(match.Value, newValue);
-              }
-            }
-            language2.Dialog[index1] = input;
-          }
-          language2.Lines = 0;
-          language2.Words = 0;
-          foreach (string key in stringList)
-          {
-            string str = language2.Dialog[key];
-            if (str.IndexOf('{') >= 0)
-            {
-              string input = str.Replace("{n}", "\n").Replace("{break}", "\n");
-              str = Dialog.command.Replace(input, "");
-            }
-            language2.Cleaned.Add(key, str);
-          }
-        }
-      }
-      if (Settings.Instance != null && Settings.Instance.Language != null && Dialog.Languages.ContainsKey(Settings.Instance.Language))
-        Dialog.Language = Dialog.Languages[Settings.Instance.Language];
-      else if (Dialog.Languages.ContainsKey("english"))
-      {
-        Dialog.Language = Dialog.Languages["english"];
-      }
-      else
-      {
-        if (Dialog.Languages.Count <= 0)
-          throw new Exception("Missing Language Files");
-        Dialog.Language = Dialog.Languages.ElementAt<KeyValuePair<string, Language>>(0).Value;
-      }
-      Settings.Instance.Language = Dialog.Language.Id;
     }
 
     public static void Unload()
@@ -216,9 +80,7 @@ namespace Celeste
       if (language == null)
         language = Dialog.Language;
       string str = "";
-      if (language.Dialog.TryGetValue(name, out str))
-        return str;
-      return "XXX";
+      return language.Dialog.TryGetValue(name, out str) ? str : "XXX";
     }
 
     public static string Clean(string name, Language language = null)
@@ -226,34 +88,26 @@ namespace Celeste
       if (language == null)
         language = Dialog.Language;
       string str = "";
-      if (language.Cleaned.TryGetValue(name, out str))
-        return str;
-      return "XXX";
+      return language.Cleaned.TryGetValue(name, out str) ? str : "XXX";
     }
 
     public static string Time(long ticks)
     {
       TimeSpan timeSpan = TimeSpan.FromTicks(ticks);
-      if ((int) timeSpan.TotalHours > 0)
-        return ((int) timeSpan.TotalHours).ToString() + timeSpan.ToString("\\:mm\\:ss\\.fff");
-      return timeSpan.Minutes.ToString() + timeSpan.ToString("\\:ss\\.fff");
+      return (int) timeSpan.TotalHours > 0 ? ((int) timeSpan.TotalHours).ToString() + timeSpan.ToString("\\:mm\\:ss\\.fff") : timeSpan.Minutes.ToString() + timeSpan.ToString("\\:ss\\.fff");
     }
 
     public static string FileTime(long ticks)
     {
       TimeSpan timeSpan = TimeSpan.FromTicks(ticks);
-      if (timeSpan.TotalHours >= 1.0)
-        return ((int) timeSpan.TotalHours).ToString() + timeSpan.ToString("\\:mm\\:ss\\.fff");
-      return timeSpan.ToString("mm\\:ss\\.fff");
+      return timeSpan.TotalHours >= 1.0 ? ((int) timeSpan.TotalHours).ToString() + timeSpan.ToString("\\:mm\\:ss\\.fff") : timeSpan.ToString("mm\\:ss\\.fff");
     }
 
     public static string Deaths(int deaths)
     {
       if (deaths > 999999)
         return ((float) deaths / 1000000f).ToString("0.00") + "m";
-      if (deaths > 9999)
-        return ((float) deaths / 1000f).ToString("0.0") + "k";
-      return deaths.ToString();
+      return deaths > 9999 ? ((float) deaths / 1000f).ToString("0.0") + "k" : deaths.ToString();
     }
 
     public static void CheckCharacters()
@@ -309,47 +163,53 @@ namespace Celeste
     {
       Language language = Dialog.Languages[a];
       bool flag = true;
-      HashSet<int> intSet = new HashSet<int>();
+      HashSet<int> values = new HashSet<int>();
       foreach (KeyValuePair<string, string> keyValuePair in language.Dialog)
       {
         for (int index = 0; index < keyValuePair.Value.Length; ++index)
         {
           int key = (int) keyValuePair.Value[index];
-          if (!intSet.Contains(key) && !language.FontSize.Characters.ContainsKey(key))
+          if (!values.Contains(key) && !language.FontSize.Characters.ContainsKey(key))
           {
-            intSet.Add(key);
+            values.Add(key);
             flag = false;
           }
         }
       }
       Console.WriteLine("FONT: " + a);
-      if (intSet.Count > 0)
-        Console.WriteLine(" - Missing Characters: " + string.Join<int>(",", (IEnumerable<int>) intSet));
+      if (values.Count > 0)
+        Console.WriteLine(" - Missing Characters: " + string.Join<int>(",", (IEnumerable<int>) values));
       Console.WriteLine(" - OK: " + flag.ToString());
       Console.WriteLine();
-      if (intSet.Count > 0)
+      if (values.Count > 0)
       {
         string contents = "";
-        foreach (int num in intSet)
+        foreach (int num in values)
           contents += ((char) num).ToString();
         File.WriteAllText(a + "-missing-debug.txt", contents);
       }
       return flag;
     }
 
-    public static bool CompareLanguages(string a, string b)
+    public static bool CompareLanguages(string a, string b, bool compareContent)
     {
       Console.WriteLine("COMPARE: " + a + " -> " + b);
       Language language1 = Dialog.Languages[a];
       Language language2 = Dialog.Languages[b];
       bool flag = true;
-      List<string> stringList1 = new List<string>();
-      List<string> stringList2 = new List<string>();
+      List<string> values1 = new List<string>();
+      List<string> values2 = new List<string>();
+      List<string> values3 = new List<string>();
       foreach (KeyValuePair<string, string> keyValuePair in language1.Dialog)
       {
         if (!language2.Dialog.ContainsKey(keyValuePair.Key))
         {
-          stringList2.Add(keyValuePair.Key);
+          values2.Add(keyValuePair.Key);
+          flag = false;
+        }
+        else if (compareContent && language2.Dialog[keyValuePair.Key] != language1.Dialog[keyValuePair.Key])
+        {
+          values3.Add(keyValuePair.Key);
           flag = false;
         }
       }
@@ -357,27 +217,29 @@ namespace Celeste
       {
         if (!language1.Dialog.ContainsKey(keyValuePair.Key))
         {
-          stringList2.Add(keyValuePair.Key);
+          values1.Add(keyValuePair.Key);
           flag = false;
         }
       }
-      if (stringList1.Count > 0)
-        Console.WriteLine(" - Missing from " + a + ": " + string.Join(", ", (IEnumerable<string>) stringList1));
-      if (stringList2.Count > 0)
-        Console.WriteLine(" - Missing from " + b + ": " + string.Join(", ", (IEnumerable<string>) stringList2));
+      if (values1.Count > 0)
+        Console.WriteLine(" - Missing from " + a + ": " + string.Join(", ", (IEnumerable<string>) values1));
+      if (values2.Count > 0)
+        Console.WriteLine(" - Missing from " + b + ": " + string.Join(", ", (IEnumerable<string>) values2));
+      if (values3.Count > 0)
+        Console.WriteLine(" - Diff. Content: " + string.Join(", ", (IEnumerable<string>) values3));
       Func<string, List<List<string>>> func = (Func<string, List<List<string>>>) (text =>
       {
         List<List<string>> stringListList = new List<List<string>>();
         foreach (Capture match in Regex.Matches(text, "\\{([^}]*)\\}"))
         {
           string[] strArray = Regex.Split(match.Value, "(\\{|\\}|\\s)");
-          List<string> stringList3 = new List<string>();
+          List<string> stringList = new List<string>();
           foreach (string str in strArray)
           {
-            if (!string.IsNullOrWhiteSpace(str) && str.Length > 0 && (str != "{" && str != "}"))
-              stringList3.Add(str);
+            if (!string.IsNullOrWhiteSpace(str) && str.Length > 0 && str != "{" && str != "}")
+              stringList.Add(str);
           }
-          stringListList.Add(stringList3);
+          stringListList.Add(stringList);
         }
         return stringListList;
       });
@@ -404,21 +266,26 @@ namespace Celeste
               }
               else
               {
-                if (str == "portrait")
+                switch (str)
                 {
-                  for (int index3 = 0; index3 < stringListList1[index1].Count; ++index3)
-                  {
-                    if (stringListList1[index1][index3] != stringListList2[index2][index3])
+                  case "portrait":
+                    for (int index3 = 0; index3 < stringListList1[index1].Count; ++index3)
                     {
-                      Console.WriteLine(" - Portrait in " + keyValuePair.Key + " is incorrect in " + b + " ({" + string.Join(" ", (IEnumerable<string>) stringListList1[index1]) + "} vs {" + string.Join(" ", (IEnumerable<string>) stringListList2[index2]) + "})");
-                      flag = false;
+                      if (stringListList1[index1][index3] != stringListList2[index2][index3])
+                      {
+                        Console.WriteLine(" - Portrait in " + keyValuePair.Key + " is incorrect in " + b + " ({" + string.Join(" ", (IEnumerable<string>) stringListList1[index1]) + "} vs {" + string.Join(" ", (IEnumerable<string>) stringListList2[index2]) + "})");
+                        flag = false;
+                      }
                     }
-                  }
-                }
-                else if (str == "trigger" && stringListList1[index1][1] != stringListList2[index2][1])
-                {
-                  Console.WriteLine(" - Trigger in " + keyValuePair.Key + " is incorrect in " + b + " (" + stringListList1[index1][1] + " vs " + stringListList2[index2][1] + ")");
-                  flag = false;
+                    break;
+                  case "trigger":
+                    if (stringListList1[index1][1] != stringListList2[index2][1])
+                    {
+                      Console.WriteLine(" - Trigger in " + keyValuePair.Key + " is incorrect in " + b + " (" + stringListList1[index1][1] + " vs " + stringListList2[index2][1] + ")");
+                      flag = false;
+                      break;
+                    }
+                    break;
                 }
                 ++index2;
               }

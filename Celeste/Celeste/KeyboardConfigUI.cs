@@ -1,31 +1,82 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.KeyboardConfigUI
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Monocle;
 using System;
-using System.Collections.Generic;
 
 namespace Celeste
 {
+  [Tracked(false)]
   public class KeyboardConfigUI : TextMenu
   {
-    private float remappingEase = 0.0f;
-    private float inputDelay = 0.0f;
     private bool remapping;
+    private float remappingEase;
+    private Binding remappingBinding;
+    private string remappingText;
+    private float inputDelay;
     private float timeout;
-    private KeyboardConfigUI.Mappings remappingKey;
     private bool closing;
+    private float closingDelay;
+    private bool resetHeld;
+    private float resetTime;
+    private float resetDelay;
 
     public KeyboardConfigUI()
     {
-      this.Reload(-1);
+      this.Add((TextMenu.Item) new TextMenu.Header(Dialog.Clean("KEY_CONFIG_TITLE")));
+      this.Add((TextMenu.Item) new InputMappingInfo(false));
+      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_GAMEPLAY")));
+      this.AddMap("LEFT", Settings.Instance.Left);
+      this.AddMap("RIGHT", Settings.Instance.Right);
+      this.AddMap("UP", Settings.Instance.Up);
+      this.AddMap("DOWN", Settings.Instance.Down);
+      this.AddMap("JUMP", Settings.Instance.Jump);
+      this.AddMap("DASH", Settings.Instance.Dash);
+      this.AddMap("GRAB", Settings.Instance.Grab);
+      this.AddMap("TALK", Settings.Instance.Talk);
+      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_MENUS")));
+      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_MENU_NOTICE"), false));
+      this.AddMap("LEFT", Settings.Instance.MenuLeft);
+      this.AddMap("RIGHT", Settings.Instance.MenuRight);
+      this.AddMap("UP", Settings.Instance.MenuUp);
+      this.AddMap("DOWN", Settings.Instance.MenuDown);
+      this.AddMap("CONFIRM", Settings.Instance.Confirm);
+      this.AddMap("CANCEL", Settings.Instance.Cancel);
+      this.AddMap("JOURNAL", Settings.Instance.Journal);
+      this.AddMap("PAUSE", Settings.Instance.Pause);
+      this.Add((TextMenu.Item) new TextMenu.SubHeader(""));
+      TextMenu.Button button = new TextMenu.Button(Dialog.Clean("KEY_CONFIG_RESET"));
+      button.IncludeWidthInMeasurement = false;
+      button.AlwaysCenter = true;
+      button.ConfirmSfx = "event:/ui/main/button_lowkey";
+      button.OnPressed = (Action) (() =>
+      {
+        this.resetHeld = true;
+        this.resetTime = 0.0f;
+        this.resetDelay = 0.0f;
+      });
+      this.Add((TextMenu.Item) button);
+      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_ADVANCED")));
+      this.AddMap("QUICKRESTART", Settings.Instance.QuickRestart);
+      this.AddMap("DEMO", Settings.Instance.DemoDash);
+      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_MOVE_ONLY")));
+      this.AddMap("LEFT", Settings.Instance.LeftMoveOnly);
+      this.AddMap("RIGHT", Settings.Instance.RightMoveOnly);
+      this.AddMap("UP", Settings.Instance.UpMoveOnly);
+      this.AddMap("DOWN", Settings.Instance.DownMoveOnly);
+      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_DASH_ONLY")));
+      this.AddMap("LEFT", Settings.Instance.LeftDashOnly);
+      this.AddMap("RIGHT", Settings.Instance.RightDashOnly);
+      this.AddMap("UP", Settings.Instance.UpDashOnly);
+      this.AddMap("DOWN", Settings.Instance.DownDashOnly);
       this.OnESC = this.OnCancel = (Action) (() =>
       {
+        MenuOptions.UpdateCrouchDashModeVisibility();
         this.Focused = false;
         this.closing = true;
       });
@@ -34,178 +85,72 @@ namespace Celeste
       this.Alpha = 0.0f;
     }
 
-    public void Reload(int index = -1)
+    private void AddMap(string label, Binding binding)
     {
-      this.Clear();
-      List<Keys> keys1 = new List<Keys>()
+      string txt = Dialog.Clean("KEY_CONFIG_" + label);
+      this.Add(new TextMenu.Setting(txt, binding, false).Pressed((Action) (() =>
       {
-        Keys.Escape
-      };
-      keys1.AddRange((IEnumerable<Keys>) Settings.Instance.Pause);
-      List<Keys> keys2 = new List<Keys>();
-      keys2.AddRange((IEnumerable<Keys>) Settings.Instance.Confirm);
-      if (!keys2.Contains(Keys.Enter))
-        keys2.Add(Keys.Enter);
-      List<Keys> keys3 = new List<Keys>();
-      keys3.AddRange((IEnumerable<Keys>) Settings.Instance.Cancel);
-      if (!keys3.Contains(Keys.Back))
-        keys3.Add(Keys.Back);
-      List<Keys> keys4 = new List<Keys>()
-      {
-        Settings.Instance.Left
-      };
-      if (Settings.Instance.Left != Keys.Left)
-        keys4.Add(Keys.Left);
-      List<Keys> keys5 = new List<Keys>()
-      {
-        Settings.Instance.Right
-      };
-      if (Settings.Instance.Right != Keys.Right)
-        keys5.Add(Keys.Right);
-      List<Keys> keys6 = new List<Keys>()
-      {
-        Settings.Instance.Up
-      };
-      if (Settings.Instance.Up != Keys.Up)
-        keys6.Add(Keys.Up);
-      List<Keys> keys7 = new List<Keys>()
-      {
-        Settings.Instance.Down
-      };
-      if (Settings.Instance.Down != Keys.Down)
-        keys7.Add(Keys.Down);
-      this.Add((TextMenu.Item) new TextMenu.Header(Dialog.Clean("KEY_CONFIG_TITLE", (Language) null)));
-      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_MOVEMENT", (Language) null)));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Left), keys4).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Left))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Right), keys5).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Right))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Up), keys6).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Up))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Down), keys7).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Down))));
-      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_GAMEPLAY", (Language) null)));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Jump), Settings.Instance.Jump).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Jump))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Dash), Settings.Instance.Dash).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Dash))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Grab), Settings.Instance.Grab).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Grab))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Talk), Settings.Instance.Talk).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Talk))));
-      this.Add((TextMenu.Item) new TextMenu.SubHeader(Dialog.Clean("KEY_CONFIG_MENUS", (Language) null)));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Confirm), keys2).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Confirm))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Cancel), keys3).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Cancel))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Pause), keys1).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Pause))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.Journal), Settings.Instance.Journal).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.Journal))));
-      this.Add(new TextMenu.Setting(this.Label(KeyboardConfigUI.Mappings.QuickRestart), Settings.Instance.QuickRestart).Pressed((Action) (() => this.Remap(KeyboardConfigUI.Mappings.QuickRestart))));
-      this.Add((TextMenu.Item) new TextMenu.SubHeader(""));
-      TextMenu.Button button = new TextMenu.Button(Dialog.Clean("KEY_CONFIG_RESET", (Language) null));
-      button.IncludeWidthInMeasurement = false;
-      button.AlwaysCenter = true;
-      button.OnPressed = (Action) (() =>
-      {
-        Settings.Instance.SetDefaultKeyboardControls(true);
-        Input.Initialize();
-        this.Reload(this.Selection);
-      });
-      this.Add((TextMenu.Item) button);
-      if (index < 0)
-        return;
-      this.Selection = index;
+        this.remappingText = txt;
+        this.Remap(binding);
+      })).AltPressed((Action) (() => this.Clear(binding))));
     }
 
-    private void Remap(KeyboardConfigUI.Mappings mapping)
+    private void Remap(Binding binding)
     {
       this.remapping = true;
-      this.remappingKey = mapping;
+      this.remappingBinding = binding;
       this.timeout = 5f;
       this.Focused = false;
     }
 
-    private void SetRemap(Keys key)
+    private void AddRemap(Keys key)
     {
+      while (this.remappingBinding.Keyboard.Count >= Input.MaxBindings)
+        this.remappingBinding.Keyboard.RemoveAt(0);
       this.remapping = false;
       this.inputDelay = 0.25f;
-      if (key == Keys.None || key == Keys.Left && this.remappingKey != KeyboardConfigUI.Mappings.Left || (key == Keys.Right && this.remappingKey != KeyboardConfigUI.Mappings.Right || key == Keys.Up && this.remappingKey != KeyboardConfigUI.Mappings.Up) || (key == Keys.Down && this.remappingKey != KeyboardConfigUI.Mappings.Down || key == Keys.Enter && this.remappingKey != KeyboardConfigUI.Mappings.Confirm) || key == Keys.Back && this.remappingKey != KeyboardConfigUI.Mappings.Cancel)
-        return;
-      switch (this.remappingKey)
-      {
-        case KeyboardConfigUI.Mappings.Left:
-          Settings.Instance.Left = key != Keys.Left ? key : Keys.None;
-          break;
-        case KeyboardConfigUI.Mappings.Right:
-          Settings.Instance.Right = key != Keys.Right ? key : Keys.None;
-          break;
-        case KeyboardConfigUI.Mappings.Up:
-          Settings.Instance.Up = key != Keys.Up ? key : Keys.None;
-          break;
-        case KeyboardConfigUI.Mappings.Down:
-          Settings.Instance.Down = key != Keys.Down ? key : Keys.None;
-          break;
-        case KeyboardConfigUI.Mappings.Jump:
-          Settings.Instance.Jump.Clear();
-          Settings.Instance.Jump.Add(key);
-          break;
-        case KeyboardConfigUI.Mappings.Dash:
-          Settings.Instance.Dash.Clear();
-          Settings.Instance.Dash.Add(key);
-          break;
-        case KeyboardConfigUI.Mappings.Grab:
-          Settings.Instance.Grab.Clear();
-          Settings.Instance.Grab.Add(key);
-          break;
-        case KeyboardConfigUI.Mappings.Talk:
-          Settings.Instance.Talk.Clear();
-          Settings.Instance.Talk.Add(key);
-          break;
-        case KeyboardConfigUI.Mappings.Confirm:
-          if (!Settings.Instance.Cancel.Contains(key) && !Settings.Instance.Pause.Contains(key))
-          {
-            Settings.Instance.Confirm.Clear();
-            if (key != Keys.Enter)
-              Settings.Instance.Confirm.Add(key);
-            break;
-          }
-          break;
-        case KeyboardConfigUI.Mappings.Cancel:
-          if (!Settings.Instance.Confirm.Contains(key) && !Settings.Instance.Pause.Contains(key))
-          {
-            Settings.Instance.Cancel.Clear();
-            if (key != Keys.Back)
-              Settings.Instance.Cancel.Add(key);
-            break;
-          }
-          break;
-        case KeyboardConfigUI.Mappings.Pause:
-          if (!Settings.Instance.Confirm.Contains(key) && !Settings.Instance.Cancel.Contains(key))
-          {
-            Settings.Instance.Pause.Clear();
-            Settings.Instance.Pause.Add(key);
-            break;
-          }
-          break;
-        case KeyboardConfigUI.Mappings.Journal:
-          Settings.Instance.Journal.Clear();
-          Settings.Instance.Journal.Add(key);
-          break;
-        case KeyboardConfigUI.Mappings.QuickRestart:
-          Settings.Instance.QuickRestart.Clear();
-          Settings.Instance.QuickRestart.Add(key);
-          break;
-      }
+      if (!this.remappingBinding.Add(key))
+        Audio.Play("event:/ui/main/button_invalid");
       Input.Initialize();
-      this.Reload(this.Selection);
     }
 
-    private string Label(KeyboardConfigUI.Mappings mapping)
+    private void Clear(Binding binding)
     {
-      return Dialog.Clean("KEY_CONFIG_" + mapping.ToString(), (Language) null);
+      if (binding.ClearKeyboard())
+        return;
+      Audio.Play("event:/ui/main/button_invalid");
     }
 
     public override void Update()
     {
-      base.Update();
-      if ((double) this.inputDelay > 0.0 && !this.remapping)
+      if (this.resetHeld)
       {
-        this.inputDelay -= Engine.DeltaTime;
-        if ((double) this.inputDelay <= 0.0)
-          this.Focused = true;
+        this.resetDelay += Engine.DeltaTime;
+        this.resetTime += Engine.DeltaTime;
+        if ((double) this.resetTime > 1.5)
+        {
+          this.resetDelay = 0.0f;
+          this.resetHeld = false;
+          Settings.Instance.SetDefaultKeyboardControls(true);
+          Input.Initialize();
+          Audio.Play("event:/ui/main/button_select");
+        }
+        if (!Input.MenuConfirm.Check && (double) this.resetDelay > 0.30000001192092896)
+        {
+          Audio.Play("event:/ui/main/button_invalid");
+          this.resetHeld = false;
+        }
+        if (this.resetHeld)
+          return;
       }
-      this.remappingEase = Calc.Approach(this.remappingEase, this.remapping ? 1f : 0.0f, Engine.DeltaTime * 4f);
-      if ((double) this.remappingEase > 0.5 && this.remapping)
+      base.Update();
+      this.Focused = !this.closing && (double) this.inputDelay <= 0.0 && !this.remapping;
+      if (!this.closing && Input.MenuCancel.Pressed && !this.remapping)
+        this.OnCancel();
+      if ((double) this.inputDelay > 0.0 && !this.remapping)
+        this.inputDelay -= Engine.RawDeltaTime;
+      this.remappingEase = Calc.Approach(this.remappingEase, this.remapping ? 1f : 0.0f, Engine.RawDeltaTime * 4f);
+      if ((double) this.remappingEase >= 0.25 && this.remapping)
       {
         if (Input.ESC.Pressed || (double) this.timeout <= 0.0)
         {
@@ -216,11 +161,12 @@ namespace Celeste
         {
           Keys[] pressedKeys = MInput.Keyboard.CurrentState.GetPressedKeys();
           if (pressedKeys != null && pressedKeys.Length != 0 && MInput.Keyboard.Pressed(pressedKeys[pressedKeys.Length - 1]))
-            this.SetRemap(pressedKeys[pressedKeys.Length - 1]);
+            this.AddRemap(pressedKeys[pressedKeys.Length - 1]);
         }
-        this.timeout -= Engine.DeltaTime;
+        this.timeout -= Engine.RawDeltaTime;
       }
-      this.Alpha = Calc.Approach(this.Alpha, this.closing ? 0.0f : 1f, Engine.DeltaTime * 8f);
+      this.closingDelay -= Engine.RawDeltaTime;
+      this.Alpha = Calc.Approach(this.Alpha, !this.closing || (double) this.closingDelay > 0.0 ? 1f : 0.0f, Engine.RawDeltaTime * 8f);
       if (!this.closing || (double) this.Alpha > 0.0)
         return;
       this.Close();
@@ -229,31 +175,23 @@ namespace Celeste
     public override void Render()
     {
       Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * Ease.CubeOut(this.Alpha));
-      base.Render();
-      if ((double) this.remappingEase <= 0.0)
-        return;
-      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * 0.95f * Ease.CubeInOut(this.remappingEase));
       Vector2 vector2 = new Vector2(1920f, 1080f) * 0.5f;
-      ActiveFont.Draw(Dialog.Get("KEY_CONFIG_CHANGING", (Language) null), vector2 + new Vector2(0.0f, -8f), new Vector2(0.5f, 1f), Vector2.One * 0.7f, Color.LightGray * Ease.CubeIn(this.remappingEase));
-      ActiveFont.Draw(this.Label(this.remappingKey), vector2 + new Vector2(0.0f, 8f), new Vector2(0.5f, 0.0f), Vector2.One * 2f, Color.White * Ease.CubeIn(this.remappingEase));
-    }
-
-    private enum Mappings
-    {
-      Left,
-      Right,
-      Up,
-      Down,
-      Jump,
-      Dash,
-      Grab,
-      Talk,
-      Confirm,
-      Cancel,
-      Pause,
-      Journal,
-      QuickRestart,
+      base.Render();
+      if ((double) this.remappingEase > 0.0)
+      {
+        Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * 0.95f * Ease.CubeInOut(this.remappingEase));
+        ActiveFont.Draw(Dialog.Get("KEY_CONFIG_CHANGING"), vector2 + new Vector2(0.0f, -8f), new Vector2(0.5f, 1f), Vector2.One * 0.7f, Color.LightGray * Ease.CubeIn(this.remappingEase));
+        ActiveFont.Draw(this.remappingText, vector2 + new Vector2(0.0f, 8f), new Vector2(0.5f, 0.0f), Vector2.One * 2f, Color.White * Ease.CubeIn(this.remappingEase));
+      }
+      if (!this.resetHeld)
+        return;
+      float num1 = Ease.CubeInOut(Calc.Min(1f, this.resetDelay / 0.2f));
+      float num2 = Ease.SineOut(Calc.Min(1f, this.resetTime / 1.5f));
+      Draw.Rect(-10f, -10f, 1940f, 1100f, Color.Black * 0.95f * num1);
+      float width = 480f;
+      double x = (1920.0 - (double) width) / 2.0;
+      Draw.Rect((float) x, 530f, width, 20f, Color.White * 0.25f * num1);
+      Draw.Rect((float) x, 530f, width * num2, 20f, Color.White * num1);
     }
   }
 }
-

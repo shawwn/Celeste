@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Backdrop
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -13,18 +13,20 @@ namespace Celeste
   public abstract class Backdrop
   {
     public bool UseSpritebatch = true;
+    public string Name;
+    public HashSet<string> Tags = new HashSet<string>();
+    public Vector2 Position;
     public Vector2 Scroll = Vector2.One;
+    public Vector2 Speed;
     public Color Color = Color.White;
     public bool LoopX = true;
     public bool LoopY = true;
-    public bool InstantIn = true;
-    public string Name;
-    public Vector2 Position;
-    public Vector2 Speed;
     public bool FlipX;
     public bool FlipY;
     public Backdrop.Fader FadeX;
     public Backdrop.Fader FadeY;
+    public float FadeAlphaMultiplier = 1f;
+    public float WindMultiplier;
     public HashSet<string> ExcludeFrom;
     public HashSet<string> OnlyIn;
     public string OnlyIfFlag;
@@ -32,17 +34,14 @@ namespace Celeste
     public string AlsoIfFlag;
     public bool? Dreaming;
     public bool Visible;
+    public bool InstantIn = true;
     public bool InstantOut;
+    public bool ForceVisible;
+    public BackdropRenderer Renderer;
 
-    public Backdrop()
-    {
-      this.Visible = true;
-    }
+    public Backdrop() => this.Visible = true;
 
-    public bool IsVisible(Level level)
-    {
-      return (string.IsNullOrEmpty(this.OnlyIfNotFlag) || !level.Session.GetFlag(this.OnlyIfNotFlag)) && (!string.IsNullOrEmpty(this.AlsoIfFlag) && level.Session.GetFlag(this.AlsoIfFlag) || (!this.Dreaming.HasValue || this.Dreaming.Value == level.Session.Dreaming) && (string.IsNullOrEmpty(this.OnlyIfFlag) || level.Session.GetFlag(this.OnlyIfFlag)) && ((this.ExcludeFrom == null || !this.ExcludeFrom.Contains(level.Session.Level)) && (this.OnlyIn == null || this.OnlyIn.Contains(level.Session.Level))));
-    }
+    public bool IsVisible(Level level) => this.ForceVisible || (string.IsNullOrEmpty(this.OnlyIfNotFlag) || !level.Session.GetFlag(this.OnlyIfNotFlag)) && (!string.IsNullOrEmpty(this.AlsoIfFlag) && level.Session.GetFlag(this.AlsoIfFlag) || (!this.Dreaming.HasValue || this.Dreaming.Value == level.Session.Dreaming) && (string.IsNullOrEmpty(this.OnlyIfFlag) || level.Session.GetFlag(this.OnlyIfFlag)) && (this.ExcludeFrom == null || !this.ExcludeFrom.Contains(level.Session.Level)) && (this.OnlyIn == null || this.OnlyIn.Contains(level.Session.Level)));
 
     public virtual void Update(Scene scene)
     {
@@ -105,4 +104,3 @@ namespace Celeste
     }
   }
 }
-

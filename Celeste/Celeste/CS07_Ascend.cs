@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.CS07_Ascend
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -19,68 +19,68 @@ namespace Celeste
     private Player player;
     private Vector2 origin;
     private bool spinning;
+    private bool dark;
 
-    public CS07_Ascend(int index, string cutscene)
-      : base(true, false)
+    public CS07_Ascend(int index, string cutscene, bool dark)
+      : base()
     {
       this.index = index;
       this.cutscene = cutscene;
+      this.dark = dark;
     }
 
-    public override void OnBegin(Level level)
-    {
-      this.Add((Component) new Coroutine(this.Cutscene(), true));
-    }
+    public override void OnBegin(Level level) => this.Add((Component) new Coroutine(this.Cutscene()));
 
     private IEnumerator Cutscene()
     {
-      while ((this.player = this.Scene.Tracker.GetEntity<Player>()) == null)
+      CS07_Ascend cs07Ascend = this;
+      while ((cs07Ascend.player = cs07Ascend.Scene.Tracker.GetEntity<Player>()) == null)
         yield return (object) null;
-      this.origin = this.player.Position;
+      cs07Ascend.origin = cs07Ascend.player.Position;
       Audio.Play("event:/char/badeline/maddy_split");
-      this.player.CreateSplitParticles();
+      cs07Ascend.player.CreateSplitParticles();
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-      this.Level.Displacement.AddBurst(this.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
-      this.player.Dashes = 1;
-      this.player.Facing = Facings.Right;
-      this.Scene.Add((Entity) (this.badeline = new BadelineDummy(this.player.Position)));
-      this.badeline.AutoAnimator.Enabled = false;
-      this.spinning = true;
-      this.Add((Component) new Coroutine(this.SpinCharacters(), true));
-      yield return (object) Textbox.Say(this.cutscene);
+      cs07Ascend.Level.Displacement.AddBurst(cs07Ascend.player.Position, 0.4f, 8f, 32f, 0.5f);
+      cs07Ascend.player.Dashes = 1;
+      cs07Ascend.player.Facing = Facings.Right;
+      cs07Ascend.Scene.Add((Entity) (cs07Ascend.badeline = new BadelineDummy(cs07Ascend.player.Position)));
+      cs07Ascend.badeline.AutoAnimator.Enabled = false;
+      cs07Ascend.spinning = true;
+      cs07Ascend.Add((Component) new Coroutine(cs07Ascend.SpinCharacters()));
+      yield return (object) Textbox.Say(cs07Ascend.cutscene);
       Audio.Play("event:/char/badeline/maddy_join");
-      this.spinning = false;
+      cs07Ascend.spinning = false;
       yield return (object) 0.25f;
-      this.badeline.RemoveSelf();
-      this.player.Dashes = 2;
-      this.player.CreateSplitParticles();
+      cs07Ascend.badeline.RemoveSelf();
+      cs07Ascend.player.Dashes = 2;
+      cs07Ascend.player.CreateSplitParticles();
       Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
-      this.Level.Displacement.AddBurst(this.player.Position, 0.4f, 8f, 32f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
-      this.EndCutscene(this.Level, true);
+      cs07Ascend.Level.Displacement.AddBurst(cs07Ascend.player.Position, 0.4f, 8f, 32f, 0.5f);
+      cs07Ascend.EndCutscene(cs07Ascend.Level);
     }
 
     private IEnumerator SpinCharacters()
     {
       float dist = 0.0f;
       Vector2 center = this.player.Position;
-      float timer = 1.570796f;
-      this.player.Sprite.Play("spin", false, false);
-      this.badeline.Sprite.Play("spin", false, false);
+      float timer = 1.5707964f;
+      this.player.Sprite.Play("spin");
+      this.badeline.Sprite.Play("spin");
       this.badeline.Sprite.Scale.X = 1f;
       while (this.spinning || (double) dist > 0.0)
       {
         dist = Calc.Approach(dist, this.spinning ? 1f : 0.0f, Engine.DeltaTime * 4f);
-        int frame = (int) ((double) timer / 6.28318548202515 * 14.0 + 10.0);
-        float sin = (float) Math.Sin((double) timer);
-        float cos = (float) Math.Cos((double) timer);
-        float len = Ease.CubeOut(dist) * 32f;
+        int frame = (int) ((double) timer / 6.2831854820251465 * 14.0 + 10.0);
+        float num1 = (float) Math.Sin((double) timer);
+        float num2 = (float) Math.Cos((double) timer);
+        float num3 = Ease.CubeOut(dist) * 32f;
         this.player.Sprite.SetAnimationFrame(frame);
         this.badeline.Sprite.SetAnimationFrame(frame + 7);
-        this.player.Position = center - new Vector2(sin * len, (float) ((double) cos * (double) dist * 8.0));
-        this.badeline.Position = center + new Vector2(sin * len, (float) ((double) cos * (double) dist * 8.0));
+        this.player.Position = center - new Vector2(num1 * num3, (float) ((double) num2 * (double) dist * 8.0));
+        this.badeline.Position = center + new Vector2(num1 * num3, (float) ((double) num2 * (double) dist * 8.0));
         timer -= Engine.DeltaTime * 2f;
         if ((double) timer <= 0.0)
-          timer += 6.283185f;
+          timer += 6.2831855f;
         yield return (object) null;
       }
     }
@@ -94,8 +94,9 @@ namespace Celeste
         this.player.Dashes = 2;
         this.player.Position = this.origin;
       }
+      if (this.dark)
+        return;
       level.Add((Entity) new HeightDisplay(this.index));
     }
   }
 }
-

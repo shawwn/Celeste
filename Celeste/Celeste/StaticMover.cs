@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.StaticMover
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -51,25 +51,15 @@ namespace Celeste
         this.Entity.Position += amount;
     }
 
-    public bool IsRiding(Solid solid)
-    {
-      if (this.SolidChecker != null)
-        return this.SolidChecker(solid);
-      return false;
-    }
+    public bool IsRiding(Solid solid) => this.SolidChecker != null && this.SolidChecker(solid);
 
-    public bool IsRiding(JumpThru jumpThru)
-    {
-      if (this.JumpThruChecker != null)
-        return this.JumpThruChecker(jumpThru);
-      return false;
-    }
+    public bool IsRiding(JumpThru jumpThru) => this.JumpThruChecker != null && this.JumpThruChecker(jumpThru);
 
     public void TriggerPlatform()
     {
       if (this.Platform == null)
         return;
-      this.Platform.OnStaticMoverTrigger();
+      this.Platform.OnStaticMoverTrigger(this);
     }
 
     public void Disable()
@@ -89,4 +79,3 @@ namespace Celeste
     }
   }
 }
-

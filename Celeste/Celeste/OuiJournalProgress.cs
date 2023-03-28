@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.OuiJournalProgress
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -18,7 +18,7 @@ namespace Celeste
       : base(journal)
     {
       this.PageTexture = "page";
-      this.table = new OuiJournalPage.Table().AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_progress", (Language) null), new Vector2(0.0f, 0.5f), 1f, Color.Black * 0.7f, 0.0f, false)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(20f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(100f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("strawberry", 150f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("skullblue", 100f));
+      this.table = new OuiJournalPage.Table().AddColumn((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_progress"), new Vector2(0.0f, 0.5f), 1f, Color.Black * 0.7f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(20f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(64f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.EmptyCell(100f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("strawberry", 150f)).AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("skullblue", 100f));
       if (SaveData.Instance.UnlockedModes >= 2)
         this.table.AddColumn((OuiJournalPage.Cell) new OuiJournalPage.IconCell("skullred", 100f));
       if (SaveData.Instance.UnlockedModes >= 3)
@@ -48,19 +48,50 @@ namespace Celeste
             }
             if (stringList.Count <= 0)
               stringList.Add("dot");
-            OuiJournalPage.Row row = this.table.AddRow().Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean(areaData.Name, (Language) null), new Vector2(1f, 0.5f), 0.6f, this.TextColor, 0.0f, false)).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) new OuiJournalPage.IconsCell(new string[1]
+            OuiJournalPage.Row row1 = this.table.AddRow().Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean(areaData.Name), new Vector2(1f, 0.5f), 0.6f, this.TextColor)).Add((OuiJournalPage.Cell) null);
+            string[] strArray = new string[1]
             {
               this.CompletionIcon(area)
-            })).Add((OuiJournalPage.Cell) new OuiJournalPage.IconsCell(new string[1]
+            };
+            OuiJournalPage.IconsCell entry1;
+            OuiJournalPage.IconsCell iconsCell = entry1 = new OuiJournalPage.IconsCell(strArray);
+            OuiJournalPage.Row row2 = row1.Add((OuiJournalPage.Cell) entry1);
+            if (areaData.CanFullClear)
             {
-              area.Cassette ? "cassette" : "dot"
-            })).Add((OuiJournalPage.Cell) new OuiJournalPage.IconsCell(-32f, stringList.ToArray())).Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(text, this.TextJustify, 0.5f, this.TextColor, 0.0f, false));
-            for (int index = 0; index < SaveData.Instance.UnlockedModes; ++index)
-              row.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Deaths(area.Modes[index].Deaths), this.TextJustify, 0.5f, this.TextColor, 0.0f, false));
-            if (area.TotalTimePlayed > 0L)
-              row.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Time(area.TotalTimePlayed), this.TextJustify, 0.5f, this.TextColor, 0.0f, false));
+              row2.Add((OuiJournalPage.Cell) new OuiJournalPage.IconsCell(new string[1]
+              {
+                area.Cassette ? "cassette" : "dot"
+              }));
+              row2.Add((OuiJournalPage.Cell) new OuiJournalPage.IconsCell(-32f, stringList.ToArray()));
+            }
             else
-              row.Add((OuiJournalPage.Cell) new OuiJournalPage.IconCell("dot", 0.0f));
+            {
+              iconsCell.SpreadOverColumns = 3;
+              row2.Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) null);
+            }
+            row2.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(text, this.TextJustify, 0.5f, this.TextColor));
+            if (areaData.IsFinal)
+            {
+              OuiJournalPage.TextCell entry2 = new OuiJournalPage.TextCell(Dialog.Deaths(area.Modes[0].Deaths), this.TextJustify, 0.5f, this.TextColor);
+              entry2.SpreadOverColumns = SaveData.Instance.UnlockedModes;
+              row2.Add((OuiJournalPage.Cell) entry2);
+              for (int index = 0; index < SaveData.Instance.UnlockedModes - 1; ++index)
+                row2.Add((OuiJournalPage.Cell) null);
+            }
+            else
+            {
+              for (int mode = 0; mode < SaveData.Instance.UnlockedModes; ++mode)
+              {
+                if (areaData.HasMode((AreaMode) mode))
+                  row2.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Deaths(area.Modes[mode].Deaths), this.TextJustify, 0.5f, this.TextColor));
+                else
+                  row2.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell("-", this.TextJustify, 0.5f, this.TextColor));
+              }
+            }
+            if (area.TotalTimePlayed > 0L)
+              row2.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Time(area.TotalTimePlayed), this.TextJustify, 0.5f, this.TextColor));
+            else
+              row2.Add((OuiJournalPage.Cell) new OuiJournalPage.IconCell("dot"));
           }
           else
             break;
@@ -69,17 +100,20 @@ namespace Celeste
       if (this.table.Rows <= 1)
         return;
       this.table.AddRow();
-      OuiJournalPage.Row row1 = this.table.AddRow().Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_totals", (Language) null), new Vector2(1f, 0.5f), 0.7f, this.TextColor, 0.0f, false)).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(SaveData.Instance.TotalStrawberries.ToString(), this.TextJustify, 0.6f, this.TextColor, 0.0f, false));
-      OuiJournalPage.TextCell textCell = new OuiJournalPage.TextCell(Dialog.Deaths(SaveData.Instance.TotalDeaths), this.TextJustify, 0.6f, this.TextColor, 0.0f, false);
-      textCell.SpreadOverColumns = SaveData.Instance.UnlockedModes;
-      row1.Add((OuiJournalPage.Cell) textCell);
+      OuiJournalPage.Row row = this.table.AddRow().Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Clean("journal_totals"), new Vector2(1f, 0.5f), 0.7f, this.TextColor)).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) null).Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(SaveData.Instance.TotalStrawberries.ToString(), this.TextJustify, 0.6f, this.TextColor));
+      OuiJournalPage.TextCell entry = new OuiJournalPage.TextCell(Dialog.Deaths(SaveData.Instance.TotalDeaths), this.TextJustify, 0.6f, this.TextColor);
+      entry.SpreadOverColumns = SaveData.Instance.UnlockedModes;
+      row.Add((OuiJournalPage.Cell) entry);
       for (int index = 1; index < SaveData.Instance.UnlockedModes; ++index)
-        row1.Add((OuiJournalPage.Cell) null);
-      row1.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Time(SaveData.Instance.Time), this.TextJustify, 0.6f, this.TextColor, 0.0f, false));
+        row.Add((OuiJournalPage.Cell) null);
+      row.Add((OuiJournalPage.Cell) new OuiJournalPage.TextCell(Dialog.Time(SaveData.Instance.Time), this.TextJustify, 0.6f, this.TextColor));
+      this.table.AddRow();
     }
 
     private string CompletionIcon(AreaStats data)
     {
+      if (!AreaData.Get(data.ID).CanFullClear && data.Modes[0].Completed)
+        return "beat";
       if (data.Modes[0].FullClear)
         return "fullclear";
       return data.Modes[0].Completed ? "clear" : "dot";
@@ -90,17 +124,15 @@ namespace Celeste
       base.Redraw(buffer);
       Draw.SpriteBatch.Begin();
       this.table.Render(new Vector2(60f, 20f));
-      this.RenderStamps();
       Draw.SpriteBatch.End();
     }
 
     private void DrawIcon(Vector2 pos, bool obtained, string icon)
     {
       if (obtained)
-        GFX.Journal[icon].DrawCentered(pos);
+        MTN.Journal[icon].DrawCentered(pos);
       else
-        GFX.Journal["dot"].DrawCentered(pos);
+        MTN.Journal["dot"].DrawCentered(pos);
     }
   }
 }
-

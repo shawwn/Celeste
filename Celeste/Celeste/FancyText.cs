@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.FancyText
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -17,16 +17,13 @@ namespace Celeste
   public class FancyText
   {
     public static Color DefaultColor = Color.LightGray;
-    private FancyText.Text group = new FancyText.Text();
-    private float currentScale = 1f;
-    private float currentDelay = 0.01f;
-    private int currentCharIndex = 0;
     public const float CharacterDelay = 0.01f;
     public const float PeriodDelay = 0.3f;
     public const float CommaDelay = 0.15f;
     public const float ShakeDistance = 2f;
     private Language language;
     private string text;
+    private FancyText.Text group = new FancyText.Text();
     private int maxLineWidth;
     private int linesPerPage;
     private PixelFont font;
@@ -37,10 +34,13 @@ namespace Celeste
     private int currentPage;
     private float currentPosition;
     private Color currentColor;
+    private float currentScale = 1f;
+    private float currentDelay = 0.01f;
     private bool currentShake;
     private bool currentWave;
     private bool currentImpact;
     private bool currentMessedUp;
+    private int currentCharIndex;
 
     public static FancyText.Text Parse(
       string text,
@@ -70,7 +70,7 @@ namespace Celeste
         language = Dialog.Language;
       this.language = language;
       this.group.Nodes = new List<FancyText.Node>();
-      this.group.Font = this.font = Fonts.Faces[language.FontFace];
+      this.group.Font = this.font = Fonts.Get(language.FontFace);
       this.group.BaseSize = language.FontFaceSize;
       this.size = this.font.Get(this.group.BaseSize);
     }
@@ -122,148 +122,218 @@ namespace Celeste
             else
             {
               colorStack.Push(this.currentColor);
-              this.currentColor = !(hex == "red") ? (!(hex == "green") ? (!(hex == "blue") ? Calc.HexToColor(hex) : Color.Blue) : Color.Green) : Color.Red;
+              switch (hex)
+              {
+                case "red":
+                  this.currentColor = Color.Red;
+                  continue;
+                case "green":
+                  this.currentColor = Color.Green;
+                  continue;
+                case "blue":
+                  this.currentColor = Color.Blue;
+                  continue;
+                default:
+                  this.currentColor = Calc.HexToColor(hex);
+                  continue;
+              }
             }
           }
-          else if (s == "break")
+          else
           {
-            this.CalcLineWidth();
-            ++this.currentPage;
-            ++this.group.Pages;
-            this.currentLine = 0;
-            this.currentPosition = 0.0f;
-            this.group.Nodes.Add((FancyText.Node) new FancyText.NewPage());
-          }
-          else if (s == "n")
-            this.AddNewLine();
-          else if (s == ">>")
-          {
-            float result2;
-            this.currentDelay = stringList.Count <= 0 || !float.TryParse(stringList[0], NumberStyles.Float, (IFormatProvider) CultureInfo.InvariantCulture, out result2) ? 0.01f : 0.01f / result2;
-          }
-          else if (s.Equals("/>>"))
-            this.currentDelay = 0.01f;
-          else if (s.Equals("anchor"))
-          {
-            FancyText.Anchors result2;
-            if (Enum.TryParse<FancyText.Anchors>(stringList[0], true, out result2))
-              this.group.Nodes.Add((FancyText.Node) new FancyText.Anchor()
-              {
-                Position = result2
-              });
-          }
-          else if (s.Equals("portrait") || s.Equals("left") || s.Equals("right"))
-          {
-            if (s.Equals("portrait") && stringList.Count > 0 && stringList[0].Equals("none"))
+            switch (s)
             {
-              this.group.Nodes.Add((FancyText.Node) new FancyText.Portrait());
-            }
-            else
-            {
-              FancyText.Portrait portrait;
-              if (s.Equals("left"))
-                portrait = portraitArray[0];
-              else if (s.Equals("right"))
-              {
-                portrait = portraitArray[1];
-              }
-              else
-              {
-                portrait = new FancyText.Portrait();
-                foreach (string str in stringList)
+              case "break":
+                this.CalcLineWidth();
+                ++this.currentPage;
+                ++this.group.Pages;
+                this.currentLine = 0;
+                this.currentPosition = 0.0f;
+                this.group.Nodes.Add((FancyText.Node) new FancyText.NewPage());
+                continue;
+              case "n":
+                this.AddNewLine();
+                continue;
+              case ">>":
+                float result2;
+                this.currentDelay = stringList.Count <= 0 || !float.TryParse(stringList[0], NumberStyles.Float, (IFormatProvider) CultureInfo.InvariantCulture, out result2) ? 0.01f : 0.01f / result2;
+                continue;
+              case "/>>":
+                this.currentDelay = 0.01f;
+                continue;
+              case "anchor":
+                FancyText.Anchors result3;
+                if (Enum.TryParse<FancyText.Anchors>(stringList[0], true, out result3))
                 {
-                  if (str.Equals("upsidedown"))
-                    portrait.UpsideDown = true;
-                  else if (str.Equals("flip"))
-                    portrait.Flipped = true;
-                  else if (str.Equals("left"))
-                    portrait.Side = -1;
-                  else if (str.Equals("right"))
-                    portrait.Side = 1;
-                  else if (str.Equals("pop"))
-                    portrait.Pop = true;
-                  else if (portrait.Sprite == null)
-                    portrait.Sprite = str;
-                  else
-                    portrait.Animation = str;
-                }
-              }
-              if (GFX.PortraitsSpriteBank.Has(portrait.SpriteId))
-              {
-                XmlElement xml1 = GFX.PortraitsSpriteBank.SpriteData[portrait.SpriteId].Sources[0].XML;
-                if (xml1 != null)
-                {
-                  portrait.SfxEvent = "event:/char/dialogue/" + xml1.Attr("sfx", "");
-                  if (xml1.HasChild("sfxs"))
+                  this.group.Nodes.Add((FancyText.Node) new FancyText.Anchor()
                   {
-                    foreach (object obj in (XmlNode) xml1["sfxs"])
+                    Position = result3
+                  });
+                  continue;
+                }
+                continue;
+              case "portrait":
+              case "left":
+              case "right":
+                if (s.Equals("portrait") && stringList.Count > 0 && stringList[0].Equals("none"))
+                {
+                  this.group.Nodes.Add((FancyText.Node) new FancyText.Portrait());
+                  continue;
+                }
+                FancyText.Portrait portrait;
+                switch (s)
+                {
+                  case "left":
+                    portrait = portraitArray[0];
+                    break;
+                  case "right":
+                    portrait = portraitArray[1];
+                    break;
+                  default:
+                    portrait = new FancyText.Portrait();
+                    using (List<string>.Enumerator enumerator = stringList.GetEnumerator())
                     {
-                      XmlElement xml2 = obj as XmlElement;
-                      if (xml2 != null && xml2.Name.Equals(portrait.Animation, StringComparison.InvariantCultureIgnoreCase))
+                      while (enumerator.MoveNext())
                       {
-                        portrait.SfxExpression = xml2.AttrInt("index");
-                        break;
+                        string current = enumerator.Current;
+                        switch (current)
+                        {
+                          case "upsidedown":
+                            portrait.UpsideDown = true;
+                            continue;
+                          case "flip":
+                            portrait.Flipped = true;
+                            continue;
+                          case "left":
+                            portrait.Side = -1;
+                            continue;
+                          case "right":
+                            portrait.Side = 1;
+                            continue;
+                          case "pop":
+                            portrait.Pop = true;
+                            continue;
+                          default:
+                            if (portrait.Sprite == null)
+                            {
+                              portrait.Sprite = current;
+                              continue;
+                            }
+                            portrait.Animation = current;
+                            continue;
+                        }
+                      }
+                      break;
+                    }
+                }
+                if (GFX.PortraitsSpriteBank.Has(portrait.SpriteId))
+                {
+                  List<SpriteDataSource> sources = GFX.PortraitsSpriteBank.SpriteData[portrait.SpriteId].Sources;
+                  for (int index3 = sources.Count - 1; index3 >= 0; --index3)
+                  {
+                    XmlElement xml1 = sources[index3].XML;
+                    if (xml1 != null)
+                    {
+                      if (portrait.SfxEvent == null)
+                        portrait.SfxEvent = "event:/char/dialogue/" + xml1.Attr("sfx", "");
+                      if (xml1.HasAttr("glitchy"))
+                        portrait.Glitchy = xml1.AttrBool("glitchy", false);
+                      if (xml1.HasChild("sfxs") && portrait.SfxExpression == 1)
+                      {
+                        foreach (object obj in (XmlNode) xml1["sfxs"])
+                        {
+                          if (obj is XmlElement xml2 && xml2.Name.Equals(portrait.Animation, StringComparison.InvariantCultureIgnoreCase))
+                          {
+                            portrait.SfxExpression = xml2.AttrInt("index");
+                            break;
+                          }
+                        }
                       }
                     }
                   }
                 }
-              }
-              this.group.Nodes.Add((FancyText.Node) portrait);
-              portraitArray[portrait.Side > 0 ? 1 : 0] = portrait;
+                this.group.Nodes.Add((FancyText.Node) portrait);
+                portraitArray[portrait.Side > 0 ? 1 : 0] = portrait;
+                continue;
+              case "trigger":
+              case "silent_trigger":
+                string str = "";
+                for (int index4 = 1; index4 < stringList.Count; ++index4)
+                  str = str + stringList[index4] + " ";
+                int result4;
+                if (int.TryParse(stringList[0], out result4) && result4 >= 0)
+                {
+                  this.group.Nodes.Add((FancyText.Node) new FancyText.Trigger()
+                  {
+                    Index = result4,
+                    Silent = s.StartsWith("silent"),
+                    Label = str
+                  });
+                  continue;
+                }
+                continue;
+              case "*":
+                this.currentShake = true;
+                continue;
+              case "/*":
+                this.currentShake = false;
+                continue;
+              case "~":
+                this.currentWave = true;
+                continue;
+              case "/~":
+                this.currentWave = false;
+                continue;
+              case "!":
+                this.currentImpact = true;
+                continue;
+              case "/!":
+                this.currentImpact = false;
+                continue;
+              case "%":
+                this.currentMessedUp = true;
+                continue;
+              case "/%":
+                this.currentMessedUp = false;
+                continue;
+              case "big":
+                this.currentScale = 1.5f;
+                continue;
+              case "/big":
+                this.currentScale = 1f;
+                continue;
+              case "s":
+                int result5 = 1;
+                if (stringList.Count > 0)
+                  int.TryParse(stringList[0], out result5);
+                this.currentPosition += (float) (5 * result5);
+                continue;
+              case "savedata":
+                if (SaveData.Instance == null)
+                {
+                  if (stringList[0].Equals("name", StringComparison.OrdinalIgnoreCase))
+                  {
+                    this.AddWord("Madeline");
+                    continue;
+                  }
+                  this.AddWord("[SD:" + stringList[0] + "]");
+                  continue;
+                }
+                if (stringList[0].Equals("name", StringComparison.OrdinalIgnoreCase))
+                {
+                  if (!this.language.CanDisplay(SaveData.Instance.Name))
+                  {
+                    this.AddWord(Dialog.Clean("FILE_DEFAULT", this.language));
+                    continue;
+                  }
+                  this.AddWord(SaveData.Instance.Name);
+                  continue;
+                }
+                this.AddWord(typeof (SaveData).GetField(stringList[0]).GetValue((object) SaveData.Instance).ToString());
+                continue;
+              default:
+                continue;
             }
-          }
-          else if (s.Equals("trigger") || s.Equals("silent_trigger"))
-          {
-            string str = "";
-            for (int index3 = 1; index3 < stringList.Count; ++index3)
-              str = str + stringList[index3] + " ";
-            int result2;
-            if (int.TryParse(stringList[0], out result2) && result2 >= 0)
-              this.group.Nodes.Add((FancyText.Node) new FancyText.Trigger()
-              {
-                Index = result2,
-                Silent = s.StartsWith("silent"),
-                Label = str
-              });
-          }
-          else if (s.Equals("*"))
-            this.currentShake = true;
-          else if (s.Equals("/*"))
-            this.currentShake = false;
-          else if (s.Equals("~"))
-            this.currentWave = true;
-          else if (s.Equals("/~"))
-            this.currentWave = false;
-          else if (s.Equals("!"))
-            this.currentImpact = true;
-          else if (s.Equals("/!"))
-            this.currentImpact = false;
-          else if (s.Equals("%"))
-            this.currentMessedUp = true;
-          else if (s.Equals("/%"))
-            this.currentMessedUp = false;
-          else if (s.Equals("big"))
-            this.currentScale = 1.5f;
-          else if (s.Equals("/big"))
-            this.currentScale = 1f;
-          else if (s.Equals("s"))
-          {
-            int result2 = 1;
-            if (stringList.Count > 0)
-              int.TryParse(stringList[0], out result2);
-            this.currentPosition += (float) (5 * result2);
-          }
-          else if (s.Equals("savedata"))
-          {
-            if (SaveData.Instance == null)
-            {
-              if (stringList[0].Equals("name", StringComparison.OrdinalIgnoreCase))
-                this.AddWord("Madeline");
-              else
-                this.AddWord("[SD:" + stringList[0] + "]");
-            }
-            else
-              this.AddWord(typeof (SaveData).GetField(stringList[0]).GetValue((object) SaveData.Instance).ToString());
           }
         }
         else
@@ -338,10 +408,10 @@ namespace Celeste
               Position = this.currentPosition,
               Line = this.currentLine,
               Page = this.currentPage,
-              Delay = (this.currentImpact ? 0.0035f : this.currentDelay + num1),
+              Delay = (this.currentImpact ? 0.0034999999f : this.currentDelay + num1),
               Color = this.currentColor,
               Scale = this.currentScale,
-              Rotation = (this.currentMessedUp ? (float) Calc.Random.Choose<int>(-1, 1) * Calc.Random.Choose<float>(0.1745329f, 0.3490658f) : 0.0f),
+              Rotation = (this.currentMessedUp ? (float) Calc.Random.Choose<int>(-1, 1) * Calc.Random.Choose<float>(0.17453292f, 0.34906584f) : 0.0f),
               YOffset = (this.currentMessedUp ? (float) Calc.Random.Choose<int>(-3, -6, 3, 6) : 0.0f),
               Fade = this.startFade,
               Shake = this.currentShake,
@@ -414,46 +484,23 @@ namespace Celeste
 
     public class Portrait : FancyText.Node
     {
-      public int SfxExpression = 1;
       public int Side;
       public string Sprite;
       public string Animation;
       public bool UpsideDown;
       public bool Flipped;
       public bool Pop;
+      public bool Glitchy;
       public string SfxEvent;
+      public int SfxExpression = 1;
 
-      public string SpriteId
-      {
-        get
-        {
-          return "portrait_" + this.Sprite;
-        }
-      }
+      public string SpriteId => "portrait_" + this.Sprite;
 
-      public string BeginAnimation
-      {
-        get
-        {
-          return "begin_" + this.Animation;
-        }
-      }
+      public string BeginAnimation => "begin_" + this.Animation;
 
-      public string IdleAnimation
-      {
-        get
-        {
-          return "idle_" + this.Animation;
-        }
-      }
+      public string IdleAnimation => "idle_" + this.Animation;
 
-      public string TalkAnimation
-      {
-        get
-        {
-          return "talk_" + this.Animation;
-        }
-      }
+      public string TalkAnimation => "talk_" + this.Animation;
     }
 
     public class Wait : FancyText.Node
@@ -496,33 +543,21 @@ namespace Celeste
       public PixelFont Font;
       public float BaseSize;
 
-      public int Count
-      {
-        get
-        {
-          return this.Nodes.Count;
-        }
-      }
+      public int Count => this.Nodes.Count;
 
-      public FancyText.Node this[int index]
-      {
-        get
-        {
-          return this.Nodes[index];
-        }
-      }
+      public FancyText.Node this[int index] => this.Nodes[index];
 
       public int GetCharactersOnPage(int start)
       {
-        int num = 0;
+        int charactersOnPage = 0;
         for (int index = start; index < this.Count; ++index)
         {
           if (this.Nodes[index] is FancyText.Char)
-            ++num;
+            ++charactersOnPage;
           else if (this.Nodes[index] is FancyText.NewPage)
             break;
         }
-        return num;
+        return charactersOnPage;
       }
 
       public int GetNextPageStart(int start)
@@ -555,44 +590,44 @@ namespace Celeste
         int end = 2147483647)
       {
         int num1 = Math.Min(this.Nodes.Count, end);
-        int val1_1 = 0;
-        float val1_2 = 0.0f;
-        float num2 = 0.0f;
+        int num2 = 0;
+        float val1_1 = 0.0f;
+        float num3 = 0.0f;
         PixelFontSize pixelFontSize = this.Font.Get(this.BaseSize);
         for (int index = start; index < num1; ++index)
         {
           if (this.Nodes[index] is FancyText.NewLine)
           {
-            if ((double) val1_2 == 0.0)
-              val1_2 = 1f;
-            num2 += val1_2;
-            val1_2 = 0.0f;
+            if ((double) val1_1 == 0.0)
+              val1_1 = 1f;
+            num3 += val1_1;
+            val1_1 = 0.0f;
           }
           else if (this.Nodes[index] is FancyText.Char)
           {
-            val1_1 = Math.Max(val1_1, (int) (this.Nodes[index] as FancyText.Char).LineWidth);
-            val1_2 = Math.Max(val1_2, (this.Nodes[index] as FancyText.Char).Scale);
+            num2 = Math.Max(num2, (int) (this.Nodes[index] as FancyText.Char).LineWidth);
+            val1_1 = Math.Max(val1_1, (this.Nodes[index] as FancyText.Char).Scale);
           }
           else if (this.Nodes[index] is FancyText.NewPage)
             break;
         }
-        float num3 = num2 + val1_2;
-        position -= justify * new Vector2((float) val1_1, num3 * (float) pixelFontSize.LineHeight) * scale;
-        float val1_3 = 0.0f;
+        float num4 = num3 + val1_1;
+        position -= justify * new Vector2((float) num2, num4 * (float) pixelFontSize.LineHeight) * scale;
+        float val1_2 = 0.0f;
         for (int index = start; index < num1 && !(this.Nodes[index] is FancyText.NewPage); ++index)
         {
           if (this.Nodes[index] is FancyText.NewLine)
           {
-            if ((double) val1_3 == 0.0)
-              val1_3 = 1f;
-            position.Y += (float) pixelFontSize.LineHeight * val1_3 * scale.Y;
-            val1_3 = 0.0f;
+            if ((double) val1_2 == 0.0)
+              val1_2 = 1f;
+            position.Y += (float) pixelFontSize.LineHeight * val1_2 * scale.Y;
+            val1_2 = 0.0f;
           }
           if (this.Nodes[index] is FancyText.Char)
           {
             FancyText.Char node = this.Nodes[index] as FancyText.Char;
             node.Draw(this.Font, this.BaseSize, position, scale, alpha);
-            val1_3 = Math.Max(val1_3, node.Scale);
+            val1_2 = Math.Max(val1_2, node.Scale);
           }
         }
       }
@@ -646,4 +681,3 @@ namespace Celeste
     }
   }
 }
-

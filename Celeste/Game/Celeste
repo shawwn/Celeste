@@ -25,7 +25,14 @@ if [ "$UNAME" == "Darwin" ]; then
 		export DYLD_INSERT_LIBRARIES="$STEAM_DYLD_INSERT_LIBRARIES"
 	fi
 
-	mono ./Celeste.exe "$@"
+  if [ -d /Library/Frameworks/Mono.framework ]
+  then
+    MONO=/Library/Frameworks/Mono.framework/Commands/mono
+  else
+    MONO=mono
+  fi
+
+	exec "$MONO" ./Celeste.exe "$@"
 else
-	mono ./Celeste.exe "$@"
+	exec mono ./Celeste.exe "$@"
 fi

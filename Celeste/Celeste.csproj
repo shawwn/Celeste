@@ -10,6 +10,8 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <ApplicationVersion>1.0.0.0</ApplicationVersion>
     <FileAlignment>512</FileAlignment>
+    <LangVersion>9</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -35,6 +37,9 @@
     <Prefer32bit>true</Prefer32bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FNA">
+      <HintPath>Game\FNA.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -43,6 +48,77 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Celeste\AscendManager.cs" />
+    <Compile Include="Celeste\BirdPath.cs" />
+    <Compile Include="Celeste\BirdPathTrigger.cs" />
+    <Compile Include="Celeste\BlackholeBG.cs" />
+    <Compile Include="Celeste\BlackholeStrengthTrigger.cs" />
+    <Compile Include="Celeste\CrouchDashModes.cs" />
+    <Compile Include="Celeste\CrumbleWallOnRumble.cs" />
+    <Compile Include="Celeste\CS10_BadelineHelps.cs" />
+    <Compile Include="Celeste\CS10_CatchTheBird.cs" />
+    <Compile Include="Celeste\CS10_Ending.cs" />
+    <Compile Include="Celeste\CS10_Farewell.cs" />
+    <Compile Include="Celeste\CS10_FinalRoom.cs" />
+    <Compile Include="Celeste\CS10_FreeBird.cs" />
+    <Compile Include="Celeste\CS10_Gravestone.cs" />
+    <Compile Include="Celeste\CS10_HubIntro.cs" />
+    <Compile Include="Celeste\CS10_MissTheBird.cs" />
+    <Compile Include="Celeste\CS10_MoonIntro.cs" />
+    <Compile Include="Celeste\CutsceneNode.cs" />
+    <Compile Include="Celeste\DetachStrawberryTrigger.cs" />
+    <Compile Include="Celeste\DisperseImage.cs" />
+    <Compile Include="Celeste\FlingBird.cs" />
+    <Compile Include="Celeste\FlingBirdIntro.cs" />
+    <Compile Include="Celeste\FloatySpaceBlock.cs" />
+    <Compile Include="Celeste\Glider.cs" />
+    <Compile Include="Celeste\GoldenBlock.cs" />
+    <Compile Include="Celeste\GrabbyIcon.cs" />
+    <Compile Include="Celeste\GrabModes.cs" />
+    <Compile Include="Celeste\InputMappingInfo.cs" />
+    <Compile Include="Celeste\KevinsPC.cs" />
+    <Compile Include="Celeste\LightningBreakerBox.cs" />
+    <Compile Include="Celeste\LightningRenderer.cs" />
+    <Compile Include="Celeste\LightningStrike.cs" />
+    <Compile Include="Celeste\MoonCreature.cs" />
+    <Compile Include="Celeste\MoonGlitchBackgroundTrigger.cs" />
+    <Compile Include="Celeste\MoonParticle3D.cs" />
+    <Compile Include="Celeste\MTN.cs" />
+    <Compile Include="Celeste\NPC10_Gravestone.cs" />
+    <Compile Include="Celeste\OVR.cs" />
+    <Compile Include="Celeste\PlaybackBillboard.cs" />
+    <Compile Include="Celeste\PlaybackData.cs" />
+    <Compile Include="Celeste\PlayerDashAssist.cs" />
+    <Compile Include="Celeste\PlayerPlayback.cs" />
+    <Compile Include="Celeste\PowerSourceNumber.cs" />
+    <Compile Include="Celeste\PreviewRecording.cs" />
+    <Compile Include="Celeste\Puffer.cs" />
+    <Compile Include="Celeste\PufferCollider.cs" />
+    <Compile Include="Celeste\RainFG.cs" />
+    <Compile Include="Celeste\ReturnMapHint.cs" />
+    <Compile Include="Celeste\RumbleTrigger.cs" />
+    <Compile Include="Celeste\ScreenshakeAmount.cs" />
+    <Compile Include="Celeste\SeekerBarrierRenderer.cs" />
+    <Compile Include="Celeste\SFX.cs" />
+    <Compile Include="Celeste\SpawnFacingTrigger.cs" />
+    <Compile Include="Celeste\StadiaStat.cs" />
+    <Compile Include="Celeste\StardustFG.cs" />
+    <Compile Include="Celeste\StarfieldWipe.cs" />
+    <Compile Include="Celeste\StarRotateSpinner.cs" />
+    <Compile Include="Celeste\StarTrackSpinner.cs" />
+    <Compile Include="Celeste\StatsForStadia.cs" />
+    <Compile Include="Celeste\WaveDashPage.cs" />
+    <Compile Include="Celeste\WaveDashPage00.cs" />
+    <Compile Include="Celeste\WaveDashPage01.cs" />
+    <Compile Include="Celeste\WaveDashPage02.cs" />
+    <Compile Include="Celeste\WaveDashPage03.cs" />
+    <Compile Include="Celeste\WaveDashPage04.cs" />
+    <Compile Include="Celeste\WaveDashPage05.cs" />
+    <Compile Include="Celeste\WaveDashPage06.cs" />
+    <Compile Include="Celeste\WaveDashPlaybackTutorial.cs" />
+    <Compile Include="Celeste\WaveDashPresentation.cs" />
+    <Compile Include="Celeste\WaveDashTutorialMachine.cs" />
+    <Compile Include="Monocle\Binding.cs" />
     <Compile Include="SimplexNoise\Noise.cs" />
     <Compile Include="FMOD\VERSION.cs" />
     <Compile Include="FMOD\CONSTANTS.cs" />
@@ -467,7 +543,6 @@
     <Compile Include="Celeste\RidgeGate.cs" />
     <Compile Include="Celeste\StarJumpController.cs" />
     <Compile Include="Celeste\StarJumpBlock.cs" />
-    <Compile Include="Celeste\SummitBackgroundManager.cs" />
     <Compile Include="Celeste\SummitCheckpoint.cs" />
     <Compile Include="Celeste\SummitGemManager.cs" />
     <Compile Include="Celeste\TheoPhone.cs" />
@@ -896,12 +971,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Microsoft\Xna\Framework.RuntimeProfile" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FNA\FNA.csproj">
-      <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
-      <Name>FNA</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

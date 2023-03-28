@@ -1,11 +1,10 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.CassetteBlockManager
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using FMOD.Studio;
-using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 
@@ -14,12 +13,14 @@ namespace Celeste
   [Tracked(false)]
   public class CassetteBlockManager : Entity
   {
-    private int leadBeats = 16;
     private int currentIndex;
     private float beatTimer;
     private int beatIndex;
     private float tempoMult;
+    private int leadBeats;
     private int maxBeat;
+    private bool isLevelMusic;
+    private int beatIndexOffset;
     private EventInstance sfx;
     private EventInstance snapshot;
 
@@ -46,7 +47,18 @@ namespace Celeste
     public override void Awake(Scene scene)
     {
       base.Awake(scene);
-      this.snapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute", true);
+      this.isLevelMusic = AreaData.Areas[this.SceneAs<Level>().Session.Area.ID].CassetteSong == null;
+      if (this.isLevelMusic)
+      {
+        this.leadBeats = 0;
+        this.beatIndexOffset = 5;
+      }
+      else
+      {
+        this.beatIndexOffset = 0;
+        this.leadBeats = 16;
+        this.snapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute");
+      }
       this.maxBeat = this.SceneAs<Level>().CassetteBlockBeats;
       this.tempoMult = this.SceneAs<Level>().CassetteBlockTempo;
     }
@@ -54,23 +66,29 @@ namespace Celeste
     public override void Removed(Scene scene)
     {
       base.Removed(scene);
-      Audio.Stop(this.snapshot, true);
-      Audio.Stop(this.sfx, true);
+      if (this.isLevelMusic)
+        return;
+      Audio.Stop(this.snapshot);
+      Audio.Stop(this.sfx);
     }
 
     public override void SceneEnd(Scene scene)
     {
       base.SceneEnd(scene);
-      Audio.Stop(this.snapshot, true);
-      Audio.Stop(this.sfx, true);
+      if (this.isLevelMusic)
+        return;
+      Audio.Stop(this.snapshot);
+      Audio.Stop(this.sfx);
     }
 
     public override void Update()
     {
       base.Update();
-      if ((HandleBase) this.sfx == (HandleBase) null)
+      if (this.isLevelMusic)
+        this.sfx = Audio.CurrentMusicEventInstance;
+      if ((HandleBase) this.sfx == (HandleBase) null && !this.isLevelMusic)
       {
-        this.sfx = Audio.CreateInstance(AreaData.Areas[this.SceneAs<Level>().Session.Area.ID].CassetteSong, new Vector2?());
+        this.sfx = Audio.CreateInstance(AreaData.Areas[this.SceneAs<Level>().Session.Area.ID].CassetteSong);
         Audio.Play("event:/game/general/cassette_block_switch_2");
       }
       else
@@ -81,9 +99,9 @@ namespace Celeste
     {
       double beatTimer = (double) this.beatTimer;
       this.beatTimer += time;
-      if ((double) this.beatTimer < 0.16666667163372)
+      if ((double) this.beatTimer < 0.1666666716337204)
         return;
-      this.beatTimer -= 0.1666667f;
+      this.beatTimer -= 0.16666667f;
       ++this.beatIndex;
       this.beatIndex %= 256;
       if (this.beatIndex % 8 == 0)
@@ -91,12 +109,13 @@ namespace Celeste
         ++this.currentIndex;
         this.currentIndex %= this.maxBeat;
         this.SetActiveIndex(this.currentIndex);
-        Audio.Play("event:/game/general/cassette_block_switch_2");
+        if (!this.isLevelMusic)
+          Audio.Play("event:/game/general/cassette_block_switch_2");
         Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
       }
       else if ((this.beatIndex + 1) % 8 == 0)
         this.SetWillActivate((this.currentIndex + 1) % this.maxBeat);
-      else if ((this.beatIndex + 4) % 8 == 0)
+      else if ((this.beatIndex + 4) % 8 == 0 && !this.isLevelMusic)
         Audio.Play("event:/game/general/cassette_block_switch_1");
       if (this.leadBeats > 0)
       {
@@ -104,29 +123,42 @@ namespace Celeste
         if (this.leadBeats == 0)
         {
           this.beatIndex = 0;
-          int num = (int) this.sfx.start();
+          if (!this.isLevelMusic)
+          {
+            int num = (int) this.sfx.start();
+          }
         }
       }
       if (this.leadBeats > 0)
         return;
-      int num1 = (int) this.sfx.setParameterValue("sixteenth_note", (float) (this.beatIndex + 1));
+      // TKTK: Why is this.sfx null?
+      if (sfx == null)
+        return;
+      int num1 = (int) this.sfx.setParameterValue("sixteenth_note", (float) this.GetSixteenthNote());
     }
+
+    public int GetSixteenthNote() => (this.beatIndex + this.beatIndexOffset) % 256 + 1;
 
     public void StopBlocks()
     {
       foreach (CassetteBlock entity in this.Scene.Tracker.GetEntities<CassetteBlock>())
         entity.Finish();
-      Audio.Stop(this.sfx, true);
+      if (this.isLevelMusic)
+        return;
+      Audio.Stop(this.sfx);
     }
 
     public void Finish()
     {
-      Audio.Stop(this.snapshot, true);
+      if (!this.isLevelMusic)
+        Audio.Stop(this.snapshot);
       this.RemoveSelf();
     }
 
     public void OnLevelStart()
     {
+      this.maxBeat = this.SceneAs<Level>().CassetteBlockBeats;
+      this.tempoMult = this.SceneAs<Level>().CassetteBlockTempo;
       this.currentIndex = this.beatIndex % 8 < 5 ? this.maxBeat - 1 : this.maxBeat - 2;
       this.SilentUpdateBlocks();
     }
@@ -134,7 +166,10 @@ namespace Celeste
     private void SilentUpdateBlocks()
     {
       foreach (CassetteBlock entity in this.Scene.Tracker.GetEntities<CassetteBlock>())
-        entity.SetActivatedSilently(entity.Index == this.currentIndex);
+      {
+        if (entity.ID.Level == this.SceneAs<Level>().Session.Level)
+          entity.SetActivatedSilently(entity.Index == this.currentIndex);
+      }
     }
 
     public void SetActiveIndex(int index)

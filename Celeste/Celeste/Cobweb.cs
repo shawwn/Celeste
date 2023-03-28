@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Cobweb
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -45,7 +45,7 @@ namespace Celeste
     public override void Added(Scene scene)
     {
       base.Added(scene);
-      this.color = AreaData.Get(scene).CobwebColor;
+      this.color = Calc.Random.Choose<Color>(AreaData.Get(scene).CobwebColor);
       this.edge = Color.Lerp(this.color, Calc.HexToColor("0f0e17"), 0.2f);
       if (!this.Scene.CollideCheck<Solid>(new Rectangle((int) this.anchorA.X - 2, (int) this.anchorA.Y - 2, 4, 4)) || !this.Scene.CollideCheck<Solid>(new Rectangle((int) this.anchorB.X - 2, (int) this.anchorB.Y - 2, 4, 4)))
         this.RemoveSelf();
@@ -67,10 +67,7 @@ namespace Celeste
       base.Update();
     }
 
-    public override void Render()
-    {
-      this.DrawCobweb(this.anchorA, this.anchorB, 12, true);
-    }
+    public override void Render() => this.DrawCobweb(this.anchorA, this.anchorB, 12, true);
 
     private void DrawCobweb(Vector2 a, Vector2 b, int steps, bool drawOffshoots)
     {
@@ -91,4 +88,3 @@ namespace Celeste
     }
   }
 }
-

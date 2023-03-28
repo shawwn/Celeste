@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.SoundSource
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using FMOD.Studio;
 using Microsoft.Xna.Framework;
@@ -13,30 +13,19 @@ namespace Celeste
   [Tracked(false)]
   public class SoundSource : Component
   {
+    public string EventName;
     public Vector2 Position = Vector2.Zero;
     public bool DisposeOnTransition = true;
-    public string EventName;
+    public bool RemoveOnOneshotEnd;
     private EventInstance instance;
     private bool is3D;
     private bool isOneshot;
 
     public bool Playing { get; private set; }
 
-    public bool Is3D
-    {
-      get
-      {
-        return this.is3D;
-      }
-    }
+    public bool Is3D => this.is3D;
 
-    public bool IsOneshot
-    {
-      get
-      {
-        return this.isOneshot;
-      }
-    }
+    public bool IsOneshot => this.isOneshot;
 
     public bool InstancePlaying
     {
@@ -61,19 +50,25 @@ namespace Celeste
     public SoundSource(string path)
       : this()
     {
-      this.Play(path, (string) null, 0.0f);
+      this.Play(path);
     }
 
     public SoundSource(Vector2 offset, string path)
       : this()
     {
       this.Position = offset;
-      this.Play(path, (string) null, 0.0f);
+      this.Play(path);
+    }
+
+    public override void Added(Entity entity)
+    {
+      base.Added(entity);
+      this.UpdateSfxPosition();
     }
 
     public SoundSource Play(string path, string param = null, float value = 0.0f)
     {
-      this.Stop(true);
+      this.Stop();
       this.EventName = path;
       EventDescription eventDescription = Audio.GetEventDescription(path);
       if ((HandleBase) eventDescription != (HandleBase) null)
@@ -93,9 +88,9 @@ namespace Celeste
         }
         if (param != null)
         {
-          int num1 = (int) this.instance.setParameterValue(param, value);
+          int num3 = (int) this.instance.setParameterValue(param, value);
         }
-        int num2 = (int) this.instance.start();
+        int num4 = (int) this.instance.start();
         this.Playing = true;
       }
       return this;
@@ -143,37 +138,43 @@ namespace Celeste
       return this;
     }
 
+    public void UpdateSfxPosition()
+    {
+      if (!this.is3D || !((HandleBase) this.instance != (HandleBase) null))
+        return;
+      Vector2 position = this.Position;
+      if (this.Entity != null)
+        position += this.Entity.Position;
+      Audio.Position(this.instance, position);
+    }
+
     public override void Update()
     {
-      if (this.is3D && (HandleBase) this.instance != (HandleBase) null)
-      {
-        Vector2 position = this.Position;
-        if (this.Entity != null)
-          position += this.Entity.Position;
-        Audio.Position(this.instance, position);
-      }
+      this.UpdateSfxPosition();
       if (!this.isOneshot || !((HandleBase) this.instance != (HandleBase) null))
         return;
       PLAYBACK_STATE state;
       int playbackState = (int) this.instance.getPlaybackState(out state);
-      if (state == PLAYBACK_STATE.STOPPED)
-      {
-        int num = (int) this.instance.release();
-        this.instance = (EventInstance) null;
-        this.Playing = false;
-      }
+      if (state != PLAYBACK_STATE.STOPPED)
+        return;
+      int num = (int) this.instance.release();
+      this.instance = (EventInstance) null;
+      this.Playing = false;
+      if (!this.RemoveOnOneshotEnd)
+        return;
+      this.RemoveSelf();
     }
 
     public override void EntityRemoved(Scene scene)
     {
       base.EntityRemoved(scene);
-      this.Stop(true);
+      this.Stop();
     }
 
     public override void Removed(Entity entity)
     {
       base.Removed(entity);
-      this.Stop(true);
+      this.Stop();
     }
 
     public override void SceneEnd(Scene scene)
@@ -187,8 +188,9 @@ namespace Celeste
       Vector2 position = this.Position;
       if (this.Entity != null)
         position += this.Entity.Position;
+      if ((HandleBase) this.instance != (HandleBase) null && this.Playing)
+        Draw.Circle(position, (float) (4.0 + (double) this.Scene.RawTimeActive * 2.0 % 1.0 * 16.0), Color.BlueViolet, 16);
       Draw.HollowRect(position.X - 2f, position.Y - 2f, 4f, 4f, Color.BlueViolet);
     }
   }
 }
-

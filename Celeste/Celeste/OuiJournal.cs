@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.OuiJournal
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,97 +15,76 @@ namespace Celeste
 {
   public class OuiJournal : Oui
   {
-    public List<OuiJournalPage> Pages = new List<OuiJournalPage>();
-    public int PageIndex = 0;
-    private bool turningPage = false;
-    private Color backColor = Color.Lerp(Color.White, Color.Black, 0.2f);
-    private MTexture arrow = GFX.Journal["pageArrow"];
     private const float onScreenX = 0.0f;
     private const float offScreenX = -1920f;
     public bool PageTurningLocked;
+    public List<OuiJournalPage> Pages = new List<OuiJournalPage>();
+    public int PageIndex;
     public VirtualRenderTarget CurrentPageBuffer;
     public VirtualRenderTarget NextPageBuffer;
+    private bool turningPage;
     private float turningScale;
+    private Color backColor = Color.Lerp(Color.White, Color.Black, 0.2f);
     private bool fromAreaInspect;
     private float rotation;
     private MountainCamera cameraStart;
     private MountainCamera cameraEnd;
+    private MTexture arrow = MTN.Journal["pageArrow"];
     private float dot;
     private float dotTarget;
     private float dotEase;
     private float leftArrowEase;
     private float rightArrowEase;
 
-    public OuiJournalPage Page
-    {
-      get
-      {
-        return this.Pages[this.PageIndex];
-      }
-    }
+    public OuiJournalPage Page => this.Pages[this.PageIndex];
 
-    public OuiJournalPage NextPage
-    {
-      get
-      {
-        return this.Pages[this.PageIndex + 1];
-      }
-    }
+    public OuiJournalPage NextPage => this.Pages[this.PageIndex + 1];
 
-    public OuiJournalPage PrevPage
-    {
-      get
-      {
-        return this.Pages[this.PageIndex - 1];
-      }
-    }
+    public OuiJournalPage PrevPage => this.Pages[this.PageIndex - 1];
 
     public override IEnumerator Enter(Oui from)
     {
+      OuiJournal journal = this;
       Stats.MakeRequest();
-      this.Overworld.ShowConfirmUI = false;
-      this.fromAreaInspect = from is OuiChapterPanel;
-      this.PageIndex = 0;
-      this.Visible = true;
-      this.X = -1920f;
-      this.turningPage = false;
-      this.turningScale = 1f;
-      this.rotation = 0.0f;
-      this.dot = 0.0f;
-      this.dotTarget = 0.0f;
-      this.dotEase = 0.0f;
-      this.leftArrowEase = 0.0f;
-      this.rightArrowEase = 0.0f;
-      this.NextPageBuffer = VirtualContent.CreateRenderTarget("journal-a", 1610, 1000, false, true, 0);
-      this.CurrentPageBuffer = VirtualContent.CreateRenderTarget("journal-b", 1610, 1000, false, true, 0);
-      this.Pages.Add((OuiJournalPage) new OuiJournalCover(this));
-      this.Pages.Add((OuiJournalPage) new OuiJournalProgress(this));
-      this.Pages.Add((OuiJournalPage) new OuiJournalSpeedrun(this));
-      this.Pages.Add((OuiJournalPage) new OuiJournalDeaths(this));
-      this.Pages.Add((OuiJournalPage) new OuiJournalPoem(this));
+      journal.Overworld.ShowConfirmUI = false;
+      journal.fromAreaInspect = from is OuiChapterPanel;
+      journal.PageIndex = 0;
+      journal.Visible = true;
+      journal.X = -1920f;
+      journal.turningPage = false;
+      journal.turningScale = 1f;
+      journal.rotation = 0.0f;
+      journal.dot = 0.0f;
+      journal.dotTarget = 0.0f;
+      journal.dotEase = 0.0f;
+      journal.leftArrowEase = 0.0f;
+      journal.rightArrowEase = 0.0f;
+      journal.NextPageBuffer = VirtualContent.CreateRenderTarget("journal-a", 1610, 1000);
+      journal.CurrentPageBuffer = VirtualContent.CreateRenderTarget("journal-b", 1610, 1000);
+      journal.Pages.Add((OuiJournalPage) new OuiJournalCover(journal));
+      journal.Pages.Add((OuiJournalPage) new OuiJournalProgress(journal));
+      journal.Pages.Add((OuiJournalPage) new OuiJournalSpeedrun(journal));
+      journal.Pages.Add((OuiJournalPage) new OuiJournalDeaths(journal));
+      journal.Pages.Add((OuiJournalPage) new OuiJournalPoem(journal));
       if (Stats.Has())
-        this.Pages.Add((OuiJournalPage) new OuiJournalGlobal(this));
-      int i = 0;
-      foreach (OuiJournalPage page1 in this.Pages)
-      {
-        OuiJournalPage page = page1;
-        page.PageIndex = i++;
-        page = (OuiJournalPage) null;
-      }
-      this.Pages[0].Redraw(this.CurrentPageBuffer);
-      this.cameraStart = this.Overworld.Mountain.UntiltedCamera;
-      this.cameraEnd = this.cameraStart;
-      this.cameraEnd.Position += -this.cameraStart.Rotation.Forward() * 1f;
-      double num = (double) this.Overworld.Mountain.EaseCamera(this.Overworld.Mountain.Area, this.cameraEnd, new float?(2f), true, false);
-      this.Overworld.Mountain.AllowUserRotation = false;
+        journal.Pages.Add((OuiJournalPage) new OuiJournalGlobal(journal));
+      int num1 = 0;
+      foreach (OuiJournalPage page in journal.Pages)
+        page.PageIndex = num1++;
+      journal.Pages[0].Redraw(journal.CurrentPageBuffer);
+      journal.cameraStart = journal.Overworld.Mountain.UntiltedCamera;
+      journal.cameraEnd = journal.cameraStart;
+      journal.cameraEnd.Position += -journal.cameraStart.Rotation.Forward() * 1f;
+      double num2 = (double) journal.Overworld.Mountain.EaseCamera(journal.Overworld.Mountain.Area, journal.cameraEnd, new float?(2f));
+      journal.Overworld.Mountain.AllowUserRotation = false;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / 0.4f)
       {
-        this.rotation = -0.025f * Ease.BackOut(p);
-        this.X = (float) (1920.0 * (double) Ease.CubeInOut(p) - 1920.0);
-        this.dotEase = p;
+        journal.rotation = -0.025f * Ease.BackOut(p);
+        journal.X = (float) (1920.0 * (double) Ease.CubeInOut(p) - 1920.0);
+        journal.dotEase = p;
         yield return (object) null;
       }
-      this.dotEase = 1f;
+      journal.dotEase = 1f;
     }
 
     public override void HandleGraphicsReset()
@@ -145,31 +124,33 @@ namespace Celeste
 
     public override IEnumerator Leave(Oui next)
     {
+      OuiJournal ouiJournal = this;
       Audio.Play("event:/ui/world_map/journal/back");
-      double num = (double) this.Overworld.Mountain.EaseCamera(this.Overworld.Mountain.Area, this.cameraStart, new float?(0.4f), true, false);
+      double num = (double) ouiJournal.Overworld.Mountain.EaseCamera(ouiJournal.Overworld.Mountain.Area, ouiJournal.cameraStart, new float?(0.4f));
       UserIO.SaveHandler(false, true);
-      yield return (object) this.EaseOut(0.4f);
+      yield return (object) ouiJournal.EaseOut(0.4f);
       while (UserIO.Saving)
         yield return (object) null;
-      this.CurrentPageBuffer.Dispose();
-      this.NextPageBuffer.Dispose();
-      this.Overworld.ShowConfirmUI = true;
-      this.Pages.Clear();
-      this.Visible = false;
-      this.Overworld.Mountain.AllowUserRotation = true;
+      ouiJournal.CurrentPageBuffer.Dispose();
+      ouiJournal.NextPageBuffer.Dispose();
+      ouiJournal.Overworld.ShowConfirmUI = true;
+      ouiJournal.Pages.Clear();
+      ouiJournal.Visible = false;
+      ouiJournal.Overworld.Mountain.AllowUserRotation = true;
     }
 
     private IEnumerator EaseOut(float duration)
     {
-      float rotFrom = this.rotation;
+      OuiJournal ouiJournal = this;
+      float rotFrom = ouiJournal.rotation;
       for (float p = 0.0f; (double) p < 1.0; p += Engine.DeltaTime / duration)
       {
-        this.rotation = rotFrom * (1f - Ease.BackOut(p));
-        this.X = (float) (0.0 + -1920.0 * (double) Ease.CubeInOut(p));
-        this.dotEase = 1f - p;
+        ouiJournal.rotation = rotFrom * (1f - Ease.BackOut(p));
+        ouiJournal.X = (float) (0.0 + -1920.0 * (double) Ease.CubeInOut(p));
+        ouiJournal.dotEase = 1f - p;
         yield return (object) null;
       }
-      this.dotEase = 0.0f;
+      ouiJournal.dotEase = 0.0f;
     }
 
     public override void Update()
@@ -189,7 +170,7 @@ namespace Celeste
             Audio.Play("event:/ui/world_map/journal/page_cover_back");
           else
             Audio.Play("event:/ui/world_map/journal/page_main_back");
-          this.Add((Component) new Coroutine(this.TurnPage(-1), true));
+          this.Add((Component) new Coroutine(this.TurnPage(-1)));
         }
         else if (Input.MenuRight.Pressed && this.PageIndex < this.Pages.Count - 1)
         {
@@ -197,11 +178,12 @@ namespace Celeste
             Audio.Play("event:/ui/world_map/journal/page_cover_forward");
           else
             Audio.Play("event:/ui/world_map/journal/page_main_forward");
-          this.Add((Component) new Coroutine(this.TurnPage(1), true));
+          this.Add((Component) new Coroutine(this.TurnPage(1)));
         }
       }
-      if (!this.PageTurningLocked && (Input.MenuJournal.Pressed || Input.MenuCancel.Pressed))
-        this.Close();
+      if (this.PageTurningLocked || !Input.MenuJournal.Pressed && !Input.MenuCancel.Pressed)
+        return;
+      this.Close();
     }
 
     private void Close()
@@ -217,20 +199,24 @@ namespace Celeste
       Vector2 position = this.Position + new Vector2(128f, 120f);
       float x1 = Ease.CubeInOut(Math.Max(0.0f, this.turningScale));
       float num1 = Ease.CubeInOut(Math.Abs(Math.Min(0.0f, this.turningScale)));
-      MTexture mtexture1 = GFX.Journal["edge"];
+      if (SaveData.Instance.CheatMode)
+        MTN.FileSelect["cheatmode"].DrawCentered(position + new Vector2(80f, 360f), Color.White, 1f, 1.5707964f);
+      if (SaveData.Instance.AssistMode)
+        MTN.FileSelect["assist"].DrawCentered(position + new Vector2(100f, 370f), Color.White, 1f, 1.5707964f);
+      MTexture mtexture1 = MTN.Journal["edge"];
       mtexture1.Draw(position + new Vector2((float) -mtexture1.Width, 0.0f), Vector2.Zero, Color.White, 1f, this.rotation);
       if (this.PageIndex > 0)
-        GFX.Journal[this.PrevPage.PageTexture].Draw(position, Vector2.Zero, this.backColor, new Vector2(-1f, 1f), this.rotation);
+        MTN.Journal[this.PrevPage.PageTexture].Draw(position, Vector2.Zero, this.backColor, new Vector2(-1f, 1f), this.rotation);
       if (this.turningPage)
       {
-        GFX.Journal[this.NextPage.PageTexture].Draw(position, Vector2.Zero, Color.White, 1f, this.rotation);
+        MTN.Journal[this.NextPage.PageTexture].Draw(position, Vector2.Zero, Color.White, 1f, this.rotation);
         Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.NextPageBuffer, position, new Rectangle?(this.NextPageBuffer.Bounds), Color.White, this.rotation, Vector2.Zero, Vector2.One, SpriteEffects.None, 0.0f);
       }
       if (this.turningPage && (double) num1 > 0.0)
-        GFX.Journal[this.Page.PageTexture].Draw(position, Vector2.Zero, this.backColor, new Vector2(-1f * num1, 1f), this.rotation);
+        MTN.Journal[this.Page.PageTexture].Draw(position, Vector2.Zero, this.backColor, new Vector2(-1f * num1, 1f), this.rotation);
       if ((double) x1 > 0.0)
       {
-        GFX.Journal[this.Page.PageTexture].Draw(position, Vector2.Zero, Color.White, new Vector2(x1, 1f), this.rotation);
+        MTN.Journal[this.Page.PageTexture].Draw(position, Vector2.Zero, Color.White, new Vector2(x1, 1f), this.rotation);
         Draw.SpriteBatch.Draw((Texture2D) (RenderTarget2D) this.CurrentPageBuffer, position, new Rectangle?(this.CurrentPageBuffer.Bounds), Color.White, this.rotation, Vector2.Zero, new Vector2(x1, 1f), SpriteEffects.None, 0.0f);
       }
       if (this.Pages.Count <= 0)
@@ -248,4 +234,3 @@ namespace Celeste
     }
   }
 }
-

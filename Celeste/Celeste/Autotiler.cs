@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Autotiler
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -58,28 +58,30 @@ namespace Celeste
           XmlElement xml1 = obj as XmlElement;
           string str1 = xml1.Attr("mask");
           Autotiler.Tiles tiles;
-          if (str1 == "center")
-            tiles = data.Center;
-          else if (str1 == "padding")
+          switch (str1)
           {
-            tiles = data.Padded;
-          }
-          else
-          {
-            Autotiler.Masked masked = new Autotiler.Masked();
-            tiles = masked.Tiles;
-            int index = 0;
-            int num = 0;
-            for (; index < str1.Length; ++index)
-            {
-              if (str1[index] == '0')
-                masked.Mask[num++] = (byte) 0;
-              else if (str1[index] == '1')
-                masked.Mask[num++] = (byte) 1;
-              else if (str1[index] == 'x' || str1[index] == 'X')
-                masked.Mask[num++] = (byte) 2;
-            }
-            data.Masked.Add(masked);
+            case "center":
+              tiles = data.Center;
+              break;
+            case "padding":
+              tiles = data.Padded;
+              break;
+            default:
+              Autotiler.Masked masked = new Autotiler.Masked();
+              tiles = masked.Tiles;
+              int index = 0;
+              int num = 0;
+              for (; index < str1.Length; ++index)
+              {
+                if (str1[index] == '0')
+                  masked.Mask[num++] = (byte) 0;
+                else if (str1[index] == '1')
+                  masked.Mask[num++] = (byte) 1;
+                else if (str1[index] == 'x' || str1[index] == 'X')
+                  masked.Mask[num++] = (byte) 2;
+              }
+              data.Masked.Add(masked);
+              break;
           }
           string str2 = xml1.Attr("tiles");
           char[] chArray1 = new char[1]{ ';' };
@@ -87,17 +89,17 @@ namespace Celeste
           {
             char[] chArray2 = new char[1]{ ',' };
             string[] strArray = str3.Split(chArray2);
-            int index1 = int.Parse(strArray[0]);
-            int index2 = int.Parse(strArray[1]);
-            MTexture mtexture = tileset[index1, index2];
+            int x = int.Parse(strArray[0]);
+            int y = int.Parse(strArray[1]);
+            MTexture mtexture = tileset[x, y];
             tiles.Textures.Add(mtexture);
           }
           if (xml1.HasAttr("sprites"))
           {
-            string str3 = xml1.Attr("sprites");
-            char[] chArray2 = new char[1]{ ',' };
-            foreach (string str4 in str3.Split(chArray2))
-              tiles.OverlapSprites.Add(str4);
+            string str4 = xml1.Attr("sprites");
+            char[] chArray3 = new char[1]{ ',' };
+            foreach (string str5 in str4.Split(chArray3))
+              tiles.OverlapSprites.Add(str5);
             tiles.HasOverlays = true;
           }
         }
@@ -117,9 +119,7 @@ namespace Celeste
       }));
     }
 
-    public Autotiler.Generated GenerateMap(
-      VirtualMap<char> mapData,
-      bool paddingIgnoreOutOfLevel)
+    public Autotiler.Generated GenerateMap(VirtualMap<char> mapData, bool paddingIgnoreOutOfLevel)
     {
       Autotiler.Behaviour behaviour = new Autotiler.Behaviour()
       {
@@ -130,10 +130,9 @@ namespace Celeste
       return this.Generate(mapData, 0, 0, mapData.Columns, mapData.Rows, false, '0', behaviour);
     }
 
-    public Autotiler.Generated GenerateBox(char id, int tilesX, int tilesY)
-    {
-      return this.Generate((VirtualMap<char>) null, 0, 0, tilesX, tilesY, true, id, new Autotiler.Behaviour());
-    }
+    public Autotiler.Generated GenerateMap(VirtualMap<char> mapData, Autotiler.Behaviour behaviour) => this.Generate(mapData, 0, 0, mapData.Columns, mapData.Rows, false, '0', behaviour);
+
+    public Autotiler.Generated GenerateBox(char id, int tilesX, int tilesY) => this.Generate((VirtualMap<char>) null, 0, 0, tilesX, tilesY, true, id, new Autotiler.Behaviour());
 
     public Autotiler.Generated GenerateOverlay(
       char id,
@@ -190,7 +189,7 @@ namespace Celeste
                   {
                     tileGrid.Tiles[x2 - startX, y2 - startY] = Calc.Random.Choose<MTexture>(tiles.Textures);
                     if (tiles.HasOverlays)
-                      animatedTiles.Set(x2 - startX, y2 - startY, Calc.Random.Choose<string>(tiles.OverlapSprites), 1f, 1f);
+                      animatedTiles.Set(x2 - startX, y2 - startY, Calc.Random.Choose<string>(tiles.OverlapSprites));
                   }
                 }
               }
@@ -209,7 +208,7 @@ namespace Celeste
             {
               tileGrid.Tiles[x - startX, y - startY] = Calc.Random.Choose<MTexture>(tiles.Textures);
               if (tiles.HasOverlays)
-                animatedTiles.Set(x - startX, y - startY, Calc.Random.Choose<string>(tiles.OverlapSprites), 1f, 1f);
+                animatedTiles.Set(x - startX, y - startY, Calc.Random.Choose<string>(tiles.OverlapSprites));
             }
           }
         }
@@ -248,20 +247,16 @@ namespace Celeste
         }
       }
       if (flag1)
-      {
-        if (behaviour.PaddingIgnoreOutOfLevel ? !this.CheckTile(set, mapData, x - 2, y, forceFill, behaviour) && this.CheckForSameLevel(x, y, x - 2, y) || !this.CheckTile(set, mapData, x + 2, y, forceFill, behaviour) && this.CheckForSameLevel(x, y, x + 2, y) || !this.CheckTile(set, mapData, x, y - 2, forceFill, behaviour) && this.CheckForSameLevel(x, y, x, y - 2) || !this.CheckTile(set, mapData, x, y + 2, forceFill, behaviour) && this.CheckForSameLevel(x, y, x, y + 2) : !this.CheckTile(set, mapData, x - 2, y, forceFill, behaviour) || !this.CheckTile(set, mapData, x + 2, y, forceFill, behaviour) || !this.CheckTile(set, mapData, x, y - 2, forceFill, behaviour) || !this.CheckTile(set, mapData, x, y + 2, forceFill, behaviour))
-          return this.lookup[tile].Padded;
-        return this.lookup[tile].Center;
-      }
+        return (behaviour.PaddingIgnoreOutOfLevel ? !this.CheckTile(set, mapData, x - 2, y, forceFill, behaviour) && this.CheckForSameLevel(x, y, x - 2, y) || !this.CheckTile(set, mapData, x + 2, y, forceFill, behaviour) && this.CheckForSameLevel(x, y, x + 2, y) || !this.CheckTile(set, mapData, x, y - 2, forceFill, behaviour) && this.CheckForSameLevel(x, y, x, y - 2) || !this.CheckTile(set, mapData, x, y + 2, forceFill, behaviour) && this.CheckForSameLevel(x, y, x, y + 2) : !this.CheckTile(set, mapData, x - 2, y, forceFill, behaviour) || !this.CheckTile(set, mapData, x + 2, y, forceFill, behaviour) || !this.CheckTile(set, mapData, x, y - 2, forceFill, behaviour) || !this.CheckTile(set, mapData, x, y + 2, forceFill, behaviour)) ? this.lookup[tile].Padded : this.lookup[tile].Center;
       foreach (Autotiler.Masked masked in set.Masked)
       {
-        bool flag2 = true;
-        for (int index = 0; index < 9 & flag2; ++index)
+        bool flag3 = true;
+        for (int index = 0; index < 9 & flag3; ++index)
         {
           if (masked.Mask[index] != (byte) 2 && (int) masked.Mask[index] != (int) this.adjacent[index])
-            flag2 = false;
+            flag3 = false;
         }
-        if (flag2)
+        if (flag3)
           return masked.Tiles;
       }
       return (Autotiler.Tiles) null;
@@ -311,41 +306,33 @@ namespace Celeste
       if (forceFill.Contains(x, y))
         return forceID;
       if (mapData == null)
-      {
-        if (!behaviour.EdgesExtend)
-          return '0';
-        return forceID;
-      }
+        return !behaviour.EdgesExtend ? '0' : forceID;
       if (x >= 0 && y >= 0 && x < mapData.Columns && y < mapData.Rows)
         return mapData[x, y];
       if (!behaviour.EdgesExtend)
         return '0';
-      int index1 = Calc.Clamp(x, 0, mapData.Columns - 1);
-      int index2 = Calc.Clamp(y, 0, mapData.Rows - 1);
-      return mapData[index1, index2];
+      int x1 = Calc.Clamp(x, 0, mapData.Columns - 1);
+      int y1 = Calc.Clamp(y, 0, mapData.Rows - 1);
+      return mapData[x1, y1];
     }
 
-    private bool IsEmpty(char id)
-    {
-      return id == '0' || id == char.MinValue;
-    }
+    private bool IsEmpty(char id) => id == '0' || id == char.MinValue;
 
     private class TerrainType
     {
+      public char ID;
       public HashSet<char> Ignores = new HashSet<char>();
       public List<Autotiler.Masked> Masked = new List<Autotiler.Masked>();
       public Autotiler.Tiles Center = new Autotiler.Tiles();
       public Autotiler.Tiles Padded = new Autotiler.Tiles();
-      public char ID;
 
-      public TerrainType(char id)
-      {
-        this.ID = id;
-      }
+      public TerrainType(char id) => this.ID = id;
 
       public bool Ignore(char c)
       {
-        return (int) this.ID != (int) c && (this.Ignores.Contains(c) || this.Ignores.Contains('*'));
+        if ((int) this.ID == (int) c)
+          return false;
+        return this.Ignores.Contains(c) || this.Ignores.Contains('*');
       }
     }
 
@@ -359,7 +346,7 @@ namespace Celeste
     {
       public List<MTexture> Textures = new List<MTexture>();
       public List<string> OverlapSprites = new List<string>();
-      public bool HasOverlays = false;
+      public bool HasOverlays;
     }
 
     public struct Generated
@@ -376,4 +363,3 @@ namespace Celeste
     }
   }
 }
-

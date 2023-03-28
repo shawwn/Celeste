@@ -1,257 +1,229 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Monocle.VirtualJoystick
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
 
 namespace Monocle
 {
   public class VirtualJoystick : VirtualInput
   {
-    public List<VirtualJoystick.Node> Nodes;
-    public bool Normalized;
-    public float? SnapSlices;
+    public Binding Up;
+    public Binding Down;
+    public Binding Left;
+    public Binding Right;
+    public Binding UpAlt;
+    public Binding DownAlt;
+    public Binding LeftAlt;
+    public Binding RightAlt;
+    public float Threshold;
+    public int GamepadIndex;
+    public VirtualInput.OverlapBehaviors OverlapBehavior;
     public bool InvertedX;
     public bool InvertedY;
+    private Vector2 value;
+    private Vector2 previousValue;
+    private bool hTurned;
+    private bool vTurned;
 
     public Vector2 Value { get; private set; }
 
     public Vector2 PreviousValue { get; private set; }
 
-    public VirtualJoystick(bool normalized)
+    public VirtualJoystick(
+      Binding up,
+      Binding down,
+      Binding left,
+      Binding right,
+      int gamepadIndex,
+      float threshold,
+      VirtualInput.OverlapBehaviors overlapBehavior = VirtualInput.OverlapBehaviors.TakeNewer)
     {
-      this.Nodes = new List<VirtualJoystick.Node>();
-      this.Normalized = normalized;
+      this.Up = up;
+      this.Down = down;
+      this.Left = left;
+      this.Right = right;
+      this.GamepadIndex = gamepadIndex;
+      this.Threshold = threshold;
+      this.OverlapBehavior = overlapBehavior;
     }
 
-    public VirtualJoystick(bool normalized, params VirtualJoystick.Node[] nodes)
+    public VirtualJoystick(
+      Binding up,
+      Binding upAlt,
+      Binding down,
+      Binding downAlt,
+      Binding left,
+      Binding leftAlt,
+      Binding right,
+      Binding rightAlt,
+      int gamepadIndex,
+      float threshold,
+      VirtualInput.OverlapBehaviors overlapBehavior = VirtualInput.OverlapBehaviors.TakeNewer)
     {
-      this.Nodes = new List<VirtualJoystick.Node>((IEnumerable<VirtualJoystick.Node>) nodes);
-      this.Normalized = normalized;
+      this.Up = up;
+      this.Down = down;
+      this.Left = left;
+      this.Right = right;
+      this.UpAlt = upAlt;
+      this.DownAlt = downAlt;
+      this.LeftAlt = leftAlt;
+      this.RightAlt = rightAlt;
+      this.GamepadIndex = gamepadIndex;
+      this.Threshold = threshold;
+      this.OverlapBehavior = overlapBehavior;
     }
 
     public override void Update()
     {
-      foreach (VirtualInputNode node in this.Nodes)
-        node.Update();
-      this.PreviousValue = this.Value;
-      this.Value = Vector2.Zero;
-      if (MInput.Disabled)
-        return;
-      foreach (VirtualJoystick.Node node in this.Nodes)
+      this.previousValue = this.value;
+      if (!MInput.Disabled)
       {
-        Vector2 vec = node.Value;
-        if (vec != Vector2.Zero)
+        Vector2 zero = this.value;
+        float num1 = this.Right.Axis(this.GamepadIndex, 0.0f);
+        float num2 = this.Left.Axis(this.GamepadIndex, 0.0f);
+        float num3 = this.Down.Axis(this.GamepadIndex, 0.0f);
+        float num4 = this.Up.Axis(this.GamepadIndex, 0.0f);
+        if ((double) num1 == 0.0 && this.RightAlt != null)
+          num1 = this.RightAlt.Axis(this.GamepadIndex, 0.0f);
+        if ((double) num2 == 0.0 && this.LeftAlt != null)
+          num2 = this.LeftAlt.Axis(this.GamepadIndex, 0.0f);
+        if ((double) num3 == 0.0 && this.DownAlt != null)
+          num3 = this.DownAlt.Axis(this.GamepadIndex, 0.0f);
+        if ((double) num4 == 0.0 && this.UpAlt != null)
+          num4 = this.UpAlt.Axis(this.GamepadIndex, 0.0f);
+        if ((double) num1 > (double) num2)
+          num2 = 0.0f;
+        else if ((double) num2 > (double) num1)
+          num1 = 0.0f;
+        if ((double) num3 > (double) num4)
+          num4 = 0.0f;
+        else if ((double) num4 > (double) num3)
+          num3 = 0.0f;
+        if ((double) num1 != 0.0 && (double) num2 != 0.0)
         {
-          if (this.Normalized)
+          switch (this.OverlapBehavior)
           {
-            if (this.SnapSlices.HasValue)
-              vec = vec.SnappedNormal(this.SnapSlices.Value);
-            else
-              vec.Normalize();
-          }
-          else if (this.SnapSlices.HasValue)
-            vec = vec.Snapped(this.SnapSlices.Value);
-          if (this.InvertedX)
-            vec.X *= -1f;
-          if (this.InvertedY)
-            vec.Y *= -1f;
-          this.Value = vec;
-          break;
-        }
-      }
-    }
-
-    public static implicit operator Vector2(VirtualJoystick joystick)
-    {
-      return joystick.Value;
-    }
-
-    public abstract class Node : VirtualInputNode
-    {
-      public abstract Vector2 Value { get; }
-    }
-
-    public class PadLeftStick : VirtualJoystick.Node
-    {
-      public int GamepadIndex;
-      public float Deadzone;
-
-      public PadLeftStick(int gamepadIndex, float deadzone)
-      {
-        this.GamepadIndex = gamepadIndex;
-        this.Deadzone = deadzone;
-      }
-
-      public override Vector2 Value
-      {
-        get
-        {
-          return MInput.GamePads[this.GamepadIndex].GetLeftStick(this.Deadzone);
-        }
-      }
-    }
-
-    public class PadRightStick : VirtualJoystick.Node
-    {
-      public int GamepadIndex;
-      public float Deadzone;
-
-      public PadRightStick(int gamepadIndex, float deadzone)
-      {
-        this.GamepadIndex = gamepadIndex;
-        this.Deadzone = deadzone;
-      }
-
-      public override Vector2 Value
-      {
-        get
-        {
-          return MInput.GamePads[this.GamepadIndex].GetRightStick(this.Deadzone);
-        }
-      }
-    }
-
-    public class PadDpad : VirtualJoystick.Node
-    {
-      public int GamepadIndex;
-
-      public PadDpad(int gamepadIndex)
-      {
-        this.GamepadIndex = gamepadIndex;
-      }
-
-      public override Vector2 Value
-      {
-        get
-        {
-          Vector2 zero = Vector2.Zero;
-          if (MInput.GamePads[this.GamepadIndex].DPadRightCheck)
-            zero.X = 1f;
-          else if (MInput.GamePads[this.GamepadIndex].DPadLeftCheck)
-            zero.X = -1f;
-          if (MInput.GamePads[this.GamepadIndex].DPadDownCheck)
-            zero.Y = 1f;
-          else if (MInput.GamePads[this.GamepadIndex].DPadUpCheck)
-            zero.Y = -1f;
-          return zero;
-        }
-      }
-    }
-
-    public class KeyboardKeys : VirtualJoystick.Node
-    {
-      public VirtualInput.OverlapBehaviors OverlapBehavior;
-      public Keys Left;
-      public Keys Right;
-      public Keys Up;
-      public Keys Down;
-      private bool turnedX;
-      private bool turnedY;
-      private Vector2 value;
-
-      public KeyboardKeys(
-        VirtualInput.OverlapBehaviors overlapBehavior,
-        Keys left,
-        Keys right,
-        Keys up,
-        Keys down)
-      {
-        this.OverlapBehavior = overlapBehavior;
-        this.Left = left;
-        this.Right = right;
-        this.Up = up;
-        this.Down = down;
-      }
-
-      public override void Update()
-      {
-        if (MInput.Keyboard.Check(this.Left))
-        {
-          if (MInput.Keyboard.Check(this.Right))
-          {
-            switch (this.OverlapBehavior)
-            {
-              case VirtualInput.OverlapBehaviors.TakeOlder:
+            case VirtualInput.OverlapBehaviors.CancelOut:
+              zero.X = 0.0f;
+              break;
+            case VirtualInput.OverlapBehaviors.TakeOlder:
+              if ((double) zero.X > 0.0)
+              {
+                zero.X = num1;
                 break;
-              case VirtualInput.OverlapBehaviors.TakeNewer:
-                if (!this.turnedX)
-                {
-                  this.value.X *= -1f;
-                  this.turnedX = true;
-                  break;
-                }
+              }
+              if ((double) zero.X < 0.0)
+              {
+                zero.X = num2;
                 break;
-              default:
-                this.value.X = 0.0f;
+              }
+              break;
+            case VirtualInput.OverlapBehaviors.TakeNewer:
+              if (!this.hTurned)
+              {
+                if ((double) zero.X > 0.0)
+                  zero.X = -num2;
+                else if ((double) zero.X < 0.0)
+                  zero.X = num1;
+                this.hTurned = true;
                 break;
-            }
-          }
-          else
-          {
-            this.turnedX = false;
-            this.value.X = -1f;
+              }
+              if ((double) zero.X > 0.0)
+              {
+                zero.X = num1;
+                break;
+              }
+              if ((double) zero.X < 0.0)
+              {
+                zero.X = -num2;
+                break;
+              }
+              break;
           }
         }
-        else if (MInput.Keyboard.Check(this.Right))
+        else if ((double) num1 != 0.0)
         {
-          this.turnedX = false;
-          this.value.X = 1f;
+          this.hTurned = false;
+          zero.X = num1;
+        }
+        else if ((double) num2 != 0.0)
+        {
+          this.hTurned = false;
+          zero.X = -num2;
         }
         else
         {
-          this.turnedX = false;
-          this.value.X = 0.0f;
+          this.hTurned = false;
+          zero.X = 0.0f;
         }
-        if (MInput.Keyboard.Check(this.Up))
+        if ((double) num3 != 0.0 && (double) num4 != 0.0)
         {
-          if (MInput.Keyboard.Check(this.Down))
+          switch (this.OverlapBehavior)
           {
-            switch (this.OverlapBehavior)
-            {
-              case VirtualInput.OverlapBehaviors.TakeOlder:
+            case VirtualInput.OverlapBehaviors.CancelOut:
+              zero.Y = 0.0f;
+              break;
+            case VirtualInput.OverlapBehaviors.TakeOlder:
+              if ((double) zero.Y > 0.0)
+              {
+                zero.Y = num3;
                 break;
-              case VirtualInput.OverlapBehaviors.TakeNewer:
-                if (this.turnedY)
-                  break;
-                this.value.Y *= -1f;
-                this.turnedY = true;
+              }
+              if ((double) zero.Y < 0.0)
+              {
+                zero.Y = -num4;
                 break;
-              default:
-                this.value.Y = 0.0f;
+              }
+              break;
+            case VirtualInput.OverlapBehaviors.TakeNewer:
+              if (!this.vTurned)
+              {
+                if ((double) zero.Y > 0.0)
+                  zero.Y = -num4;
+                else if ((double) zero.Y < 0.0)
+                  zero.Y = num3;
+                this.vTurned = true;
                 break;
-            }
-          }
-          else
-          {
-            this.turnedY = false;
-            this.value.Y = -1f;
+              }
+              if ((double) zero.Y > 0.0)
+              {
+                zero.Y = num3;
+                break;
+              }
+              if ((double) zero.Y < 0.0)
+              {
+                zero.Y = -num4;
+                break;
+              }
+              break;
           }
         }
-        else if (MInput.Keyboard.Check(this.Down))
+        else if ((double) num3 != 0.0)
         {
-          this.turnedY = false;
-          this.value.Y = 1f;
+          this.vTurned = false;
+          zero.Y = num3;
+        }
+        else if ((double) num4 != 0.0)
+        {
+          this.vTurned = false;
+          zero.Y = -num4;
         }
         else
         {
-          this.turnedY = false;
-          this.value.Y = 0.0f;
+          this.vTurned = false;
+          zero.Y = 0.0f;
         }
+        if ((double) zero.Length() < (double) this.Threshold)
+          zero = Vector2.Zero;
+        this.value = zero;
       }
-
-      public override Vector2 Value
-      {
-        get
-        {
-          return this.value;
-        }
-      }
+      this.Value = new Vector2(this.InvertedX ? this.value.X * -1f : this.value.X, this.InvertedY ? this.value.Y * -1f : this.value.Y);
+      this.PreviousValue = new Vector2(this.InvertedX ? this.previousValue.X * -1f : this.previousValue.X, this.InvertedY ? this.previousValue.Y * -1f : this.previousValue.Y);
     }
+
+    public static implicit operator Vector2(VirtualJoystick joystick) => joystick.Value;
   }
 }
-

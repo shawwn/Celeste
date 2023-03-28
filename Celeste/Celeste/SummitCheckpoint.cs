@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.SummitCheckpoint
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -27,7 +27,7 @@ namespace Celeste
     public SummitCheckpoint(EntityData data, Vector2 offset)
       : base(data.Position + offset)
     {
-      this.Number = data.Int("number", 0);
+      this.Number = data.Int("number");
       this.numberString = this.Number.ToString("D2");
       this.baseEmpty = GFX.Game["scenery/summitcheckpoints/base00"];
       this.baseToggle = GFX.Game["scenery/summitcheckpoints/base01"];
@@ -53,7 +53,7 @@ namespace Celeste
         return;
       this.Activated = true;
       Level scene1 = this.Scene as Level;
-      scene1.Session.SetFlag("summit_checkpoint_" + (object) this.Number, true);
+      scene1.Session.SetFlag("summit_checkpoint_" + (object) this.Number);
       scene1.Session.RespawnPoint = new Vector2?(this.respawn);
     }
 
@@ -62,18 +62,17 @@ namespace Celeste
       if (this.Activated)
         return;
       Player player = this.CollideFirst<Player>();
-      if (player != null && player.OnGround(1) && (double) player.Speed.Y >= 0.0)
-      {
-        Level scene = this.Scene as Level;
-        this.Activated = true;
-        scene.Session.SetFlag("summit_checkpoint_" + (object) this.Number, true);
-        scene.Session.RespawnPoint = new Vector2?(this.respawn);
-        scene.Session.UpdateLevelStartDashes();
-        scene.Session.HitCheckpoint = true;
-        scene.Displacement.AddBurst(this.Position, 0.5f, 4f, 24f, 0.5f, (Ease.Easer) null, (Ease.Easer) null);
-        scene.Add((Entity) new SummitCheckpoint.ConfettiRenderer(this.Position));
-        Audio.Play("event:/game/07_summit/checkpoint_confetti", this.Position);
-      }
+      if (player == null || !player.OnGround() || (double) player.Speed.Y < 0.0)
+        return;
+      Level scene = this.Scene as Level;
+      this.Activated = true;
+      scene.Session.SetFlag("summit_checkpoint_" + (object) this.Number);
+      scene.Session.RespawnPoint = new Vector2?(this.respawn);
+      scene.Session.UpdateLevelStartDashes();
+      scene.Session.HitCheckpoint = true;
+      scene.Displacement.AddBurst(this.Position, 0.5f, 4f, 24f, 0.5f);
+      scene.Add((Entity) new SummitCheckpoint.ConfettiRenderer(this.Position));
+      Audio.Play("event:/game/07_summit/checkpoint_confetti", this.Position);
     }
 
     public override void Render()
@@ -87,7 +86,7 @@ namespace Celeste
       mtextureList[(int) this.numberString[1] - 48].DrawJustified(this.Position + new Vector2(0.0f, 1f), new Vector2(0.0f, 0.0f));
     }
 
-    private class ConfettiRenderer : Entity
+    public class ConfettiRenderer : Entity
     {
       private static readonly Color[] confettiColors = new Color[3]
       {
@@ -108,9 +107,9 @@ namespace Celeste
           this.particles[index].Timer = Calc.Random.NextFloat();
           this.particles[index].Duration = (float) Calc.Random.Range(2, 4);
           this.particles[index].Alpha = 1f;
-          float angleRadians = Calc.Random.Range(-0.5f, 0.5f) - 1.570796f;
-          int num = Calc.Random.Range(140, 220);
-          this.particles[index].Speed = Calc.AngleToVector(angleRadians, (float) num);
+          float angleRadians = Calc.Random.Range(-0.5f, 0.5f) - 1.5707964f;
+          int length = Calc.Random.Range(140, 220);
+          this.particles[index].Speed = Calc.AngleToVector(angleRadians, (float) length);
         }
       }
 
@@ -142,7 +141,7 @@ namespace Celeste
           else
           {
             rotation = (float) Math.Sin((double) this.particles[index].Timer * 4.0) * 1f;
-            position += Calc.AngleToVector(1.570796f + rotation, this.particles[index].Approach);
+            position += Calc.AngleToVector(1.5707964f + rotation, this.particles[index].Approach);
           }
           GFX.Game["particles/confetti"].DrawCentered(position + Vector2.UnitY, Color.Black * (this.particles[index].Alpha * 0.5f), 1f, rotation);
           GFX.Game["particles/confetti"].DrawCentered(position, this.particles[index].Color * this.particles[index].Alpha, 1f, rotation);
@@ -163,4 +162,3 @@ namespace Celeste
     }
   }
 }
-

@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.CrystalStaticSpinner
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -14,6 +14,8 @@ namespace Celeste
   [Tracked(false)]
   public class CrystalStaticSpinner : Entity
   {
+    public static ParticleType P_Move;
+    public const float ParticleInterval = 0.02f;
     private static Dictionary<CrystalColor, string> fgTextureLookup = new Dictionary<CrystalColor, string>()
     {
       {
@@ -27,6 +29,10 @@ namespace Celeste
       {
         CrystalColor.Purple,
         "danger/crystal/fg_purple"
+      },
+      {
+        CrystalColor.Rainbow,
+        "danger/crystal/fg_white"
       }
     };
     private static Dictionary<CrystalColor, string> bgTextureLookup = new Dictionary<CrystalColor, string>()
@@ -42,14 +48,16 @@ namespace Celeste
       {
         CrystalColor.Purple,
         "danger/crystal/bg_purple"
+      },
+      {
+        CrystalColor.Rainbow,
+        "danger/crystal/bg_white"
       }
     };
-    private float offset = Calc.Random.NextFloat();
-    public static ParticleType P_Move;
-    public const float ParticleInterval = 0.02f;
     public bool AttachToSolid;
     private Entity filler;
     private CrystalStaticSpinner.Border border;
+    private float offset = Calc.Random.NextFloat();
     private bool expanded;
     private int randomSeed;
     private CrystalColor color;
@@ -61,13 +69,13 @@ namespace Celeste
       this.Tag = (int) Tags.TransitionUpdate;
       this.Collider = (Collider) new ColliderList(new Collider[2]
       {
-        (Collider) new Monocle.Circle(6f, 0.0f, 0.0f),
+        (Collider) new Monocle.Circle(6f),
         (Collider) new Hitbox(16f, 4f, -8f, -3f)
       });
       this.Visible = false;
-      this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer), (Collider) null, (Collider) null));
-      this.Add((Component) new HoldableCollider(new Action<Holdable>(this.OnHoldable), (Collider) null));
-      this.Add((Component) new LedgeBlocker((Func<Player, bool>) null));
+      this.Add((Component) new PlayerCollider(new Action<Player>(this.OnPlayer)));
+      this.Add((Component) new HoldableCollider(new Action<Holdable>(this.OnHoldable)));
+      this.Add((Component) new LedgeBlocker());
       this.Depth = -8500;
       this.AttachToSolid = attachToSolid;
       if (attachToSolid)
@@ -81,7 +89,7 @@ namespace Celeste
     }
 
     public CrystalStaticSpinner(EntityData data, Vector2 offset, CrystalColor color)
-      : this(data.Position + offset, data.Bool("attachToSolid", false), color)
+      : this(data.Position + offset, data.Bool("attachToSolid"), color)
     {
     }
 
@@ -114,11 +122,15 @@ namespace Celeste
           this.Visible = true;
           if (!this.expanded)
             this.CreateSprites();
+          if (this.color == CrystalColor.Rainbow)
+            this.UpdateHue();
         }
       }
       else
       {
         base.Update();
+        if (this.color == CrystalColor.Rainbow && this.Scene.OnInterval(0.08f, this.offset))
+          this.UpdateHue();
         if (this.Scene.OnInterval(0.25f, this.offset) && !this.InView())
           this.Visible = false;
         if (this.Scene.OnInterval(0.05f, this.offset))
@@ -131,6 +143,22 @@ namespace Celeste
       if (this.filler == null)
         return;
       this.filler.Position = this.Position;
+    }
+
+    private void UpdateHue()
+    {
+      foreach (Component component in this.Components)
+      {
+        if (component is Monocle.Image image)
+          image.Color = this.GetHue(this.Position + image.Position);
+      }
+      if (this.filler == null)
+        return;
+      foreach (Component component in this.filler.Components)
+      {
+        if (component is Monocle.Image image)
+          image.Color = this.GetHue(this.Position + image.Position);
+      }
     }
 
     private bool InView()
@@ -146,14 +174,17 @@ namespace Celeste
       Calc.PushRandom(this.randomSeed);
       List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.fgTextureLookup[this.color]);
       MTexture mtexture = Calc.Random.Choose<MTexture>(atlasSubtextures);
+      Color color = Color.White;
+      if (this.color == CrystalColor.Rainbow)
+        color = this.GetHue(this.Position);
       if (!this.SolidCheck(new Vector2(this.X - 4f, this.Y - 4f)))
-        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(0, 0, 14, 14, (MTexture) null)).SetOrigin(12f, 12f));
+        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(0, 0, 14, 14)).SetOrigin(12f, 12f).SetColor(color));
       if (!this.SolidCheck(new Vector2(this.X + 4f, this.Y - 4f)))
-        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(10, 0, 14, 14, (MTexture) null)).SetOrigin(2f, 12f));
+        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(10, 0, 14, 14)).SetOrigin(2f, 12f).SetColor(color));
       if (!this.SolidCheck(new Vector2(this.X + 4f, this.Y + 4f)))
-        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(10, 10, 14, 14, (MTexture) null)).SetOrigin(2f, 2f));
+        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(10, 10, 14, 14)).SetOrigin(2f, 2f).SetColor(color));
       if (!this.SolidCheck(new Vector2(this.X - 4f, this.Y + 4f)))
-        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(0, 10, 14, 14, (MTexture) null)).SetOrigin(12f, 2f));
+        this.Add((Component) new Monocle.Image(mtexture.GetSubtexture(0, 10, 14, 14)).SetOrigin(12f, 2f).SetColor(color));
       foreach (CrystalStaticSpinner entity in this.Scene.Tracker.GetEntities<CrystalStaticSpinner>())
       {
         if (entity != this && entity.AttachToSolid == this.AttachToSolid && (double) entity.X >= (double) this.X && (double) (entity.Position - this.Position).Length() < 24.0)
@@ -174,8 +205,10 @@ namespace Celeste
       List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.bgTextureLookup[this.color]);
       Monocle.Image image = new Monocle.Image(Calc.Random.Choose<MTexture>(atlasSubtextures));
       image.Position = offset;
-      image.Rotation = (float) Calc.Random.Choose<int>(0, 1, 2, 3) * 1.570796f;
+      image.Rotation = (float) Calc.Random.Choose<int>(0, 1, 2, 3) * 1.5707964f;
       image.CenterOrigin();
+      if (this.color == CrystalColor.Rainbow)
+        image.Color = this.GetHue(this.Position + offset);
       this.filler.Add((Component) image);
     }
 
@@ -213,20 +246,11 @@ namespace Celeste
       }
     }
 
-    private bool IsRiding(Solid solid)
-    {
-      return this.CollideCheck((Entity) solid);
-    }
+    private bool IsRiding(Solid solid) => this.CollideCheck((Entity) solid);
 
-    private void OnPlayer(Player player)
-    {
-      player.Die((player.Position - this.Position).SafeNormalize(), false, true);
-    }
+    private void OnPlayer(Player player) => player.Die((player.Position - this.Position).SafeNormalize());
 
-    private void OnHoldable(Holdable h)
-    {
-      h.HitSpinner((Entity) this);
-    }
+    private void OnHoldable(Holdable h) => h.HitSpinner((Entity) this);
 
     public override void Removed(Scene scene)
     {
@@ -252,6 +276,12 @@ namespace Celeste
         CrystalDebris.Burst(this.Position, color, boss, 8);
       }
       this.RemoveSelf();
+    }
+
+    private Color GetHue(Vector2 position)
+    {
+      float num = 280f;
+      return Calc.HsvToColor((float) (0.4000000059604645 + (double) Calc.YoYo((position.Length() + this.Scene.TimeActive * 50f) % num / num) * 0.4000000059604645), 0.4f, 0.9f);
     }
 
     private class CoreModeListener : Component
@@ -300,8 +330,7 @@ namespace Celeste
           return;
         foreach (Component component in entity.Components)
         {
-          Monocle.Image image = component as Monocle.Image;
-          if (image != null)
+          if (component is Monocle.Image image)
           {
             Color color = image.Color;
             Vector2 position = image.Position;
@@ -322,4 +351,3 @@ namespace Celeste
     }
   }
 }
-

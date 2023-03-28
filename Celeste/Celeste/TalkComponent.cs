@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.TalkComponent
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -12,17 +12,17 @@ namespace Celeste
 {
   public class TalkComponent : Component
   {
-    public bool Enabled = true;
-    public bool PlayerMustBeFacing = true;
-    private float cooldown = 0.0f;
-    private float hoverTimer = 0.0f;
-    private float disableDelay = 0.0f;
     public static TalkComponent PlayerOver;
+    public bool Enabled = true;
     public Rectangle Bounds;
     public Vector2 DrawAt;
     public Action<Player> OnTalk;
+    public bool PlayerMustBeFacing = true;
     public TalkComponent.TalkComponentUI UI;
     public TalkComponent.HoverDisplay HoverUI;
+    private float cooldown;
+    private float hoverTimer;
+    private float disableDelay;
 
     public TalkComponent(
       Rectangle bounds,
@@ -49,7 +49,7 @@ namespace Celeste
       if (this.UI == null)
         this.Entity.Scene.Add((Entity) (this.UI = new TalkComponent.TalkComponentUI(this)));
       Player entity = this.Scene.Tracker.GetEntity<Player>();
-      bool flag = (double) this.disableDelay < 0.0500000007450581 && entity != null && (entity.CollideRect(new Rectangle((int) ((double) this.Entity.X + (double) this.Bounds.X), (int) ((double) this.Entity.Y + (double) this.Bounds.Y), this.Bounds.Width, this.Bounds.Height)) && entity.OnGround(1)) && entity.StateMachine.State == 0 && (!this.PlayerMustBeFacing || (double) Math.Abs(entity.X - this.Entity.X) <= 16.0 || entity.Facing == (Facings) Math.Sign(this.Entity.X - entity.X)) && (TalkComponent.PlayerOver == null || TalkComponent.PlayerOver == this);
+      bool flag = (double) this.disableDelay < 0.05000000074505806 && entity != null && entity.CollideRect(new Rectangle((int) ((double) this.Entity.X + (double) this.Bounds.X), (int) ((double) this.Entity.Y + (double) this.Bounds.Y), this.Bounds.Width, this.Bounds.Height)) && entity.OnGround() && (double) entity.Bottom < (double) this.Entity.Y + (double) this.Bounds.Bottom + 4.0 && entity.StateMachine.State == 0 && (!this.PlayerMustBeFacing || (double) Math.Abs(entity.X - this.Entity.X) <= 16.0 || entity.Facing == (Facings) Math.Sign(this.Entity.X - entity.X)) && (TalkComponent.PlayerOver == null || TalkComponent.PlayerOver == this);
       if (flag)
         this.hoverTimer += Engine.DeltaTime;
       else if (this.UI.Display)
@@ -58,7 +58,7 @@ namespace Celeste
         TalkComponent.PlayerOver = (TalkComponent) null;
       else if (flag)
         TalkComponent.PlayerOver = this;
-      if (flag && (double) this.cooldown <= 0.0 && (entity != null && (int) entity.StateMachine == 0) && (Input.Talk.Pressed && this.Enabled) && !this.Scene.Paused)
+      if (flag && (double) this.cooldown <= 0.0 && entity != null && (int) entity.StateMachine == 0 && Input.Talk.Pressed && this.Enabled && !this.Scene.Paused)
       {
         this.cooldown = 0.1f;
         if (this.OnTalk != null)
@@ -70,7 +70,7 @@ namespace Celeste
         this.disableDelay += Engine.DeltaTime;
       else
         this.disableDelay = 0.0f;
-      this.UI.Highlighted = flag && (double) this.hoverTimer > 0.100000001490116;
+      this.UI.Highlighted = flag && (double) this.hoverTimer > 0.10000000149011612;
       base.Update();
     }
 
@@ -108,28 +108,25 @@ namespace Celeste
 
     public class HoverDisplay
     {
-      public string SfxIn = "event:/ui/game/hotspot_main_in";
-      public string SfxOut = "event:/ui/game/hotspot_main_out";
       public MTexture Texture;
       public Vector2 InputPosition;
+      public string SfxIn = "event:/ui/game/hotspot_main_in";
+      public string SfxOut = "event:/ui/game/hotspot_main_out";
     }
 
     public class TalkComponentUI : Entity
     {
-      private float alpha = 1f;
-      private Color lineColor = new Color(1f, 1f, 1f);
       public TalkComponent Handler;
       private bool highlighted;
       private float slide;
       private float timer;
       private Wiggler wiggler;
+      private float alpha = 1f;
+      private Color lineColor = new Color(1f, 1f, 1f);
 
       public bool Highlighted
       {
-        get
-        {
-          return this.highlighted;
-        }
+        get => this.highlighted;
         set
         {
           if (!(this.highlighted != value & this.Display))
@@ -161,13 +158,13 @@ namespace Celeste
       {
         this.Handler = handler;
         this.AddTag((int) Tags.HUD | (int) Tags.Persistent);
-        this.Add((Component) (this.wiggler = Wiggler.Create(0.25f, 4f, (Action<float>) null, false, false)));
+        this.Add((Component) (this.wiggler = Wiggler.Create(0.25f, 4f)));
       }
 
       public override void Awake(Scene scene)
       {
         base.Awake(scene);
-        if (!this.Scene.CollideCheck<FakeWall>(this.Handler.Entity.Position))
+        if (this.Handler.Entity != null && !this.Scene.CollideCheck<FakeWall>(this.Handler.Entity.Position))
           return;
         this.alpha = 0.0f;
       }
@@ -176,7 +173,7 @@ namespace Celeste
       {
         this.timer += Engine.DeltaTime;
         this.slide = Calc.Approach(this.slide, this.Display ? 1f : 0.0f, Engine.DeltaTime * 4f);
-        if ((double) this.alpha < 1.0 && !this.Scene.CollideCheck<FakeWall>(this.Handler.Entity.Position))
+        if ((double) this.alpha < 1.0 && this.Handler.Entity != null && !this.Scene.CollideCheck<FakeWall>(this.Handler.Entity.Position))
           this.alpha = Calc.Approach(this.alpha, 1f, 2f * Engine.DeltaTime);
         base.Update();
       }
@@ -184,7 +181,7 @@ namespace Celeste
       public override void Render()
       {
         Level scene = this.Scene as Level;
-        if (scene.FrozenOrPaused || ((double) this.slide <= 0.0 || this.Handler.Entity == null))
+        if (scene.FrozenOrPaused || (double) this.slide <= 0.0 || this.Handler.Entity == null)
           return;
         Vector2 position1 = this.Handler.Entity.Position + this.Handler.DrawAt - scene.Camera.Position.Floor();
         if (SaveData.Instance != null && SaveData.Instance.Assists.MirrorMode)
@@ -199,16 +196,14 @@ namespace Celeste
           this.Handler.HoverUI.Texture.DrawJustified(position1, new Vector2(0.5f, 1f), color * this.alpha, scale);
         else
           GFX.Gui["hover/idle"].DrawJustified(position1, new Vector2(0.5f, 1f), color * this.alpha, scale);
-        if (this.Highlighted)
-        {
-          Vector2 position2 = position1 + this.Handler.HoverUI.InputPosition * scale;
-          if (Input.GuiInputController())
-            Input.GuiButton(Input.Talk, "controls/keyboard/oemquestion").DrawJustified(position2, new Vector2(0.5f), Color.White * num, scale);
-          else
-            ActiveFont.DrawOutline(Input.FirstKey(Input.Talk).ToString().ToUpper(), position2, new Vector2(0.5f), new Vector2(scale), Color.White * num, 2f, Color.Black);
-        }
+        if (!this.Highlighted)
+          return;
+        Vector2 position2 = position1 + this.Handler.HoverUI.InputPosition * scale;
+        if (Input.GuiInputController())
+          Input.GuiButton(Input.Talk).DrawJustified(position2, new Vector2(0.5f), Color.White * num, scale);
+        else
+          ActiveFont.DrawOutline(Input.FirstKey(Input.Talk).ToString().ToUpper(), position2, new Vector2(0.5f), new Vector2(scale), Color.White * num, 2f, Color.Black);
       }
     }
   }
 }
-

@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.AreaCompleteTitle
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -14,12 +14,12 @@ namespace Celeste
   public class AreaCompleteTitle : Entity
   {
     public float Alpha = 1f;
-    private List<AreaCompleteTitle.Letter> letters = new List<AreaCompleteTitle.Letter>();
     private Vector2 origin;
+    private List<AreaCompleteTitle.Letter> letters = new List<AreaCompleteTitle.Letter>();
     private float rectangleEase;
     private float scale;
 
-    public AreaCompleteTitle(Vector2 origin, string text, float scale)
+    public AreaCompleteTitle(Vector2 origin, string text, float scale, bool rainbow = false)
     {
       this.origin = origin;
       this.scale = scale;
@@ -35,7 +35,14 @@ namespace Celeste
           ch = text[index1];
           string str = ch.ToString();
           Vector2 position = vector2_2 + Vector2.UnitX * vector2_3.X * 0.5f;
-          this.letters.Add(new AreaCompleteTitle.Letter(index2, str, position));
+          AreaCompleteTitle.Letter letter = new AreaCompleteTitle.Letter(index2, str, position);
+          if (rainbow)
+          {
+            float hue = (float) index1 / (float) text.Length;
+            letter.Color = Calc.HsvToColor(hue, 0.8f, 0.9f);
+            letter.Shadow = Color.Lerp(letter.Color, Color.Black, 0.7f);
+          }
+          this.letters.Add(letter);
         }
         vector2_2 += Vector2.UnitX * vector2_3.X;
       }
@@ -44,7 +51,7 @@ namespace Celeste
         Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineOut, 0.5f, true);
         tween.OnUpdate = (Action<Tween>) (t => this.rectangleEase = t.Eased);
         this.Add((Component) tween);
-      }), Alarm.AlarmMode.Oneshot);
+      }));
     }
 
     public override void Update()
@@ -54,10 +61,7 @@ namespace Celeste
         letter.Update();
     }
 
-    public void DrawLineUI()
-    {
-      Draw.Rect(this.X, (float) ((double) this.Y + (double) this.origin.Y - 40.0), 1920f * this.rectangleEase, 80f, Color.Black * 0.65f);
-    }
+    public void DrawLineUI() => Draw.Rect(this.X, (float) ((double) this.Y + (double) this.origin.Y - 40.0), 1920f * this.rectangleEase, 80f, Color.Black * 0.65f);
 
     public override void Render()
     {
@@ -70,6 +74,8 @@ namespace Celeste
     {
       public string Value;
       public Vector2 Position;
+      public Color Color = Color.White;
+      public Color Shadow = Color.Black;
       private float delay;
       private float ease;
       private Vector2 scale;
@@ -79,7 +85,7 @@ namespace Celeste
       {
         this.Value = value;
         this.Position = position;
-        this.delay = (float) (0.200000002980232 + (double) index * 0.0199999995529652);
+        this.delay = (float) (0.20000000298023224 + (double) index * 0.019999999552965164);
         this.curve = new SimpleCurve(position + Vector2.UnitY * 60f, position, position - Vector2.UnitY * 100f);
         this.scale = new Vector2(0.75f, 1.5f);
       }
@@ -97,11 +103,10 @@ namespace Celeste
           if ((double) this.ease >= 1.0)
             return;
           this.ease += 4f * Engine.DeltaTime;
-          if ((double) this.ease >= 1.0)
-          {
-            this.ease = 1f;
-            this.scale = new Vector2(1.5f, 0.75f);
-          }
+          if ((double) this.ease < 1.0)
+            return;
+          this.ease = 1f;
+          this.scale = new Vector2(1.5f, 0.75f);
         }
       }
 
@@ -114,15 +119,14 @@ namespace Celeste
         Vector2 scale1 = this.scale * scale;
         if ((double) num < 1.0)
         {
-          ActiveFont.Draw(this.Value, position, new Vector2(0.5f, 1f), scale1, Color.White * num);
+          ActiveFont.Draw(this.Value, position, new Vector2(0.5f, 1f), scale1, this.Color * num);
         }
         else
         {
-          ActiveFont.Draw(this.Value, position + Vector2.UnitY * 3.5f * scale, new Vector2(0.5f, 1f), scale1, Color.Black);
-          ActiveFont.DrawOutline(this.Value, position, new Vector2(0.5f, 1f), scale1, Color.White, 2f, Color.Black);
+          ActiveFont.Draw(this.Value, position + Vector2.UnitY * 3.5f * scale, new Vector2(0.5f, 1f), scale1, this.Shadow);
+          ActiveFont.DrawOutline(this.Value, position, new Vector2(0.5f, 1f), scale1, this.Color, 2f, this.Shadow);
         }
       }
     }
   }
 }
-

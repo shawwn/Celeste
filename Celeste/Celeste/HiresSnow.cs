@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.HiresSnow
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,8 +26,8 @@ namespace Celeste
     public HiresSnow(float overlayAlpha = 0.45f)
     {
       this.overlayAlpha = overlayAlpha;
-      this.overlay = GFX.Overworld[nameof (overlay)];
-      this.snow = GFX.Overworld[nameof (snow)].GetSubtexture(1, 1, 254, 254, (MTexture) null);
+      this.overlay = OVR.Atlas[nameof (overlay)];
+      this.snow = OVR.Atlas[nameof (snow)].GetSubtexture(1, 1, 254, 254);
       this.particles = new HiresSnow.Particle[50];
       this.Reset();
     }
@@ -67,7 +67,7 @@ namespace Celeste
       if (flag)
       {
         num1 = this.Direction.Angle();
-        vector2 = new Vector2(x, (float) (0.200000002980232 + (1.0 - (double) x / 20.0) * 0.800000011920929));
+        vector2 = new Vector2(x, (float) (0.20000000298023224 + (1.0 - (double) x / 20.0) * 0.800000011920929));
       }
       Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, (DepthStencilState) null, (RasterizerState) null, (Effect) null, Engine.ScreenMatrix);
       float num2 = this.Alpha * this.ParticleAlpha;
@@ -106,11 +106,10 @@ namespace Celeste
           this.Position = new Vector2(Calc.Random.NextFloat((float) Engine.Width), (float) sbyte.MinValue);
         else if ((double) direction.Y < 0.0)
           this.Position = new Vector2(Calc.Random.NextFloat((float) Engine.Width), (float) (Engine.Height + 128));
-        this.Sin = Calc.Random.NextFloat(6.283185f);
-        this.Rotation = Calc.Random.NextFloat(6.283185f);
+        this.Sin = Calc.Random.NextFloat(6.2831855f);
+        this.Rotation = Calc.Random.NextFloat(6.2831855f);
         this.Color = Color.Lerp(Color.White, Color.Transparent, val * 0.8f);
       }
     }
   }
 }
-

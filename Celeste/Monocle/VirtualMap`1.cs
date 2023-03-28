@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Monocle.VirtualMap`1
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 namespace Monocle
 {
@@ -16,7 +16,7 @@ namespace Monocle
     public readonly T EmptyValue;
     private T[,][,] segments;
 
-    public VirtualMap(int columns, int rows, T emptyValue)
+    public VirtualMap(int columns, int rows, T emptyValue = default(T))
     {
       this.Columns = columns;
       this.Rows = rows;
@@ -26,42 +26,25 @@ namespace Monocle
       this.EmptyValue = emptyValue;
     }
 
-    public VirtualMap(T[,] map, T emptyValue)
+    public VirtualMap(T[,] map, T emptyValue = default(T))
       : this(map.GetLength(0), map.GetLength(1), emptyValue)
     {
-      for (int index1 = 0; index1 < this.Columns; ++index1)
+      for (int x = 0; x < this.Columns; ++x)
       {
-        for (int index2 = 0; index2 < this.Rows; ++index2)
-          this[index1, index2] = map[index1, index2];
+        for (int y = 0; y < this.Rows; ++y)
+          this[x, y] = map[x, y];
       }
     }
 
-    public bool AnyInSegmentAtTile(int x, int y)
-    {
-      return this.segments[x / 50, y / 50] != null;
-    }
+    public bool AnyInSegmentAtTile(int x, int y) => this.segments[x / 50, y / 50] != null;
 
-    public bool AnyInSegment(int segmentX, int segmentY)
-    {
-      return this.segments[segmentX, segmentY] != null;
-    }
+    public bool AnyInSegment(int segmentX, int segmentY) => this.segments[segmentX, segmentY] != null;
 
-    public T InSegment(int segmentX, int segmentY, int x, int y)
-    {
-      return this.segments[segmentX, segmentY][x, y];
-    }
+    public T InSegment(int segmentX, int segmentY, int x, int y) => this.segments[segmentX, segmentY][x, y];
 
-    public T[,] GetSegment(int segmentX, int segmentY)
-    {
-      return this.segments[segmentX, segmentY];
-    }
+    public T[,] GetSegment(int segmentX, int segmentY) => this.segments[segmentX, segmentY];
 
-    public T SafeCheck(int x, int y)
-    {
-      if (x >= 0 && y >= 0 && x < this.Columns && y < this.Rows)
-        return this[x, y];
-      return this.EmptyValue;
-    }
+    public T SafeCheck(int x, int y) => x >= 0 && y >= 0 && x < this.Columns && y < this.Rows ? this[x, y] : this.EmptyValue;
 
     public T this[int x, int y]
     {
@@ -70,9 +53,7 @@ namespace Monocle
         int index1 = x / 50;
         int index2 = y / 50;
         T[,] segment = this.segments[index1, index2];
-        if (segment == null)
-          return this.EmptyValue;
-        return segment[x - index1 * 50, y - index2 * 50];
+        return segment == null ? this.EmptyValue : segment[x - index1 * 50, y - index2 * 50];
       }
       set
       {
@@ -96,25 +77,24 @@ namespace Monocle
 
     public T[,] ToArray()
     {
-      T[,] objArray = new T[this.Columns, this.Rows];
-      for (int index1 = 0; index1 < this.Columns; ++index1)
+      T[,] array = new T[this.Columns, this.Rows];
+      for (int x = 0; x < this.Columns; ++x)
       {
-        for (int index2 = 0; index2 < this.Rows; ++index2)
-          objArray[index1, index2] = this[index1, index2];
+        for (int y = 0; y < this.Rows; ++y)
+          array[x, y] = this[x, y];
       }
-      return objArray;
+      return array;
     }
 
     public VirtualMap<T> Clone()
     {
       VirtualMap<T> virtualMap = new VirtualMap<T>(this.Columns, this.Rows, this.EmptyValue);
-      for (int index1 = 0; index1 < this.Columns; ++index1)
+      for (int x = 0; x < this.Columns; ++x)
       {
-        for (int index2 = 0; index2 < this.Rows; ++index2)
-          virtualMap[index1, index2] = this[index1, index2];
+        for (int y = 0; y < this.Rows; ++y)
+          virtualMap[x, y] = this[x, y];
       }
       return virtualMap;
     }
   }
 }
-

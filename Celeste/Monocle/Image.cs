@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Monocle.Image
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 
@@ -11,6 +11,7 @@ namespace Monocle
   public class Image : GraphicsComponent
   {
     public MTexture Texture;
+    public bool TEST;
 
     public Image(MTexture texture)
       : base(false)
@@ -31,21 +32,9 @@ namespace Monocle
       this.Texture.Draw(this.RenderPosition, this.Origin, this.Color, this.Scale, this.Rotation, this.Effects);
     }
 
-    public virtual float Width
-    {
-      get
-      {
-        return (float) this.Texture.Width;
-      }
-    }
+    public virtual float Width => (float) this.Texture.Width;
 
-    public virtual float Height
-    {
-      get
-      {
-        return (float) this.Texture.Height;
-      }
-    }
+    public virtual float Height => (float) this.Texture.Height;
 
     public Image SetOrigin(float x, float y)
     {
@@ -74,6 +63,11 @@ namespace Monocle
       this.Origin.Y = this.Height * y;
       return this;
     }
+
+    public Image SetColor(Color color)
+    {
+      this.Color = color;
+      return this;
+    }
   }
 }
-

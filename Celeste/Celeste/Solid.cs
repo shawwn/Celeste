@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Solid
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -14,21 +14,25 @@ namespace Celeste
   [Tracked(true)]
   public class Solid : Platform
   {
-    private static HashSet<Actor> riders = new HashSet<Actor>();
+    public Vector2 Speed;
+    public bool AllowStaticMovers = true;
     public bool EnableAssistModeChecks = true;
     public bool DisableLightsInside = true;
     public bool StopPlayerRunIntoAnimation = true;
-    public Vector2 Speed;
+    public bool SquishEvenInAssistMode;
+    private static HashSet<Actor> riders = new HashSet<Actor>();
 
     public Solid(Vector2 position, float width, float height, bool safe)
       : base(position, safe)
     {
-      this.Collider = (Collider) new Hitbox(width, height, 0.0f, 0.0f);
+      this.Collider = (Collider) new Hitbox(width, height);
     }
 
     public override void Awake(Scene scene)
     {
       base.Awake(scene);
+      if (!this.AllowStaticMovers)
+        return;
       bool collidable = this.Collidable;
       this.Collidable = true;
       foreach (StaticMover component in scene.Tracker.GetComponents<StaticMover>())
@@ -49,18 +53,22 @@ namespace Celeste
       base.Update();
       this.MoveH(this.Speed.X * Engine.DeltaTime);
       this.MoveV(this.Speed.Y * Engine.DeltaTime);
-      if (!this.EnableAssistModeChecks || SaveData.Instance == null || (!SaveData.Instance.Assists.Invincible || this.Components.Get<SolidOnInvinciblePlayer>() != null) || !this.Collidable)
+      if (!this.EnableAssistModeChecks || SaveData.Instance == null || !SaveData.Instance.Assists.Invincible || this.Components.Get<SolidOnInvinciblePlayer>() != null || !this.Collidable)
         return;
       Player player = this.CollideFirst<Player>();
-      if (player != null && player.StateMachine.State != 9)
+      Level scene = this.Scene as Level;
+      if (player == null && (double) this.Bottom > (double) scene.Bounds.Bottom)
+        player = this.CollideFirst<Player>(this.Position + Vector2.UnitY);
+      if (player != null && player.StateMachine.State != 9 && player.StateMachine.State != 21)
       {
         this.Add((Component) new SolidOnInvinciblePlayer());
       }
       else
       {
         TheoCrystal theoCrystal = this.CollideFirst<TheoCrystal>();
-        if (theoCrystal != null && !theoCrystal.Hold.IsHeld)
-          this.Add((Component) new SolidOnInvinciblePlayer());
+        if (theoCrystal == null || theoCrystal.Hold.IsHeld)
+          return;
+        this.Add((Component) new SolidOnInvinciblePlayer());
       }
     }
 
@@ -84,25 +92,13 @@ namespace Celeste
       return (Player) null;
     }
 
-    public bool HasPlayerRider()
-    {
-      return this.GetPlayerRider() != null;
-    }
+    public bool HasPlayerRider() => this.GetPlayerRider() != null;
 
-    public bool HasPlayerOnTop()
-    {
-      return this.GetPlayerOnTop() != null;
-    }
+    public bool HasPlayerOnTop() => this.GetPlayerOnTop() != null;
 
-    public Player GetPlayerOnTop()
-    {
-      return this.CollideFirst<Player>(this.Position - Vector2.UnitY);
-    }
+    public Player GetPlayerOnTop() => this.CollideFirst<Player>(this.Position - Vector2.UnitY);
 
-    public bool HasPlayerClimbing()
-    {
-      return this.GetPlayerClimbing() != null;
-    }
+    public bool HasPlayerClimbing() => this.GetPlayerClimbing() != null;
 
     public Player GetPlayerClimbing()
     {
@@ -129,8 +125,8 @@ namespace Celeste
       float right = this.Right;
       float left = this.Left;
       Player entity1 = this.Scene.Tracker.GetEntity<Player>();
-      if (entity1 != null && Input.MoveX.Value == Math.Sign(move) && (Math.Sign(entity1.Speed.X) == Math.Sign(move) && !Solid.riders.Contains((Actor) entity1)) && this.CollideCheck((Entity) entity1, this.Position + Vector2.UnitX * (float) move - Vector2.UnitY))
-        entity1.MoveV(1f, (Collision) null, (Solid) null);
+      if (entity1 != null && Input.MoveX.Value == Math.Sign(move) && Math.Sign(entity1.Speed.X) == Math.Sign(move) && !Solid.riders.Contains((Actor) entity1) && this.CollideCheck((Entity) entity1, this.Position + Vector2.UnitX * (float) move - Vector2.UnitY))
+        entity1.MoveV(1f);
       this.X += (float) move;
       this.MoveStaticMovers(Vector2.UnitX * (float) move);
       if (this.Collidable)
@@ -155,7 +151,7 @@ namespace Celeste
               if (entity2.TreatNaive)
                 entity2.NaiveMove(Vector2.UnitX * (float) move);
               else
-                entity2.MoveHExact(move, (Collision) null, (Solid) null);
+                entity2.MoveHExact(move);
               entity2.LiftSpeed = this.LiftSpeed;
               this.Collidable = true;
             }
@@ -195,7 +191,7 @@ namespace Celeste
               if (entity.TreatNaive)
                 entity.NaiveMove(Vector2.UnitY * (float) move);
               else
-                entity.MoveVExact(move, (Collision) null, (Solid) null);
+                entity.MoveVExact(move);
               entity.LiftSpeed = this.LiftSpeed;
               this.Collidable = true;
             }
@@ -207,4 +203,3 @@ namespace Celeste
     }
   }
 }
-

@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.AreaComplete
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -14,15 +14,15 @@ namespace Celeste
 {
   public class AreaComplete : Scene
   {
-    private bool canConfirm = true;
-    private float speedrunTimerDelay = 1.1f;
-    private string chapterSpeedrunText = Dialog.Get("OPTIONS_SPEEDRUN_CHAPTER", (Language) null) + ":";
     public Session Session;
     private bool finishedSlide;
+    private bool canConfirm = true;
     private HiresSnow snow;
+    private float speedrunTimerDelay = 1.1f;
     private float speedrunTimerEase;
     private string speedrunTimerChapterString;
     private string speedrunTimerFileString;
+    private string chapterSpeedrunText = Dialog.Get("OPTIONS_SPEEDRUN_CHAPTER") + ":";
     private AreaCompleteTitle title;
     private CompleteRenderer complete;
     private string version;
@@ -33,7 +33,7 @@ namespace Celeste
       this.version = Celeste.Instance.Version.ToString();
       if (session.Area.ID != 7)
       {
-        string text = Dialog.Clean("areacomplete_" + (object) session.Area.Mode + (session.FullClear ? (object) "_fullclear" : (object) ""), (Language) null);
+        string text = Dialog.Clean("areacomplete_" + (object) session.Area.Mode + (session.FullClear ? (object) "_fullclear" : (object) ""));
         Vector2 origin = new Vector2(960f, 200f);
         float scale = Math.Min(1600f / ActiveFont.Measure(text).X, 3f);
         this.title = new AreaCompleteTitle(origin, text, scale);
@@ -61,9 +61,15 @@ namespace Celeste
       else if (area.ID == 5)
         Achievements.Register(Achievement.CH5);
       else if (area.ID == 6)
+      {
         Achievements.Register(Achievement.CH6);
-      else if (area.ID == 7)
+      }
+      else
+      {
+        if (area.ID != 7)
+          return;
         Achievements.Register(Achievement.CH7);
+      }
     }
 
     public override void End()
@@ -87,7 +93,7 @@ namespace Celeste
             this.Session.Level = "credits-summit";
             this.Session.Audio.Music.Event = "event:/music/lvl8/main";
             this.Session.Audio.Apply();
-            Engine.Scene = (Scene) new LevelLoader(this.Session, new Vector2?())
+            Engine.Scene = (Scene) new LevelLoader(this.Session)
             {
               PlayerIntroTypeOverride = new Player.IntroTypes?(Player.IntroTypes.None),
               Level = {
@@ -98,7 +104,7 @@ namespace Celeste
         }
         else
         {
-          HiresSnow outSnow = new HiresSnow(0.45f)
+          HiresSnow outSnow = new HiresSnow()
           {
             Alpha = 0.0f
           };
@@ -117,53 +123,66 @@ namespace Celeste
         return;
       if (MInput.Keyboard.Pressed(Keys.F2))
       {
-        Celeste.ReloadAssets(false, true, false, new AreaKey?());
-        Engine.Scene = (Scene) new LevelExit(LevelExit.Mode.Completed, this.Session, (HiresSnow) null);
+        Celeste.ReloadAssets(false, true, false);
+        Engine.Scene = (Scene) new LevelExit(LevelExit.Mode.Completed, this.Session);
       }
-      else if (MInput.Keyboard.Pressed(Keys.F3))
+      else
       {
-        Celeste.ReloadAssets(false, true, true, new AreaKey?());
-        Engine.Scene = (Scene) new LevelExit(LevelExit.Mode.Completed, this.Session, (HiresSnow) null);
+        if (!MInput.Keyboard.Pressed(Keys.F3))
+          return;
+        Celeste.ReloadAssets(false, true, true);
+        Engine.Scene = (Scene) new LevelExit(LevelExit.Mode.Completed, this.Session);
       }
     }
 
     private void RenderUI()
     {
       this.Entities.Render();
-      if ((double) this.speedrunTimerEase > 0.0 && (uint) Settings.Instance.SpeedrunClock > 0U)
-      {
-        Vector2 position = new Vector2((float) (80.0 - 300.0 * (1.0 - (double) Ease.CubeOut(this.speedrunTimerEase))), 1000f);
-        if (Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
-        {
-          SpeedrunTimerDisplay.DrawTime(position, this.speedrunTimerChapterString, 1f, true, false, false, 1f);
-        }
-        else
-        {
-          position.Y -= 16f;
-          SpeedrunTimerDisplay.DrawTime(position, this.speedrunTimerFileString, 1f, true, false, false, 1f);
-          ActiveFont.DrawOutline(this.chapterSpeedrunText, position + new Vector2(0.0f, 40f), new Vector2(0.0f, 1f), Vector2.One * 0.6f, Color.White, 2f, Color.Black);
-          SpeedrunTimerDisplay.DrawTime(position + new Vector2((float) ((double) ActiveFont.Measure(this.chapterSpeedrunText).X * 0.600000023841858 + 8.0), 40f), this.speedrunTimerChapterString, 0.6f, true, false, false, 1f);
-        }
-        AreaComplete.VersionNumberAndVariants(this.version, this.speedrunTimerEase, 1f);
-      }
+      AreaComplete.Info(this.speedrunTimerEase, this.speedrunTimerChapterString, this.speedrunTimerFileString, this.chapterSpeedrunText, this.version);
       if (!this.complete.HasUI || this.title == null)
         return;
       this.title.Render();
     }
 
+    public static void Info(
+      float ease,
+      string speedrunTimerChapterString,
+      string speedrunTimerFileString,
+      string chapterSpeedrunText,
+      string versionText)
+    {
+      if ((double) ease <= 0.0 || Settings.Instance.SpeedrunClock == SpeedrunType.Off)
+        return;
+      Vector2 position = new Vector2((float) (80.0 - 300.0 * (1.0 - (double) Ease.CubeOut(ease))), 1000f);
+      if (Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
+      {
+        SpeedrunTimerDisplay.DrawTime(position, speedrunTimerChapterString);
+      }
+      else
+      {
+        position.Y -= 16f;
+        SpeedrunTimerDisplay.DrawTime(position, speedrunTimerFileString);
+        ActiveFont.DrawOutline(chapterSpeedrunText, position + new Vector2(0.0f, 40f), new Vector2(0.0f, 1f), Vector2.One * 0.6f, Color.White, 2f, Color.Black);
+        SpeedrunTimerDisplay.DrawTime(position + new Vector2((float) ((double) ActiveFont.Measure(chapterSpeedrunText).X * 0.6000000238418579 + 8.0), 40f), speedrunTimerChapterString, 0.6f);
+      }
+      AreaComplete.VersionNumberAndVariants(versionText, ease, 1f);
+    }
+
     public static void VersionNumberAndVariants(string version, float ease, float alpha)
     {
-      Vector2 position = new Vector2((float) (1820.0 + 300.0 * (1.0 - (double) Ease.CubeOut(ease))), 1020f);
+      Vector2 position1 = new Vector2((float) (1820.0 + 300.0 * (1.0 - (double) Ease.CubeOut(ease))), 1020f);
       if (SaveData.Instance.AssistMode || SaveData.Instance.VariantMode)
       {
         MTexture mtexture = GFX.Gui[SaveData.Instance.AssistMode ? "cs_assistmode" : "cs_variantmode"];
-        position.Y -= 32f;
-        mtexture.DrawJustified(position + new Vector2(0.0f, -8f), new Vector2(0.5f, 1f), Color.White, 0.6f);
-        ActiveFont.DrawOutline(version, position, new Vector2(0.5f, 0.0f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
+        position1.Y -= 32f;
+        Vector2 position2 = position1 + new Vector2(0.0f, -8f);
+        Vector2 justify = new Vector2(0.5f, 1f);
+        Color white = Color.White;
+        mtexture.DrawJustified(position2, justify, white, 0.6f);
+        ActiveFont.DrawOutline(version, position1, new Vector2(0.5f, 0.0f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
       }
       else
-        ActiveFont.DrawOutline(version, position, new Vector2(0.5f, 0.5f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
+        ActiveFont.DrawOutline(version, position1, new Vector2(0.5f, 0.5f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
     }
   }
 }
-

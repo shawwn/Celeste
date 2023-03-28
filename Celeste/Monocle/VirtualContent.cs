@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Monocle.VirtualContent
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using System;
@@ -15,30 +15,20 @@ namespace Monocle
     private static List<VirtualAsset> assets = new List<VirtualAsset>();
     private static bool reloading;
 
-    public static int Count
-    {
-      get
-      {
-        return VirtualContent.assets.Count;
-      }
-    }
+    public static int Count => VirtualContent.assets.Count;
 
     public static VirtualTexture CreateTexture(string path)
     {
-      VirtualTexture virtualTexture = new VirtualTexture(path);
-      VirtualContent.assets.Add((VirtualAsset) virtualTexture);
-      return virtualTexture;
+      VirtualTexture texture = new VirtualTexture(path);
+      VirtualContent.assets.Add((VirtualAsset) texture);
+      return texture;
     }
 
-    public static VirtualTexture CreateTexture(
-      string name,
-      int width,
-      int height,
-      Color color)
+    public static VirtualTexture CreateTexture(string name, int width, int height, Color color)
     {
-      VirtualTexture virtualTexture = new VirtualTexture(name, width, height, color);
-      VirtualContent.assets.Add((VirtualAsset) virtualTexture);
-      return virtualTexture;
+      VirtualTexture texture = new VirtualTexture(name, width, height, color);
+      VirtualContent.assets.Add((VirtualAsset) texture);
+      return texture;
     }
 
     public static VirtualRenderTarget CreateRenderTarget(
@@ -49,9 +39,9 @@ namespace Monocle
       bool preserve = true,
       int multiSampleCount = 0)
     {
-      VirtualRenderTarget virtualRenderTarget = new VirtualRenderTarget(name, width, height, multiSampleCount, depth, preserve);
-      VirtualContent.assets.Add((VirtualAsset) virtualRenderTarget);
-      return virtualRenderTarget;
+      VirtualRenderTarget renderTarget = new VirtualRenderTarget(name, width, height, multiSampleCount, depth, preserve);
+      VirtualContent.assets.Add((VirtualAsset) renderTarget);
+      return renderTarget;
     }
 
     public static void BySize()
@@ -78,10 +68,7 @@ namespace Monocle
         Console.WriteLine(asset.Name + "[" + (object) asset.Width + "x" + (object) asset.Height + "]");
     }
 
-    internal static void Remove(VirtualAsset asset)
-    {
-      VirtualContent.assets.Remove(asset);
-    }
+    internal static void Remove(VirtualAsset asset) => VirtualContent.assets.Remove(asset);
 
     internal static void Reload()
     {

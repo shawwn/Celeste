@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Celeste.Editor.LevelTemplate
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -13,26 +13,6 @@ namespace Celeste.Editor
 {
   public class LevelTemplate
   {
-    private static readonly Color bgTilesColor = Color.DarkSlateGray * 0.5f;
-    private static readonly Color[] fgTilesColor = new Color[7]
-    {
-      Color.White,
-      Calc.HexToColor("f6735e"),
-      Calc.HexToColor("85f65e"),
-      Calc.HexToColor("37d7e3"),
-      Calc.HexToColor("376be3"),
-      Calc.HexToColor("c337e3"),
-      Calc.HexToColor("e33773")
-    };
-    private static readonly Color inactiveBorderColor = Color.DarkSlateGray;
-    private static readonly Color selectedBorderColor = Color.Red;
-    private static readonly Color hoveredBorderColor = Color.Yellow;
-    private static readonly Color dummyBgTilesColor = Color.DarkSlateGray * 0.5f;
-    private static readonly Color dummyFgTilesColor = Color.LightGray;
-    private static readonly Color dummyInactiveBorderColor = Color.DarkOrange;
-    private static readonly Color firstBorderColor = Color.Aqua;
-    private List<Rectangle> solids = new List<Rectangle>();
-    private List<Rectangle> backs = new List<Rectangle>();
     public string Name;
     public LevelTemplateType Type;
     public int X;
@@ -52,14 +32,28 @@ namespace Celeste.Editor
     public int EditorColorIndex;
     private Vector2 moveAnchor;
     private Vector2 resizeAnchor;
-
-    private Vector2 resizeHoldSize
+    private List<Rectangle> solids = new List<Rectangle>();
+    private List<Rectangle> backs = new List<Rectangle>();
+    private static readonly Color bgTilesColor = Color.DarkSlateGray * 0.5f;
+    private static readonly Color[] fgTilesColor = new Color[7]
     {
-      get
-      {
-        return new Vector2((float) Math.Min(this.Width, 4), (float) Math.Min(this.Height, 4));
-      }
-    }
+      Color.White,
+      Calc.HexToColor("f6735e"),
+      Calc.HexToColor("85f65e"),
+      Calc.HexToColor("37d7e3"),
+      Calc.HexToColor("376be3"),
+      Calc.HexToColor("c337e3"),
+      Calc.HexToColor("e33773")
+    };
+    private static readonly Color inactiveBorderColor = Color.DarkSlateGray;
+    private static readonly Color selectedBorderColor = Color.Red;
+    private static readonly Color hoveredBorderColor = Color.Yellow;
+    private static readonly Color dummyBgTilesColor = Color.DarkSlateGray * 0.5f;
+    private static readonly Color dummyFgTilesColor = Color.LightGray;
+    private static readonly Color dummyInactiveBorderColor = Color.DarkOrange;
+    private static readonly Color firstBorderColor = Color.Aqua;
+
+    private Vector2 resizeHoldSize => new Vector2((float) Math.Min(this.Width, 4), (float) Math.Min(this.Height, 4));
 
     public LevelTemplate(LevelData data)
     {
@@ -110,7 +104,7 @@ namespace Celeste.Editor
         if (entity.Name.Equals("strawberry") || entity.Name.Equals("snowberry"))
         {
           this.Strawberries.Add(entity.Position / 8f);
-          this.StrawberryMetadata.Add(entity.Int("checkpointID", 0).ToString() + ":" + (object) entity.Int("order", 0));
+          this.StrawberryMetadata.Add(entity.Int("checkpointID").ToString() + ":" + (object) entity.Int("order"));
         }
         else if (entity.Name.Equals("checkpoint"))
           this.Checkpoints.Add(entity.Position / 8f);
@@ -133,26 +127,23 @@ namespace Celeste.Editor
       this.Type = LevelTemplateType.Filler;
     }
 
-    public void Render(bool selected, bool hovered, List<LevelTemplate> allLevels)
+    public void RenderContents(Camera camera, List<LevelTemplate> allLevels)
     {
-      bool flag = false;
-      if (Engine.Scene.BetweenInterval(0.1f))
-      {
-        foreach (LevelTemplate allLevel in allLevels)
-        {
-          if (allLevel != this && allLevel.Rect.Intersects(this.Rect))
-          {
-            flag = true;
-            break;
-          }
-        }
-      }
       if (this.Type == LevelTemplateType.Level)
       {
+        bool flag = false;
+        if (Engine.Scene.BetweenInterval(0.1f))
+        {
+          foreach (LevelTemplate allLevel in allLevels)
+          {
+            if (allLevel != this && allLevel.Rect.Intersects(this.Rect))
+            {
+              flag = true;
+              break;
+            }
+          }
+        }
         Draw.Rect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, (flag ? Color.Red : Color.Black) * 0.5f);
-        if (this.Check(Vector2.Zero))
-          Draw.HollowRect((float) (this.X + 1), (float) (this.Y + 1), (float) (this.Width - 2), (float) (this.Height - 2), LevelTemplate.firstBorderColor);
-        Draw.HollowRect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, this.Dummy ? LevelTemplate.dummyInactiveBorderColor : LevelTemplate.inactiveBorderColor);
         foreach (Rectangle back in this.backs)
           Draw.Rect((float) (this.X + back.X), (float) (this.Y + back.Y), (float) back.Width, (float) back.Height, this.Dummy ? LevelTemplate.dummyBgTilesColor : LevelTemplate.bgTilesColor);
         foreach (Rectangle solid in this.solids)
@@ -171,25 +162,36 @@ namespace Celeste.Editor
         Draw.Rect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, LevelTemplate.dummyFgTilesColor);
         Draw.Rect((float) (this.X + this.Width) - this.resizeHoldSize.X, (float) (this.Y + this.Height) - this.resizeHoldSize.Y, this.resizeHoldSize.X, this.resizeHoldSize.Y, Color.Orange);
       }
+    }
+
+    public void RenderOutline(Camera camera)
+    {
+      float t = (float) (1.0 / (double) camera.Zoom * 2.0);
+      if (this.Check(Vector2.Zero))
+        this.Outline((float) (this.X + 1), (float) (this.Y + 1), (float) (this.Width - 2), (float) (this.Height - 2), t, LevelTemplate.firstBorderColor);
+      this.Outline((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, t, this.Dummy ? LevelTemplate.dummyInactiveBorderColor : LevelTemplate.inactiveBorderColor);
+    }
+
+    public void RenderHighlight(Camera camera, bool hovered, bool selected)
+    {
       if (!(selected | hovered))
         return;
-      Draw.HollowRect((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, hovered ? LevelTemplate.hoveredBorderColor : LevelTemplate.selectedBorderColor);
+      this.Outline((float) this.X, (float) this.Y, (float) this.Width, (float) this.Height, (float) (1.0 / (double) camera.Zoom * 2.0), hovered ? LevelTemplate.hoveredBorderColor : LevelTemplate.selectedBorderColor);
     }
 
-    public bool Check(Vector2 point)
+    private void Outline(float x, float y, float w, float h, float t, Color color)
     {
-      return (double) point.X >= (double) this.Left && (double) point.Y >= (double) this.Top && (double) point.X < (double) this.Right && (double) point.Y < (double) this.Bottom;
+      Draw.Line(x, y, x + w, y, color, t);
+      Draw.Line(x + w, y, x + w, y + h, color, t);
+      Draw.Line(x, y + h, x + w, y + h, color, t);
+      Draw.Line(x, y, x, y + h, color, t);
     }
 
-    public bool Check(Rectangle rect)
-    {
-      return this.Rect.Intersects(rect);
-    }
+    public bool Check(Vector2 point) => (double) point.X >= (double) this.Left && (double) point.Y >= (double) this.Top && (double) point.X < (double) this.Right && (double) point.Y < (double) this.Bottom;
 
-    public void StartMoving()
-    {
-      this.moveAnchor = new Vector2((float) this.X, (float) this.Y);
-    }
+    public bool Check(Rectangle rect) => this.Rect.Intersects(rect);
+
+    public void StartMoving() => this.moveAnchor = new Vector2((float) this.X, (float) this.Y);
 
     public void Move(Vector2 relativeMove, List<LevelTemplate> allLevels, bool snap)
     {
@@ -203,13 +205,13 @@ namespace Celeste.Editor
         {
           if (this.Bottom >= allLevel.Top && this.Top <= allLevel.Bottom)
           {
-            bool flag1 = Math.Abs(this.Left - allLevel.Right) < 3;
-            bool flag2 = Math.Abs(this.Right - allLevel.Left) < 3;
-            if (flag1)
+            int num = Math.Abs(this.Left - allLevel.Right) < 3 ? 1 : 0;
+            bool flag = Math.Abs(this.Right - allLevel.Left) < 3;
+            if (num != 0)
               this.Left = allLevel.Right;
-            else if (flag2)
+            else if (flag)
               this.Right = allLevel.Left;
-            if (flag1 | flag2)
+            if ((num | (flag ? 1 : 0)) != 0)
             {
               if (Math.Abs(this.Top - allLevel.Top) < 3)
                 this.Top = allLevel.Top;
@@ -219,13 +221,13 @@ namespace Celeste.Editor
           }
           if (this.Right >= allLevel.Left && this.Left <= allLevel.Right)
           {
-            bool flag1 = Math.Abs(this.Top - allLevel.Bottom) < 5;
-            bool flag2 = Math.Abs(this.Bottom - allLevel.Top) < 5;
-            if (flag1)
+            int num = Math.Abs(this.Top - allLevel.Bottom) < 5 ? 1 : 0;
+            bool flag = Math.Abs(this.Bottom - allLevel.Top) < 5;
+            if (num != 0)
               this.Top = allLevel.Bottom;
-            else if (flag2)
+            else if (flag)
               this.Bottom = allLevel.Top;
-            if (flag1 | flag2)
+            if ((num | (flag ? 1 : 0)) != 0)
             {
               if (Math.Abs(this.Left - allLevel.Left) < 3)
                 this.Left = allLevel.Left;
@@ -237,10 +239,7 @@ namespace Celeste.Editor
       }
     }
 
-    public void StartResizing()
-    {
-      this.resizeAnchor = new Vector2((float) this.Width, (float) this.Height);
-    }
+    public void StartResizing() => this.resizeAnchor = new Vector2((float) this.Width, (float) this.Height);
 
     public void Resize(Vector2 relativeMove)
     {
@@ -250,66 +249,32 @@ namespace Celeste.Editor
       this.ActualHeight = this.Height * 8;
     }
 
-    public bool ResizePosition(Vector2 mouse)
-    {
-      return (double) mouse.X > (double) (this.X + this.Width) - (double) this.resizeHoldSize.X && (double) mouse.Y > (double) (this.Y + this.Height) - (double) this.resizeHoldSize.Y && (double) mouse.X < (double) (this.X + this.Width) && (double) mouse.Y < (double) (this.Y + this.Height);
-    }
+    public bool ResizePosition(Vector2 mouse) => (double) mouse.X > (double) (this.X + this.Width) - (double) this.resizeHoldSize.X && (double) mouse.Y > (double) (this.Y + this.Height) - (double) this.resizeHoldSize.Y && (double) mouse.X < (double) (this.X + this.Width) && (double) mouse.Y < (double) (this.Y + this.Height);
 
-    public Rectangle Rect
-    {
-      get
-      {
-        return new Rectangle(this.X, this.Y, this.Width, this.Height);
-      }
-    }
+    public Rectangle Rect => new Rectangle(this.X, this.Y, this.Width, this.Height);
 
     public int Left
     {
-      get
-      {
-        return this.X;
-      }
-      set
-      {
-        this.X = value;
-      }
+      get => this.X;
+      set => this.X = value;
     }
 
     public int Top
     {
-      get
-      {
-        return this.Y;
-      }
-      set
-      {
-        this.Y = value;
-      }
+      get => this.Y;
+      set => this.Y = value;
     }
 
     public int Right
     {
-      get
-      {
-        return this.X + this.Width;
-      }
-      set
-      {
-        this.X = value - this.Width;
-      }
+      get => this.X + this.Width;
+      set => this.X = value - this.Width;
     }
 
     public int Bottom
     {
-      get
-      {
-        return this.Y + this.Height;
-      }
-      set
-      {
-        this.Y = value - this.Height;
-      }
+      get => this.Y + this.Height;
+      set => this.Y = value - this.Height;
     }
   }
 }
-

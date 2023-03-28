@@ -1,8 +1,8 @@
 ﻿// Decompiled with JetBrains decompiler
 // Type: Monocle.Sprite
 // Assembly: Celeste, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 3F0C8D56-DA65-4356-B04B-572A65ED61D1
-// Assembly location: M:\code\bin\Celeste\Celeste.exe
+// MVID: 4A26F9DE-D670-4C87-A2F4-7E66D2D85163
+// Assembly location: /Users/shawn/Library/Application Support/Steam/steamapps/common/Celeste/Celeste.app/Contents/Resources/Celeste.exe
 
 using Microsoft.Xna.Framework;
 using System;
@@ -53,18 +53,9 @@ namespace Monocle
       this.Animating = false;
     }
 
-    public MTexture GetFrame(string animation, int frame)
-    {
-      return this.animations[animation].Frames[frame];
-    }
+    public MTexture GetFrame(string animation, int frame) => this.animations[animation].Frames[frame];
 
-    public Vector2 Center
-    {
-      get
-      {
-        return new Vector2(this.Width / 2f, this.Height / 2f);
-      }
-    }
+    public Vector2 Center => new Vector2(this.Width / 2f, this.Height / 2f);
 
     public override void Update()
     {
@@ -74,45 +65,46 @@ namespace Monocle
         this.animationTimer += Engine.RawDeltaTime * this.Rate;
       else
         this.animationTimer += Engine.DeltaTime * this.Rate;
-      if ((double) Math.Abs(this.animationTimer) >= (double) this.currentAnimation.Delay)
+      if ((double) Math.Abs(this.animationTimer) < (double) this.currentAnimation.Delay)
+        return;
+      this.CurrentAnimationFrame += Math.Sign(this.animationTimer);
+      this.animationTimer -= (float) Math.Sign(this.animationTimer) * this.currentAnimation.Delay;
+      if (this.CurrentAnimationFrame < 0 || this.CurrentAnimationFrame >= this.currentAnimation.Frames.Length)
       {
-        this.CurrentAnimationFrame += Math.Sign(this.animationTimer);
-        this.animationTimer -= (float) Math.Sign(this.animationTimer) * this.currentAnimation.Delay;
-        if (this.CurrentAnimationFrame < 0 || this.CurrentAnimationFrame >= this.currentAnimation.Frames.Length)
+        string currentAnimationId1 = this.CurrentAnimationID;
+        if (this.OnLastFrame != null)
+          this.OnLastFrame(this.CurrentAnimationID);
+        string currentAnimationId2 = this.CurrentAnimationID;
+        if (!(currentAnimationId1 == currentAnimationId2))
+          return;
+        if (this.currentAnimation.Goto != null)
         {
-          string currentAnimationId1 = this.CurrentAnimationID;
-          if (this.OnLastFrame != null)
-            this.OnLastFrame(this.CurrentAnimationID);
-          if (currentAnimationId1 == this.CurrentAnimationID)
-          {
-            if (this.currentAnimation.Goto != null)
-            {
-              this.CurrentAnimationID = this.currentAnimation.Goto.Choose();
-              if (this.OnChange != null)
-                this.OnChange(this.LastAnimationID, this.CurrentAnimationID);
-              this.LastAnimationID = this.CurrentAnimationID;
-              this.currentAnimation = this.animations[this.LastAnimationID];
-              this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? 0 : this.currentAnimation.Frames.Length - 1;
-              this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
-              if (this.OnLoop != null)
-                this.OnLoop(this.CurrentAnimationID);
-            }
-            else
-            {
-              this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? this.currentAnimation.Frames.Length - 1 : 0;
-              this.Animating = false;
-              string currentAnimationId2 = this.CurrentAnimationID;
-              this.CurrentAnimationID = "";
-              this.currentAnimation = (Sprite.Animation) null;
-              this.animationTimer = 0.0f;
-              if (this.OnFinish != null)
-                this.OnFinish(currentAnimationId2);
-            }
-          }
+          this.CurrentAnimationID = this.currentAnimation.Goto.Choose();
+          if (this.OnChange != null)
+            this.OnChange(this.LastAnimationID, this.CurrentAnimationID);
+          this.LastAnimationID = this.CurrentAnimationID;
+          this.currentAnimation = this.animations[this.LastAnimationID];
+          this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? 0 : this.currentAnimation.Frames.Length - 1;
+          this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
+          if (this.OnLoop == null)
+            return;
+          this.OnLoop(this.CurrentAnimationID);
         }
         else
-          this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
+        {
+          this.CurrentAnimationFrame = this.CurrentAnimationFrame >= 0 ? this.currentAnimation.Frames.Length - 1 : 0;
+          this.Animating = false;
+          string currentAnimationId3 = this.CurrentAnimationID;
+          this.CurrentAnimationID = "";
+          this.currentAnimation = (Sprite.Animation) null;
+          this.animationTimer = 0.0f;
+          if (this.OnFinish == null)
+            return;
+          this.OnFinish(currentAnimationId3);
+        }
       }
+      else
+        this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
     }
 
     private void SetFrame(MTexture texture)
@@ -120,6 +112,10 @@ namespace Monocle
       if (texture == this.Texture)
         return;
       this.Texture = texture;
+      if (this.width == 0)
+        this.width = texture.Width;
+      if (this.height == 0)
+        this.height = texture.Height;
       if (this.Justify.HasValue)
         this.Origin = new Vector2((float) this.Texture.Width * this.Justify.Value.X, (float) this.Texture.Height * this.Justify.Value.Y);
       if (this.OnFrameChange == null)
@@ -134,85 +130,75 @@ namespace Monocle
       this.SetFrame(this.currentAnimation.Frames[this.CurrentAnimationFrame]);
     }
 
-    public void AddLoop(string id, string path, float delay)
+    public void AddLoop(string id, string path, float delay) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = delay,
-        Frames = this.GetFrames(path, (int[]) null),
-        Goto = new Chooser<string>(id, 1f)
-      };
-    }
+      Delay = delay,
+      Frames = this.GetFrames(path),
+      Goto = new Chooser<string>(id, 1f)
+    };
 
-    public void AddLoop(string id, string path, float delay, params int[] frames)
+    public void AddLoop(string id, string path, float delay, params int[] frames) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = delay,
-        Frames = this.GetFrames(path, frames),
-        Goto = new Chooser<string>(id, 1f)
-      };
-    }
+      Delay = delay,
+      Frames = this.GetFrames(path, frames),
+      Goto = new Chooser<string>(id, 1f)
+    };
 
-    public void Add(string id, string path)
+    public void AddLoop(string id, float delay, params MTexture[] frames) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = 0.0f,
-        Frames = this.GetFrames(path, (int[]) null),
-        Goto = (Chooser<string>) null
-      };
-    }
+      Delay = delay,
+      Frames = frames,
+      Goto = new Chooser<string>(id, 1f)
+    };
 
-    public void Add(string id, string path, float delay)
+    public void Add(string id, string path) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = delay,
-        Frames = this.GetFrames(path, (int[]) null),
-        Goto = (Chooser<string>) null
-      };
-    }
+      Delay = 0.0f,
+      Frames = this.GetFrames(path),
+      Goto = (Chooser<string>) null
+    };
 
-    public void Add(string id, string path, float delay, params int[] frames)
+    public void Add(string id, string path, float delay) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = delay,
-        Frames = this.GetFrames(path, frames),
-        Goto = (Chooser<string>) null
-      };
-    }
+      Delay = delay,
+      Frames = this.GetFrames(path),
+      Goto = (Chooser<string>) null
+    };
 
-    public void Add(string id, string path, float delay, string into)
+    public void Add(string id, string path, float delay, params int[] frames) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = delay,
-        Frames = this.GetFrames(path, (int[]) null),
-        Goto = Chooser<string>.FromString<string>(into)
-      };
-    }
+      Delay = delay,
+      Frames = this.GetFrames(path, frames),
+      Goto = (Chooser<string>) null
+    };
 
-    public void Add(string id, string path, float delay, Chooser<string> into)
+    public void Add(string id, string path, float delay, string into) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = delay,
-        Frames = this.GetFrames(path, (int[]) null),
-        Goto = into
-      };
-    }
+      Delay = delay,
+      Frames = this.GetFrames(path),
+      Goto = Chooser<string>.FromString<string>(into)
+    };
 
-    public void Add(string id, string path, float delay, string into, params int[] frames)
+    public void Add(string id, string path, float delay, Chooser<string> into) => this.animations[id] = new Sprite.Animation()
     {
-      this.animations[id] = new Sprite.Animation()
-      {
-        Delay = delay,
-        Frames = this.GetFrames(path, frames),
-        Goto = Chooser<string>.FromString<string>(into)
-      };
-    }
+      Delay = delay,
+      Frames = this.GetFrames(path),
+      Goto = into
+    };
+
+    public void Add(string id, string path, float delay, string into, params int[] frames) => this.animations[id] = new Sprite.Animation()
+    {
+      Delay = delay,
+      Frames = this.GetFrames(path, frames),
+      Goto = Chooser<string>.FromString<string>(into)
+    };
+
+    public void Add(string id, float delay, string into, params MTexture[] frames) => this.animations[id] = new Sprite.Animation()
+    {
+      Delay = delay,
+      Frames = frames,
+      Goto = Chooser<string>.FromString<string>(into)
+    };
 
     public void Add(
       string id,
@@ -231,33 +217,25 @@ namespace Monocle
 
     private MTexture[] GetFrames(string path, int[] frames = null)
     {
-      MTexture[] mtextureArray1;
+      MTexture[] frames1;
       if (frames == null || frames.Length == 0)
       {
-        mtextureArray1 = this.atlas.GetAtlasSubtextures(this.Path + path).ToArray();
+        frames1 = this.atlas.GetAtlasSubtextures(this.Path + path).ToArray();
       }
       else
       {
         string key = this.Path + path;
-        MTexture[] mtextureArray2 = new MTexture[frames.Length];
+        MTexture[] mtextureArray = new MTexture[frames.Length];
         for (int index = 0; index < frames.Length; ++index)
-        {
-          MTexture atlasSubtexturesAt = this.atlas.GetAtlasSubtexturesAt(key, frames[index]);
-          if (atlasSubtexturesAt == null)
-            throw new Exception("Can't find sprite " + key + " with index " + (object) frames[index]);
-          mtextureArray2[index] = atlasSubtexturesAt;
-        }
-        mtextureArray1 = mtextureArray2;
+          mtextureArray[index] = this.atlas.GetAtlasSubtexturesAt(key, frames[index]) ?? throw new Exception("Can't find sprite " + key + " with index " + (object) frames[index]);
+        frames1 = mtextureArray;
       }
-      this.width = Math.Max(mtextureArray1[0].Width, this.width);
-      this.height = Math.Max(mtextureArray1[0].Height, this.height);
-      return mtextureArray1;
+      this.width = Math.Max(frames1[0].Width, this.width);
+      this.height = Math.Max(frames1[0].Height, this.height);
+      return frames1;
     }
 
-    public void ClearAnimations()
-    {
-      this.animations.Clear();
-    }
+    public void ClearAnimations() => this.animations.Clear();
 
     public void Play(string id, bool restart = false, bool randomizeFrame = false)
     {
@@ -311,7 +289,7 @@ namespace Monocle
 
     public IEnumerator PlayRoutine(string id, bool restart = false)
     {
-      this.Play(id, restart, false);
+      this.Play(id, restart);
       return this.PlayUtil();
     }
 
@@ -329,16 +307,13 @@ namespace Monocle
 
     public void Reverse(string id, bool restart = false)
     {
-      this.Play(id, restart, false);
+      this.Play(id, restart);
       if ((double) this.Rate <= 0.0)
         return;
       this.Rate *= -1f;
     }
 
-    public bool Has(string id)
-    {
-      return id != null && this.animations.ContainsKey(id);
-    }
+    public bool Has(string id) => id != null && this.animations.ContainsKey(id);
 
     public void Stop()
     {
@@ -355,41 +330,18 @@ namespace Monocle
 
     public int CurrentAnimationFrame { get; private set; }
 
-    public int CurrentAnimationTotalFrames
-    {
-      get
-      {
-        if (this.currentAnimation != null)
-          return this.currentAnimation.Frames.Length;
-        return 0;
-      }
-    }
+    public int CurrentAnimationTotalFrames => this.currentAnimation != null ? this.currentAnimation.Frames.Length : 0;
 
-    public override float Width
-    {
-      get
-      {
-        return (float) this.width;
-      }
-    }
+    public override float Width => (float) this.width;
 
-    public override float Height
-    {
-      get
-      {
-        return (float) this.height;
-      }
-    }
+    public override float Height => (float) this.height;
 
     internal Sprite()
       : base((MTexture) null, true)
     {
     }
 
-    internal Sprite CreateClone()
-    {
-      return this.CloneInto(new Sprite());
-    }
+    internal Sprite CreateClone() => this.CloneInto(new Sprite());
 
     internal Sprite CloneInto(Sprite clone)
     {
@@ -440,4 +392,3 @@ namespace Monocle
     }
   }
 }
-
